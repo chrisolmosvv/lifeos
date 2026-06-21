@@ -48,7 +48,7 @@ Telegram (two-way chat) and Gemini (writes the brief). The 7am alarm wakes the
 agent. GitHub just stores the code (not part of the running flow).
 
 ## Hard constraints
-- **Free tiers only.** If a choice needs paid hosting/DB/API, stop and flag it.
+- **Free tiers only.** If a choice needs paid hosting/DB, stop and flag it.
 - **RLS (row-level security) ON** — the database refuses to hand out data
   that isn't the owner's.
 - **Single user.** No multi-user features, no sharing, no roles.

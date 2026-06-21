@@ -35,17 +35,8 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
-### 2026-06-21 — Phase 0 — First commit
-WHAT CHANGED:
-- Turned the lifeos folder into a git repository (the "vault" is now active locally).
-- Saved all seven brain docs as the first commit.
-
-FILES TOUCHED: 00-overview.md, 01-architecture.md, 02-roadmap.md, 03-decisions.md, CLAUDE.md, 04-handoff-log.md, 05-glossary.md
-
-HOW TO VERIFY: Open Terminal, go to the lifeos folder, type `git log --oneline`. You should see one line: the first commit.
-
-KNOWN GAPS / RISKS: Repo is local only — not yet on GitHub. Nothing is at risk of loss as long as your laptop is safe, but GitHub is the real backup.
-
-NEXT: Create the five free accounts (GitHub first, then Supabase, Vercel, Telegram bot, Google AI Studio), then push this repo to GitHub.
-
-FOR THE CHECKER: n/a — nothing to review yet, just docs.
+### Phase 0 — kickoff (template entry, not yet done)
+WHAT CHANGED: nothing yet — accounts and setup pending.
+HOW TO VERIFY: n/a.
+NEXT: create accounts (GitHub, Supabase, Vercel, Telegram, Gemini), install
+Claude Code, add these brain docs to the repo, first commit.
