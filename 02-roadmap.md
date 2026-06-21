@@ -8,17 +8,18 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
-## 🔨 Phase 0 — Setup & the Project Brain   ← CURRENT
+## ✅ Phase 0 — Setup & the Project Brain
 Goal: make the free accounts, get Claude Code running, put the brain docs
 into the repo and the project knowledge.
 **Done when:** the project has a memory and an empty app is live on the internet.
 Tasks:
-- ⬜ Create accounts: GitHub, Supabase, Vercel, Telegram bot, Google AI Studio (Gemini)
-- ⬜ Install Claude Code, point it at a new repo
-- ⬜ Drop these brain docs into the repo; rename the rules file to CLAUDE.md
-- ⬜ First commit (first save point)
+- ✅ Create accounts: GitHub, Supabase, Vercel, Telegram bot, Google AI Studio (Gemini)
+- ✅ Install Claude Code, point it at a new repo
+- ✅ Drop these brain docs into the repo; rename the rules file to CLAUDE.md
+- ✅ First commit (first save point)
+- ✅ Build minimal React+Vite app and deploy live on Vercel
 
-## ⬜ Phase 1 — The skeleton you can see
+## 🔨 Phase 1 — The skeleton you can see   ← CURRENT
 App shell deployed, login works, empty week-view calendar on desktop + a
 stripped phone layout.
 **Done when:** I open my app on my phone and log in.
@@ -61,4 +62,8 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
-- (none yet — Phase 0 not started)
+- **2026-06-21 — Phase 0 complete.** Created all five accounts (GitHub, Supabase,
+  Vercel, Telegram bot, Gemini). Installed Claude Code. Created the `lifeos` repo,
+  added and verified all seven brain docs, built a minimal React+Vite app (single
+  page showing "LifeOS"), confirmed it builds cleanly, and deployed it live on
+  Vercel. Repo is public at github.com/chrisolmosvv/lifeos.

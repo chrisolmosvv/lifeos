@@ -9,6 +9,17 @@
 
 ---
 
+- **GitHub repo is public.** Why: checker chats (Claude.ai) can read any file
+  directly via its raw GitHub URL, with no login or file-upload needed. This
+  keeps the review workflow smooth. Trade-off: source code is visible to anyone
+  on the internet — acceptable because there are no secrets in the repo and this
+  is a personal project with no proprietary logic yet.
+
+- **npm global prefix set to ~/.npm-global.** Why: macOS system-owned directories
+  block npm global installs by default, causing permission errors. A user-owned
+  prefix (`~/.npm-global`) sidesteps this without using `sudo`. Trade-off: one-time
+  setup step needed on any new machine.
+
 - **Telegram, not iMessage.** Why: iMessage has no official way for an app to
   send/receive; the workarounds need the Mac on 24/7 and break constantly,
   killing "free + works when laptop closed." Telegram is free, official,

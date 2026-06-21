@@ -35,8 +35,34 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
-### Phase 0 — kickoff (template entry, not yet done)
-WHAT CHANGED: nothing yet — accounts and setup pending.
-HOW TO VERIFY: n/a.
-NEXT: create accounts (GitHub, Supabase, Vercel, Telegram, Gemini), install
-Claude Code, add these brain docs to the repo, first commit.
+### 2026-06-21 — Phase 0 — Setup complete, empty app live
+WHAT CHANGED:
+- Created all five free accounts: GitHub (chrisolmosvv), Supabase, Vercel,
+  Telegram bot, Google AI Studio (Gemini).
+- Initialized the git repo, added all seven brain docs, and pushed to GitHub.
+- Built a minimal React+Vite app (one page: "LifeOS" centered on screen),
+  confirmed it builds cleanly, committed, pushed, and deployed live on Vercel.
+
+FILES TOUCHED: 00-overview.md, 01-architecture.md, 02-roadmap.md, 03-decisions.md,
+CLAUDE.md, 04-handoff-log.md, 05-glossary.md, index.html, vite.config.js,
+package.json, package-lock.json, src/main.jsx, src/App.jsx, .gitignore
+
+HOW TO VERIFY:
+- Repo on GitHub: https://github.com/chrisolmosvv/lifeos — should show all files.
+- Live app on Vercel: open the Vercel dashboard, find the lifeos project, click
+  the deployment URL — you should see a white page with "LifeOS" in the center.
+- Run `git log --oneline` in the lifeos folder — should show 3 commits.
+
+KNOWN GAPS / RISKS:
+- Claude Code login showed "Claude Pro" in the UI during setup — worth confirming
+  it is actually running on the Max plan (Pro won't have enough capacity for long
+  build sessions).
+- Vercel deployment was done manually in the browser; not yet connected to
+  auto-deploy on git push (Vercel usually sets this up automatically — confirm
+  it's active in the Vercel dashboard).
+
+NEXT: Phase 1 — build the real app shell: Supabase login (magic link or Google),
+empty week-view calendar visible on desktop, stripped layout on phone.
+
+FOR THE CHECKER: Confirm the live Vercel URL loads correctly and the GitHub repo
+contains only the brain docs + app source (no node_modules, no .env files).
