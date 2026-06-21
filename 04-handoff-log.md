@@ -35,6 +35,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-21 — Phase 1 (step 1) — Supabase connection + email magic-link login
+WHAT CHANGED:
+- Installed the official Supabase library and connected the app to Supabase
+  using environment variables (no keys in the code; real keys live in a local
+  .env that is gitignored and NOT committed).
+- Built an email magic-link login: type your email → get a login link → tap it
+  → you're back in the app logged in. Logged-in view shows "You're logged in as
+  <email>" and a Log out button. (No calendar yet — that's the next step.)
+
+FILES TOUCHED: package.json, package-lock.json, .gitignore, .env.example,
+index.html, src/supabaseClient.js, src/Login.jsx, src/LoggedIn.jsx, src/App.jsx
+(plus a local .env holding the real keys — gitignored, never committed)
+
+HOW TO VERIFY (do this on your Mac before we deploy):
+1. In the Supabase dashboard → Authentication → URL Configuration:
+   set Site URL to  http://localhost:5173  and add Redirect URL
+   http://localhost:5173/**  — then Save.
+   Direct link: https://supabase.com/dashboard/project/cntlptuacsujbdtwvbis/auth/url-configuration
+2. In Terminal, from the lifeos folder, run:  npm run dev
+3. Open  http://localhost:5173 , type your email, click "Send me a login link".
+4. Check your inbox, tap the link — you should land back on the app showing
+   "You're logged in as <your email>" and a Log out button.
+5. Click Log out — you should return to the login screen.
+
+KNOWN GAPS / RISKS:
+- I confirmed it BUILDS cleanly, but I can't complete the email round-trip myself
+  (I can't read your inbox). Your local test above is the real confirmation.
+- Step 1 (the dashboard redirect URL) is required or the link won't return you to
+  the app — easy to forget.
+- Supabase's built-in email sender has a low hourly limit; if links stop arriving
+  during repeated testing, wait a while or check spam.
+- New-user signups are allowed by default. Single-user + RLS makes this fine for
+  now; we can lock signups down later.
+
+NEXT: Phase 1 (step 2) — empty week-view calendar on desktop + a stripped phone
+layout. After that we deploy to Vercel (adding the same two env vars there and the
+Vercel URL to Supabase redirect URLs) and you log in on your phone.
+
+FOR THE CHECKER: Confirm NO .env file is committed (only .env.example, which holds
+placeholders), and that no Supabase URL or key is hard-coded in any source file
+(they must come only from import.meta.env via .env).
+
 ### 2026-06-21 — Phase 0 — Setup complete, empty app live
 WHAT CHANGED:
 - Created all five free accounts: GitHub (chrisolmosvv), Supabase, Vercel,

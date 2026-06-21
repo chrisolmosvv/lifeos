@@ -1,5 +1,10 @@
 node_modules
 dist
+
+# Local environment variables — never commit these (they hold your real keys)
 .env
 .env.*
 *.local
+
+# ...except the example template, which holds no real values and is safe to share
+!.env.example
