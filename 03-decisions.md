@@ -1,0 +1,57 @@
+# LifeOS — Decisions
+
+> I am the record of "what we chose and why," so we never re-argue settled
+> things or contradict ourselves. LIVING doc — add to me, never silently
+> reverse me. New decisions on top.
+
+## Format
+**[Decision]** — the choice. **Why:** the reason. **Trade-off:** what we gave up.
+
+---
+
+- **Telegram, not iMessage.** Why: iMessage has no official way for an app to
+  send/receive; the workarounds need the Mac on 24/7 and break constantly,
+  killing "free + works when laptop closed." Telegram is free, official,
+  cloud-based, two-way, supports voice notes. Trade-off: not in the native
+  Messages app.
+
+- **Notifications via Telegram, not PWA push.** Why: iPhone PWA push is flaky.
+  Letting Telegram handle all nudges sidesteps it. Trade-off: none meaningful.
+
+- **One responsive codebase, two layouts.** Desktop = full dashboard, phone =
+  quick glance + fast input. Why: simplest path to both. Trade-off: none.
+
+- **Gemini free tier for the agent (Flash).** Why: genuinely free, no card,
+  plenty for one user. Trade-off: Google may train on inputs, and there's no
+  uptime guarantee. **Plan:** start free; switch sensitive modules (mood,
+  health) to pay-as-you-go (~$1-4/mo, no training) when we build them.
+
+- **Consumer subscriptions can't power the in-app agent.** Why: Claude/ChatGPT/
+  Gemini subscriptions are for the chat apps, not callable by code. The API is
+  separate. (The Max plan DOES power Claude Code for *building*, though.)
+
+- **Supabase + RLS for the database.** Why: free tier, built-in login and
+  security, runs the agent code and the scheduler all in one place. Trade-off:
+  free project can pause after long inactivity (fine for daily use).
+
+- **Single user, no multi-user features.** Why: it's just the owner; skipping
+  accounts/roles/sharing removes huge complexity. Trade-off: a friend can't use
+  it later without real work.
+
+- **Standalone calendar in V1, Apple sync as a later dream.** Why: standalone is
+  far faster to build. We add a hidden external_id field now so future sync is
+  "connect the pipes," not a rebuild. Trade-off: V1 calendar is separate from
+  Apple Calendar until sync is built.
+
+- **V1 = tasks + events only.** Why: keep the first usable version small so the
+  owner engages fast. Other types (meals, friend notes) wait for their modules.
+  Trade-off: can't capture a meal/note in V1.
+
+- **Tasks live on the same calendar as events.** Tasks with a due date or a
+  scheduled time block show up on the week view; tasks can be dragged onto slots.
+
+- **Claude Code as the build tool (on Max).** Why: it keeps the whole project in
+  view, the direct fix for past "AI loses the plot / messy codebase" failures.
+
+- **All guardrails on (CLAUDE.md).** Brain docs, file-size ceiling, one feature
+  at a time, commit after each feature, start/end session ritual.
