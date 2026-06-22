@@ -35,6 +35,78 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 (Piece 4f) — The week view, made real (read-only)
+WHAT CHANGED (UI only — NO database/schema/RLS change; read-only render):
+- **The Calendar route now renders a real week** (was the empty Phase-1 shell):
+  seven day columns **Mon–Sun**, the week's date range in the header corner, hour
+  rows down the side, today's column subtly marked, the **now-line on today**.
+- **Events render in each day** as blocks (same style as the day column: paper,
+  hairline, category-coloured left rule, kicker + time + title; uncategorised =
+  neutral, no Inbox tag).
+- **Scheduled tasks render as dotted blocks** in each day (same 4e treatment) —
+  still belonging to their task list; this is just their second view on the week.
+- **Overlaps within a day split side by side**, reusing the same packing as the
+  day column — an event and a scheduled task overlapping in one day split too.
+- **Only the current week** shows (no week navigation — none existed; not built).
+- **Shared, not duplicated:** factored a `DayColumn` component used by BOTH the
+  day timeline and the week (the day view is the interactive version; the week is
+  read-only). The overlap layout, the item-building, the block render and the
+  scroll-to-now are all shared.
+- **Desktop zero-scroll:** the grid scrolls through the hours internally (opens
+  around now/7am); the page itself stays put.
+
+WHAT THE PHONE DOES (unchanged — confirm it's not a squished week):
+- On a narrow screen the Calendar route still falls back to the existing
+  single-day view (DayAgenda), NOT a 7-column grid. (That phone day view is still
+  the plain shell — wiring events into the phone Calendar view isn't this piece;
+  the Today route's phone timeline already shows events.)
+
+FILES TOUCHED:
+- New: `src/DayColumn.jsx` (shared one-day column render)
+- Edited: `src/WeekCalendar.jsx` (loads the week's events + scheduled tasks +
+  categories; renders seven DayColumns), `src/DayTimeline.jsx` (now uses
+  DayColumn for its interactive column), `src/EventBlock.jsx` (an `interactive`
+  flag — hides handles / × / grab cursor when read-only), `src/eventLayout.js`
+  (shared `buildDayItems`), `src/dateUtils.js` (shared `nowScrollTop`),
+  `src/calendar.css`, `src/dayTimeline.css`
+- NOT touched: `db/` (no schema/RLS change).
+
+HOW TO VERIFY (on your Mac — no SQL):
+1. `npm run dev`, log in. On **Today**, add a couple of events on the day grid,
+   and (via the grip) schedule a task or two. To get items on OTHER days this
+   week, set an event's date in its edit panel (Start/End date), or schedule
+   tasks then drag/edit — anything that lands them on different days this week.
+2. Click **Calendar**. You should see **seven columns Mon–Sun**, the week range in
+   the top-left, hour rows, and **today's column marked with the now-line**.
+3. Your **events** sit on the right days at the right times with their category
+   colours; **scheduled tasks** show as **dotted blocks**.
+4. Put two items at the same time on one day → they **split side by side**, both
+   readable. (An event + a scheduled task overlapping splits too.)
+5. **Narrow the window** (or open on a phone) → it falls back to the **single-day
+   view**, not a squished 7-column grid.
+6. **Reload** → the whole week renders again from the database.
+
+KNOWN GAPS / RISKS:
+- **Read-only** — you can't drag/move/resize/create on the week yet (that's 4g);
+  tapping a week block does nothing.
+- **Multi-day events show on their start day only** (no all-day/multi-day banners
+  this piece) — a known gap.
+- **No week navigation** (current week only) — deferred.
+- The phone Calendar view is still the plain day shell (no events drawn there yet).
+
+NEXT: Phase 4, Piece 4g — drag/edit on the week view.
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` is untouched; the week view only READS events +
+  tasks (owner-only RLS still applies). No writes.
+- **The week reuses the day column's logic, not a re-implementation** — both
+  render through the shared `DayColumn` + `eventLayout.js` + `EventBlock`; the week
+  passes the read-only (non-interactive) variant.
+- **Overlap splits side by side** on the week (same `layoutEvents` over a day's
+  events + scheduled tasks).
+- **The phone still falls back to the single-day view** (DayAgenda), not a squished
+  week.
+
 ### 2026-06-22 — Phase 4 (Piece 4e) — Drag a task onto the grid to schedule it
 WHAT CHANGED (UI only — NO database/schema/RLS change; writes only scheduled_start/scheduled_end):
 - **Drag a task from its list row (a quiet grip "⠿") onto "The Day"** → it gets a

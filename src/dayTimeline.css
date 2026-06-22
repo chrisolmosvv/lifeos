@@ -63,6 +63,10 @@
   user-select: none;
   touch-action: pan-y; /* let touch scroll the column; mouse handles drag */
 }
+/* Read-only blocks (the week view) aren't draggable — no grab cursor. */
+.dt-event.is-static {
+  cursor: default;
+}
 /* A scheduled TASK block: dashed edges mark it as a task (vs a solid event).
    It's still a task — this is just its time view. */
 .dt-event.is-task {

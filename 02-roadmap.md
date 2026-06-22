@@ -71,6 +71,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 4, Piece 4f of several: the week view, made real (read-only).**
+  The Calendar route now renders a real week (was the empty Phase-1 shell): seven
+  Mon–Sun columns, week range in the header, hour rows, today marked with the
+  now-line. Events render per day as blocks; scheduled tasks as dotted blocks;
+  overlaps within a day split side by side. Reuses the day column's logic via a new
+  shared `DayColumn` (day = interactive, week = read-only) + `eventLayout.js` +
+  `EventBlock` + shared `buildDayItems`/`nowScrollTop` — no duplication. Current week
+  only (no nav). Desktop zero-scroll (grid scrolls internally, opens around now/7am).
+  Phone still falls back to the single-day view (not a squished week). UI only — NO
+  schema/RLS change (read-only). Builds clean. **Phase 4 is NOT done — NEXT: 4g
+  drag/edit on the week. Known gap: multi-day events show on start day only.**
 - **2026-06-22 — Phase 4, Piece 4e of several: drag a task onto the grid to schedule
   it.** Drag a task from its list row (a quiet grip) onto "The Day" → it gets a time
   block (scheduled_start at drop, +1h, 15-min snap). A scheduled task STAYS a task —

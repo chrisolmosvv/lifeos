@@ -97,3 +97,14 @@ export function formatClock(d) {
   const p = (n) => String(n).padStart(2, '0')
   return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 }
+
+// Where an hour-grid should open: centred around now during working hours, else
+// at ~7am. Shared by the day column and the week view so they behave the same.
+export function nowScrollTop(viewportH) {
+  const now = new Date()
+  const h = now.getHours()
+  if (h >= 7 && h < 22) {
+    return Math.max(0, (h + now.getMinutes() / 60) * HOUR_HEIGHT - viewportH / 2)
+  }
+  return 7 * HOUR_HEIGHT
+}

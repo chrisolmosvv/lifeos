@@ -111,6 +111,20 @@
 .cal-corner {
   width: 56px;
   flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  box-sizing: border-box;
+}
+/* The week's date range, quietly set in the header corner. */
+.cal-range {
+  font-size: 0.6rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 .cal-dayhead {
   flex: 1;

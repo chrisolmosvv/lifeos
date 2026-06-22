@@ -69,3 +69,23 @@ export function layoutEvents(events, dayStart) {
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v))
 }
+
+// Merge a day's events and scheduled tasks into one list of timeline blocks, so
+// both the day column and the week column lay them out (and split overlaps) the
+// same way. Events keep their start_at/end_at; a scheduled task is mapped onto
+// the same shape from its scheduled_start/scheduled_end and tagged kind:'task'
+// (it stays a task — this is just its block view).
+export function buildDayItems(events, scheduledTasks) {
+  return [
+    ...events.map((e) => ({ ...e, kind: 'event' })),
+    ...scheduledTasks.map((t) => ({
+      id: t.id,
+      kind: 'task',
+      title: t.title,
+      category_id: t.category_id,
+      status: t.status,
+      start_at: t.scheduled_start,
+      end_at: t.scheduled_end,
+    })),
+  ]
+}

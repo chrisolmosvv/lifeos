@@ -9,6 +9,20 @@
 
 ---
 
+- **Day and week views share one column render (Phase 4, Piece 4f).** The week
+  view is a seven-day version of "The Day", not a new paradigm — so the
+  hour-grid-with-blocks render was factored into a shared `DayColumn` component
+  used by both: the interactive day timeline (drag/create wired in via props) and
+  the read-only week (those props omitted). The overlap packing (`eventLayout.js`),
+  the events+tasks item-building (`buildDayItems`), the `EventBlock` render
+  (incl. the dotted scheduled-task treatment), and the scroll-to-now helper
+  (`nowScrollTop`) are all shared — nothing is duplicated. **Why:** one source of
+  truth for "a day's blocks" means the week automatically matches the day (and
+  4g's week editing can reuse the same drag). `EventBlock` gained an `interactive`
+  flag that hides the drag handles / unschedule control and the grab cursor when
+  read-only. Trade-off: a couple of opt-in props on the shared component; worth it
+  to avoid a parallel implementation.
+
 - **A scheduled task STAYS a task — scheduling only sets times (Phase 4, Piece
   4e).** Dragging a task onto the day grid sets its `scheduled_start`/
   `scheduled_end` and nothing else. It does **not** become an event and does not

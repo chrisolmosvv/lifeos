@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react'
-import { HOURS, HOUR_HEIGHT, formatHour } from './dateUtils'
-import NowLine from './NowLine'
-import EventBlock from './EventBlock'
+import { HOURS, HOUR_HEIGHT, formatHour, nowScrollTop } from './dateUtils'
 import EventPanel from './EventPanel'
-import { layoutEvents } from './eventLayout'
+import DayColumn from './DayColumn'
 import { useEventDrag } from './useEventDrag'
 import './dayTimeline.css'
 
-// "The Day" column: a 24-hour grid showing today's events (solid blocks) and
-// scheduled tasks (dashed blocks — still tasks, just a time view) in one shared
-// overlap layout. Editable: tap empty to create an event, tap an event to edit,
-// drag any block to move/resize, drag a task block off the right edge (or its ×)
-// to unschedule. `scrollRef` is owned by Today (so the schedule-drop shares it).
+// "The Day" column on Today: a single interactive day (the shared DayColumn,
+// with drag/create wired in) plus the create/edit panel. The hour-grid render,
+// the event/task blocks and the overlap layout all live in DayColumn — this
+// file is just the interaction wiring. `scrollRef` is owned by Today (shared
+// with the schedule-drop).
 export default function DayTimeline({
   events,
   scheduledTasks,
@@ -40,18 +38,9 @@ export default function DayTimeline({
     onUnschedule: (item) => onUnscheduleTask(item.id),
   })
 
-  // Open centred around now, or at ~7am if now is outside working hours.
   useEffect(() => {
     const el = scrollRef.current
-    if (!el) return
-    const now = new Date()
-    const h = now.getHours()
-    if (h >= 7 && h < 22) {
-      const nowTop = (h + now.getMinutes() / 60) * HOUR_HEIGHT
-      el.scrollTop = Math.max(0, nowTop - el.clientHeight / 2)
-    } else {
-      el.scrollTop = 7 * HOUR_HEIGHT
-    }
+    if (el) el.scrollTop = nowScrollTop(el.clientHeight)
   }, [scrollRef])
 
   function openNewAt(hour) {
@@ -62,7 +51,7 @@ export default function DayTimeline({
     setPanel({ mode: 'new', start, end })
   }
   const openNewNext = () => openNewAt(Math.min(23, new Date().getHours() + 1))
-  function onGridClick(e) {
+  function onColClick(e) {
     const rect = e.currentTarget.getBoundingClientRect()
     const hour = Math.floor((e.clientY - rect.top) / HOUR_HEIGHT)
     openNewAt(Math.max(0, Math.min(23, hour)))
@@ -73,22 +62,6 @@ export default function DayTimeline({
     today.getMonth(),
     today.getDate(),
   ).getTime()
-  const catById = new Map(cats.map((c) => [c.id, c]))
-
-  // Events + scheduled tasks share one overlap layout.
-  const items = [
-    ...events.map((e) => ({ ...e, kind: 'event' })),
-    ...scheduledTasks.map((t) => ({
-      id: t.id,
-      kind: 'task',
-      title: t.title,
-      category_id: t.category_id,
-      status: t.status,
-      start_at: t.scheduled_start,
-      end_at: t.scheduled_end,
-    })),
-  ]
-  const laidOut = layoutEvents(items, dayStart)
 
   return (
     <div className="dt">
@@ -108,32 +81,19 @@ export default function DayTimeline({
             ))}
           </div>
 
-          <div className="cal-col is-today dt-col" onClick={onGridClick}>
-            {HOURS.map((h) => (
-              <div className="cal-hour-cell" key={h} />
-            ))}
-
-            {laidOut.map((it) => {
-              const dragging = drag.preview?.id === it.ev.id
-              return (
-                <EventBlock
-                  key={it.ev.kind + ':' + it.ev.id}
-                  ev={it.ev}
-                  cat={it.ev.category_id ? catById.get(it.ev.category_id) : null}
-                  top={dragging ? drag.preview.top : it.top}
-                  height={dragging ? drag.preview.height : it.height}
-                  col={dragging ? 0 : it.col}
-                  cols={dragging ? 1 : it.cols}
-                  dragging={dragging}
-                  removing={dragging && drag.preview.removing}
-                  handlers={drag.bind(it.ev)}
-                  onUnschedule={() => onUnscheduleTask(it.ev.id)}
-                />
-              )
-            })}
-
-            <NowLine />
-          </div>
+          <DayColumn
+            events={events}
+            scheduledTasks={scheduledTasks}
+            cats={cats}
+            dayStart={dayStart}
+            showNow
+            className="is-today dt-col"
+            interactive
+            onColClick={onColClick}
+            bind={drag.bind}
+            preview={drag.preview}
+            onUnscheduleTask={onUnscheduleTask}
+          />
         </div>
       </div>
 
