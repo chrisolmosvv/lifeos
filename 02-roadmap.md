@@ -96,7 +96,15 @@ nudge + a suggestion to fill a gap.
   groups stated plainly, no dedupe across groups. "Today" = the Europe/Amsterdam day,
   via a new shared `_shared/datetime.ts` (same definition capture uses). No AI, no
   schedule, no DB change. (Owner verifies each line against the app.)
-- ⬜ **6c — Gemini writes the brief in real words** (warm plain-English message).
+- ✅ **6c — Gemini writes the brief in real words** (voice, no schedule). The SAME
+  verified 6b facts are handed to Gemini, which writes them as a short, warm-but-
+  restrained morning message in the "quiet broadsheet" voice (sentence case, no hype,
+  no emoji, ~2-4 sentences). Gemini only rewrites the supplied facts (invents/drops
+  nothing; days-overdue precomputed so it never does date math). If Gemini fails for
+  any reason it falls back to the plain 6b checklist — never silent. Reuses the
+  existing GEMINI_API_KEY + gemini-3.1-flash-lite, temp 0. Read-only, no DB change.
+  (Owner verifies the facts match each time.)
+- ⬜ **6d — the anti-staleness brain** (stale-item nudges + a fill-the-gap suggestion).
 
 ## ⬜ Phase 7 — The redesign (look & feel pass)
 The full UX/UI pass once the data foundation and core flows are real. Bring every
@@ -120,6 +128,19 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 6, Piece 6c: Gemini writes the brief in real words (voice).**
+  The brief reads the day exactly as 6b (verified, unchanged), then hands those SAME
+  facts to Gemini, which writes a short, warm-but-restrained morning message in the
+  "quiet broadsheet" voice (sentence case, plain verbs, no hype/emoji/exclamations,
+  ~2-4 sentences). Gemini may ONLY rewrite the supplied facts — invents/drops nothing;
+  days-overdue is precomputed so it never does date math; temp 0. Crucially it FALLS
+  BACK to the plain 6b checklist on any Gemini failure (missing key / error / 429 / junk)
+  — never silent, never crashes. Reuses the existing GEMINI_API_KEY + gemini-3.1-flash-
+  lite (data->words, the opposite of capture). New brief/write.ts; day.ts split into
+  gather/format/facts. Still read-only, no DB/schema/src change; brief redeployed
+  private (anonymous → 401). **Owner verifies on phone**: text "brief", check every fact
+  matches the real day; text a few times (facts stay correct, wording may vary); "pay
+  rent friday" still captured. Phase 6 NOT done. NEXT: 6d — the anti-staleness brain.
 - **2026-06-22 — Phase 6, Piece 6b: the brief reads my real day (plain text, no AI).**
   The `brief` function now reads my real data today (READ-ONLY, every query filtered
   to my user_id) and sends a deliberately robotic, rule-built summary: EVENTS TODAY

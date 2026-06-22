@@ -9,6 +9,27 @@
 
 ---
 
+- **Gemini writes the brief from the verified facts, in the "quiet broadsheet"
+  voice; any AI failure falls back to the plain checklist — never silent (Phase 6,
+  Piece 6c).** The brief reads the day exactly as 6b (the verified source of truth),
+  then hands those SAME facts to Gemini to REWRITE in real words. **Direction:** this
+  is data -> words, the opposite of Phase 5 capture (words -> data). **Voice**
+  (06-design.md "Voice & words"): warm but restrained — a columnist, not a
+  cheerleader; sentence case, plain verbs, ~2-4 short sentences, no hype, no emoji, no
+  exclamation marks (a tiny post-filter also strips any stray "!"). **Truthfulness:**
+  the prompt forbids inventing/adding/dropping/guessing any item; Gemini may only
+  rephrase what's supplied; empty groups are stated plainly in the facts so it can't
+  imply an item; the days-overdue count is PRECOMPUTED and passed in, so Gemini never
+  does date math; temperature 0. **Reuse:** same GEMINI_API_KEY secret and same model
+  string (gemini-3.1-flash-lite) as capture. **FALL BACK, NEVER GO SILENT (the key
+  rule):** if Gemini is missing, errors, returns junk/empty, or hits its free-tier
+  limit (429) / stays down after 503 retries, the brief sends the plain 6b checklist
+  instead — the owner ALWAYS gets the day; the function never crashes and never sends
+  nothing (a silent brief is the worst outcome — see Phase 6's plan). Still read-only,
+  free tier, no schedule, no DB change. Trade-off: wording varies run to run (only the
+  facts must hold) and the brief depends on a model call — both acceptable because the
+  exact checklist is always the safety net.
+
 - **The 6b brief is a robotic, rule-built read of the day — no AI, read-only, no
   dedupe (Phase 6, Piece 6b).** Before Gemini ever touches the brief, the owner must
   be able to trust the READING. So 6b builds the summary by plain rules and the owner

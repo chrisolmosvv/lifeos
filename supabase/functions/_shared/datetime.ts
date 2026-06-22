@@ -53,6 +53,14 @@ export function localToUtc(date: string, time: string): Date {
   return new Date(utc);
 }
 
+// Whole days from one calendar date to another (toYmd - fromYmd). Noon-UTC on both
+// sides cancels any DST hour so the difference is a clean day count.
+export function daysBetweenYMD(fromYmd: string, toYmd: string): number {
+  const a = new Date(`${fromYmd}T12:00:00Z`).getTime();
+  const b = new Date(`${toYmd}T12:00:00Z`).getTime();
+  return Math.round((b - a) / 86400000);
+}
+
 // A UTC instant -> a short local clock label, e.g. "2:00pm" (Europe/Amsterdam).
 export function clockLabel(iso: string): string {
   const d = new Date(iso);

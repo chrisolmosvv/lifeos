@@ -35,6 +35,67 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 6 (Piece 6c) — Gemini writes the brief in real words (voice, no schedule)
+WHAT CHANGED:
+- The brief now READS the day exactly as 6b did (unchanged, verified source of
+  truth), then hands those SAME facts to Gemini, which writes them as a short,
+  warm-but-restrained morning message in the "quiet broadsheet" voice (06-design.md
+  "Voice & words"): sentence case, plain verbs, ~2-4 short sentences, no hype, no
+  emoji, no exclamation marks. The bulleted checklist is no longer what I normally
+  receive — I get real words.
+- Gemini ONLY rewrites the supplied facts — it must not invent, add, drop, or guess
+  any item. The facts handed over are the exact 6b groups (events + time-blocked
+  tasks, Today bucket, due today, overdue) with empty groups stated plainly and the
+  days-overdue count PRECOMPUTED (so Gemini never does date math). Temperature 0 for
+  steadiness; same Europe/Amsterdam "today".
+- FALL BACK, NEVER SILENT: if Gemini is missing/errors/returns junk/hits its free
+  limit (429) or has high demand (503 after retries), the brief sends the plain 6b
+  checklist instead — so I ALWAYS get my day. It never crashes and never sends nothing.
+- Reuses the EXISTING Gemini setup: same GEMINI_API_KEY secret, same model string
+  (gemini-3.1-flash-lite). This is the OPPOSITE direction from capture: data -> words.
+
+FILES TOUCHED: supabase/functions/brief/index.ts,
+supabase/functions/brief/day.ts (split: gatherDay + formatChecklist + factsForGemini),
+supabase/functions/brief/write.ts (new — the Gemini writer + fallback),
+supabase/functions/_shared/datetime.ts (added daysBetweenYMD),
+02-roadmap.md, 03-decisions.md, 04-handoff-log.md
+
+SAFETY / RLS: still READ-ONLY — only SELECTs, every read filtered to the owner's
+user_id; no new columns, no schema change, db/ untouched. No src/ change → no Vercel
+redeploy. `brief` redeployed PRIVATE (anonymous POST → 401 confirmed). The telegram
+webhook + capture are untouched (telegram NOT redeployed; still 401 without its secret).
+Free Gemini tier only — same task/event data class as Phase 5, no new sensitive data,
+no paid key.
+
+HOW TO VERIFY (from your phone):
+1. Text Marty "brief" → you get a short, warm, plain-English morning message (not a
+   bullet list). Check every FACT against your real day / the 6b facts you already
+   trust: nothing invented, nothing missing, right times, right groups.
+2. Text "brief" a few times → the facts stay correct each time (wording may vary a
+   little; the day must not change).
+3. Text a normal item like "pay rent friday" → still captured as a task as before.
+(If you ever get the plain bulleted checklist instead of prose, that's the safety net
+— Gemini was briefly unavailable; the facts are still 100% correct.)
+
+KNOWN GAPS / RISKS:
+- Wording varies run to run (that's fine — only the facts must hold). If a phrasing
+  ever drifts from the facts, tell me the line; the fallback is always exact.
+- Still on-demand only ("brief") — the 7am schedule is a later piece.
+- No prioritising, no "stale" nudges, no gap suggestion yet — that's 6d.
+- Duplication still flagged from 6b: telegram keeps its own copy of the timezone
+  helpers and its own GEMINI_MODEL const; the brief uses the shared/its own copies.
+  Consolidating is a safe later cleanup (left so capture stays byte-for-byte unchanged).
+
+NEXT: Phase 6, Piece 6d — the anti-staleness brain (smarter selection: stale-item
+nudges + a suggestion to fill a gap in the day).
+
+FOR THE CHECKER: confirm Gemini is told to use ONLY the supplied facts (no inventing/
+dropping), that ANY Gemini failure (missing key, !ok, 429, junk, empty, exception)
+returns the plain checklist (never silent, never crash), that the read step is
+unchanged and READ-ONLY (owner-filtered, no writes/schema change), and that `brief`
+is still private (401 anonymously). Source: supabase/functions/brief/{write.ts,
+day.ts, index.ts}.
+
 ### 2026-06-22 — Phase 6 (Piece 6b) — The brief reads my real day (plain text, no AI)
 WHAT CHANGED:
 - The `brief` function no longer sends a fixed line — it now reads MY real data
