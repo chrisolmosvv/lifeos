@@ -4,6 +4,7 @@ import NowLine from './NowLine'
 import EventBlock from './EventBlock'
 import EventPanel from './EventPanel'
 import { layoutEvents } from './eventLayout'
+import { useEventDrag } from './useEventDrag'
 import './dayTimeline.css'
 
 // "The Day" column: a 24-hour grid with today's events as blocks and the
@@ -22,6 +23,14 @@ export default function DayTimeline({
 }) {
   const scrollRef = useRef(null)
   const [panel, setPanel] = useState(null) // null | {mode, event?, start?, end?}
+
+  // Drag-to-move / drag-to-resize. A plain tap still opens the edit panel.
+  const drag = useEventDrag({
+    today,
+    scrollRef,
+    onSave: onSaveEvent,
+    onSelect: (ev) => setPanel({ mode: 'edit', event: ev }),
+  })
 
   // Open centred around now, or at ~7am if now is outside working hours.
   useEffect(() => {
@@ -86,18 +95,22 @@ export default function DayTimeline({
               <div className="cal-hour-cell" key={h} />
             ))}
 
-            {laidOut.map((it) => (
-              <EventBlock
-                key={it.ev.id}
-                ev={it.ev}
-                cat={it.ev.category_id ? catById.get(it.ev.category_id) : null}
-                top={it.top}
-                height={it.height}
-                col={it.col}
-                cols={it.cols}
-                onSelect={(ev) => setPanel({ mode: 'edit', event: ev })}
-              />
-            ))}
+            {laidOut.map((it) => {
+              const dragging = drag.preview?.id === it.ev.id
+              return (
+                <EventBlock
+                  key={it.ev.id}
+                  ev={it.ev}
+                  cat={it.ev.category_id ? catById.get(it.ev.category_id) : null}
+                  top={dragging ? drag.preview.top : it.top}
+                  height={dragging ? drag.preview.height : it.height}
+                  col={dragging ? 0 : it.col}
+                  cols={dragging ? 1 : it.cols}
+                  dragging={dragging}
+                  handlers={drag.bind(it.ev)}
+                />
+              )
+            })}
 
             <NowLine />
           </div>

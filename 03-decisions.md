@@ -9,6 +9,22 @@
 
 ---
 
+- **Drag on the day column: 15-minute snap + a 4px tap-vs-drag threshold (Phase
+  4, Piece 4d).** Events can be dragged to move (duration fixed) or resized by
+  their top/bottom edge, snapping to **15-minute** steps live as they move (the
+  owner's choice — matches Apple Calendar and most people's mental model). **A
+  press only becomes a drag once the pointer crosses ~4px**; under that it's a
+  tap. **Why the threshold:** selection (open the edit panel) and empty-slot
+  create are taps — a zero-distance "drag" must not eat them. Implementation keeps
+  selection on the native `click` and only swallows the click that follows a real
+  drag, so taps (mouse and touch) still open the panel. **Resize stops at a 1-step
+  (15-min) minimum duration**, so an event can never be dragged to end before it
+  starts — the DB backwards-time guard can't even be reached. **Touch starts no
+  drag** (keeps native scroll/tap on phones); mouse only. Gesture logic is
+  isolated in `src/useEventDrag.js` (apart from the render) so a bug stays
+  contained. Trade-off: touch users can't drag yet (panel still edits); fine —
+  touch-drag isn't this piece's target.
+
 - **Event create/edit uses a calm OVERLAY panel, not an inline expand (Phase 4,
   Piece 4c).** The task edit panel (2a) inline-expands within a list row, but a
   time grid can't inline-expand a block without shoving the other events out of

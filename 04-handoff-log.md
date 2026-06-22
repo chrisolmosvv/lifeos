@@ -35,6 +35,71 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 (Piece 4d) — Drag to move / resize events on the day column
+WHAT CHANGED (UI only — NO database/schema/RLS change; drag writes only start_at/end_at):
+- **Drag an event block up/down to move it** (duration stays fixed); **drag its
+  top edge to change the start, its bottom edge to change the end** (resize).
+- **Snaps to 15-minute steps live** as you drag — the block follows the pointer
+  (snapped), so what you see is where it lands. Smooth, no bounce.
+- **On release it saves** the new start_at/end_at to the database; the grid
+  re-lays-out (so a drag into an overlap splits side by side as in 4b).
+- **Taps are preserved** — the careful bit. A press only becomes a drag past a
+  ~4px threshold; under that it's a tap: a plain tap on a block still opens the
+  edit panel (4c), a tap on an empty slot still creates an event (4c).
+- **Resize can't go backwards** — it stops at a 15-minute minimum duration, so an
+  event's end can never cross its start (the DB guard isn't even reached).
+- **Auto-scrolls** the day column when you drag near its top/bottom edge; the page
+  itself never scrolls.
+- Gesture logic is isolated in a small hook (`useEventDrag.js`), separate from the
+  render.
+
+WHAT TOUCH DOES (unchanged — touch-drag is deliberately NOT built this piece):
+- On touch screens, dragging an event does nothing (touch never starts a drag);
+  the column scrolls and **tap-to-edit / tap-to-create still work exactly as
+  before**. Touch-drag polish is a later concern, not this piece's target.
+
+FILES TOUCHED:
+- New: `src/useEventDrag.js` (the drag hook — pointer handling, snap, threshold)
+- Edited: `src/EventBlock.jsx` (spreads the drag handlers, adds edge handles),
+  `src/DayTimeline.jsx` (uses the hook, live preview per block),
+  `src/dayTimeline.css` (grab cursor, resize handles, dragging state)
+- NOT touched: `db/` (no schema/RLS change), the event panel, tasks code.
+
+HOW TO VERIFY (on your Mac, with a mouse/trackpad — no SQL):
+1. `npm run dev`, log in → **Today**. Have a few events on the grid (add via tap /
+   "+ Add event" if needed).
+2. **Move:** press the middle of an event and drag up/down → it follows in
+   15-min snaps. Release → it stays. **Reload** → it's at the new time.
+3. **Resize:** drag the **top edge** → the start changes; drag the **bottom edge**
+   → the end changes. Release, reload → the new size persisted.
+4. **Taps still work:** a quick click on an event opens the **edit panel**; a click
+   on an **empty slot** still creates an event. (Drag didn't eat them.)
+5. **Overlap:** drag one event over another → on release they **split side by
+   side**, both readable.
+6. **No backwards:** drag the bottom edge up past the top (or the top down past the
+   bottom) → it **stops** at a 15-minute minimum; it won't invert.
+7. **Reload**, then **Settings → Log out** and back in → everything persisted and
+   only yours.
+
+KNOWN GAPS / RISKS:
+- **Touch-drag isn't built** (mouse/trackpad only) — tap still works on touch.
+- The time label inside a block shows the saved start until you release (the
+  block's position is the live preview); updates on save.
+- **Task-scheduling onto the grid is still later (4e)** and **the week view (4f/4g)**
+  — this is events-only, day-column-only, move + resize only. No recurrence,
+  no multi-day drag.
+
+NEXT: Phase 4, Piece 4e — drag-to-schedule tasks onto the day grid.
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` is untouched; a drag writes only `start_at` /
+  `end_at` on existing columns; the four owner-only policies on `events` are intact.
+- **Tap-to-edit and tap-empty-slot-to-create still work** — selection stays on the
+  click; only a real drag (past the threshold) swallows the click. A press that
+  doesn't cross the threshold is a tap, not a zero-distance drag.
+- **Resize can't produce a backwards event** — clamped to a 15-minute minimum
+  duration, so end ≥ start always holds before any save.
+
 ### 2026-06-22 — Phase 4 (Piece 4c) — Add / edit / delete events on the timeline
 WHAT CHANGED (UI only — NO database/schema/RLS change; writes to existing columns):
 - **The day timeline is now editable.** Four ways in:

@@ -47,7 +47,8 @@
   min-height: 0;
 }
 
-/* An event block — paper, a hairline border, a category-coloured left rule. */
+/* An event block — paper, a hairline border, a category-coloured left rule.
+   Draggable: grab to move, the thin edge handles to resize. */
 .dt-event {
   position: absolute;
   box-sizing: border-box;
@@ -58,6 +59,29 @@
   padding: 2px 6px;
   overflow: hidden;
   z-index: 1;
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y; /* let touch scroll the column; mouse handles drag */
+}
+/* The block being dragged floats clearly above the rest, full width. */
+.dt-event.is-dragging {
+  z-index: 4;
+  cursor: grabbing;
+  box-shadow: 0 1px 0 var(--rule);
+}
+/* Thin resize zones at the top and bottom edges. */
+.dt-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7px;
+  cursor: ns-resize;
+}
+.dt-handle-top {
+  top: 0;
+}
+.dt-handle-bottom {
+  bottom: 0;
 }
 .dt-event-kicker {
   display: flex;

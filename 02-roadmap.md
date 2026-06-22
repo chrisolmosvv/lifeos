@@ -71,6 +71,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 4, Piece 4d of several: drag to move / resize events on the
+  day column.** Events can be dragged to move (duration fixed) or resized by their
+  top/bottom edge, snapping to 15-min steps live with a calm preview; on release the
+  new start/end save and the grid re-splits overlaps side by side. Taps are
+  preserved via a ~4px tap-vs-drag threshold (plain tap still opens the edit panel;
+  empty-slot tap still creates) — selection stays on the click, only a real drag
+  swallows it. Resize clamps to a 15-min minimum so an event can't end before it
+  starts (DB guard never reached). Auto-scrolls the column near its edges; page
+  never scrolls. Touch starts no drag (phone keeps tap-to-edit/create as-is). Logic
+  isolated in `useEventDrag.js`. UI only — NO schema/RLS change (writes only
+  start_at/end_at). Builds clean. **Phase 4 is NOT done — NEXT: 4e drag-to-schedule
+  tasks onto the grid; week view (4f/4g) still later.**
 - **2026-06-22 — Phase 4, Piece 4c of several: add / edit / delete events on the
   timeline.** Made the day timeline editable: tap an empty slot → new event at that
   hour (1-hour default); a quiet "+ Add event" → same panel at the next hour; tap a
