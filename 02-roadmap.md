@@ -71,6 +71,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 4, Piece 4b of several: the day-column timeline (read-only).**
+  Replaced the "The Day" placeholder on the Today page with a real 24-hour day
+  timeline for today: hour grid that scrolls internally and opens around now (~7am
+  if outside working hours), the terracotta now-line, and today's events as blocks
+  positioned by start/end with a category-coloured left rule + small-caps kicker.
+  Only today's events show; uncategorised ones get a neutral rule (no Inbox tag).
+  **Overlapping events split side-by-side** (owner's choice — decision recorded;
+  pure logic in `eventLayout.js`). Read-only — no add/edit/drag (that's 4c), and
+  time-blocked tasks deliberately not on the grid yet. UI only — NO schema/RLS
+  change (events read-only). Phone stacks with the timeline in a ~60vh scroll area;
+  not broken. Built from the owner's description (mock not in repo). Builds clean.
+  **Phase 4 is NOT done — Piece 4c (adding/editing events on the timeline) is next.**
 - **2026-06-22 — Phase 4, Piece 4a of several: the events spine table + bare-bones
   verify UI.** Created the `events` table in Supabase (`db/04_events.sql`) to its
   FULL architecture shape so the 4b timeline + future Apple-sync bolt on without a

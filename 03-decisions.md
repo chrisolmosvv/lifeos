@@ -9,6 +9,18 @@
 
 ---
 
+- **Overlapping events split side-by-side on the day timeline (Phase 4, Piece
+  4b).** When events overlap in time, the lane splits into columns: each event
+  takes the first column where it doesn't collide, and a cluster's column count
+  is the most that overlap at once — so both stay readable and neither is hidden.
+  **Why (the owner's pick):** least information lost — you can always see every
+  event, just narrower, the way Apple/Google Calendar handle a busy hour. The
+  alternatives (stack/hide all but the top one; show a "+N more" pill) hide
+  events, which fights "nothing forgotten." **Trade-off:** a very crowded hour
+  makes each block narrow; acceptable, and tunable later. Logic lives in the pure
+  `src/eventLayout.js` (no React) so it's easy to reason about. Read-only this
+  piece — no drag/resize.
+
 - **`events` table — the third spine table (Phase 4, Piece 4a).** Built now to
   its FULL architecture-doc shape so the Phase-4b timeline and future Apple
   Calendar sync bolt on with NO rebuild, even though this piece's UI only proves

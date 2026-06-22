@@ -35,6 +35,78 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 (Piece 4b) — The day-column timeline (read-only)
+WHAT CHANGED (UI only — NO database/schema/RLS change; pure read + render):
+- **Replaced the "The Day" placeholder** on the Today page with a real **24-hour
+  day timeline** for today, matching the week-shell's hour range and behaviour:
+  it scrolls inside its own column and opens **centred around now** (or ~7am if
+  now is outside working hours). The page itself does not scroll (zero-scroll).
+- **The terracotta now-line** (the existing `NowLine`) shows the current time.
+- **Today's events render as blocks**, positioned by start_at/end_at: paper
+  background, hairline border, a **category-coloured left rule**, a small-caps
+  **category kicker + start time**, and the title. Uses the existing palette
+  colours. **Uncategorised events get a calm neutral rule and no category kicker**
+  — never an "Inbox" tag (events don't use Inbox).
+- **Only today's events appear** — the load query fetches just events whose
+  start is within today's local bounds; other days never show here.
+- **Overlap = side by side** (your choice): overlapping events split the lane
+  into columns so each is visible but narrower; nothing is hidden. (Decision
+  recorded; logic is in the pure `src/eventLayout.js`.)
+- **Read-only:** tapping an event does nothing this piece (editing is 4c). Events
+  are still managed only via the 4a verify UI in Settings.
+
+WHAT THE PHONE DOES (kept working, not polished — desktop is this piece's target):
+- The Today page stacks to one column and the whole page scrolls; the day
+  timeline sits on top in a fixed ~60vh scroll area (so it doesn't collapse),
+  with the task blocks below. The standalone Calendar route's phone day view is
+  unchanged. Full phone-calendar polish is a later piece.
+
+FILES TOUCHED:
+- New: `src/DayTimeline.jsx`, `src/EventBlock.jsx`, `src/eventLayout.js` (pure
+  overlap packing), `src/dayTimeline.css`
+- Edited: `src/Today.jsx` (loads today's events, renders the timeline),
+  `src/today.css` (dropped the dead placeholder styles; phone timeline height)
+- NOT touched: `db/` (no schema/RLS change), the events verify UI, tasks code.
+
+HOW TO VERIFY (on your Mac — no SQL):
+1. `npm run dev`, open http://localhost:5173, log in. Go to **Settings → Events
+   (verify)** and add a few events **for today** at different times, plus **one
+   for tomorrow**. Make **two of today's overlap** (e.g. 14:00–15:00 and
+   14:30–15:30). Add **one uncategorised** (Category = Uncategorised).
+2. Click **Today**. On the left "The Day" column you should see:
+   - the hour grid, opened around the current time, with the **terracotta
+     now-line**;
+   - today's events as blocks at the right times, each with its **category colour**
+     on the left rule + a small-caps kicker;
+   - the **two overlapping events side by side**, both readable, neither hidden;
+   - the **uncategorised event neutral** (grey rule, no category kicker);
+   - the **tomorrow event does NOT appear**.
+3. **Reload** (Cmd-R) → it all renders again from the database.
+4. (Optional) Resize the window narrow / open on a phone → the page stacks, the
+   timeline shows in a scroll area on top, task blocks below — nothing breaks.
+
+KNOWN GAPS / RISKS:
+- **Time-blocked tasks are deliberately NOT on the grid yet** (the dotted-task
+  block in the mock) — nothing can schedule a task until the drag-to-schedule
+  piece; this is events-only for now.
+- No add/edit/delete on the timeline (read-only — that's 4c); no recurrence,
+  quiet-hours collapsing, week view, or drag.
+- Multi-day events: only events whose START is today show here (kept simple).
+- Built from your description + the week-shell conventions (the mock file still
+  isn't in the repo) — compare to your mock and I'll tune spacing/type.
+
+NEXT: Phase 4, Piece 4c — adding / editing / deleting events on the timeline.
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` is untouched; this piece only READS the events
+  table (owner-only RLS still applies). No writes from the timeline.
+- **Only today's events render** — fetched with `start_at` ≥ today 00:00 and <
+  tomorrow 00:00 (local); other days can't appear.
+- **Overlap splits side-by-side** (see `eventLayout.js`) — each event gets its own
+  column; neither is hidden or covered.
+- **Uncategorised events show neutral** — a grey left rule and no category kicker,
+  never an "Inbox" tag.
+
 ### 2026-06-22 — Phase 4 (Piece 4a) — Events spine table + bare-bones verify UI
 WHAT CHANGED:
 - **New `events` table in Supabase**, built to the FULL architecture shape so the

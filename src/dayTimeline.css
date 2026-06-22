@@ -1,0 +1,54 @@
+/* "The Day" timeline — reuses the calendar grid bits (cal-times, cal-col,
+   cal-hour-cell, now-line from calendar.css). This file adds the scroll frame
+   and the event blocks. The column scrolls internally; the page does not. */
+
+.dt-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.dt-grid {
+  display: flex;
+  position: relative;
+}
+/* The day column carries the absolutely-positioned event blocks. */
+.dt-col {
+  min-height: 0;
+}
+
+/* An event block — paper, a hairline border, a category-coloured left rule. */
+.dt-event {
+  position: absolute;
+  box-sizing: border-box;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule);
+  border-radius: 4px;
+  padding: 2px 6px;
+  overflow: hidden;
+  z-index: 1;
+}
+.dt-event-kicker {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+.dt-event-cat {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+.dt-event-time {
+  font-size: 0.62rem;
+  color: var(--ink-muted);
+}
+.dt-event-title {
+  font-size: 0.8rem;
+  line-height: 1.2;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

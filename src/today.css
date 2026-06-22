@@ -27,34 +27,14 @@
   border-bottom: 1px solid var(--ink);
 }
 
-/* Left: The Day — the approved two-column shape kept, with a calm invitation
-   standing in until events arrive in Phase 4. */
+/* Left: The Day — the two-column shape, now holding the read-only day timeline
+   (the grid + event blocks live in DayTimeline / dayTimeline.css). */
 .today-day {
   display: flex;
   flex-direction: column;
   min-height: 0;
   border-right: 1px solid var(--rule);
-  padding-right: 2.5rem;
-}
-.today-day-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-}
-.today-day-lead {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  line-height: 1.4;
-  color: var(--ink);
-  margin: 0;
-}
-.today-day-sub {
-  margin: 0.5rem 0 0;
-  color: var(--ink-muted);
-  font-size: 0.9rem;
+  padding-right: 1.5rem;
 }
 
 /* Right: the task blocks, stacked. This column scrolls if the two blocks
@@ -131,8 +111,11 @@
     padding-right: 0;
     padding-bottom: 1.25rem;
   }
-  .today-day-body {
-    justify-content: flex-start;
+  /* Give the timeline a real height on phone so it doesn't collapse inside the
+     stacked, page-scrolling layout. */
+  .dt-scroll {
+    height: 60vh;
+    flex: none;
   }
   .today-right {
     overflow: visible;

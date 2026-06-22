@@ -3,21 +3,33 @@ import { supabase } from './supabaseClient'
 import { orderedTree, isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import TaskBlock from './TaskBlock'
+import DayTimeline from './DayTimeline'
 import './today.css'
 
-// The Today home — the front page. Two columns: "The Day" on the left (a
-// Phase-4 placeholder until events exist) and the task blocks on the right,
-// split by time bucket: Today and This Week. (Someday isn't shown here.)
-// RLS makes every query owner-only; no schema change — the columns all exist.
+// The Today home — the front page. Two columns: "The Day" timeline on the left
+// (today's events, read-only) and the task blocks on the right, split by time
+// bucket: Today and This Week. (Someday isn't shown here.) RLS makes every query
+// owner-only; no schema change — everything here just reads existing tables.
 export default function Today() {
+  const today = new Date()
   const [tasks, setTasks] = useState(null) // null = still loading
   const [cats, setCats] = useState([])
+  const [events, setEvents] = useState([]) // today's events only
   const [expandedId, setExpandedId] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
   async function load() {
-    const [taskRes, catRes] = await Promise.all([
+    // Today's bounds (local), so only today's events are fetched/rendered.
+    const dayStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    )
+    const dayEnd = new Date(dayStart)
+    dayEnd.setDate(dayEnd.getDate() + 1)
+
+    const [taskRes, catRes, evRes] = await Promise.all([
       supabase
         .from('tasks')
         .select(
@@ -29,6 +41,12 @@ export default function Today() {
         .select('id, name, parent_id, color, sort_order, created_at')
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true }),
+      supabase
+        .from('events')
+        .select('id, title, start_at, end_at, category_id')
+        .gte('start_at', dayStart.toISOString())
+        .lt('start_at', dayEnd.toISOString())
+        .order('start_at', { ascending: true }),
     ])
     if (taskRes.error) {
       setError(friendly(taskRes.error))
@@ -38,6 +56,7 @@ export default function Today() {
     setError('')
     setTasks(taskRes.data)
     setCats(catRes.data || [])
+    setEvents(evRes.data || [])
   }
 
   useEffect(() => {
@@ -100,12 +119,7 @@ export default function Today() {
     <div className="today">
       <section className="today-day">
         <h2 className="today-day-title">The Day</h2>
-        <div className="today-day-body">
-          <p className="today-day-lead">Your day’s timeline arrives with events.</p>
-          <p className="today-day-sub">
-            For now, here’s what you’re carrying — over on the right.
-          </p>
-        </div>
+        <DayTimeline events={events} cats={cats} today={today} />
       </section>
 
       <div className="today-right">
