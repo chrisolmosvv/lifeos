@@ -4,14 +4,19 @@
 // Piece 5b (the gate): only the owner gets a response. Any other sender is read,
 // silently ignored (no reply), and acked with 200 so Telegram stops retrying.
 // Piece 5c (understanding): the owner's message goes to Gemini, which reads it
-// into structured fields; Marty replies with what he understood. SAVES NOTHING.
+// into structured fields.
+// Piece 5d (saving): a confident read is written as a real task/event owned by the
+// owner, and Marty confirms exactly what was saved. An unsure read saves nothing.
 //
 // Secrets live in Supabase's secret store, never in this file or the repo:
 //   TELEGRAM_BOT_TOKEN — the bot's key
 //   OWNER_CHAT_ID      — the only chat allowed a reply
 //   GEMINI_API_KEY     — the AI key (read in ./understand.ts)
+//   OWNER_USER_ID      — the owner's auth id, set on every saved row (./save.ts)
+// (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are auto-injected by the platform.)
 
-import { understand, formatReply } from "./understand.ts";
+import { understand, isUnsure, unsureReply } from "./understand.ts";
+import { saveAndConfirm } from "./save.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const OWNER_CHAT_ID = Deno.env.get("OWNER_CHAT_ID");
@@ -41,18 +46,20 @@ Deno.serve(async (req) => {
       return ack("ignored");
     }
 
-    // --- The owner: read the message with Gemini and report (no saving). ---
+    // --- The owner: read the message with Gemini, then save and confirm. ---
     const text = message?.text;
     if (typeof text !== "string") return ack(); // e.g. a sticker — just ack.
 
     const result = await understand(text);
     let reply: string;
-    if (result.kind === "ok") {
-      reply = formatReply(result.value);
-    } else if (result.kind === "rate_limit") {
+    if (result.kind === "rate_limit") {
       reply = "I've hit my AI limit for the moment — give it a minute and send it again. (Nothing saved.)";
-    } else {
+    } else if (result.kind === "error") {
       reply = "I couldn't read that one just now — mind trying again? (Nothing saved.)";
+    } else if (isUnsure(result.value)) {
+      reply = unsureReply(result.value); // bad/gibberish read → save nothing
+    } else {
+      reply = await saveAndConfirm(result.value); // confident read → write the row
     }
 
     await sendMessage(chatId, reply);

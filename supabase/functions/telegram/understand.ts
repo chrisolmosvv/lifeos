@@ -6,8 +6,8 @@
 // GEMINI_API_KEY lives in Supabase's secret store, never in this file or the repo.
 
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
-const GEMINI_MODEL = "gemini-2.5-flash-lite"; // Flash-lite: free tier, higher daily limit
-const TZ = "Europe/Amsterdam"; // all date/time reasoning is in the owner's local time
+const GEMINI_MODEL = "gemini-3.1-flash-lite"; // free tier: 500 req/day, 15/min — highest free daily limit
+export const TZ = "Europe/Amsterdam"; // all date/time reasoning is in the owner's local time
 
 export interface Understood {
   type: "task" | "event" | "unknown";
@@ -112,27 +112,26 @@ export async function understand(text: string): Promise<ReadResult> {
 
 // "2026-06-25" -> "Thu 25 Jun" (in Europe/Amsterdam). Noon-UTC avoids any
 // timezone date-shift when formatting a bare calendar date.
-function humanDate(ymd: string): string {
+export function humanDate(ymd: string): string {
   const d = new Date(`${ymd}T12:00:00Z`);
   if (isNaN(d.getTime())) return ymd;
   return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "short", day: "numeric", month: "short" }).format(d);
 }
 
-// Build Marty's plain-English "what I understood" reply. Always ends with the
-// "(Not saved yet.)" line so the owner knows nothing was stored.
-export function formatReply(u: Understood): string {
-  const unsure = u.needs_clarification || u.type === "unknown" || !u.title.trim();
-  if (unsure) {
-    const why = u.note?.trim() ? ` (${u.note.trim()})` : "";
-    return `I'm not sure I understood that — could you rephrase?${why}\n(Nothing saved.)`;
-  }
+// Today's date as YYYY-MM-DD in the owner's timezone (for bucket choice and as an
+// event's default date when none was stated).
+export function todayYMD(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+}
 
-  const isEvent = u.type === "event";
-  const label = isEvent ? "an EVENT" : "a TASK";
-  const when: string[] = [];
-  if (u.date) when.push(humanDate(u.date));
-  if (u.time) when.push(u.time);
-  const whenStr = when.length ? when.join(", ") : "no date";
+// Whether Gemini couldn't confidently extract a task/event — in which case we save
+// NOTHING and ask the owner to rephrase (no junk row from a bad read).
+export function isUnsure(u: Understood): boolean {
+  return u.needs_clarification || u.type === "unknown" || !u.title.trim();
+}
 
-  return `I read that as ${label}: '${u.title.trim()}', ${whenStr}.\n(Not saved yet.)`;
+// The plain-English "I didn't understand" reply (saves nothing).
+export function unsureReply(u: Understood): string {
+  const why = u.note?.trim() ? ` (${u.note.trim()})` : "";
+  return `I'm not sure I understood that — could you rephrase?${why}\n(Nothing saved.)`;
 }

@@ -23,6 +23,27 @@
   be treated as dead. Trade-off: the CLI's plain `supabase login` picks the wrong account
   unless the browser is on the right one — use the access token to be sure.
 
+- **Bot-saved rows: service-role write + explicit owner user_id; mapping rules
+  (Phase 5, Piece 5d).** Marty writes a confident read straight into the spine tables,
+  matching their existing shapes exactly (no new columns, no schema change, db/
+  untouched). **Ownership / RLS:** the insert uses Supabase's service-role key
+  (auto-injected into the edge function, server-side only, never sent to a client or
+  committed) and sets `user_id = OWNER_USER_ID` (the owner's auth id, stored as a
+  secret) on every row — so each row is owned by the owner and the tables' owner-only
+  RLS policies are left UNCHANGED. We do not weaken RLS; the service-role write is
+  trusted server code, and the explicit user_id is what makes the row mine. **Mapping
+  (the owner's rules, baked in):** specific clock time → EVENT (start = the time, end
+  = +1h default, matching tap-to-create); a stated date on a TASK → `due_date` (a
+  deadline, NOT a scheduled calendar block); task bucket = 'Today' when no date or the
+  date is today, else 'This Week'; category always null (= Inbox — Marty never guesses
+  a category); tasks tagged `source='telegram'` (events have no source column).
+  **Unsure/gibberish reads save NOTHING** (no junk row from a bad read); rate-limit and
+  read errors also save nothing and say so. **Confirm-after-saving:** Marty replies
+  only after the row lands, with type/title/when/bucket-or-calendar/category so it's
+  findable. Trade-off: `source='telegram'` is a new value in the existing free-text
+  `source` column (its intended purpose — marking origin) — owner accepted; changes no
+  table meaning.
+
 - **Gemini reads messages into structured JSON; understanding is a separate piece
   from saving (Phase 5, Piece 5c).** Marty sends the owner's text + today's local
   date/time to Gemini and gets back STRUCTURED fields (type/title/date/time +
@@ -40,16 +61,20 @@
   files small. Trade-off: relies on the model for date math — accepted because the
   owner verifies the reply before anything is saved.
 
-- **Gemini model: gemini-2.5-flash-lite (Phase 5, Piece 5c).** The architecture doc
-  says "Gemini Flash, free tier." Journey: `gemini-2.0-flash`'s free tier now returns
-  `limit: 0` (unusable without billing); `gemini-2.5-flash` works but has a low free
-  **daily** request cap that this session's testing exhausted (the owner then got
-  "hit my AI limit" repeatedly, a minute apart — a per-DAY limit, not per-minute).
-  **`gemini-2.5-flash-lite`** is the settled choice: confirmed to read the samples
-  equally well, with higher free limits and a separate (fresh) quota bucket. **How to
-  change:** the model name is a single `GEMINI_MODEL` const in `understand.ts` (other
-  free options on this key: `gemini-2.5-flash`, `gemini-flash-latest`). Still free,
-  still Flash — the paid-key switch for sensitive modules remains a LATER phase.
+- **Gemini model: gemini-3.1-flash-lite — chosen for the highest free DAILY limit
+  (Phase 5, Pieces 5c→5d).** The architecture doc says "Gemini Flash, free tier."
+  Journey: `gemini-2.0-flash` free tier = `limit: 0` (unusable); `gemini-2.5-flash`
+  and `gemini-2.5-flash-lite` both work but their free tier is only **~20 requests/
+  day** (the owner's AI-Studio rate-limit dashboard showed 22/20 — exhausted, which
+  caused the "hit my AI limit" replies). **`gemini-3.1-flash-lite`** has **500 req/
+  day, 15/min** on the free tier (per that dashboard) — far more headroom — and reads
+  the samples just as well, so it's the settled choice. **Why a flash-LITE tier (not
+  full flash like 3.5-flash):** the task is simple one-line extraction (lite is
+  plenty), and full-flash free tiers carry *lower* daily caps (~20/day) that would
+  reintroduce the rate-limit problem. **How to change:** the model is a single
+  `GEMINI_MODEL` const in `understand.ts`. Still free; the paid-key switch for
+  sensitive modules remains a LATER phase. Failure handling unchanged (503 → retry
+  with backoff; 429 → "I've hit my AI limit, try again in a minute", saves nothing).
   Trade-off / failure handling: free Flash can briefly **503** ("high demand") or
   **429** (over the free per-minute/day limit). The function retries with backoff to
   ride out 503s, but treats a 429 distinctly — it stops (retrying in seconds can't help)

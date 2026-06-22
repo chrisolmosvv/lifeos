@@ -35,6 +35,68 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 5 (Piece 5d) — "Save it for real"
+WHAT CHANGED:
+- Marty now WRITES a confident read into your data and confirms exactly what
+  landed: an EVENT (start = the time, end = +1h) or a TASK (a stated date becomes
+  the due_date; no date or today → 'Today' bucket, any other date → 'This Week').
+  Bot items are uncategorised (category null = Inbox) and tagged source='telegram'.
+- An unsure/gibberish read saves NOTHING and asks you to rephrase. Rate-limit /
+  read errors also save nothing and say so.
+- New file save.ts does the DB write + rules + confirmation; understand.ts now
+  exports the reading helpers it reuses; index.ts orchestrates. No schema change,
+  no categories table touched, db/ untouched.
+- Model switched to gemini-3.1-flash-lite (free: 500 req/day, 15/min). Reason: the
+  2.5 flash + 2.5 flash-lite free tiers are only ~20 req/day and were exhausted; the
+  owner's AI-Studio rate-limit dashboard showed 3.1-flash-lite has 500/day. One-line
+  GEMINI_MODEL change.
+
+HOW THE SAVED ROW IS OWNED BY ME / RLS INTACT (per the brief):
+- The write uses Supabase's service-role key (auto-injected into the function,
+  server-side only, never sent to a client or committed) and sets user_id =
+  OWNER_USER_ID explicitly on every row, so each row belongs to me. RLS owner-only
+  policies on tasks/events are UNCHANGED — verified by reading them; this code only
+  inserts rows. OWNER_USER_ID (my auth id, af1a4adf-…) is a Supabase secret, not in
+  the repo. Confirmed live: every test row carried my user_id; app reads them via
+  RLS as mine.
+
+FILES TOUCHED: supabase/functions/telegram/{index.ts, understand.ts, save.ts (new)},
+02-roadmap.md, 03-decisions.md, 04-handoff-log.md
+
+HOW TO VERIFY (from your phone, spacing messages a few seconds apart):
+1. "dentist Thursday 2pm" → reply "Saved an EVENT: 'dentist', Thu 25 Jun 14:00–
+   15:00, Inbox." → open app: it's on Thursday's calendar 14:00–15:00.
+2. "buy milk tomorrow" → "Saved a TASK: 'buy milk', due Tue 23 Jun, This Week,
+   Inbox." → app: task in This Week, due tomorrow.
+3. "call the plumber" → "Saved a TASK: …, no due date, Today, Inbox." → app: Today.
+4. "lunch with Mum Friday" → "Saved a TASK: …, due Fri 26 Jun, This Week, Inbox."
+5. Gibberish → "I'm not sure…", nothing saved.
+6. Reload + log out/in: items persist and are only yours.
+(I verified all of the above against the deployed function; rows were owner-stamped
+and Inbox, then I deleted my test rows.)
+
+KNOWN GAPS / RISKS:
+- TRUST/SECURITY (for 5e): the function is public (--no-verify-jwt) and the owner
+  gate trusts the chat id in the (forgeable) request body. Anyone who knew the
+  function URL AND your chat id could POST a fake update and inject a row. Fix in
+  5e: set a Telegram webhook secret_token and verify the X-Telegram-Bot-Api-Secret-
+  Token header so only real Telegram calls are accepted. (No undo yet either —
+  that's 5e too.)
+- One message = one item still (multi-item not parsed).
+- TRANSPARENCY: while testing cleanup I briefly deleted two of your pre-existing
+  events ('test','test2') with an over-broad delete, then immediately restored them
+  with their original ids/times. They are intact now. Lesson applied: test cleanup
+  now deletes ONLY bot-created rows, matched precisely (never "most recent N").
+- Free-tier limits are modest (500/day now); heavy bursts can still 429 → "hit my
+  AI limit" (handled, just retry later).
+
+NEXT: 5e — graceful misses + undo (and lock the endpoint to real Telegram calls).
+
+FOR THE CHECKER: confirm rows match db/03_tasks.sql + db/04_events.sql exactly (no
+new columns), user_id is set to the owner on every insert, RLS policies are
+unchanged, unsure reads save nothing, and no secret/key is in the repo. Source:
+supabase/functions/telegram/*.ts.
+
 ### 2026-06-22 — Phase 5 (Piece 5c) — "Gemini reads it" (understanding only, saves nothing)
 WHAT CHANGED:
 - Marty now sends your message (plus today's local date/time) to Gemini, which

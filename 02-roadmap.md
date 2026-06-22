@@ -59,8 +59,16 @@ correctly → replies telling me exactly what it did and where.
   structured fields (type/title/date/time/unsure); Marty replies with what he
   understood and "(Not saved yet.)". Rules baked in: Europe/Amsterdam, next-upcoming
   day, clock-time ⇒ event else task. NOTHING saved. Owner-gate still holds.
-- 🔨 **5d — "save it for real":** turn what Gemini understood into a real task/event
-  row in the DB, and confirm what was saved and where.
+- ✅ **5d — "save it for real".** A confident read is written as a real row: EVENT
+  (start=time, end=+1h) or TASK (stated date → due_date; bucket Today/This Week),
+  uncategorised (Inbox), source='telegram'. Written server-side with the service-role
+  key, user_id set to the owner so RLS owner-only stays intact; unsure reads save
+  nothing. Verified all cases against the deployed function. Model → gemini-3.1-flash-
+  lite (500/day) since the 2.5 flash tiers are only ~20/day.
+- 🔨 **5e — graceful misses + undo + lock to real Telegram.** Undo a save; kinder
+  handling of misreads; and verify a Telegram webhook secret so the public endpoint
+  only accepts genuine Telegram calls (today the owner-gate trusts the forgeable
+  chat id in the body). THIS is the trustworthiness piece — Phase 5 done after it.
 
 ## ⬜ Phase 6 — The 7am brief + anti-staleness engine
 Scheduler wakes the agent; Gemini writes a brief: day overview + stale-item
