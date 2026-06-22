@@ -43,7 +43,7 @@ export default function Today() {
         .order('created_at', { ascending: true }),
       supabase
         .from('events')
-        .select('id, title, start_at, end_at, category_id')
+        .select('id, title, notes, start_at, end_at, location, category_id')
         .gte('start_at', dayStart.toISOString())
         .lt('start_at', dayEnd.toISOString())
         .order('start_at', { ascending: true }),
@@ -96,6 +96,26 @@ export default function Today() {
   const onToggleExpand = (id) =>
     setExpandedId((cur) => (cur === id ? null : id))
 
+  // Event create/edit/delete (timeline panel). Returns a plain message on
+  // failure (e.g. the DB's backwards-time guard) or null on success. Writes
+  // only to existing event columns; owner-only RLS is untouched.
+  async function writeEvent(query) {
+    setBusy(true)
+    const { error } = await query
+    setBusy(false)
+    if (error) return friendlyEvent(error)
+    await load()
+    return null
+  }
+  const onSaveEvent = (id, fields) =>
+    writeEvent(
+      id
+        ? supabase.from('events').update(fields).eq('id', id)
+        : supabase.from('events').insert(fields),
+    )
+  const onDeleteEvent = (id) =>
+    writeEvent(supabase.from('events').delete().eq('id', id))
+
   const inboxColor = cats.find((c) => isInbox(c))?.color || INBOX_COLOR
   const pickable = orderedTree(cats).filter((c) => !isInbox(c))
 
@@ -119,7 +139,15 @@ export default function Today() {
     <div className="today">
       <section className="today-day">
         <h2 className="today-day-title">The Day</h2>
-        <DayTimeline events={events} cats={cats} today={today} />
+        <DayTimeline
+          events={events}
+          cats={cats}
+          today={today}
+          pickable={pickable}
+          busy={busy}
+          onSaveEvent={onSaveEvent}
+          onDeleteEvent={onDeleteEvent}
+        />
       </section>
 
       <div className="today-right">
@@ -151,5 +179,12 @@ export default function Today() {
 
 // Turn a Supabase/Postgres error into one plain sentence.
 function friendly(error) {
+  return error.message || 'Something went wrong.'
+}
+
+// Same, but maps the events' backwards-time DB guard to a calm message.
+function friendlyEvent(error) {
+  if (error.code === '23514')
+    return 'That event ends before it starts — check the times.'
   return error.message || 'Something went wrong.'
 }

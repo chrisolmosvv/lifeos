@@ -35,6 +35,78 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 (Piece 4c) — Add / edit / delete events on the timeline
+WHAT CHANGED (UI only — NO database/schema/RLS change; writes to existing columns):
+- **The day timeline is now editable.** Four ways in:
+  - **Tap an empty slot** on the grid → a new-event panel pre-filled at that hour,
+    one-hour default (e.g. tap 2pm → 2:00–3:00), adjustable.
+  - **"+ Add event"** (a quiet accent affordance, like "+ Add a task") → the same
+    panel at the next whole hour.
+  - **Tap an event block** → an edit panel: change title, notes, start, end,
+    location, and category (the same CategoryTag chip picker as tasks). Saving
+    updates the block on the grid.
+  - **Delete** from inside the edit panel → the block leaves the grid.
+- The panel is a **calm overlay** over the day column (the grid behind stays put,
+  so the page never scrolls). It reuses the task edit panel's field + chip styling
+  so it feels like the same family (decision recorded). Category chips offer
+  "Uncategorised" (neutral, not Inbox) plus your categories.
+- **DB guards respected, not re-implemented:** a backwards event (end before
+  start) is refused by the database and shown as a calm message in the panel
+  ("That event ends before it starts — check the times"). The category-on-delete
+  rule (4a) is unchanged.
+- **Retired the 4a "Events (verify)" section in Settings** — events are managed on
+  the timeline now. (`EventsVerify.jsx` + `events.css` deleted; Settings is back to
+  account + Categories.)
+
+FILES TOUCHED:
+- New: `src/EventPanel.jsx`, `src/eventPanel.css`
+- Edited: `src/DayTimeline.jsx` (tap-to-create, "+ Add event", overlay panel),
+  `src/EventBlock.jsx` (tap-to-edit), `src/Today.jsx` (event create/edit/delete
+  handlers + notes/location in the query), `src/dayTimeline.css`, `src/today.css`
+  (phone height), `src/calendar.css` (now-line click-through), `src/Settings.jsx`,
+  `src/settings.css`
+- Deleted: `src/EventsVerify.jsx`, `src/events.css`
+- NOT touched: `db/` (no schema/RLS change).
+
+HOW TO VERIFY (on your Mac — no SQL):
+1. `npm run dev`, open http://localhost:5173, log in → you land on **Today**.
+2. On "The Day" column, **tap an empty slot** (say around 2pm) → a panel opens
+   with Start 2:00 and End 3:00. Give it a title, pick a category, **Save** → the
+   block appears on the grid at 2–3pm with its category colour.
+3. Click **+ Add event** (top of the column) → the same panel opens defaulted to
+   the next hour. Add one.
+4. **Tap an existing event** → the edit panel opens; change its title, time and
+   category, **Save** → the block updates in place.
+5. Add a new event that **overlaps** an existing one → they split **side by side**,
+   both readable.
+6. Open an event, set **End before Start**, **Save** → a calm message appears and
+   it doesn't save.
+7. Open an event and click **Delete** → the block leaves the grid.
+8. **Reload** (Cmd-R) → everything is still there. **Settings → Log out**, log
+   back in → still there and only yours. (Settings no longer has an Events
+   section.)
+
+KNOWN GAPS / RISKS:
+- **No dragging to move/resize yet** — create/edit/delete is via the panel; drag
+  is the next piece.
+- **Time-blocked tasks still aren't on the grid** (the dotted-task block) — that
+  comes with drag-to-schedule.
+- `repeat_rule` stays unused in the UI (no recurrence); no quiet-hours, no week
+  view.
+- Tap-to-create rounds to the tapped hour; fine-tune the minutes in the panel.
+
+NEXT: Phase 4, next piece — likely drag-to-move/resize events on the grid.
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` is untouched; create/edit/delete write only to
+  existing event columns (title, notes, start_at, end_at, location, category_id);
+  the four owner-only policies on `events` are unchanged.
+- **The Settings verify UI is retired** (files deleted; events created only on the
+  timeline now).
+- **The DB guards still hold through the new UI:** the backwards-time CHECK refuses
+  bad saves (surfaced as a plain message), and the category set-null-on-delete rule
+  is untouched.
+
 ### 2026-06-22 — Phase 4 (Piece 4b) — The day-column timeline (read-only)
 WHAT CHANGED (UI only — NO database/schema/RLS change; pure read + render):
 - **Replaced the "The Day" placeholder** on the Today page with a real **24-hour

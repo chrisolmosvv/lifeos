@@ -1,6 +1,5 @@
 import { supabase } from './supabaseClient'
 import Categories from './Categories'
-import EventsVerify from './EventsVerify'
 import './settings.css'
 
 // The Settings page: a calm account band (who you're signed in as + Log out)
@@ -27,12 +26,6 @@ export default function Settings({ email }) {
 
       <div className="settings-cats">
         <Categories />
-      </div>
-
-      {/* Temporary: events verify UI. The real events live on the Phase-4b
-          timeline; this just proves the events table saves/reads/deletes. */}
-      <div className="settings-events">
-        <EventsVerify />
       </div>
     </div>
   )

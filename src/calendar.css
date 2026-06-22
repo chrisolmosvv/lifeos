@@ -81,6 +81,7 @@
   height: 0;
   border-top: 2px solid var(--accent);
   z-index: 2;
+  pointer-events: none; /* clicks pass through to the grid (tap-to-create) */
 }
 .now-line::before {
   content: '';

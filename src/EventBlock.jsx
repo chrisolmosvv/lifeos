@@ -5,7 +5,7 @@ import { colorHex } from './palette'
 // and the title. Uncategorised events (no category) get a calm neutral rule and
 // no category kicker — never an "Inbox" tag (events don't use Inbox).
 // Read-only: tapping does nothing this piece (editing is 4c).
-export default function EventBlock({ ev, cat, top, height, col, cols }) {
+export default function EventBlock({ ev, cat, top, height, col, cols, onSelect }) {
   const hex = cat ? colorHex(cat.color) : null
   const widthPct = 100 / cols
 
@@ -18,8 +18,17 @@ export default function EventBlock({ ev, cat, top, height, col, cols }) {
     borderLeftColor: hex || 'var(--rule)',
   }
 
+  // Tap to edit. Stop the click reaching the grid (which creates a new event).
   return (
-    <div className="dt-event" style={style} title={ev.title}>
+    <div
+      className="dt-event"
+      style={style}
+      title={ev.title}
+      onClick={(e) => {
+        e.stopPropagation()
+        onSelect(ev)
+      }}
+    >
       <div className="dt-event-kicker">
         {cat && <span className="dt-event-cat">{cat.name}</span>}
         <span className="dt-event-time tnum">{startTime(ev.start_at)}</span>

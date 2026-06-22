@@ -71,6 +71,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 4, Piece 4c of several: add / edit / delete events on the
+  timeline.** Made the day timeline editable: tap an empty slot → new event at that
+  hour (1-hour default); a quiet "+ Add event" → same panel at the next hour; tap a
+  block → edit title/notes/start/end/location/category; delete from the panel. The
+  editor is a calm overlay over the day column (grid stays put — zero-scroll), reusing
+  the task panel's field + chip styling so it's the same family. DB guards respected
+  (backwards-time refused with a plain message; category-on-delete unchanged) — not
+  re-implemented in the UI. Retired the 4a "Events (verify)" section in Settings
+  (events are managed on the timeline now; `EventsVerify` deleted). UI only — NO
+  schema/RLS change (writes to existing event columns). Builds clean. **Phase 4 is
+  NOT done — next piece is likely drag-to-move/resize; time-blocked tasks still later.**
 - **2026-06-22 — Phase 4, Piece 4b of several: the day-column timeline (read-only).**
   Replaced the "The Day" placeholder on the Today page with a real 24-hour day
   timeline for today: hour grid that scrolls internally and opens around now (~7am

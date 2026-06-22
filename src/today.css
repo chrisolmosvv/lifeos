@@ -113,9 +113,9 @@
   }
   /* Give the timeline a real height on phone so it doesn't collapse inside the
      stacked, page-scrolling layout. */
-  .dt-scroll {
-    height: 60vh;
+  .dt {
     flex: none;
+    height: 65vh;
   }
   .today-right {
     overflow: visible;

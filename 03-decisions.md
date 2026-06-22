@@ -9,6 +9,23 @@
 
 ---
 
+- **Event create/edit uses a calm OVERLAY panel, not an inline expand (Phase 4,
+  Piece 4c).** The task edit panel (2a) inline-expands within a list row, but a
+  time grid can't inline-expand a block without shoving the other events out of
+  position. So the event editor is a small overlay card floating over the day
+  column, with a faint scrim (no heavy shadow — keeps the paper feel). **Why:**
+  the grid behind stays put, so the page never scrolls (zero-scroll law), and the
+  panel still reuses the task panel's exact field + chip styling (`tasks.css`), so
+  it reads as the same family rather than a new paradigm. **Trade-off:** an
+  overlay isn't a literal inline expand; accepted because the grid demands it and
+  the prompt allowed either.
+- **Tapping a slot defaults to a one-hour event at the tapped hour (4c).** Tap
+  empty grid → a new event from that hour to +1h (e.g. tap 2pm → 2:00–3:00),
+  adjustable in the panel; "+ Add event" defaults to the next whole hour. **Why:**
+  a sensible, predictable default is calmer than making the owner set both ends
+  from scratch; one hour is the common case. Trade-off: tap rounds to the hour
+  (not the exact minute), which the panel lets you fix.
+
 - **Overlapping events split side-by-side on the day timeline (Phase 4, Piece
   4b).** When events overlap in time, the lane splits into columns: each event
   takes the first column where it doesn't collide, and a cluster's column count
