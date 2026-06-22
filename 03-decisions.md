@@ -9,6 +9,31 @@
 
 ---
 
+- **The forgotten-task nudge: code-picked, one per brief, keyed off created_at
+  because there's no updated_at (Phase 6, Piece 6d).** The brief surfaces the single
+  most-forgotten task — the whole point of the product — but stays calm: at most ONE
+  per brief, and none if nothing qualifies (silence, not invented anxiety). **The
+  rule (code-side, deterministic, verifiable):** an OPEN task in time_bucket
+  'This Week', created FORGOTTEN_DAYS (=3) or more ago, that is NOT already shown
+  elsewhere in the brief — not due today, not overdue, not scheduled onto today's
+  calendar — and of those the single oldest by created_at. **Why This Week only:**
+  Today-bucket tasks are listed every day (not forgotten); Someday is deliberately
+  out of scope (a possible later add). **"Untouched" signal = created_at ONLY:** the
+  tasks table has NO updated_at/last-modified column (confirmed against the live
+  table — only created_at, completed_at, scheduled_*, due_date). So "untouched 3+
+  days" means "created 3+ days ago and still open in This Week"; a true last-touched
+  notion would require a NEW column (a schema change) — deliberately NOT made
+  (read-only piece), flagged for a separate decision. CONSEQUENCE: editing/moving a
+  task between buckets does NOT reset the clock. **CODE picks, Gemini only phrases:**
+  the chosen task is handed to the writer as the one gentle reminder; Gemini weaves it
+  in as a single calm line using the exact title — it cannot choose, add, or invent
+  it. **In BOTH prose and the checklist fallback** ("BEEN WAITING / • <title>"), so
+  the nudge survives a Gemini outage (selection is code-side). **Temporary aid:** a
+  "brief test" trigger runs the identical brief with the threshold at 0 days, so the
+  picker can be verified on real tasks without a 3-day wait; marked temporary, may be
+  removed. Trade-off: created_at is a coarse "untouched" signal until/unless a
+  last-touched column is added — accepted to stay read-only.
+
 - **Gemini writes the brief from the verified facts, in the "quiet broadsheet"
   voice; any AI failure falls back to the plain checklist — never silent (Phase 6,
   Piece 6c).** The brief reads the day exactly as 6b (the verified source of truth),

@@ -104,7 +104,16 @@ nudge + a suggestion to fill a gap.
   any reason it falls back to the plain 6b checklist — never silent. Reuses the
   existing GEMINI_API_KEY + gemini-3.1-flash-lite, temp 0. Read-only, no DB change.
   (Owner verifies the facts match each time.)
-- ⬜ **6d — the anti-staleness brain** (stale-item nudges + a fill-the-gap suggestion).
+- ✅ **6d — the anti-staleness nudge** (the real point). The brief surfaces the ONE
+  most-forgotten task, gently, at most one per brief. CODE picks it (deterministic):
+  open task in 'This Week', created 3+ days ago (FORGOTTEN_DAYS), not already shown
+  (not due-today/overdue/scheduled-today), oldest first; none → no nudge. Gemini only
+  phrases it; it's in BOTH prose and the checklist fallback. "Untouched" = by
+  created_at only (the tasks table has no updated_at — so moving buckets doesn't reset
+  it; flagged). Temporary "brief test" trigger runs it at a 0-day threshold to verify
+  now. Read-only, no schema/column change. (Owner verifies via "brief test".)
+- ⬜ **6e — the "fill a gap in the day" suggestion.**
+- ⬜ **6f — the 7am schedule** (the alarm calls the brief automatically).
 
 ## ⬜ Phase 7 — The redesign (look & feel pass)
 The full UX/UI pass once the data foundation and core flows are real. Bring every
@@ -128,6 +137,22 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 6, Piece 6d: the anti-staleness nudge (the real point).** The
+  brief now surfaces the ONE most-forgotten task, gently, at most one per brief. The
+  CODE picks it deterministically: an open 'This Week' task created 3+ days ago
+  (FORGOTTEN_DAYS, a named constant) that ISN'T already shown (not due today, not
+  overdue, not scheduled today), oldest created_at; if none qualify, no nudge at all.
+  Gemini only phrases it (one calm "been waiting" line, exact title) and it's in BOTH
+  the prose and the plain-checklist fallback, so the rescue holds if Gemini is down.
+  KEY FACT: the tasks table has NO updated_at column (only created_at) — so "untouched"
+  = created 3+ days ago and still open in This Week; moving it between buckets does NOT
+  reset the clock. I did NOT add a column (read-only). A temporary "brief test" trigger
+  runs the same brief at a 0-day threshold so the picker fires on real tasks now (with
+  today's data it surfaces "tesrt"). brief redeployed private; telegram redeployed
+  (--no-verify-jwt) for the new trigger; gates still 401. No DB/schema/src change.
+  **Owner verifies on phone**: "brief test" → one "been waiting" line naming a real
+  oldest This Week task; check it in the app; plain "brief" → no nudge yet (correct);
+  "email landlord" still captured. Phase 6 NOT done. NEXT: 6e — the fill-a-gap suggestion.
 - **2026-06-22 — Phase 6, Piece 6c: Gemini writes the brief in real words (voice).**
   The brief reads the day exactly as 6b (verified, unchanged), then hands those SAME
   facts to Gemini, which writes a short, warm-but-restrained morning message in the

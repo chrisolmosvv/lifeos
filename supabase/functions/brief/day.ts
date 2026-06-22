@@ -1,7 +1,7 @@
-// LifeOS — the morning brief: read MY real day (Piece 6b), the verified source of
-// truth for the written brief (Piece 6c). Deliberately ROBOTIC and accurate — no
-// prioritising, no "stale" logic, no cleverness (that's 6d), and no AI (that's the
-// separate write.ts step). This module ONLY gathers and plainly formats.
+// LifeOS — the morning brief: read MY real day (Piece 6b) + pick the one forgotten
+// task (Piece 6d). The verified, deterministic source of truth for the written brief
+// (6c). Deliberately accurate — the CODE decides every fact and which task is
+// "forgotten"; Gemini (write.ts) only phrases what this module hands it.
 //
 // READ-ONLY. Uses Supabase's service-role key (auto-injected, server-side only) and
 // filters every read to user_id = OWNER_USER_ID (defence in depth — service-role
@@ -13,6 +13,11 @@
 //   3. DUE TODAY     — open tasks whose due_date is today
 //   4. OVERDUE       — open tasks whose due_date is before today
 // A task may appear in more than one group — that's fine, we do not dedupe (6d).
+//
+// THE FORGOTTEN NUDGE (6d): at most ONE per brief — the single most untouched open
+// 'This Week' task NOT already shown above. "Untouched" = created_at 3+ days ago,
+// because the tasks table has NO updated_at column (created_at is the only signal);
+// so moving a task between buckets does NOT reset its clock. See the handoff.
 
 import { addDaysYMD, clockLabel, daysBetweenYMD, humanDate, localToUtc, todayYMD } from "../_shared/datetime.ts";
 
@@ -21,8 +26,13 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const OWNER_USER_ID = Deno.env.get("OWNER_USER_ID");
 export const dayConfigured = !!(SB_URL && SERVICE_KEY && OWNER_USER_ID);
 
+// How long an open This Week task sits untouched before the brief gently surfaces it.
+// One named constant so it's easy to read/change. ("brief test" passes 0 to see it
+// fire immediately on real tasks — see index.ts.)
+export const FORGOTTEN_DAYS = 3;
+
 // One read-only PostgREST query. Returns the rows, or null on any failure (so the
-// caller can tell "empty day" apart from "couldn't read").
+// caller can tell "empty" apart from "couldn't read").
 async function select(query: string): Promise<Record<string, unknown>[] | null> {
   try {
     const res = await fetch(`${SB_URL}/rest/v1/${query}`, {
@@ -37,6 +47,18 @@ async function select(query: string): Promise<Record<string, unknown>[] | null> 
 }
 
 const owner = () => `user_id=eq.${OWNER_USER_ID}`;
+
+// Today's date + the UTC bounds of today (Europe/Amsterdam midnight→midnight),
+// shared by the day read and the forgotten-task picker so "today" means one thing.
+function todayWindow(): { today: string; startUtc: string; endUtc: string } {
+  const today = todayYMD();
+  const tomorrow = addDaysYMD(today, 1);
+  return {
+    today,
+    startUtc: localToUtc(today, "00:00").toISOString(),
+    endUtc: localToUtc(tomorrow, "00:00").toISOString(),
+  };
+}
 
 // The gathered, structured day — the single source of truth both the plain
 // checklist (the fallback) and the Gemini facts are built from.
@@ -55,10 +77,7 @@ export interface DayData {
 export async function gatherDay(): Promise<DayData | null> {
   if (!dayConfigured) return null;
 
-  const today = todayYMD();
-  const tomorrow = addDaysYMD(today, 1);
-  const startUtc = localToUtc(today, "00:00").toISOString();    // today 00:00 local
-  const endUtc = localToUtc(tomorrow, "00:00").toISOString();   // tomorrow 00:00 local
+  const { today, startUtc, endUtc } = todayWindow();
 
   const events = await select(
     `events?${owner()}&start_at=gte.${startUtc}&start_at=lt.${endUtc}&select=title,start_at&order=start_at.asc`,
@@ -102,14 +121,47 @@ export async function gatherDay(): Promise<DayData | null> {
   };
 }
 
-// The plain 6b checklist — ALSO the trustworthy fallback if Gemini fails (6c). This
-// is the exact verified format the owner already eyeballs against the app.
-export function formatChecklist(d: DayData): string {
+// Pick the ONE forgotten task (6d), or null if none qualify. Rule: an OPEN task in
+// 'This Week', created `thresholdDays`+ ago, that is NOT shown elsewhere in today's
+// brief — i.e. not due today, not overdue, not scheduled onto today's calendar. Of
+// those, the single MOST untouched (oldest created_at). Code-side and deterministic;
+// Gemini only phrases it. Returns the task's title. (thresholdDays = 0 in test mode.)
+export async function pickForgotten(thresholdDays: number): Promise<string | null> {
+  if (!dayConfigured) return null;
+  const { today, startUtc, endUtc } = todayWindow();
+  const cutoff = new Date(Date.now() - thresholdDays * 86400000).toISOString();
+
+  // Open This Week tasks created at/before the cutoff, oldest first. (created_at is
+  // the only "untouched" signal — there is no updated_at column.)
+  const rows = await select(
+    `tasks?${owner()}&status=eq.open&time_bucket=eq.This%20Week&created_at=lte.${cutoff}&select=title,due_date,scheduled_start,created_at&order=created_at.asc`,
+  );
+  if (rows === null) return null; // read failed → no nudge (the brief still sends)
+
+  const startMs = new Date(startUtc).getTime();
+  const endMs = new Date(endUtc).getTime();
+  for (const r of rows) {
+    const due = r.due_date ? String(r.due_date) : null;
+    if (due && due <= today) continue; // due today or overdue → already shown above
+    const sched = r.scheduled_start ? String(r.scheduled_start) : null;
+    if (sched) {
+      const t = new Date(sched).getTime();
+      if (t >= startMs && t < endMs) continue; // scheduled today → shown in EVENTS TODAY
+    }
+    return String(r.title); // oldest survivor = the single most untouched task
+  }
+  return null;
+}
+
+// The plain 6b checklist — ALSO the trustworthy fallback if Gemini fails (6c). When
+// a forgotten task is supplied it's appended as one calm line, so the nudge survives
+// even when Gemini is unavailable (selection is code-side, not AI).
+export function formatChecklist(d: DayData, forgotten: string | null = null): string {
   const block = (heading: string, lines: string[], empty: string) =>
     `${heading}\n${lines.length ? lines.join("\n") : empty}`;
   const eventLines = d.timed.map((x) => `• ${x.title} — ${x.clock}${x.isTask ? " (task)" : ""}`);
   const overdueLines = d.overdue.map((o) => `• ${o.title} (was due ${humanDate(o.dueYMD)})`);
-  return [
+  const parts = [
     `Your day — ${humanDate(d.today)}`,
     "",
     block("EVENTS TODAY", eventLines, "No events today."),
@@ -119,13 +171,16 @@ export function formatChecklist(d: DayData): string {
     block("DUE TODAY", d.dueToday.map((t) => `• ${t}`), "Nothing due today."),
     "",
     block("OVERDUE", overdueLines, "Nothing overdue."),
-  ].join("\n");
+  ];
+  if (forgotten) parts.push("", `BEEN WAITING\n• ${forgotten}`);
+  return parts.join("\n");
 }
 
 // The SAME facts, as a compact brief for Gemini to rewrite (6c). Day-counts are
 // precomputed so Gemini never does date math; empty groups are stated plainly so it
-// can't imply an item that isn't there. Gemini may ONLY rewrite what's here.
-export function factsForGemini(d: DayData): string {
+// can't imply an item that isn't there. A supplied forgotten task is added as the
+// single gentle reminder to weave in — Gemini phrases it, never chooses it.
+export function factsForGemini(d: DayData, forgotten: string | null = null): string {
   const calendar = d.timed.length
     ? d.timed.map((x) => `- ${x.title} at ${x.clock}${x.isTask ? " (a time-blocked task)" : ""}`).join("\n")
     : "- nothing on the calendar";
@@ -134,11 +189,13 @@ export function factsForGemini(d: DayData): string {
   const over = d.overdue.length
     ? d.overdue.map((o) => `- ${o.title} (${o.daysOverdue} day${o.daysOverdue === 1 ? "" : "s"} overdue)`).join("\n")
     : "- none";
-  return [
+  const base = [
     `Today is ${humanDate(d.today)}.`,
     `Calendar today (events and time-blocked tasks), earliest first:\n${calendar}`,
     `Tasks in today's column:\n${today}`,
     `Due today:\n${due}`,
     `Overdue:\n${over}`,
   ].join("\n\n");
+  if (!forgotten) return base;
+  return `${base}\n\nOne task that's been waiting (mention it once, gently, exactly as named): ${forgotten}`;
 }

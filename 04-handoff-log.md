@@ -35,6 +35,85 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 6 (Piece 6d) — The anti-staleness nudge (the real point)
+WHAT "FORGOTTEN / UNTOUCHED" MEANS (given the columns that actually exist):
+- I inspected the live tasks table. Its only timestamp columns are: created_at,
+  completed_at (set only when done, null while open), scheduled_start/scheduled_end,
+  due_date. There is NO updated_at / last-modified column (not in the repo, not live).
+- So "untouched for 3+ days" is defined using created_at ONLY: an OPEN task in
+  time_bucket 'This Week' whose created_at is 3+ days ago. CONSEQUENCE (stated
+  plainly): editing a task or MOVING it between buckets does NOT reset the 3-day
+  clock — there is no signal that could. Completing it removes it (no longer open).
+  I did NOT add or change any column (read-only, as instructed).
+
+WHAT CHANGED:
+- The code now picks the ONE forgotten task per brief (hard cap one) and weaves it in
+  gently. Rule: open + This Week + created 3+ days ago (FORGOTTEN_DAYS=3, a single
+  named constant) + NOT already shown elsewhere in the brief — i.e. not due today, not
+  overdue, and not scheduled onto today's calendar. Of those, the single MOST
+  untouched (oldest created_at). If none qualify, NO nudge line at all (silence is
+  correct — we never invent one).
+- The CODE selects it (deterministic, verifiable); Gemini only PHRASES it as one calm
+  line in the existing quiet-broadsheet voice, using the task exactly as named — it
+  can't choose, add, or invent the item.
+- The chosen item is put in BOTH the prose AND the plain-checklist fallback
+  ("BEEN WAITING / • <title>"), so the rescue still works if Gemini is unavailable.
+- 6b's day-read and 6c's writer + never-silent fallback are unchanged.
+
+TEMPORARY TEST AID: a second trigger "brief test" (texted to Marty) runs the IDENTICAL
+brief but with the threshold at 0 days, so the picker fires on my real This Week tasks
+immediately (no 3-day wait). Plain "brief" uses the real 3-day rule. Telegram maps
+"brief test" → the brief with { test: true }. Marked temporary in code + here; we may
+remove it later.
+
+FILES TOUCHED: supabase/functions/brief/day.ts (pickForgotten + FORGOTTEN_DAYS +
+forgotten threaded into checklist/facts), supabase/functions/brief/index.ts (read
+test flag, pick threshold, select forgotten), supabase/functions/brief/write.ts
+(prompt: weave in the one gentle reminder if given), supabase/functions/telegram/index.ts
+("brief test" trigger + pass test flag), 02-roadmap.md, 03-decisions.md, 04-handoff-log.md
+
+SAFETY / RLS: still READ-ONLY — only SELECTs, every read filtered to the owner's
+user_id; NO new columns, NO schema change, db/ untouched. No src/ change → no Vercel
+redeploy. `brief` redeployed PRIVATE (anonymous POST → 401 confirmed, even with a test
+body). telegram redeployed --no-verify-jwt (the new "brief test" trigger); a forged
+"brief test" with no webhook secret → 401 (confirmed); plain capture + plain "brief"
+behave as before. Free Gemini tier only.
+
+PREVIEW OF MY REAL DATA (so I know what to expect): I have 3 open This Week tasks, all
+created today — "tesrt" (no due, not scheduled), "Assignment b" (due tomorrow),
+"Call mom" (due tomorrow, scheduled today 17:15). So "brief test" should name "tesrt"
+(oldest qualifier); "Call mom" is correctly excluded (scheduled today → in EVENTS
+TODAY); "Assignment b" is eligible but newer. Plain "brief" shows NO nudge yet (nothing
+is 3+ days old) — correct.
+
+HOW TO VERIFY (from your phone):
+1. Text "brief test" → the brief includes ONE gentle "been waiting" line naming a real
+   open This Week task (right now: "tesrt"). Only one.
+2. In the app, confirm that task really is an open This Week task, is the oldest
+   qualifying one, and ISN'T already due today / overdue / scheduled today.
+3. Text plain "brief" → if you have a This Week task untouched 3+ days it appears; if
+   not (the case today), there's simply no nudge line (correct).
+4. Text a normal item like "email landlord" → still captured as a task as before.
+
+KNOWN GAPS / RISKS:
+- created_at is the only "untouched" signal (no updated_at) — so moving a task between
+  buckets won't reset its 3-day clock. A true last-touched notion would need a new
+  column (a schema change) — NOT done; flagged for a separate decision if wanted.
+- A This Week task scheduled on ANOTHER day (not today) still counts as forgotten — by
+  the exact rule ("not scheduled onto TODAY'S calendar"); refine in a later piece if
+  you'd rather any scheduling exempt it.
+- One nudge max, by design. "brief test" is a temporary aid. Still on-demand only —
+  the 7am schedule is 6f.
+
+NEXT: Phase 6, Piece 6e — the "fill a gap in the day" suggestion.
+
+FOR THE CHECKER: confirm the forgotten task is chosen by CODE (open + This Week +
+created ≥3 days + not due-today/overdue/scheduled-today, oldest), capped at one, none
+when nothing qualifies; that Gemini only phrases it (no choosing/inventing); that it's
+in BOTH prose and the checklist fallback; that it's READ-ONLY with no schema/column
+change; and that `brief` stays private. Source: supabase/functions/brief/day.ts
+(pickForgotten), index.ts, write.ts; telegram/index.ts (brief test).
+
 ### 2026-06-22 — Phase 6 (Piece 6c) — Gemini writes the brief in real words (voice, no schedule)
 WHAT CHANGED:
 - The brief now READS the day exactly as 6b did (unchanged, verified source of

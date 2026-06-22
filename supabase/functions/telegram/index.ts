@@ -10,6 +10,8 @@
 // Piece 5e (undo): texting "undo" removes the single most recent item Marty saved.
 // Piece 6a (brief): texting "brief" fires the separate, private `brief` function
 //   (which texts the owner the morning brief). "brief" is a reserved trigger word.
+// Piece 6d (brief test): "brief test" fires the same brief with the forgotten-task
+//   threshold at 0 days — a TEMPORARY verification aid, may be removed later.
 //
 // Secrets live in Supabase's secret store, never in this file or the repo:
 //   TELEGRAM_BOT_TOKEN       — the bot's key
@@ -40,13 +42,15 @@ async function sendMessage(chatId: number | string, text: string) {
 
 // Fire the separate `brief` function (it texts the owner itself). It's deployed
 // PRIVATE (jwt verification on), so we authenticate with the service-role key this
-// function already runs with. Returns true if the brief accepted the call.
-async function fireBrief(): Promise<boolean> {
+// function already runs with. `test` (the "brief test" aid) drops the forgotten-task
+// threshold to 0 days. Returns true if the brief accepted the call.
+async function fireBrief(test: boolean): Promise<boolean> {
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/brief`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}` },
+      headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ test }),
     });
     return res.ok;
   } catch (_err) {
@@ -77,12 +81,14 @@ Deno.serve(async (req) => {
 
     const text = message?.text;
     if (typeof text !== "string") return ack(); // e.g. a sticker — just ack.
+    const lower = text.trim().toLowerCase();
 
     // --- BRIEF (6a): "brief" fires the separate brief function and stops here. ---
-    // The brief function texts the owner itself, so we don't send our own reply on
-    // success; only speak up if firing it failed. No capture/understand/save runs.
-    if (text.trim().toLowerCase() === "brief") {
-      const ok = await fireBrief();
+    // "brief test" (6d) is a TEMPORARY aid: same brief, but the forgotten-task
+    // threshold is 0 days so the nudge fires immediately. The brief texts the owner
+    // itself, so we only speak up if firing it failed. No capture/understand/save runs.
+    if (lower === "brief" || lower === "brief test") {
+      const ok = await fireBrief(lower === "brief test");
       if (!ok) {
         await sendMessage(chatId, "I couldn't fetch your brief just now — try again in a moment.");
       }
@@ -90,7 +96,7 @@ Deno.serve(async (req) => {
     }
 
     let reply: string;
-    if (text.trim().toLowerCase() === "undo") {
+    if (lower === "undo") {
       // --- UNDO (5e): remove the single most recent item Marty saved. ---
       reply = await undoLast();
     } else {
