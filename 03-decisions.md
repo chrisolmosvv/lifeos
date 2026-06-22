@@ -9,6 +9,18 @@
 
 ---
 
+- **[Today's left "The Day" column is a placeholder until Phase 4]** — The real
+  Today home is built to the approved two-column Front Page shape, but the left
+  "The Day" timeline needs events, which don't exist until Phase 4. So the left
+  column renders a calm invitation ("Your day's timeline arrives with events"),
+  NOT the hour grid / event blocks. **Why keep it (vs dropping the column until
+  Phase 4):** keeping the two-column shape preserves the approved look and avoids
+  a jarring relayout when events land — the placeholder is in the design's voice
+  (an invitation, not an apology). **Trade-off:** a chunk of the page is a
+  placeholder for now; acceptable, and it sets the slot the day-column timeline
+  drops into later. Built from the owner's written description (the mock file
+  `mockups/lifeos-today-frontpage.html` was again not present in the repo).
+
 - **[Navigation skeleton brought forward from the redesign]** — We built the
   app's top frame and three-destination nav (Today / Calendar / Settings, with a
   broadsheet masthead) now, ahead of the Phase 7 redesign. **This is NOT a

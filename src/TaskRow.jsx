@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import CategoryTag from './CategoryTag'
+import './tasks.css'
 
 // The three priority levels (plus a "None" to clear, handled separately).
 const PRIORITIES = [

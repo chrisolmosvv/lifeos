@@ -35,6 +35,77 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — The real Today home — Today / This Week task blocks (Front Page)
+WHAT CHANGED (UI only — NO database or schema change):
+- **Built the real Today screen** to the approved Front Page two-column shape,
+  replacing the temporary task view that sat on the Today route.
+- **Left "The Day" column** is a calm placeholder for now — events don't exist
+  until Phase 4, so it shows a quiet invitation ("Your day's timeline arrives
+  with events") and keeps the two-column shape. NO hour grid / event blocks yet.
+- **Right side is real:** a **Today** block and a **This Week** block, each a
+  Fraunces headline over a hairline-ruled list. **Today** lists tasks with
+  time_bucket = Today; **This Week** lists time_bucket = This Week. (Someday tasks
+  aren't shown here — by design.) Rows reuse everything from before: the dot+tag
+  (`CategoryTag`), the calm priority treatment, and completed tasks shown
+  struck-through with the filled terracotta tick.
+- **All the task behaviours carried over:** each block has a quiet "+ Add a task"
+  (a task added in the Today block lands in Today; in This Week, lands in This
+  Week); tap a task to open the Piece-2a edit panel (title/notes/category/
+  priority); tick to complete / reopen.
+- **Retired the redundant standalone task view** (`Tasks.jsx` deleted) now that
+  Today covers it; its row styles live on (TaskRow now owns the `tasks.css`
+  import).
+- Desktop **zero-scroll:** the page itself doesn't scroll; only the right column
+  scrolls, and only if the two blocks together run long.
+
+NOTE: the mock file `mockups/lifeos-today-frontpage.html` was again NOT in the
+repo, so this was built from your written description + 06-design.md. Compare to
+your mock and I'll adjust spacing/type.
+
+FILES TOUCHED:
+- New: `src/Today.jsx`, `src/TaskBlock.jsx`, `src/today.css`
+- Edited: `src/LoggedIn.jsx` (Today route now renders <Today/>),
+  `src/TaskRow.jsx` (now imports tasks.css)
+- Deleted: `src/Tasks.jsx`
+- NOT touched: `db/` (no schema/RLS change), `Categories.jsx`, `Settings.jsx`
+
+HOW TO VERIFY (on your Mac — no SQL):
+1. `npm run dev`, open http://localhost:5173, log in. You land on **Today**.
+2. You see the masthead, then two columns: **The Day** (a calm placeholder line)
+   on the left, and **Today** + **This Week** task blocks on the right with your
+   tasks, each showing its dot+tag.
+3. In the **Today** block click **+ Add a task**, type a title, Add → it appears
+   in Today. Do the same in **This Week** → it appears under This Week. (Confirms
+   each lands in the right bucket.)
+4. **Tap a task** → the edit panel opens (title, notes, category, priority); set
+   a priority and watch the calm kicker appear.
+5. **Tick** a task → it strikes through with a filled tick. **Untick** → it
+   reopens.
+6. **Reload** (Cmd-R) → everything is still there and in the right block.
+7. **Settings → Log out**, then log back in → you land on Today, tasks intact and
+   only yours.
+
+KNOWN GAPS / RISKS:
+- **The left "The Day" column is a Phase-4 placeholder** — no real timeline /
+  events yet (decision recorded).
+- Built from description, not the actual mock (missing from repo) — spacing/type
+  may need a tweak once you compare.
+- Someday-bucket tasks aren't shown on this page (intended); there's no UI yet to
+  move a task between buckets except by adding it in the right block (bucket-move
+  is Piece 2b's other half).
+
+NEXT: Phase 4 — events and the day-column timeline (this fills the left "The Day"
+column for real).
+
+FOR THE CHECKER:
+- **No schema or RLS change.** `db/` is untouched; Today only reads/writes columns
+  that already existed (adds set `time_bucket`; edits/ticks as before). The
+  owner-only policies on `tasks` are unchanged.
+- **The two blocks split strictly by `time_bucket`** (Today vs This Week); an add
+  in a block writes that block's bucket.
+- A task still means "Inbox" only by `category_id = null` (adds leave it null;
+  the edit panel's Inbox chip writes null) — the Piece-1 rule holds.
+
 ### 2026-06-22 — Navigation skeleton — broadsheet masthead + Today/Calendar/Settings nav
 WHAT CHANGED (UI/routing only — NO database or schema change):
 - **New top app frame** matching the approved "Front Page" mock: the **LifeOS**

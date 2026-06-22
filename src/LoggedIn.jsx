@@ -3,7 +3,7 @@ import { weekDays } from './dateUtils'
 import WeekCalendar from './WeekCalendar'
 import DayAgenda from './DayAgenda'
 import Masthead from './Masthead'
-import Tasks from './Tasks'
+import Today from './Today'
 import Settings from './Settings'
 import './calendar.css'
 
@@ -22,7 +22,7 @@ export default function LoggedIn({ email }) {
 
       {view === 'today' ? (
         <div className="cal-wrap">
-          <Tasks />
+          <Today />
         </div>
       ) : view === 'calendar' ? (
         <>

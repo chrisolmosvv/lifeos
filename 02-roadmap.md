@@ -71,6 +71,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — The real Today home (Front Page): Today + This Week task blocks.**
+  Built the approved two-column Today screen, replacing the temporary task view.
+  Right side is real — a **Today** block (time_bucket = Today) and a **This Week**
+  block (time_bucket = This Week), Fraunces headlines, hairline rows, dot+tag, the
+  calm priority treatment, struck-through completed tasks. Each block has its own
+  "+ Add a task" that lands in the right bucket; tap-to-edit and tick-to-complete
+  carried over. The **display half of Piece 2b (the Today / This Week bucket views)
+  now lives in the real home.** Left "The Day" column is a calm Phase-4 placeholder
+  (events don't exist yet — decision recorded). Retired the standalone task view
+  (`Tasks.jsx` deleted). UI only — NO schema/RLS change; built from the owner's
+  description (mock not in repo). Desktop zero-scroll holds. Builds clean. **No
+  phase marked done. NEXT: Phase 4 — events / the day-column timeline.**
 - **2026-06-22 — Navigation skeleton brought forward (bones, not the redesign).**
   Built the app's broadsheet top frame + a three-destination nav — **Today /
   Calendar / Settings** (active item = terracotta underline) — replacing the
