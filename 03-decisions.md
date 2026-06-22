@@ -9,6 +9,47 @@
 
 ---
 
+- **Phase 6 close-out — the seven decisions behind the 7am brief (recap; per-piece
+  detail in the entries below).** Recorded together at phase close so the shape of the
+  whole brief is in one place:
+  1. **The brief is its OWN private edge function (`brief`), jwt-verified, fired by the
+     service-role key — separate from the public Telegram webhook.** Why: the 7am alarm
+     calls it directly; keeping it private means only trusted server code can fire it,
+     and brief logic never tangles with the webhook. (6a)
+  2. **Scheduler = pg_cron + pg_net, DST-safe 7am: fire at BOTH 05:00 and 06:00 UTC and
+     proceed only when the Europe/Amsterdam hour is 7** (the other fire exits doing
+     nothing). Why: pg_cron runs in UTC and 7am Amsterdam shifts summer/winter; this
+     gives exactly one brief/day at 7am year-round, no manual DST changes, no
+     double-sends. (6f)
+  3. **Always-send safety net: the 7am run ALWAYS sends** — a calm "quiet one" on an
+     empty day, a "had trouble building your brief" line on internal error. Why: with
+     nobody watching at 7am, total silence now means the ALARM broke — silence is the
+     failure signal. Trade-off: a text every morning even when there's nothing on —
+     accepted (proving it's alive is the point). (6f)
+  4. **The service-role key lives in Supabase Vault (read at run time), never in the
+     cron SQL, the code, or GitHub.** Why: cron definitions are stored in the database
+     and the service-role key is the database's master key — it must not sit in
+     plaintext. (6f)
+  5. **"Forgotten" = an OPEN This Week task, created 3+ days ago, not already shown in
+     the brief; at most ONE/day, the oldest; CODE picks, Gemini phrases.** Why This Week:
+     Today tasks are listed daily (not forgotten); Someday is deliberately quiet. KNOWN
+     LIMITATION: the tasks table has only a created-at timestamp (no last-touched), so
+     "untouched" means "created 3+ days ago and still open" — moving a task between
+     buckets does NOT reset the clock. A true last-touched signal needs a new column (a
+     schema change) — deliberately NOT done; revisit only if the nudge misfires. (6d)
+  6. **"Fill a gap" = reserved mode: only when there's a 2h+ free stretch today within
+     08:00–20:00 AND a genuinely worth-doing task (overdue, due today, high priority, or
+     the forgotten one).** At most one offer, phrased as an offer not an order; if the
+     gap task is already mentioned, fold it into one line (never named twice). CODE finds
+     the gap + picks the task; Gemini phrases. Why reserved: an eager "here's a job for
+     your free time" every morning is the nagging we're avoiding. (6e)
+  7. **The brief stays on the FREE Gemini tier (gemini-3.1-flash-lite).** Why: it sends
+     the same task/event data class already sent in Phase 5 — nothing newly sensitive —
+     so automation alone doesn't change the privacy picture; the paid-key switch stays
+     tied to future SENSITIVE modules (mood/health), not to turning on the schedule.
+     Trade-off: free Flash can briefly rate-limit/err — covered by the checklist
+     fallback and the always-send net.
+
 - **The 7am alarm: pg_cron at 05:00 + 06:00 UTC, a 7am-Amsterdam hour gate in the
   function, service-role key from Vault, always-send (Phase 6, Piece 6f).** The brief
   runs itself daily with nobody watching. **Scheduling mechanism:** Supabase pg_cron

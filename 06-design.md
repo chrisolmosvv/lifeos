@@ -243,6 +243,14 @@ should read like a short, warm recap of the day ahead.
   token (the palette's brick), for a past-due task's dateline — kept darker than
   the terracotta accent on purpose, so a deadline never reads as "urgent now". The
   accent stays reserved.
+- **The morning brief's voice — "the quiet broadsheet" (Phase 6, Pieces 6c–6e) —
+  in use:** the 7am brief reads like a **warm columnist, not a cheerleader** — calm,
+  spare, factual with a light editorial touch. Sentence case, plain verbs, **no hype,
+  no emoji, no exclamation marks**, short (a 7am glance, ~2–4 sentences). The gentle
+  "forgotten task" nudge and the reserved "fill a gap" offer are phrased as quiet
+  observations and offers, never nags. This is the first place the **Voice & words**
+  direction above is actually generated text (Gemini, temperature 0, told to use only
+  the supplied facts), not just static UI copy. Now live in the daily brief.
 - **Navigation + core layouts now EXIST as built (Phases 2–4):** previously this
   doc was mood-only; these are now real screens —
   - the **broadsheet masthead** (Fraunces nameplate, dateline + live clock) with a

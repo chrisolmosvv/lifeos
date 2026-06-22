@@ -35,6 +35,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 6 COMPLETE & owner-verified (close-out) — the V1 finish line
+WHAT THE WHOLE PHASE DELIVERS (plain English): every morning at 7am Amsterdam, Marty
+texts me a short, warm recap of my day — on his own, with nobody watching.
+- He reads my real day (events + time-blocked tasks, today's tasks, anything due today,
+  anything overdue) and writes it in the calm "quiet broadsheet" voice (Gemini, plain
+  words, no hype/emoji). If the AI is down he sends the plain checklist instead.
+- He adds at most ONE gentle "you've been meaning to…" nudge (the oldest open This Week
+  task that's been sitting 3+ days) and at most ONE reserved "you've got a free window
+  for X" offer (only when there's a real 2h+ gap AND something genuinely worth doing).
+- The 7am run ALWAYS sends something — a calm "quiet one" on an empty day — so a silent
+  morning would mean the alarm itself broke.
+BUILT IN PIECES: 6a (the on-demand pipe — a private `brief` edge function) → 6b (reads
+my real day, plain text) → 6c (Gemini writes it, with a checklist fallback) → 6d (the
+staleness nudge) → 6e (the reserved gap offer) → 6f (the 7am alarm). All on-demand
+pieces were owner-verified on the phone; the real 7am self-delivery is now confirmed,
+so PHASE 6 IS ✅ — the proactive engagement layer (the product's whole point) is alive.
+
+WHAT'S IN THE DATABASE NOW (scheduling infra only — added in 6f, nothing else changed):
+- Extensions enabled: pg_cron 1.6.4, pg_net 0.20.3 (supabase_vault was already on).
+- Vault secret `brief_service_role_key` (the service-role key, read at run time).
+- One cron job `brief_daily_7am_ams` (`0 5,6 * * *`) calling the private brief with
+  { scheduled: true }; the 7am-Amsterdam hour gate is in the function (DST-safe).
+- The temporary `brief_test_every3min` proving job has been REMOVED (confirmed: only
+  `brief_daily_7am_ams` remains active). NO change to tasks/events/categories, no new
+  columns, no activity_log, no src/ change. The brief is read-only on the spine + private.
+
+DOC RECONCILE THIS SESSION (no code/schema touched): roadmap Phase 6 → ✅ owner-verified,
+NEXT pointer → Phase 7; decisions doc got a Phase-6 close-out recap of the seven brief
+decisions; architecture's runtime section now describes pg_cron + pg_net → the private
+brief with the key in Vault; design's "Settled so far" records the quiet-broadsheet brief
+voice as in use; glossary gained the brief, pg_net, Vault, service-role key, and the
+"brief"/"brief test" triggers.
+
+KNOWN FOLLOW-UPS (recorded so they're not lost — NOT done here):
+- The temporary "brief test" trigger WORD (0-day forgotten threshold) is still LIVE by
+  the owner's choice — a small code removal in telegram/index.ts + brief when ready.
+  (Separate from the every-3-min cron job, which is already removed.)
+- CAPTURE QUIRK TO CHECK SOMEDAY: a task ("text Steve") showed as ~163 days OVERDUE,
+  which hints the Phase-5 capture flow may read a bare date (e.g. "Jan 10") as the
+  nearest PAST date instead of the next upcoming one. Likely just test data — but worth
+  confirming it isn't a parsing bug, since a wrongly-overdue task pollutes the brief
+  (it'd show under OVERDUE and could be chosen as the gap candidate). Lives in the
+  telegram/understand.ts date rules if it turns out real.
+
+NEXT: Phase 7 — the redesign (the full per-screen look-and-feel pass to the broadsheet
+identity in 06-design.md; the owner art-directs). The data foundation and core flows are
+now all real, which is exactly the precondition Phase 7 was waiting on.
+
 ### 2026-06-22 — Phase 6 (Piece 6f) — The 7am alarm + the always-send safety net
 WHAT CHANGED (the brief now runs ITSELF, on a schedule, with nobody watching):
 - The PRIVATE `brief` edge function is now invoked by Supabase's scheduler (pg_cron),

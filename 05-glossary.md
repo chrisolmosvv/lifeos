@@ -17,8 +17,24 @@
   out data that isn't yours. Privacy, enforced at the source.
 - **Edge function** — a small piece of code that runs in the cloud on demand
   (e.g. the agent that writes your morning brief).
-- **Scheduler / cron** — the alarm clock that runs something on a timer
-  (your 7am brief).
+- **Scheduler / cron (pg_cron)** — the alarm clock inside the database that runs
+  something on a timer. It's what wakes your 7am brief every morning.
+- **pg_net** — the database's ability to make a web call out to the internet. The
+  7am alarm uses it to "phone" the brief function and tell it to run.
+- **Vault** — a locked drawer inside the database for secrets (passwords/keys). The
+  7am alarm keeps its master key (the service-role key) in the Vault and reads it only
+  at run time, so the key is never written into the schedule or saved to GitHub.
+- **The brief / morning brief** — the 7am text from Marty: a short, warm recap of
+  your day (events, today's tasks, anything due or overdue), plus at most one gentle
+  "you've been meaning to…" nudge and at most one "you've got a free window for X"
+  offer. The whole point of the app — it pulls forgotten things back into view.
+- **"brief" / "brief test" (triggers)** — text Marty **"brief"** any time to get the
+  brief on demand (same as the 7am one). **"brief test"** is a temporary testing word
+  that relaxes the "forgotten task" rule (treats anything waiting as fair game) so the
+  nudge can be checked without waiting days — it'll be retired later.
+- **Service-role key** — the database's master key that bypasses the usual privacy
+  rules. Only trusted server code uses it (the 7am alarm, the bot). It lives in the
+  Vault/secret store, never in the app or GitHub.
 - **API** — a way for two programs to talk to each other (e.g. our app asking
   Gemini to write text, or pulling data from the Hevy gym app later).
 - **Gemini** — Google's AI that writes the morning brief in real words.

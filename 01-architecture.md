@@ -60,8 +60,23 @@ Health and Life pillars plug in with no rebuild.
 
 ## How the pieces connect (runtime)
 You → the app → Supabase (read/write your data). Supabase's agent talks to
-Telegram (two-way chat) and Gemini (writes the brief). The 7am alarm wakes the
-agent. GitHub just stores the code (not part of the running flow).
+Telegram (two-way chat) and Gemini (writes the brief). GitHub just stores the
+code (not part of the running flow).
+
+**The morning brief (built Phase 6).** The brief is its own **private** edge
+function (`brief`, jwt-verified — only trusted server code can fire it), separate
+from the public Telegram webhook function. Two ways it runs:
+- **On demand** — you text Marty "brief" (or "brief test"); the webhook function
+  calls the private brief with the service-role key.
+- **The 7am alarm** — **pg_cron** runs a job at 05:00 **and** 06:00 UTC that uses
+  **pg_net** (HTTP from the database) to call the private brief, authenticating with
+  the **service-role key stored in Supabase Vault** (read at run time, never in the
+  cron SQL or the repo). The function proceeds only when the Europe/Amsterdam hour is
+  7, so exactly one brief lands at 7am Amsterdam year-round (DST-safe). The scheduled
+  run always sends — silence would mean the alarm itself broke.
+
+The brief is **read-only on the spine**: it only reads tasks/events to summarise the
+day; it never writes to tasks/events/categories.
 
 ## Hard constraints
 - **Free tiers only.** If a choice needs paid hosting/DB, stop and flag it.

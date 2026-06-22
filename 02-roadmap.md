@@ -76,11 +76,13 @@ ignore everyone but the owner.
   db/06_telegram_saves.sql), deleting exactly that row by id, owner-only — never an
   app-made row. Owner-verified on phone.
 
-## 🔨 Phase 6 — The 7am brief + anti-staleness engine   ← CURRENT (the real V1 finish line)
+## ✅ Phase 6 — The 7am brief + anti-staleness engine  (owner-verified — the V1 finish line)
 Scheduler wakes the agent; Gemini writes a brief: day overview + stale-item
 nudge + a suggestion to fill a gap.
-**Done when:** it texts me every morning and it's actually useful.
-**← This is the real V1 finish line.**
+**Done when:** it texts me every morning and it's actually useful. ✓ MET & verified:
+the real 7am Amsterdam brief now lands on its own, a warm "quiet broadsheet" recap of
+the day with at most one gentle "forgotten task" nudge and one reserved "fill a gap"
+offer. **This is the V1 finish line — the proactive engagement layer is alive.**
 - ✅ **6a — the empty pipe (Marty texts me unprompted, on demand).** New SEPARATE
   edge function `brief` (where all brief logic lives from the start, so the 7am alarm
   calls it directly later — never inside the telegram webhook). This piece it only
@@ -120,17 +122,17 @@ nudge + a suggestion to fill a gap.
   folded into one line — never named twice. In prose AND the checklist fallback.
   Read-only, no schema/column change. (Owner verifies by clearing an afternoon + a
   pressing task.)
-- ✅ **6f — the 7am alarm + always-send safety net** (pending the owner seeing it fire).
-  pg_cron calls the private brief function (service-role key from Vault) at 05:00 AND
-  06:00 UTC; the function proceeds only in the 7am Amsterdam hour → DST-safe, exactly
-  once/day, no manual switching. The scheduled run ALWAYS sends (a calm "quiet one" on
-  an empty day; a "had trouble" line if building throws) — so a silent morning means
-  the job broke. DB changes (scheduling infra only): enabled pg_cron + pg_net; a Vault
-  secret `brief_service_role_key`; cron jobs `brief_daily_7am_ams` (0 5,6 * * *) and the
-  TEMPORARY `brief_test_every3min` (*/3, force-sends, to be removed). No spine/src
-  change. (Owner verifies: unprompted briefs arrive within minutes, then the real 7am.)
+- ✅ **6f — the 7am alarm + always-send safety net** (owner-verified: the real 7am brief
+  landed on its own). pg_cron calls the private brief function (service-role key from
+  Vault) at 05:00 AND 06:00 UTC; the function proceeds only in the 7am Amsterdam hour →
+  DST-safe, exactly once/day, no manual switching. The scheduled run ALWAYS sends (a calm
+  "quiet one" on an empty day; a "had trouble" line if building throws) — so a silent
+  morning means the job broke. DB changes (scheduling infra only): enabled pg_cron +
+  pg_net; a Vault secret `brief_service_role_key`; cron job `brief_daily_7am_ams`
+  (0 5,6 * * *). The temporary `brief_test_every3min` proving job has been removed (only
+  the real 7am job remains). No spine/src change.
 
-## ⬜ Phase 7 — The redesign (look & feel pass)
+## ⬜ Phase 7 — The redesign (look & feel pass)   ← NEXT
 The full UX/UI pass once the data foundation and core flows are real. Bring every
 screen up to the broadsheet identity in 06-design.md — layout, type, colour,
 motion, the per-screen feeling — replacing the plain interim verify UIs. The
@@ -152,6 +154,28 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — PHASE 6 COMPLETE & owner-verified. The V1 finish line is reached.**
+  The brief now RUNS ITSELF at 7am Amsterdam and texts a warm "quiet broadsheet" recap
+  of the day — events + time-blocked tasks, Today tasks, due-today, overdue — plus at
+  most one gentle "forgotten task" nudge and at most one reserved "fill a gap" offer.
+  Built in pieces: 6a (the on-demand pipe — a private `brief` edge function) → 6b (reads
+  my real day, plain text) → 6c (Gemini writes it in the quiet-broadsheet voice, with a
+  plain-checklist fallback) → 6d (the staleness nudge, code-picked) → 6e (the reserved
+  gap offer, code-picked) → 6f (the 7am alarm via pg_cron + pg_net, DST-safe, always-send).
+  All on-demand pieces were owner-verified on the phone; the real 7am self-delivery is now
+  confirmed too, so Phase 6 is ✅. The proactive engagement layer — the whole point of the
+  product — is alive. Scheduling infra added (pg_cron, pg_net, a Vault secret, one cron
+  job); NO change to the spine (tasks/events/categories) and NO src/ change. Follow-ups
+  recorded in the handoff: the temporary "brief test" trigger word is still live (retire
+  when ready), and a capture quirk to check (a task read as ~163 days overdue — possibly
+  a bare date parsed as the nearest PAST date). **NEXT: Phase 7 — the redesign (the full
+  per-screen look-and-feel pass; the owner art-directs).**
+- **2026-06-22 — Phase 6, Piece 6f: the 7am alarm + always-send safety net.** The private
+  brief function now runs itself via pg_cron at 05:00 and 06:00 UTC, proceeding only in
+  the 7am Amsterdam hour (DST-safe, once/day); always-send so silence means the job broke;
+  service-role key in Vault. Verified end to end (test cron fired → function returned 200
+  "sent"). Temp every-3-min proving job since removed. NEXT was: confirm the real 7am —
+  now done (see the close-out note above).
 - **2026-06-22 — Phase 6, Piece 6e: the "fill a gap" suggestion (reserved mode).** When
   today has a real free stretch (≥2h inside 08:00–20:00 Amsterdam, no events/scheduled
   tasks, earliest one) AND a worth-doing task is waiting, the brief offers ONE gentle
