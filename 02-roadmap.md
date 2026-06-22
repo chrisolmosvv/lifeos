@@ -76,6 +76,14 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 3, Piece 3c done: due dates on tasks.** Added a due-date
+  control to the shared task editor (so it's in the list AND the calendar editor) and
+  a calm "Due <date>" / "Due today" dateline in the task rows. Overdue (past + not
+  done) uses a new brick `--overdue` token — NOT the terracotta accent; "due today"
+  isn't overdue; done tasks never show overdue. Display + edit only (no sort/filter,
+  no reminders). Kept distinct from scheduled times (never a calendar block). UI only —
+  NO schema/RLS change (writes the existing due_date column). Builds clean. **3d (Someday
+  view) and 3e (subtasks) still to come before Phase 5 — phase markers unchanged.**
 - **2026-06-22 — Roadmap corrected: Phase 4 verified DONE; Phase 3 marker fixed.** The
   owner verified the calendar — **Phase 4 → ✅**. **Phase 3** had been functionally done
   for several sessions but its marker was never flipped (still said "🔨 CURRENT" while

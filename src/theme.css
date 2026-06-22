@@ -11,6 +11,8 @@
   --rule:       #D8D0BE; /* hairline divider (the main separators) */
   --rule-faint: #E7E0D0; /* even fainter line for the calendar's hour grid */
   --accent:     #C8643D; /* warm terracotta — today, the now-line, key marks */
+  --overdue:    #A85C44; /* brick — overdue/late marks; darker than the accent on
+                            purpose so a deadline never reads as "urgent now" */
 
   /* Type — two weights only: regular (400) + medium (500) */
   --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;

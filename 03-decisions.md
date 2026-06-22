@@ -9,6 +9,20 @@
 
 ---
 
+- **Overdue colour = a new `--overdue` brick token; "due today" is not overdue
+  (Phase 3, Piece 3c).** The prompt assumed an overdue colour already existed —
+  it didn't, so a `--overdue: #A85C44` token (the palette's brick) was added to
+  `theme.css`. **Why brick, not the accent:** the design doc keeps warm reds
+  darker than the terracotta accent (`#C8643D`) so a deadline never reads as
+  "urgent now"; the accent stays reserved for today / the now-line / key marks.
+  Overdue datelines use `--overdue`; the accent is untouched. **Reading:** a task
+  due in the past (and not done) shows its dateline in brick; **a task due today
+  reads "Due today" in the normal muted colour, NOT overdue**; a done task never
+  shows overdue (the dateline drops to muted). Due dates are deliberately calm —
+  no bold, no icon — since most tasks won't have one. Trade-off: none; this just
+  names a colour the design already implied. (Distinct from `scheduled_start/end`
+  — a due date is a deadline, never rendered as a calendar block.)
+
 - **[Phase 3 trailing pieces built after Phase 4]** — subtasks, the due-date
   picker, and the Someday-bucket view were not built during the main Phase 3 work
   and were finished after Phase 4 as Pieces 3c–3e, before starting Phase 5.

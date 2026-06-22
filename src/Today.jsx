@@ -37,7 +37,7 @@ export default function Today() {
       supabase
         .from('tasks')
         .select(
-          'id, title, notes, status, completed_at, category_id, priority, time_bucket, scheduled_start, scheduled_end, created_at',
+          'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end, created_at',
         )
         .order('created_at', { ascending: true }),
       supabase

@@ -35,6 +35,60 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 3 (Piece 3c) — Due dates on tasks
+WHAT CHANGED (UI only — NO database/schema/RLS change; writes only the existing due_date column):
+- **A due-date control in the shared task editor** (`TaskEditForm`) — set or clear
+  a task's due date (a date, not a time). Because the form is shared, it appears
+  **wherever a task is edited — the list AND the calendar**.
+- **A calm dateline in the task rows** (Today / This Week): "Due Jun 25" or "Due
+  today", in the muted dateline style. Only shows when a due date is set.
+- **Overdue treatment:** a task due in the past (and not done) shows its dateline
+  in the **brick `--overdue` colour** — NOT the terracotta accent (accent stays
+  reserved). A task due **today reads "Due today", not overdue**. A **done task
+  never shows overdue** (dateline drops to muted).
+- Due date is kept **distinct from scheduled_start/end** — it's a deadline, not a
+  scheduled time, and is **never rendered as a block on the calendar grid**.
+- Added a `--overdue` token to theme.css (brick; the prompt assumed it existed —
+  it didn't). `due_date` added to the two task SELECTs (reading an existing
+  column).
+
+FILES TOUCHED:
+- New: `src/dueDate.js` (status + calm formatting, parsed as a local date)
+- Edited: `src/TaskEditForm.jsx` (the control), `src/TaskRow.jsx` (the dateline),
+  `src/tasks.css`, `src/theme.css` (`--overdue`), `src/Today.jsx` +
+  `src/useWeekData.js` (select due_date)
+- NOT touched: `db/` (no schema/RLS change).
+
+HOW TO VERIFY (on your Mac — no SQL):
+1. `npm run dev`, log in → **Today**.
+2. Tap a task → in the editor, **set a Due date** → the row shows a calm "Due
+   <date>" dateline.
+3. Set a task's due date to a **past date** → the dateline reads in the **brick
+   overdue colour** (a muted dark red, NOT the bright terracotta accent).
+4. Set a task's due date to **today** → it reads **"Due today"** in the normal
+   muted colour (not overdue).
+5. **Mark an overdue task done** → the overdue colour drops (the dateline goes
+   muted / the row strikes through).
+6. **Clear** a due date (the Clear button in the editor) → the dateline disappears.
+7. **Reload**, then **Settings → Log out** and back in → due dates persisted and
+   only yours.
+
+KNOWN GAPS / RISKS:
+- Display + edit only — **no sorting/filtering by due date**, and no reminders
+  (that's the Telegram brief's job later).
+- Due dates don't appear on the calendar grid by design (a deadline isn't a
+  scheduled time).
+
+NEXT: Phase 3, Piece 3d — the Someday view (then 3e subtasks, then Phase 5).
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` untouched; the editor writes only the existing
+  `due_date` column (clearing sets it null); SELECTs just read it.
+- **due_date is distinct from scheduled_start/end** — it's shown as a row dateline,
+  never as a calendar block.
+- **Overdue uses `--overdue` (brick `#A85C44`), not the terracotta accent**; "due
+  today" is not overdue; done tasks never show overdue.
+
 ### 2026-06-22 — Phase 4 verified DONE; roadmap corrected; 3c–3e are next
 WHAT CHANGED (docs only — no code/schema/RLS):
 - **Phase 4 (the calendar) is owner-verified complete** → marked ✅ in the roadmap.

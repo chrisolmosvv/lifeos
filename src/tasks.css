@@ -67,6 +67,43 @@
   color: var(--accent);
 }
 
+/* The due-date dateline in a task row — calm information, never an alarm.
+   Overdue (and not done) takes the brick overdue colour, NOT the accent. */
+.tasks-due {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.tasks-due.is-overdue {
+  color: var(--overdue);
+}
+
+/* The due-date control inside the task editor. */
+.tasks-due-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.tasks-dateinput {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+}
+.tasks-due-clear {
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+.tasks-due-clear:hover {
+  color: var(--overdue);
+}
+
 /* The done/open tick — a quiet hollow circle that fills with the accent when
    done. The satisfying mark, never confetti. */
 .tasks-check {

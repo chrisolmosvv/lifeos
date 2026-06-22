@@ -1,5 +1,6 @@
 import CategoryTag from './CategoryTag'
 import TaskEditForm from './TaskEditForm'
+import { dueStatus, formatDue } from './dueDate'
 import './tasks.css'
 
 // One task line: a tick to mark it done, the title + its quiet meta (priority
@@ -70,6 +71,18 @@ export default function TaskRow({
             )}
             {task.scheduled_start && (
               <span className="tasks-scheduled">scheduled</span>
+            )}
+            {task.due_date && (
+              <span
+                className={
+                  'tasks-due' +
+                  (!done && dueStatus(task.due_date) === 'overdue'
+                    ? ' is-overdue'
+                    : '')
+                }
+              >
+                {formatDue(task.due_date)}
+              </span>
             )}
           </span>
         </button>

@@ -26,7 +26,7 @@ export function useWeekData(days) {
       inWeek(
         supabase
           .from('tasks')
-          .select('id, title, notes, status, category_id, priority, scheduled_start, scheduled_end'),
+          .select('id, title, notes, status, category_id, priority, due_date, scheduled_start, scheduled_end'),
         'scheduled_start',
       ),
       supabase.from('categories').select('id, name, color, parent_id, sort_order'),
