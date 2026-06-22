@@ -9,6 +9,37 @@
 
 ---
 
+- **The 6b brief is a robotic, rule-built read of the day — no AI, read-only, no
+  dedupe (Phase 6, Piece 6b).** Before Gemini ever touches the brief, the owner must
+  be able to trust the READING. So 6b builds the summary by plain rules and the owner
+  eyeballs it against the app. **Groups, fixed order, each labelled:** (1) EVENTS
+  TODAY = today's events PLUS time-blocked tasks (open tasks with a scheduled start
+  today, marked "(task)"), merged and sorted earliest-first — because on the calendar
+  those tasks sit alongside events; (2) TODAY = open tasks in the 'Today' bucket;
+  (3) DUE TODAY = open tasks whose due_date is today (any bucket); (4) OVERDUE = open
+  tasks whose due_date is before today. **Empty groups are STATED, never hidden**
+  ("No events today.") — empty is information. **No dedupe across groups** — a task
+  that is both due-today and in the Today bucket appears in both; selection refinement
+  is 6d, not here. **"Today" = the Europe/Amsterdam calendar day** (midnight→midnight),
+  the SAME definition capture uses. **Read-only + RLS intact:** reads use the service-
+  role key and filter every query to user_id = OWNER_USER_ID (service-role bypasses
+  RLS, so the explicit filter is the guard); only existing columns are read, no schema
+  change. Any read failure sends a plain "couldn't read your day" rather than a
+  half-brief. Trade-off: literal/robotic and a bit repetitive — intended, so the data
+  is verifiable before AI wording (6c) and smarter selection/staleness (6d).
+
+- **Shared timezone logic moved to `_shared/datetime.ts`; telegram left untouched
+  (Phase 6, Piece 6b).** The brief must use the SAME timezone and "today" definition
+  as capture. Rather than reinvent it, the helpers (TZ Europe/Amsterdam, todayYMD,
+  localToUtc, humanDate, + clockLabel/addDaysYMD for the brief) now live in a shared
+  module the brief imports. **Why not also refactor telegram onto it now:** the
+  guardrails for this read-only piece say the capture flow must behave exactly as it
+  does, so the working `telegram` function was left byte-for-byte unchanged (it still
+  carries its own copy of TZ/todayYMD/localToUtc). **Trade-off (acknowledged):** the
+  logic is duplicated until a later cleanup points telegram at the shared module —
+  accepted deliberately to avoid redeploying/re-verifying capture during a display
+  piece. The shared copy is lifted verbatim, so the two definitions agree.
+
 - **The brief lives in its own PRIVATE edge function, fired by the reserved word
   "brief" (Phase 6, Piece 6a).** A new, SEPARATE function `brief`
   (supabase/functions/brief/index.ts) holds all brief logic from the very first

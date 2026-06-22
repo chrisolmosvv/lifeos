@@ -35,6 +35,75 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 6 (Piece 6b) — The brief reads my real day (plain text, no AI)
+WHAT CHANGED:
+- The `brief` function no longer sends a fixed line — it now reads MY real data
+  today (READ-ONLY) and sends a plain, rule-built summary. No AI, no schedule, no
+  prioritising, no "stale" logic — deliberately robotic, so I can eyeball it against
+  the app and trust the READING before Gemini (6c) ever rewrites it.
+- Four labelled groups, in order, exactly as agreed:
+  1. EVENTS TODAY — today's events AND time-blocked tasks (open tasks scheduled
+     today), merged and sorted earliest-first; a scheduled task is marked "(task)".
+  2. TODAY — open tasks in the 'Today' bucket.
+  3. DUE TODAY — open tasks whose due_date is today (any bucket).
+  4. OVERDUE — open tasks whose due_date is before today (shows when it was due).
+  An EMPTY group is STATED plainly ("No events today.", "Nothing overdue."), never
+  hidden. A task can appear in more than one group — not deduped, by design (6d).
+- "Today" = the calendar day in Europe/Amsterdam (midnight→midnight), the SAME
+  timezone/definition telegram capture uses. To keep that consistent without
+  touching the working capture flow, the shared timezone logic now lives in a new
+  `_shared/datetime.ts` (same TZ, same "today", same UTC conversion as before); the
+  brief uses it. (See KNOWN GAPS re: telegram still holding its own copy.)
+- If any read fails (a transient DB blip), it sends "I couldn't read your day just
+  now — give it a moment and ask again." rather than a half-brief.
+
+HOW THE READ IS SAFE / RLS INTACT: reads use Supabase's service-role key (auto-
+injected, server-side only, never sent to a client or committed) and every query is
+filtered to user_id = OWNER_USER_ID (defence in depth — service-role bypasses RLS,
+so the explicit filter is the guard). It only SELECTs; it never writes. No new
+columns, no schema change, db/ untouched — it reads existing fields only (events:
+title, start_at; tasks: title, time_bucket, due_date, status, scheduled_start).
+
+FILES TOUCHED: supabase/functions/brief/index.ts,
+supabase/functions/brief/day.ts (new), supabase/functions/_shared/datetime.ts (new),
+02-roadmap.md, 03-decisions.md, 04-handoff-log.md
+
+DEPLOY STATE: `brief` redeployed PRIVATE (jwt verification on) to the real project
+cntlptuacsujbdtwvbis (Frankfurt) via the access token. Verified live: an anonymous
+POST to the brief URL still returns 401 (private), and the telegram webhook still
+returns 401 without its secret (capture path untouched — telegram NOT redeployed).
+No src/ change → no Vercel redeploy.
+
+HOW TO VERIFY (from your phone, then check each line against the app):
+1. Text Marty "brief" → you get a plain summary of today. Open the app and confirm
+   EVERY line: the right events at the right times, time-blocked tasks marked
+   "(task)", the right Today-bucket tasks, anything due today, anything overdue —
+   and empty groups stated plainly.
+2. In the app, add a quick task DUE TODAY and an OVERDUE task (due date in the past).
+   Text "brief" again → confirm they appear in DUE TODAY and OVERDUE.
+3. Text a normal item like "buy milk" → it's still captured as a task as before.
+
+KNOWN GAPS / RISKS:
+- DUPLICATION (transparent): the shared timezone helpers now live in
+  `_shared/datetime.ts` for the brief, but the telegram function STILL carries its
+  own copy (I left it byte-for-byte unchanged to protect the working capture flow).
+  Pointing telegram at the shared module is a safe later cleanup — flagged, not done.
+- Selection is deliberately literal (6b): a task can show in several groups (no
+  dedupe); no prioritising, no "stale" nudges, no gap suggestion — that's 6d. No AI
+  wording yet — that's 6c. Time-blocked tasks shown are open only (a done one isn't
+  "your day ahead").
+- Still on-demand only ("brief") — the 7am schedule is a later piece.
+
+NEXT: Phase 6, Piece 6c — Gemini writes the brief in real words (turn this robotic
+summary into a warm, plain-English morning message).
+
+FOR THE CHECKER: confirm the brief is READ-ONLY (only SELECTs; no insert/update/
+delete), every read is filtered to the owner's user_id, it reads only existing
+columns (no schema change), empty groups are stated not hidden, and `brief` is still
+deployed private (its URL returns 401 anonymously). Source:
+supabase/functions/brief/day.ts, supabase/functions/brief/index.ts,
+supabase/functions/_shared/datetime.ts.
+
 ### 2026-06-22 — Phase 6 (Piece 6a) — The empty pipe (Marty texts me unprompted, on demand)
 WHAT CHANGED:
 - Built a NEW, SEPARATE edge function `brief` (supabase/functions/brief/index.ts).

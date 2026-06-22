@@ -89,7 +89,14 @@ nudge + a suggestion to fill a gap.
   gets in. Texting Marty "brief" (a reserved trigger word) fires it, after the secret
   check + owner-gate, and skips the capture flow; every other message is unchanged.
   No AI, no data-reading, no schedule, no DB change. (Owner verifies on phone.)
-- ⬜ **6b — the brief reads my real day** (today's events + tasks).
+- ✅ **6b — the brief reads my real day** (plain text, no AI). The fixed line is
+  replaced by a robotic, rule-built summary of today read from my real data
+  (READ-ONLY, owner-filtered): EVENTS TODAY (events + time-blocked tasks, earliest
+  first, tasks marked "(task)"), TODAY-bucket tasks, DUE TODAY, OVERDUE — empty
+  groups stated plainly, no dedupe across groups. "Today" = the Europe/Amsterdam day,
+  via a new shared `_shared/datetime.ts` (same definition capture uses). No AI, no
+  schedule, no DB change. (Owner verifies each line against the app.)
+- ⬜ **6c — Gemini writes the brief in real words** (warm plain-English message).
 
 ## ⬜ Phase 7 — The redesign (look & feel pass)
 The full UX/UI pass once the data foundation and core flows are real. Bring every
@@ -113,6 +120,19 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 6, Piece 6b: the brief reads my real day (plain text, no AI).**
+  The `brief` function now reads my real data today (READ-ONLY, every query filtered
+  to my user_id) and sends a deliberately robotic, rule-built summary: EVENTS TODAY
+  (events + time-blocked open tasks, earliest first, tasks tagged "(task)"), TODAY
+  bucket, DUE TODAY, OVERDUE — empty groups stated plainly, a task may appear in more
+  than one group (no dedupe; refined in 6d). No AI, no schedule, no prioritising/stale
+  logic yet. "Today" = the Europe/Amsterdam calendar day, via a new shared
+  `_shared/datetime.ts` (same definition capture uses; telegram left untouched, still
+  holds its own copy — safe later cleanup). No DB/schema change, no src/ change.
+  Redeployed `brief` private (anonymous → 401 confirmed). **Owner verifies on phone**:
+  text "brief", check every line against the app; add a due-today + an overdue task,
+  text again, confirm they land in the right groups; "buy milk" still captured. Phase 6
+  NOT done. NEXT: 6c — Gemini writes the brief in real words.
 - **2026-06-22 — Phase 6 STARTED. Piece 6a: the empty pipe (on demand).** Built a new,
   separate `brief` edge function — the home for ALL brief logic from the start, so the
   later 7am alarm calls it directly and the webhook function never holds brief code.
