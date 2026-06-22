@@ -9,6 +9,23 @@
 
 ---
 
+- **Cross-day drag = inject geometry into the shared hook; horizontal snaps to
+  whole columns (Phase 4, Piece 4g).** The week reuses the day's drag hook rather
+  than a second one; the only difference is geometry, so the hook now takes a
+  `geometry` object — `minutesAt(y)` (vertical, snapped to 15 min, as before) and
+  `dayStartMsAt(x)` (which day-column the pointer is over). On the day view
+  `dayStartMsAt` is constant (today); on the week it maps X → the column, so
+  dragging left/right changes the **date** while the time holds. **Horizontal
+  snaps to whole day-columns** (no sub-day precision) — combined with the 15-min
+  vertical snap, a block lands on a clean day+time. **Why:** one hook, one set of
+  drag mechanics (snap, threshold, tap-vs-drag); the day-axis is just more
+  geometry. **Cross-column live preview:** the real block stays mounted but
+  invisible (so the pointer keeps its grip — unmounting would drop pointer
+  capture) and a light floating preview follows the pointer across columns;
+  overlap re-splits on drop (reload), as specified. Resize and unschedule are
+  flagged off on the week (those are 4h / day-only). Trade-off: a couple of opt-in
+  flags + a geometry object on the hook — cheaper than a parallel implementation.
+
 - **Day and week views share one column render (Phase 4, Piece 4f).** The week
   view is a seven-day version of "The Day", not a new paradigm — so the
   hour-grid-with-blocks render was factored into a shared `DayColumn` component

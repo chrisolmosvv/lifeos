@@ -67,6 +67,17 @@
 .dt-event.is-static {
   cursor: default;
 }
+/* The original block while it's being dragged across week columns: kept mounted
+   (so the pointer keeps its grip) but invisible — the floating preview shows it. */
+.dt-event.is-ghost {
+  opacity: 0;
+}
+/* The floating cross-column drag preview — never intercepts the pointer. */
+.dt-event.dt-preview {
+  z-index: 5;
+  pointer-events: none;
+  box-shadow: 0 1px 0 var(--rule);
+}
 /* A scheduled TASK block: dashed edges mark it as a task (vs a solid event).
    It's still a task — this is just its time view. */
 .dt-event.is-task {

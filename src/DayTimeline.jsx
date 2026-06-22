@@ -25,9 +25,28 @@ export default function DayTimeline({
 }) {
   const [panel, setPanel] = useState(null) // null | {mode, event?, start?, end?}
 
+  const dayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  ).getTime()
+
+  // Geometry for the single day column: minutes from the grid top; the day is
+  // always today (no horizontal day-axis here).
+  const geometry = {
+    minutesAt: (clientY) => {
+      const el = scrollRef.current
+      const top = el.getBoundingClientRect().top
+      return ((clientY - top + el.scrollTop) / HOUR_HEIGHT) * 60
+    },
+    dayStartMsAt: () => dayStart,
+  }
+
   const drag = useEventDrag({
-    today,
+    geometry,
     scrollRef,
+    allowResize: true,
+    allowUnschedule: true,
     onSelect: (item) => {
       if (item.kind === 'event') setPanel({ mode: 'edit', event: item })
     },
@@ -56,12 +75,6 @@ export default function DayTimeline({
     const hour = Math.floor((e.clientY - rect.top) / HOUR_HEIGHT)
     openNewAt(Math.max(0, Math.min(23, hour)))
   }
-
-  const dayStart = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-  ).getTime()
 
   return (
     <div className="dt">

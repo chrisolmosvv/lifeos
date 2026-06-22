@@ -17,9 +17,11 @@ export default function DayColumn({
   showNow,
   className = '',
   interactive = false,
+  resizable = true,
   onColClick,
   bind, // (item) => pointer/click handlers, interactive only
-  preview, // the active drag preview, interactive only
+  preview, // in-place drag preview (day view), interactive only
+  ghostId, // id to render invisibly while it's dragged elsewhere (week view)
   onUnscheduleTask, // interactive only
 }) {
   const catById = new Map(cats.map((c) => [c.id, c]))
@@ -33,6 +35,7 @@ export default function DayColumn({
 
       {laidOut.map((it) => {
         const dragging = interactive && preview?.id === it.ev.id
+        const isGhost = ghostId != null && it.ev.id === ghostId
         return (
           <EventBlock
             key={it.ev.kind + ':' + it.ev.id}
@@ -44,10 +47,12 @@ export default function DayColumn({
             cols={dragging ? 1 : it.cols}
             dragging={dragging}
             removing={dragging && preview.removing}
+            ghost={isGhost}
             interactive={interactive}
+            resizable={resizable}
             handlers={interactive ? bind(it.ev) : undefined}
             onUnschedule={
-              interactive && it.ev.kind === 'task'
+              interactive && it.ev.kind === 'task' && onUnscheduleTask
                 ? () => onUnscheduleTask(it.ev.id)
                 : undefined
             }

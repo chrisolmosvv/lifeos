@@ -17,7 +17,9 @@ export default function EventBlock({
   cols,
   dragging,
   removing,
+  ghost,
   interactive = false,
+  resizable = true,
   handlers,
   onUnschedule, // task blocks only
 }) {
@@ -42,17 +44,18 @@ export default function EventBlock({
         (done ? ' is-done' : '') +
         (dragging ? ' is-dragging' : '') +
         (removing ? ' is-removing' : '') +
+        (ghost ? ' is-ghost' : '') +
         (interactive ? '' : ' is-static')
       }
       style={style}
       title={ev.title}
       {...handlers}
     >
-      {interactive && <div className="dt-handle dt-handle-top" />}
+      {interactive && resizable && <div className="dt-handle dt-handle-top" />}
       <div className="dt-event-kicker">
         {cat && <span className="dt-event-cat">{cat.name}</span>}
         <span className="dt-event-time tnum">{startTime(ev.start_at)}</span>
-        {interactive && isTask && (
+        {interactive && isTask && onUnschedule && (
           <button
             className="dt-unschedule"
             title="Unschedule"
@@ -68,7 +71,7 @@ export default function EventBlock({
         )}
       </div>
       <div className="dt-event-title">{ev.title}</div>
-      {interactive && <div className="dt-handle dt-handle-bottom" />}
+      {interactive && resizable && <div className="dt-handle dt-handle-bottom" />}
     </div>
   )
 }

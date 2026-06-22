@@ -35,6 +35,82 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 (Piece 4g) — Edit & move on the week (incl. cross-day drag)
+WHAT CHANGED (UI only — NO database/schema/RLS change; writes only existing time columns):
+- **The week view is now interactive** (was read-only in 4f):
+  - **Tap an event block → the same edit panel** as the day column (4c); edit and
+    save work exactly as on the day view.
+  - **Drag to move within a day** — vertical drag changes the time, snapping to 15
+    minutes (reuses the day's drag hook, not a second one).
+  - **Drag across day columns — the new part:** dragging a block left/right into
+    another day changes its **date** while keeping its **time** (combined
+    vertical+horizontal changes both). The block follows the pointer across
+    columns with a calm snapped preview; horizontal snaps to whole day-columns.
+  - **Scheduled tasks move too** (within a day or across days) — writes their
+    scheduled_start/scheduled_end; they stay tasks in their list.
+- **Tap-vs-drag preserved** — a plain tap still opens the panel; only a drag past
+  the ~4px threshold moves a block. A careful tap never starts a cross-day drag.
+- **Overlap re-splits side by side on drop** in the destination day (reuses
+  eventLayout.js). Moving keeps duration fixed, so it can't invert (end-before-
+  start guard never reached).
+- **Reused, not rebuilt:** the day's drag hook now takes a `geometry` object so
+  the same hook drives both views (day = X ignored; week = X → which column). The
+  edit panel, DayColumn, EventBlock and eventLayout.js are all shared.
+
+FILES TOUCHED:
+- New: `src/WeekDragPreview.jsx` (the floating cross-column drag preview)
+- Edited: `src/useEventDrag.js` (geometry-injected; cross-day via `dayStartMsAt`;
+  resize/unschedule flags), `src/WeekCalendar.jsx` (interactive: loads + writes,
+  the hook with week geometry, the panel, the overlay), `src/DayTimeline.jsx`
+  (builds its day geometry), `src/DayColumn.jsx` (+ ghost/resizable),
+  `src/EventBlock.jsx` (+ ghost / resizable gating), `src/calendar.css`,
+  `src/dayTimeline.css`
+- NOT touched: `db/` (no schema/RLS change).
+
+HOW TO VERIFY (on your Mac, mouse/trackpad — no SQL):
+1. `npm run dev`, log in. On **Today**, make a couple of events and schedule a
+   task; edit some events' dates so you have items on a few different days.
+2. Click **Calendar**.
+3. **Tap an event** → the **edit panel** opens; change something, Save → it
+   updates. (Confirms tap-to-edit works.)
+4. **Move within a day:** drag an event up/down → it snaps to 15 min; release,
+   **reload** → it stayed at the new time.
+5. **Cross-day:** drag an event from one day's column to another → its **date
+   changes, its time holds**; reload → it's on the new day.
+6. **Task across days:** drag a dotted task block to another day → it moves and is
+   **still in its task list** (check the Today list).
+7. **Tap still works:** a quick click still opens the panel (drag didn't eat it).
+8. **Overlap:** drag two items onto the same time in one day → they **split side
+   by side**.
+9. **Narrow the window** → still falls back to the **single-day view** (not a
+   squished grid). **Reload**, log out/in → all persisted and only yours.
+
+WHAT THE PHONE DOES (unchanged): the Calendar route still falls back to the
+single-day view (DayAgenda) on narrow screens — no touch-drag on the week (touch
+never starts a drag).
+
+KNOWN GAPS / RISKS:
+- **Resize on the week and create on the week are NOT in this piece** — that's 4h.
+  (On the week, grabbing a block edge moves it, it doesn't resize.)
+- **Tapping a scheduled-task block does nothing** (consistent with the day view —
+  edit a task's text in its list; it stays a task). If you'd like a task editor
+  reachable from the grid, say so and I'll add it as a small follow-up.
+- Multi-day events still show on their start day only; no recurrence; no week nav.
+
+NEXT: Phase 4, Piece 4h — resize + create on the week view.
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` untouched; moving writes only `start_at`/`end_at`
+  (events) or `scheduled_start`/`scheduled_end` (tasks) on existing columns; the
+  four owner-only policies are intact.
+- **The week reuses the day column's drag hook and edit panel** (not a
+  re-implementation) — same `useEventDrag` (now geometry-injected), same
+  `EventPanel`, `DayColumn`, `EventBlock`, `eventLayout.js`.
+- **Tap-to-edit works alongside drag** — selection stays on the click; a press
+  under the threshold is a tap, not a zero-distance drag.
+- **Cross-day drag changes the date while keeping the time** (the move sets the
+  new day's midnight + the same minutes; duration fixed).
+
 ### 2026-06-22 — Phase 4 (Piece 4f) — The week view, made real (read-only)
 WHAT CHANGED (UI only — NO database/schema/RLS change; read-only render):
 - **The Calendar route now renders a real week** (was the empty Phase-1 shell):

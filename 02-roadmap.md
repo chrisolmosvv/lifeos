@@ -71,6 +71,19 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 4, Piece 4g of several: edit & move on the week (incl. cross-day).**
+  Made the week interactive: tap an event → the same edit panel as the day; drag to
+  move within a day (15-min snap); and the new part — drag across day columns to
+  change the date while keeping the time (horizontal snaps to whole columns).
+  Scheduled tasks move too (write scheduled_*), staying tasks in their list.
+  Tap-vs-drag preserved (~4px threshold); overlap re-splits on drop. Reused the
+  day's drag hook by injecting a `geometry` object (day = X ignored; week = X →
+  column) rather than a second hook — shared EventPanel/DayColumn/EventBlock/
+  eventLayout. Cross-column live preview = ghost the original (keeps pointer grip)
+  + a floating preview. UI only — NO schema/RLS change (writes only existing time
+  columns). Phone still falls back to the day view. Builds clean. **Phase 4 is NOT
+  done — NEXT: 4h resize + create on the week. Known: task-block tap is a no-op
+  (edit in list); resize/create on week not yet.**
 - **2026-06-22 — Phase 4, Piece 4f of several: the week view, made real (read-only).**
   The Calendar route now renders a real week (was the empty Phase-1 shell): seven
   Mon–Sun columns, week range in the header, hour rows, today marked with the

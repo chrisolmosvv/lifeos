@@ -95,6 +95,12 @@
 }
 
 /* ---- Desktop week view ---- */
+/* Positioned wrapper so the edit panel's overlay covers the calendar without
+   scrolling with the grid. */
+.cal-week {
+  position: relative;
+  height: 100%;
+}
 .cal-scroll {
   height: 100%;
   overflow-y: auto;
