@@ -1,6 +1,6 @@
-/* Categories view — plain and calm, reusing the shared paper/ink/fonts.
-   Bare-bones for now (verification UI), not the real styled manager.
-   The list scrolls inside itself so the desktop never gains page scroll. */
+/* Categories manager — plain and calm, reusing the shared paper/ink/fonts.
+   An indented tree; tap a row to rename, nest, or delete it. The list scrolls
+   inside itself so the desktop never gains page scroll. No colour yet. */
 
 .cats {
   height: 100%;
@@ -9,7 +9,7 @@
   box-sizing: border-box;
 }
 .cats-inner {
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
@@ -32,10 +32,74 @@
   border-top: 1px solid var(--rule);
 }
 .cats-item {
-  padding: 0.7rem 0.25rem;
   border-bottom: 1px solid var(--rule);
+}
+
+/* The tappable row header. */
+.cats-rowhead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 0.25rem;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.cats-caret {
+  flex: none;
+  width: 0.8rem;
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+}
+.cats-name {
   font-size: 1rem;
 }
+
+/* Inbox: protected, no actions. */
+.is-inbox {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.25rem;
+}
+.cats-tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+/* The expand-on-tap actions panel. */
+.cats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.1rem 0.25rem 0.9rem;
+}
+.cats-field {
+  display: flex;
+  gap: 0.5rem;
+}
+.cats-move {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+.cats-move select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+}
+
 .cats-note {
   color: var(--ink-muted);
   padding: 0.7rem 0.25rem;
@@ -64,10 +128,31 @@
   border-radius: 8px;
   cursor: pointer;
 }
+.cats-btn.ghost {
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--rule);
+}
 .cats-btn:disabled {
   opacity: 0.5;
   cursor: default;
 }
+
+.cats-delete {
+  align-self: flex-start;
+  padding: 0.4rem 0;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.cats-delete:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .cats-error {
   margin-top: 0.75rem;
   color: var(--accent);

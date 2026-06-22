@@ -62,6 +62,14 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 2, Piece 3a: the real category manager (rename/nest/delete,
+  NO colour).** Turned the bare list into an indented tree with expand-on-tap
+  actions: rename, move-inside (nesting), add sub-category, delete. Delete
+  reparents children up one level; duplicate names blocked under the same parent;
+  Inbox is undeletable/unrenamable/top-level; cycles + cross-owner nesting
+  blocked — all enforced in the DB via a second SQL file (`db/02_categories_guards.sql`)
+  plus the UI. Builds clean. **Owner still needs to run the new SQL and verify.
+  Phase 2 is NOT done — Piece 3b (the 16-colour palette) is the last piece.**
 - **2026-06-22 — Phase 2, Piece 2 of 3: categories data foundation + verify UI.**
   Created the `categories` table in Supabase (RLS on, owner-only; nullable
   `parent_id`/`color` for later; `sort_order`; Inbox seeded as a normal row).

@@ -35,6 +35,82 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 2 (Piece 3a) — Real category manager: rename, nest, delete
+WHAT CHANGED:
+- The Categories page is now a real manager. Buckets show as an **indented tree**.
+  **Tap a row** to expand calm inline actions: **rename** it, **move it inside**
+  another bucket (nesting), **add a sub-category**, or **delete** it.
+- **Delete reparents children up one level** — delete a middle bucket and its
+  sub-buckets move up to its parent; delete a top-level bucket and its children
+  become top-level. Nothing is lost (your chosen rule).
+- **Duplicate names are blocked under the same parent** (case-insensitive);
+  different parents may reuse a name. You'll see a plain message if it clashes.
+- **Inbox is protected in the database**: it can't be deleted, renamed, or
+  nested — not just hidden in the UI. It shows as a "default bucket", no actions.
+- **Cycles are blocked**: you can't move a category inside itself or one of its
+  own sub-categories (the move list hides those; the database refuses it too).
+- The decision back-and-forth (delete→reparent-up; duplicates→block per parent)
+  is recorded in the decisions doc.
+
+FILES TOUCHED:
+- New: `db/02_categories_guards.sql` (the DB rules/triggers), `src/CategoryRow.jsx`,
+  `src/categoryTree.js`
+- Edited: `src/Categories.jsx` (now the manager), `src/categories.css` (tree +
+  panel styles)
+
+SUPABASE / SQL STEPS (do this once, on your Mac, BEFORE testing):
+1. Open the SQL editor:
+   https://supabase.com/dashboard/project/cntlptuacsujbdtwvbis/sql/new
+2. Open `db/02_categories_guards.sql`, copy ALL of it, paste, click **Run**.
+   Expect "Success. No rows returned."
+   (If it errors on the unique index, you already have two categories with the
+   same name under the same parent — delete one in the Table editor and re-run.)
+
+HOW TO VERIFY (in the app, on your Mac):
+1. `npm run dev`, open http://localhost:5173, log in, click **Categories**.
+2. **Add some nesting:** add a top-level "Uni" (box at the bottom). Tap **Uni**,
+   use "Add a sub-category" to add "Q2". Tap **Q2**, add "Class A". You should
+   see Uni → Q2 → Class A stepping in with indentation.
+3. **Rename:** tap "Class A", change the name box, click **Rename** — the row
+   updates.
+4. **Move (nest an existing one):** add a top-level "Reading", tap it, and in the
+   "Inside" dropdown pick "Uni" — it slides under Uni.
+5. **Inbox can't be deleted:** Inbox shows "default bucket" with no Delete button.
+   It's also blocked in the database (a UI bypass would still be refused).
+6. **No cycles:** tap "Uni", open the "Inside" dropdown — notice Q2 and Class A
+   (its own descendants) are NOT offered, so you can't nest Uni inside itself.
+7. **Delete a normal category and watch the children move up:** tap **Q2** and
+   click **Delete**. Q2 disappears and **Class A moves up under Uni** (it wasn't
+   deleted with it).
+8. **Duplicate guard:** try adding a second top-level "Uni" — you'll get
+   "A category with that name already exists here." (But "Uni" under a different
+   parent is allowed.)
+9. **Proof it's saved & only yours:** **Log out**, log back in, open Categories —
+   your tree is exactly as you left it (RLS returns only your rows).
+
+KNOWN GAPS / RISKS:
+- You must run `db/02_categories_guards.sql` once first, or the new rules aren't
+  active (deletes would cascade-delete children instead of reparenting them).
+- No colour anything yet — that's Piece 3b. No drag-to-reorder; ordering is by
+  creation for now. Renaming the Inbox is intentionally not allowed.
+- Rare edge: deleting a category whose child would collide with a same-named
+  bucket at the destination is refused (duplicate rule) — move/rename first.
+- Local preview only this session (not deployed). The DB rules live in Supabase
+  once you run the SQL, so deploy needs nothing extra.
+
+NEXT: **Phase 2, Piece 3b** — the 16-colour curated palette + the dot/uppercase-
+tag look, done with the owner as art director. Do NOT start until 3a is verified.
+
+FOR THE CHECKER: Confirm **RLS is still owner-only** after the new update/delete
+paths (the triggers add rules, they don't change the four `auth.uid() = user_id`
+policies, and run as the invoker so they can't touch other owners' rows). Confirm
+**Inbox is undeletable AND unrenamable/un-nestable at the DB level** (the
+`before delete` / `before write` triggers in `db/02_categories_guards.sql`), not
+just hidden in the UI. Confirm **cycles cannot be created** (trigger walks
+ancestors and rejects; UI also hides descendants) and that a **parent must belong
+to the same owner**. Confirm this is still spine-only: no task/event tables
+touched, no colour/palette work, `color` column still unused.
+
 ### 2026-06-22 — Phase 2 (Piece 2 of 3) — Categories table + bare-bones view
 WHAT CHANGED:
 - Created the **categories** table — the first real spine table. It holds your

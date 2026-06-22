@@ -9,6 +9,39 @@
 
 ---
 
+- **Deleting a category reparents its children UP one level (Phase 2, Piece 3a).**
+  When a category is deleted, its sub-categories attach to the deleted one's
+  parent; if it was top-level, they become top-level (`parent_id = null`).
+  **Why:** least destructive — nothing is lost and the rest of the hierarchy
+  stays intact (what Finder/Things do), matching "calm, never shout." Enforced
+  in the DB by a `before delete` trigger (`db/02_categories_guards.sql`), so it
+  holds even if the app is bypassed. Trade-off: in the rare case a reparented
+  child would collide with a same-named sibling at the destination, the delete
+  is refused (duplicate-name rule below); owner moves/renames first.
+
+- **Duplicate category names are blocked under the SAME parent only (Piece 3a).**
+  Case-insensitive; different parents may reuse a name ("Class A" under Q2 and
+  under Q3 is fine). **Why:** two identical siblings are a future-you trap,
+  especially once tasks attach to categories; a global unique-name rule would be
+  wrong. Enforced by a unique index on `(user_id, coalesce(parent_id, sentinel),
+  lower(name))` — DB-level, can't be bypassed; the app shows a plain message.
+
+- **Inbox is protected at the DB level: undeletable, unrenamable, stays top-level
+  (Piece 3a).** A `before delete` trigger refuses to delete it; a `before write`
+  trigger refuses to rename it away from 'Inbox' or give it a parent. **Why:**
+  it's the fallback bucket (the spine), so UI-only guards aren't enough; keeping
+  its name/position fixed lets the guards anchor on "top-level row named Inbox"
+  without adding a special column (stays "not special machinery" per the
+  architecture doc). Trade-off: can't rename Inbox to something else; acceptable
+  for the one fallback bucket.
+
+- **Cycle & cross-owner nesting blocked in BOTH the UI and the DB (Piece 3a).**
+  UI: the "move inside" list hides a category and its own descendants. DB: the
+  `before write` trigger walks ancestors and rejects a cycle, rejects self-
+  parenting, and requires the parent to belong to the same owner. **Why:** clear
+  message in the UI, hard guarantee on the spine. RLS stays owner-only — these
+  triggers add rules, they don't widen access.
+
 - **`categories` table — the first spine table (Phase 2, Piece 2).** Final shape
   (recorded so future pieces bolt on without a rebuild; see `db/01_categories.sql`):
   `id` uuid PK · `user_id` uuid not null (default `auth.uid()`, FK→auth.users,
