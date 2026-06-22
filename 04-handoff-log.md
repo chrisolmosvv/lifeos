@@ -80,6 +80,14 @@ KNOWN GAPS / RISKS:
 - The access token the owner believed was revoked STILL worked this session (third
   time) — owner to confirm at the tokens page that dead tokens are actually gone.
 
+- Owner-observed: a message listing SEVERAL items ("dentist Thursday 2pm, call the
+  plumber, buy milk tomorrow") is read as ONE item (the first). One text = one thing
+  for now; multi-item parsing is a later enhancement, not in 5c/5d scope. Owner is
+  fine with this ("good enough for now").
+
+5c VERIFIED by owner on phone (dinner/dentist/plumber/milk/gibberish all read
+correctly; nothing saved).
+
 NEXT: 5d — "save it for real": take what Gemini understood and write it as a real
 task/event in the database (and confirm what was saved + where).
 
