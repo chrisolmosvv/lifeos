@@ -35,6 +35,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 3 (Piece 3d) — The Someday view
+WHAT CHANGED (UI only — NO database/schema/RLS change; reads/writes time_bucket='Someday'):
+- **A quiet "Someday" expander below the This Week block**, collapsed by default —
+  a single muted line (uppercase "Someday" + a count + a caret), deliberately NOT a
+  third headline competing with Today/This Week.
+- **Expanding it reveals the Someday tasks** (time_bucket='Someday') using the
+  **exact same shared task rows** as Today/This Week (tick to complete/reopen, tap
+  to edit, dot+tag, priority, due-date dateline) and the same **"+ Add a task"**
+  (adding lands the task in Someday). Reuses `TaskBlock` with its big headline
+  suppressed (a new `hideTitle` prop) — not a re-implementation.
+- **Open/closed is session-only** (no persistence — kept simple).
+- **Zero-scroll holds:** the drawer opens into its **own scroll region** (a
+  max-height area that scrolls internally), so it never lengthens the page.
+
+FILES TOUCHED:
+- New: `src/SomedayDrawer.jsx`
+- Edited: `src/TaskBlock.jsx` (`hideTitle` prop), `src/Today.jsx` (compute Someday
+  tasks + render the drawer), `src/today.css`
+- NOT touched: `db/` (no schema/RLS change).
+
+HOW TO VERIFY (on your Mac — no SQL):
+1. `npm run dev`, log in → **Today**. Below **This Week** you'll see a quiet
+   **"Someday"** line with a count and a ▸ caret — collapsed.
+2. Click it to **expand** (caret turns ▾). Use its **"+ Add a task"** to add a
+   couple of tasks (one with a **due date** and a **priority**) — confirm the rows
+   look exactly like Today/This Week rows.
+3. **Tick one done** and **tap one to edit** — full row behaviour works.
+4. With it **expanded, confirm the page still doesn't scroll** — the Someday list
+   scrolls inside its own area (add several to see the inner scroll).
+5. **Collapse** it again (the rows hide; it's a single quiet line).
+6. **Reload**, then **Settings → Log out** and back in → the Someday tasks
+   persisted and are only yours.
+
+KNOWN GAPS / RISKS:
+- Open/closed state resets on reload (session-only, by design).
+- A task's bucket is set when adding / in the editor — **no drag-between-buckets
+  UI** (not this piece).
+
+NEXT: Phase 3, Piece 3e — subtasks (the last Phase-3 piece), then Phase 5.
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` untouched; Someday just reads/writes the existing
+  `time_bucket` column (value 'Someday').
+- **Someday reuses the shared task row/block** (`TaskBlock`/`TaskRow` with
+  `hideTitle`) — not a parallel implementation.
+- **Expanding does NOT break desktop zero-scroll** — the drawer body has its own
+  `max-height`/`overflow-y:auto`; the page (`.today`) stays `overflow:hidden`.
+
 ### 2026-06-22 — Phase 3 (Piece 3c) — Due dates on tasks
 WHAT CHANGED (UI only — NO database/schema/RLS change; writes only the existing due_date column):
 - **A due-date control in the shared task editor** (`TaskEditForm`) — set or clear

@@ -9,6 +9,19 @@
 
 ---
 
+- **Someday is a quiet collapsed drawer below This Week, opening a scroll region
+  (Phase 3, Piece 3d).** Someday deliberately does NOT get equal billing with
+  Today/This Week: collapsed by default, it's a single muted line (uppercase
+  "Someday" + a count + a caret) under This Week — a drawer you open, not a third
+  headline. **Why here / this shape:** it stays reachable without competing for
+  daily attention. Expanded, it reuses the exact shared `TaskBlock`/`TaskRow`
+  (with the big Fraunces headline suppressed via a `hideTitle` prop) so the rows
+  match the other buckets; adding lands the task in `time_bucket='Someday'`. **Open
+  state is session-only** (component state, not persisted — no storage complexity).
+  **Zero-scroll:** the drawer's body has its own `max-height` + `overflow-y:auto`,
+  so opening it reveals a contained scroll region rather than lengthening the page
+  (the page stays under `.today`'s `overflow:hidden`). Trade-off: none meaningful.
+
 - **Overdue colour = a new `--overdue` brick token; "due today" is not overdue
   (Phase 3, Piece 3c).** The prompt assumed an overdue colour already existed —
   it didn't, so a `--overdue: #A85C44` token (the palette's brick) was added to

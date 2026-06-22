@@ -76,6 +76,14 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 3, Piece 3d done: the Someday view.** Added a quiet collapsed
+  "Someday" expander below This Week (a single muted line + count + caret, not a third
+  headline). Expanding reveals time_bucket='Someday' tasks using the exact shared task
+  rows + "+ Add a task" (adds land in Someday), inside its own max-height scroll region
+  so desktop zero-scroll holds. Reuses TaskBlock via a `hideTitle` prop; open state is
+  session-only. UI only — NO schema/RLS change (reads/writes existing time_bucket).
+  Builds clean. **3e (subtasks) still to come — the last Phase-3 piece — then Phase 5.
+  Phase markers unchanged.**
 - **2026-06-22 — Phase 3, Piece 3c done: due dates on tasks.** Added a due-date
   control to the shared task editor (so it's in the list AND the calendar editor) and
   a calm "Due <date>" / "Due today" dateline in the task rows. Overdue (past + not

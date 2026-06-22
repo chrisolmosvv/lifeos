@@ -19,6 +19,7 @@ export default function TaskBlock({
   onUpdate,
   onAdd,
   scheduleBind,
+  hideTitle, // Someday reuses this block under its own quiet expander header
 }) {
   const [adding, setAdding] = useState(false)
   const [value, setValue] = useState('')
@@ -33,7 +34,7 @@ export default function TaskBlock({
 
   return (
     <section className="tb">
-      <h2 className="tb-title">{title}</h2>
+      {!hideTitle && <h2 className="tb-title">{title}</h2>}
 
       {tasks.length === 0 ? (
         <p className="tb-empty">{emptyText}</p>

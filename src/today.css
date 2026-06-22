@@ -52,6 +52,51 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Someday — a quiet drawer below This Week, not a third headline. Collapsed it's
+   a single muted line; open it reveals the rows in their own scroll region so the
+   page never grows taller (desktop zero-scroll holds). */
+.someday {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.someday-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.25rem;
+  font: inherit;
+  text-align: left;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule);
+  cursor: pointer;
+}
+.someday-head:hover {
+  color: var(--ink);
+}
+.someday-caret {
+  font-size: 0.7rem;
+}
+.someday-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.someday-count {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.someday-body {
+  min-height: 0;
+  max-height: 38vh;
+  overflow-y: auto;
+  padding-top: 0.25rem;
+}
 .tb-empty {
   color: var(--ink-muted);
   font-size: 0.9rem;

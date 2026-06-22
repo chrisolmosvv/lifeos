@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient'
 import { orderedTree, isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import TaskBlock from './TaskBlock'
+import SomedayDrawer from './SomedayDrawer'
 import DayTimeline from './DayTimeline'
 import { useScheduleDrag } from './useScheduleDrag'
 import { isSameDay } from './dateUtils'
@@ -146,6 +147,7 @@ export default function Today() {
   const all = tasks || []
   const todayTasks = all.filter((t) => t.time_bucket === 'Today')
   const weekTasks = all.filter((t) => t.time_bucket === 'This Week')
+  const somedayTasks = all.filter((t) => t.time_bucket === 'Someday')
   // Tasks scheduled for today appear on the grid (still listed too).
   const scheduledTasks = all.filter(
     (t) => t.scheduled_start && isSameDay(new Date(t.scheduled_start), today),
@@ -204,6 +206,7 @@ export default function Today() {
               tasks={weekTasks}
               {...blockProps}
             />
+            <SomedayDrawer tasks={somedayTasks} {...blockProps} />
           </>
         )}
         {error && <p className="today-error">{error}</p>}
