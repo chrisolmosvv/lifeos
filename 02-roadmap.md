@@ -62,6 +62,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 3, Piece 1 of several: the tasks spine table + bare-bones
+  verify UI.** Created the `tasks` table in Supabase (`db/03_tasks.sql`) to its
+  FULL architecture shape so later pieces bolt on without a rebuild — RLS on,
+  owner-only; category link is SET-NULL-on-delete (deleting a category empties its
+  tasks into Inbox, never deletes them); status/priority/time_bucket locked with
+  DB CHECK constraints; a trigger keeps `completed_at` honest (set on done, cleared
+  on reopen). Added a calm **Tasks** view (new masthead link): list + add-by-title
+  (lands in Today) + optional category picker + tick-to-complete, reusing the
+  paper/ink/Fraunces foundation and the dot+tag. UI deliberately touches only the
+  basics; priority/buckets/due-date/subtasks/calendar/activity-log are NOT built
+  (columns exist, UI doesn't). Builds clean. **Owner still needs to run the SQL and
+  verify on the Mac. Phase 3 is NOT done — Piece 2 (the real task UI) is next.**
 - **2026-06-22 — Phase 2 COMPLETE (Piece 3b: colour palette wired in).** Locked the
   16-colour palette (12 distinct + 4 shades) after eye-validation, removed the
   temporary preview tab, and wired colour into the Categories list: pick a colour

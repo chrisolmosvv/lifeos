@@ -35,6 +35,81 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 3 (Piece 1) — Tasks spine table + bare-bones verify UI
+WHAT CHANGED:
+- **New `tasks` table in Supabase**, built to the FULL architecture shape so
+  later pieces bolt on with no rebuild: title, notes, category, parent task
+  (subtasks), priority, time bucket, due date, scheduled start/end, status,
+  completed_at, source, created_at. SQL: `db/03_tasks.sql` (run it once — steps
+  below). RLS ON, owner-only. ADDS to the spine; does NOT change categories.
+- **Category link is "empty on delete" (SET NULL), never cascade** — deleting a
+  category drops its tasks into Inbox instead of deleting them. Same for the
+  parent-task link (subtasks get promoted, not deleted). Enforced in the DB.
+- **Fixed-value fields locked in the DB** (CHECK constraints) for status,
+  priority and time_bucket — a bad value can never be stored.
+- **`completed_at` kept honest by a DB trigger** — stamped when a task is marked
+  done, cleared when reopened, so the "finished at" time can never lie.
+- **A calm Tasks view** (reachable from a new "Tasks" link in the masthead):
+  lists your tasks, add one by typing a title (lands in Today), optional
+  category picker (Inbox by default), and a tick to mark done / reopen. Done
+  tasks show a struck title + a quiet "Done · <time>". Reuses the paper/ink/
+  Fraunces foundation and the dot+tag (`CategoryTag`).
+- This is the VERIFY UI, not the real task manager. No priority controls,
+  time-bucket views, due-date picker, subtasks UI, calendar, or activity_log —
+  those columns exist but the UI doesn't touch them yet (Piece 2+).
+
+FILES TOUCHED:
+- New: `db/03_tasks.sql`, `src/Tasks.jsx`, `src/tasks.css`
+- Edited: `src/LoggedIn.jsx` (Tasks view), `src/Masthead.jsx` (Tasks nav link)
+
+SUPABASE STEP (do this once, before verifying):
+1. Open the SQL editor:
+   https://supabase.com/dashboard/project/_/sql/new
+   (or Dashboard → your project → SQL Editor → New query).
+2. Open `db/03_tasks.sql`, copy the WHOLE file, paste it in, click **Run**.
+   You should see "Success. No rows returned." (It needs `db/01_categories.sql`
+   already run, which it is.)
+
+HOW TO VERIFY (on your Mac):
+1. `npm run dev`, open http://localhost:5173, log in.
+2. Click **Tasks** in the masthead. You'll see an empty list + an add row.
+3. Type a title (e.g. "Buy milk"), leave the picker on **Inbox**, click **Add**.
+   It appears with an **Inbox** tag (Slate dot).
+4. Add another and pick one of your categories — it shows that category's
+   coloured dot + tag.
+5. Click the circle to the left of a task → it fills terracotta, the title gets
+   struck through, and a **"Done · <date, time>"** stamp appears.
+6. Click the filled circle again to reopen → the strike + the Done stamp both
+   vanish (the finish time is cleared, so it can never be stale).
+7. Go to **Categories**, delete the category you assigned in step 4. Return to
+   **Tasks** — that task is **still there**, now back in **Inbox** (NOT gone).
+8. Click **Log out**, then log back in, open **Tasks** — your tasks are still
+   there. Confirms they persisted and are only yours (owner-only).
+
+KNOWN GAPS / RISKS:
+- Bare-bones on purpose: no priority/time-bucket/due-date/subtasks UI yet (the
+  schema has the columns; the UI is Piece 2+). No edit/delete of a task in the
+  UI yet (that's the real task manager, Piece 2).
+- The category picker is a plain dropdown; nesting shows as simple indentation.
+
+NEXT: Phase 3, Piece 2 — the REAL task UI (edit, priority, time buckets, due
+dates, and so on).
+
+FOR THE CHECKER (please confirm against `db/03_tasks.sql`):
+- The `tasks` table is **owner-only**: RLS is enabled and all four policies
+  (select/insert/update/delete) are keyed to `auth.uid() = user_id`; `user_id`
+  defaults to `auth.uid()` so an owner can't be forged.
+- `category_id` **references `public.categories(id)` with `ON DELETE SET NULL`**
+  (NOT cascade) — deleting a category empties its tasks into Inbox, never
+  deletes them. (`parent_task_id` self-FK is also SET NULL.)
+- The fixed-value fields have **DB CHECK constraints**: `status` (open/done),
+  `priority` (high/med/low), `time_bucket` (Today/This Week/Someday).
+- `completed_at` is managed by the `tasks_sync_completed_at` trigger (set on
+  done, cleared on reopen).
+- This change **ADDS** the tasks table and does **NOT** modify the categories
+  table or its meaning (no edits to `db/01_categories.sql` /
+  `db/02_categories_guards.sql`).
+
 ### 2026-06-22 — Phase 2 (Piece 3b) — Category colour palette wired in (PHASE 2 DONE)
 WHAT CHANGED:
 - **Locked the 16-colour palette** (12 distinct + 4 lighter shades) after you

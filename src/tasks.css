@@ -1,0 +1,148 @@
+/* Tasks view — plain and calm, reusing the shared paper/ink/fonts (mirrors the
+   Categories view). A quiet list with a checkbox to mark each done; the list
+   scrolls inside itself so the desktop never gains page scroll. Bare-bones on
+   purpose — the real task manager (priority, buckets, due dates) is Piece 2. */
+
+.tasks {
+  height: 100%;
+  overflow-y: auto;
+  padding: 2.5rem 1.5rem;
+  box-sizing: border-box;
+}
+.tasks-inner {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.tasks-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.8rem;
+  margin: 0;
+}
+.tasks-sub {
+  margin: 0.25rem 0 1.5rem;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.tasks-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.tasks-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.7rem 0.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* The done/open tick — a quiet hollow circle that fills with the accent when
+   done. The satisfying mark, never confetti. */
+.tasks-check {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.1rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--paper);
+  background: transparent;
+  border: 1px solid var(--ink-muted);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.tasks-check.is-done {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.tasks-check:disabled {
+  cursor: default;
+}
+
+.tasks-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.tasks-text {
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+.tasks-text.is-done {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+
+.tasks-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.tasks-doneat {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.tasks-note {
+  color: var(--ink-muted);
+  padding: 0.7rem 0.25rem;
+}
+
+/* Add row: title, an optional category picker, and the Add button. */
+.tasks-add {
+  display: flex;
+  gap: 0.6rem;
+}
+.tasks-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+.tasks-select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+}
+.tasks-btn {
+  padding: 0.6rem 1.1rem;
+  font: inherit;
+  font-weight: 500;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.tasks-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tasks-error {
+  margin-top: 0.75rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .tasks {
+    padding: 1.5rem 1rem;
+  }
+}

@@ -9,6 +9,63 @@
 
 ---
 
+- **`tasks` table — the second spine table (Phase 3, Piece 1).** Built now to its
+  FULL architecture shape so later pieces (priority, time-bucket views, due-date
+  picker, subtasks, calendar time-blocking) bolt on with NO rebuild, even though
+  this piece's UI only touches title, category and done/open. Final shape
+  (source of truth: `db/03_tasks.sql`):
+  `id` uuid PK · `user_id` uuid not null (default `auth.uid()`, FK→auth.users, on
+  delete cascade — same anti-spoof pattern as categories) · `title` text not null
+  · `notes` text null · `category_id` uuid null (FK→categories, **on delete SET
+  NULL**) · `parent_task_id` uuid null (self-FK, **on delete SET NULL**) ·
+  `priority` text null (CHECK in high/med/low) · `time_bucket` text not null
+  default `'Today'` (CHECK in Today/This Week/Someday) · `due_date` date null ·
+  `scheduled_start`/`scheduled_end` timestamptz null · `status` text not null
+  default `'open'` (CHECK in open/done) · `completed_at` timestamptz null ·
+  `source` text default `'typed by me'` · `created_at` timestamptz default now().
+  - **Why this shape:** matches the architecture doc's tasks list exactly,
+    including the "one move that unlocks everything" (`source` — future modules
+    just write tasks). RLS is ON with owner-only select/insert/update/delete (all
+    keyed to `auth.uid() = user_id`), so the DB never returns or accepts another
+    user's rows. This ADDS to the spine; it does not change the categories table's
+    meaning.
+  - **NULL category = Inbox, the ONE and ONLY representation.** A task means
+    "uncategorised / Inbox" by having `category_id = null` — we never also
+    re-point it at the real Inbox row's id. One representation only, so there's no
+    "two ways to mean the same thing" trap (the same discipline we used to ban
+    duplicate category names). Trade-off: the Inbox row exists as a category but
+    tasks never reference it by id; that's intended.
+  - **Fixed-value fields locked at the DB** via CHECK constraints on `status`,
+    `priority` and `time_bucket`, so a bad value can never be stored even via a
+    future module or Telegram — not just guarded in the UI. `priority` is nullable
+    (NULL = "no priority set"; a CHECK passes on NULL).
+  - **`completed_at` can never lie** — a `before insert/update` trigger
+    (`tasks_sync_completed_at`) stamps it when `status` becomes `done` and clears
+    it back to NULL when reopened, regardless of who writes the row. So an open
+    task never carries a stale finish time. Trade-off: the app can't set an
+    arbitrary completed_at while a task is open — correct for a truthful log.
+
+- **Deleting a category EMPTIES its tasks into Inbox; deleting a parent task
+  PROMOTES its subtasks (Phase 3, Piece 1).** Both enforced at the DB by `ON
+  DELETE SET NULL` foreign keys, so they hold even if the app is bypassed and a
+  task can never point at a category (or parent) that no longer exists.
+  - **Category delete → tasks emptied (fall into Inbox).** This is the chosen
+    behaviour. **Why:** least destructive — matches the category reparent-up rule
+    and "calm, never shout"; silent task loss is unacceptable.
+    - *Alternatives considered:*
+      - **Delete the tasks too (ON DELETE CASCADE).** Pro: no leftovers. Con:
+        silently destroys real tasks when a bucket is removed — unacceptable.
+      - **Block deleting a non-empty category.** Pro: forces a deliberate choice.
+        Con: a stop-and-fix chore mid-flow; fights the calm/least-friction goal.
+    - Trade-off of the chosen path: a deleted category's tasks lose their bucket
+      label and need re-filing if you want them elsewhere — acceptable and
+      reversible.
+  - **Parent task delete → subtasks promoted to standalone (also SET NULL).**
+    **Why:** same least-destructive ethos; a subtask shouldn't vanish because its
+    parent did. Trade-off: a subtask outlives its parent as a top-level task;
+    revisit when the subtasks UI is built (Piece-later) if a different rule is
+    wanted.
+
 - **The category colour palette is LOCKED (Phase 2, Piece 3b).** 16 muted,
   editorial hues — the official record (source of truth: `src/palette.js`; mood
   record: `06-design.md`). The DB `color` column stores the colour **id** (e.g.

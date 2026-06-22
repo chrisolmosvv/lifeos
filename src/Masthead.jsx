@@ -36,6 +36,12 @@ export default function Masthead({ view, onNavigate }) {
           Calendar
         </button>
         <button
+          className={view === 'tasks' ? 'is-active' : ''}
+          onClick={() => onNavigate('tasks')}
+        >
+          Tasks
+        </button>
+        <button
           className={view === 'categories' ? 'is-active' : ''}
           onClick={() => onNavigate('categories')}
         >

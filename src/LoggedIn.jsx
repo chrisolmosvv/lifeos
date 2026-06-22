@@ -4,10 +4,12 @@ import WeekCalendar from './WeekCalendar'
 import DayAgenda from './DayAgenda'
 import Masthead from './Masthead'
 import Categories from './Categories'
+import Tasks from './Tasks'
 import './calendar.css'
 
 // The logged-in app frame: the masthead strip plus the current view.
-// Calendar (desktop week / phone day) or the bare-bones Categories view.
+// Calendar (desktop week / phone day), the Categories view, or the bare-bones
+// Tasks view.
 export default function LoggedIn() {
   const today = new Date()
   const days = weekDays(today)
@@ -26,6 +28,10 @@ export default function LoggedIn() {
             <DayAgenda today={today} />
           </div>
         </>
+      ) : view === 'tasks' ? (
+        <div className="cal-wrap">
+          <Tasks />
+        </div>
       ) : (
         <div className="cal-wrap">
           <Categories />
