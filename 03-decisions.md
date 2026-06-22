@@ -9,6 +9,29 @@
 
 ---
 
+- **`categories` table — the first spine table (Phase 2, Piece 2).** Final shape
+  (recorded so future pieces bolt on without a rebuild; see `db/01_categories.sql`):
+  `id` uuid PK · `user_id` uuid not null (default `auth.uid()`, FK→auth.users,
+  on delete cascade) · `name` text not null · `parent_id` uuid null (self-FK,
+  on delete cascade — lets buckets nest later) · `color` text null (stays empty
+  until Piece 3) · `sort_order` int not null default 0 · `created_at` timestamptz
+  default now(). **Why:** matches the architecture doc's "buckets that nest, Inbox
+  is just the first one." RLS is ON with owner-only select/insert/update/delete
+  (all keyed to `auth.uid() = user_id`), so the DB never returns or accepts
+  another user's rows. `user_id` defaults to `auth.uid()` so the app inserts just
+  a name and can't spoof an owner. **Inbox** is seeded by the SQL as a normal row
+  (idempotent — no second Inbox), not special machinery, per the architecture doc.
+  Trade-off: deleting a parent cascades to its children (sensible for nesting);
+  revisit if we ever want orphan-promotion instead.
+
+- **Defer colours, nesting UI, and edit/delete to later pieces (Phase 2).** The
+  `color` and `parent_id` columns exist now but no UI touches them. **Why:** the
+  16-colour curated palette needs the owner's eye-validation (Piece 3), and
+  nesting/edit/delete are their own careful jobs — Piece 2 is just the data
+  foundation plus a bare-bones list+add view to verify it. Trade-off: the
+  Categories view is intentionally plain (no colour picker, no sub-levels, no
+  edit/delete) until those pieces land.
+
 - **Visual foundation: Fraunces + Inter, terracotta accent, one theme file.**
   (Phase 2, Piece 1 — *starting values, owner is art director and will tweak
   before we lock.*) Why each:

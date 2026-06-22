@@ -35,6 +35,69 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 2 (Piece 2 of 3) — Categories table + bare-bones view
+WHAT CHANGED:
+- Created the **categories** table — the first real spine table. It holds your
+  buckets, can nest later (a `parent_id` self-link), has an empty `color` column
+  for the Piece-3 palette, a `sort_order`, and a `created_at`. Row-level security
+  is ON and owner-only: the database only ever returns or accepts rows belonging
+  to the logged-in owner (read/add/change/delete all locked to your account).
+- **Inbox** is seeded as the default first bucket — a normal category row, not
+  special machinery. The seed is idempotent (won't make a second Inbox).
+- Built a plain **Categories view**: lists your buckets (Inbox shows up) and lets
+  you add one by typing a name. No colours, no nesting, no edit/delete yet — on
+  purpose. It reuses the Piece-1 paper/ink/fonts so it fits in.
+- Added a small **Calendar / Categories** switch in the masthead to open it
+  (temporary placement — we'll give it a proper home later).
+
+FILES TOUCHED:
+- New: `db/01_categories.sql` (the table + RLS + Inbox seed),
+  `src/Categories.jsx`, `src/categories.css`
+- Edited: `src/Masthead.jsx`, `src/masthead.css` (the view switch),
+  `src/LoggedIn.jsx` (calendar ↔ categories)
+
+SUPABASE / SQL STEPS (do this once, on your Mac):
+1. Open the Supabase SQL editor:
+   https://supabase.com/dashboard/project/cntlptuacsujbdtwvbis/sql/new
+2. Open `db/01_categories.sql` from the project, copy ALL of it, paste into the
+   editor, and click **Run**. You should see "Success. No rows returned."
+3. (Optional sanity check) In the dashboard → Table editor → `categories`, you
+   should see one row named **Inbox**.
+
+HOW TO VERIFY (in the app, on your Mac):
+1. In Terminal, from the lifeos folder: `npm run dev`, then open
+   http://localhost:5173 and log in.
+2. In the top strip, click **Categories**. You should see a calm page titled
+   "Categories" with **Inbox** listed, and a box to add one.
+3. Type a name (e.g. "Uni") and click **Add** — it should appear in the list
+   immediately, under Inbox.
+4. Click **Calendar** then **Categories** again — your new category is still
+   there (it saved to the database).
+5. **Prove it's only yours / really saved:** click **Log out**, then log back in,
+   open **Categories** — Inbox and "Uni" should still be there. (RLS means the
+   database only ever hands back your own rows.)
+
+KNOWN GAPS / RISKS:
+- You must run the SQL once before the view works; until then, opening
+  Categories will show a red error message (the table doesn't exist yet).
+- Bare-bones on purpose: no colour, no sub-categories, no editing/renaming or
+  deleting yet. Adding the same name twice is currently allowed.
+- Not deployed to Vercel this session (local preview only). When we deploy, the
+  table already lives in Supabase, so nothing extra is needed there.
+
+NEXT: **Phase 2, Piece 3** — the 16-colour curated category palette (needs your
+eye-validation), then later the nesting UI and edit/delete. Do NOT start Piece 3
+until you've verified this one.
+
+FOR THE CHECKER: Confirm the `categories` table is **owner-only via RLS** — all
+four policies key on `auth.uid() = user_id`, and `user_id` defaults to
+`auth.uid()` so a client can't insert rows for anyone else. Confirm an **Inbox**
+default exists (seeded as a normal row, idempotent — not special machinery).
+Confirm this **adds to the spine without changing core meaning**: it only adds
+the `categories` table per the architecture doc (nullable `parent_id`/`color`
+present but unused in UI), and touches no task/event tables. Confirm no colour
+palette, nesting UI, or edit/delete was built (those are later pieces).
+
 ### 2026-06-22 — Phase 2 (Piece 1 of 3) — Shared visual foundation (NOT locked)
 WHAT CHANGED:
 - Loaded two fonts: **Fraunces** (the serif, for the masthead + headlines) and

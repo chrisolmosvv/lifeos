@@ -62,6 +62,14 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 2, Piece 2 of 3: categories data foundation + verify UI.**
+  Created the `categories` table in Supabase (RLS on, owner-only; nullable
+  `parent_id`/`color` for later; `sort_order`; Inbox seeded as a normal row).
+  SQL saved at `db/01_categories.sql`. Added a plain Categories view (lists
+  buckets incl. Inbox, add-by-name) reachable from a small Calendar/Categories
+  switch in the masthead. No colours, nesting, edit or delete yet (Piece 3+).
+  Builds clean. **Owner still needs to run the SQL in Supabase and verify on the
+  Mac. Phase 2 is NOT done — Piece 3 (curated colour palette) is next.**
 - **2026-06-22 — Phase 2, Piece 1 of 3: shared visual foundation built (not yet
   locked).** Loaded Fraunces + Inter (Google Fonts, two weights each), added a
   single theme file of CSS variables (warm paper/ink palette + terracotta

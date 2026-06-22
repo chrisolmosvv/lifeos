@@ -5,8 +5,9 @@ import './masthead.css'
 
 // The edition header: the LifeOS nameplate, today's dateline, a live ticking
 // clock (tabular figures so it never jitters), and a hairline rule beneath.
-// One quiet strip — the app's single top bar. Log out lives here too.
-export default function Masthead() {
+// One quiet strip — the app's single top bar. The view switch and Log out
+// live here too. `view`/`onNavigate` toggle between Calendar and Categories.
+export default function Masthead({ view, onNavigate }) {
   const [now, setNow] = useState(() => new Date())
 
   // Tick once a second so the clock is genuinely live.
@@ -27,6 +28,20 @@ export default function Masthead() {
         <span className="mast-time tnum">{formatClock(now)}</span>
       </div>
       <div className="mast-spacer" />
+      <nav className="mast-nav">
+        <button
+          className={view === 'calendar' ? 'is-active' : ''}
+          onClick={() => onNavigate('calendar')}
+        >
+          Calendar
+        </button>
+        <button
+          className={view === 'categories' ? 'is-active' : ''}
+          onClick={() => onNavigate('categories')}
+        >
+          Categories
+        </button>
+      </nav>
       <button className="mast-logout" onClick={handleLogout}>
         Log out
       </button>

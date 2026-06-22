@@ -1,0 +1,75 @@
+/* Categories view — plain and calm, reusing the shared paper/ink/fonts.
+   Bare-bones for now (verification UI), not the real styled manager.
+   The list scrolls inside itself so the desktop never gains page scroll. */
+
+.cats {
+  height: 100%;
+  overflow-y: auto;
+  padding: 2.5rem 1.5rem;
+  box-sizing: border-box;
+}
+.cats-inner {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.cats-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.8rem;
+  margin: 0;
+}
+.cats-sub {
+  margin: 0.25rem 0 1.5rem;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.cats-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.cats-item {
+  padding: 0.7rem 0.25rem;
+  border-bottom: 1px solid var(--rule);
+  font-size: 1rem;
+}
+.cats-note {
+  color: var(--ink-muted);
+  padding: 0.7rem 0.25rem;
+}
+
+.cats-add {
+  display: flex;
+  gap: 0.6rem;
+}
+.cats-input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+.cats-btn {
+  padding: 0.6rem 1.1rem;
+  font: inherit;
+  font-weight: 500;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.cats-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.cats-error {
+  margin-top: 0.75rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+}

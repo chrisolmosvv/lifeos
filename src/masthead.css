@@ -48,6 +48,29 @@
 .mast-spacer {
   margin-left: auto;
 }
+
+/* The quiet view switch (Calendar / Categories) — temporary placement; we'll
+   give it a proper home in a later phase. */
+.mast-nav {
+  display: flex;
+  gap: 1rem;
+}
+.mast-nav button {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0.2rem 0;
+  cursor: pointer;
+}
+.mast-nav button.is-active {
+  color: var(--ink);
+  font-weight: 500;
+}
+.mast-nav button:hover {
+  color: var(--accent);
+}
 .mast-logout {
   font-family: var(--font-sans);
   font-size: 0.78rem;
