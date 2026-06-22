@@ -1,14 +1,19 @@
-/* The masthead — a quiet edition header, not a banner. ONE thin strip across
-   the top of the app, with a hairline rule beneath. Stays compact so the
-   desktop never gains page-level scroll. */
+/* The masthead — a quiet edition header in two tiers: the nameplate row, a
+   hairline rule, then the nav strip. Stays compact so the desktop never gains
+   page-level scroll. All colour/type comes from the shared theme (theme.css). */
 
 .masthead {
   flex: none;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Top tier: the nameplate + the dateline, with a hairline rule beneath. */
+.mast-top {
   display: flex;
   align-items: baseline;
   gap: 1rem;
-  padding: 0.5rem 1.25rem;
-  background: var(--paper);
+  padding: 0.55rem 1.25rem 0.5rem;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -17,20 +22,20 @@
   font-family: var(--font-serif);
   font-optical-sizing: auto;
   font-weight: 500;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   line-height: 1;
   letter-spacing: 0.01em;
   color: var(--ink);
 }
 
-/* Today's dateline + the live clock, set off by a hairline. */
+/* Today's dateline + the live clock, pushed to the right. */
 .mast-dateline {
+  margin-left: auto;
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
-  padding-left: 1rem;
-  border-left: 1px solid var(--rule);
+  gap: 0.9rem;
 }
+.mast-edition,
 .mast-date {
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -43,25 +48,24 @@
   color: var(--ink);
 }
 
-/* Pushes the controls to the right. Weather will slot in around here later —
-   there's no source yet, so nothing is shown for it. */
-.mast-spacer {
-  margin-left: auto;
-}
-
-/* The quiet view switch (Calendar / Categories) — temporary placement; we'll
-   give it a proper home in a later phase. */
+/* Nav strip: the three destinations. The active item gets a terracotta
+   underline drawn just under its label, so a subtitle never shifts it. */
 .mast-nav {
   display: flex;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 1.6rem;
+  padding: 0.45rem 1.25rem;
 }
 .mast-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
   font-family: var(--font-sans);
-  font-size: 0.8rem;
   color: var(--ink-muted);
   background: none;
   border: none;
-  padding: 0.2rem 0;
+  padding: 0;
   cursor: pointer;
 }
 .mast-nav button.is-active {
@@ -69,31 +73,34 @@
   font-weight: 500;
 }
 .mast-nav button:hover {
-  color: var(--accent);
+  color: var(--ink);
 }
-.mast-logout {
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
+.mast-navlabel {
+  font-size: 0.9rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 2px solid transparent;
+}
+.mast-nav button.is-active .mast-navlabel {
+  border-bottom-color: var(--accent);
+}
+/* The optional "categories, account" caption under Settings. */
+.mast-navsub {
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
   color: var(--ink-muted);
-  background: none;
-  border: none;
-  padding: 0.2rem 0.3rem;
-  cursor: pointer;
-}
-.mast-logout:hover {
-  color: var(--accent);
 }
 
 @media (max-width: 768px) {
-  .masthead {
+  .mast-top {
     padding: 0.5rem 1rem;
     gap: 0.6rem;
   }
-  .mast-dateline {
-    padding-left: 0.6rem;
-    gap: 0.5rem;
+  .mast-nav {
+    padding: 0.45rem 1rem;
+    gap: 1.2rem;
   }
   /* The phone day view prints today's date itself — don't repeat it here. */
+  .mast-edition,
   .mast-date {
     display: none;
   }

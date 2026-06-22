@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react'
-import { supabase } from './supabaseClient'
 import { formatMastheadDate, formatClock } from './dateUtils'
 import './masthead.css'
 
-// The edition header: the LifeOS nameplate, today's dateline, a live ticking
-// clock (tabular figures so it never jitters), and a hairline rule beneath.
-// One quiet strip — the app's single top bar. The view switch and Log out
-// live here too. `view`/`onNavigate` toggle between Calendar and Categories.
+// The three top-level destinations. Settings carries a small subtitle in the
+// mock ("categories, account") — an optional flourish, easy to drop.
+const NAV = [
+  { id: 'today', label: 'Today' },
+  { id: 'calendar', label: 'Calendar' },
+  { id: 'settings', label: 'Settings', sub: 'categories, account' },
+]
+
+// The edition header — a personal broadsheet nameplate. Top tier: the LifeOS
+// nameplate (Fraunces), an edition line, today's dateline and a live ticking
+// clock (tabular figures so it never jitters). A hairline rule, then the nav
+// strip (Today / Calendar / Settings) with the active item marked by a
+// terracotta underline. Log out now lives on the Settings page, not here.
+// `view`/`onNavigate` drive which screen shows.
 export default function Masthead({ view, onNavigate }) {
   const [now, setNow] = useState(() => new Date())
 
@@ -16,41 +25,30 @@ export default function Masthead({ view, onNavigate }) {
     return () => clearInterval(id)
   }, [])
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-  }
-
   return (
     <header className="masthead">
-      <span className="mast-name">LifeOS</span>
-      <div className="mast-dateline">
-        <span className="mast-date">{formatMastheadDate(now)}</span>
-        <span className="mast-time tnum">{formatClock(now)}</span>
+      <div className="mast-top">
+        <span className="mast-name">LifeOS</span>
+        <div className="mast-dateline">
+          <span className="mast-edition">Vol. I · No. 142</span>
+          <span className="mast-date">{formatMastheadDate(now)}</span>
+          <span className="mast-time tnum">{formatClock(now)}</span>
+        </div>
       </div>
-      <div className="mast-spacer" />
+
       <nav className="mast-nav">
-        <button
-          className={view === 'calendar' ? 'is-active' : ''}
-          onClick={() => onNavigate('calendar')}
-        >
-          Calendar
-        </button>
-        <button
-          className={view === 'tasks' ? 'is-active' : ''}
-          onClick={() => onNavigate('tasks')}
-        >
-          Tasks
-        </button>
-        <button
-          className={view === 'categories' ? 'is-active' : ''}
-          onClick={() => onNavigate('categories')}
-        >
-          Categories
-        </button>
+        {NAV.map((item) => (
+          <button
+            key={item.id}
+            className={item.id === view ? 'is-active' : ''}
+            aria-current={item.id === view ? 'page' : undefined}
+            onClick={() => onNavigate(item.id)}
+          >
+            <span className="mast-navlabel">{item.label}</span>
+            {item.sub && <span className="mast-navsub">{item.sub}</span>}
+          </button>
+        ))}
       </nav>
-      <button className="mast-logout" onClick={handleLogout}>
-        Log out
-      </button>
     </header>
   )
 }

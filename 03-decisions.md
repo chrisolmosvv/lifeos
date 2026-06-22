@@ -9,6 +9,28 @@
 
 ---
 
+- **[Navigation skeleton brought forward from the redesign]** — We built the
+  app's top frame and three-destination nav (Today / Calendar / Settings, with a
+  broadsheet masthead) now, ahead of the Phase 7 redesign. **This is NOT a
+  reversal of [Data foundation before design].** The nav is *bones*, not the
+  redesign: it replaces the temporary entry points that were piling up (the
+  masthead Calendar/Categories switch, the separate Tasks link) with one stable
+  skeleton, so each new piece has an obvious home instead of another bolt-on
+  link. The full per-screen redesign — the real Today home layout, the day-column
+  timeline, type/colour/motion polish on every screen — still belongs to Phase 7.
+  **Why now:** the interim entry points were becoming clutter and would be redone
+  anyway; a single clean skeleton is cheap, stops the mess (CLAUDE.md), and gives
+  the data-foundation pieces somewhere tidy to land. **Why it's still bones:**
+  the Today route currently just renders the existing task view; Calendar is still
+  the empty shell; no screen got its real redesign. **Trade-off:** a little
+  design work lands early, but only structural navigation — the look-and-feel
+  conversations the redesign phase owns are untouched. Built from the owner's
+  written description of the approved "Front Page" mock (the mock file
+  `mockups/lifeos-today-frontpage.html` was not present in the repo); the
+  decorative flourishes (edition line "Vol. I · No. 142", foot colophon, the
+  "categories, account" subtitle under Settings) are optional and easy to drop —
+  owner to confirm as art director.
+
 - **[Data foundation before design]** — Build all spine tables and data
   structures to their full architecture-doc shape first; the interim UIs that
   verify each piece stay deliberately plain and are NOT design-finalised. A

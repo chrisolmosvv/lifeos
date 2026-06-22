@@ -35,6 +35,71 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Navigation skeleton — broadsheet masthead + Today/Calendar/Settings nav
+WHAT CHANGED (UI/routing only — NO database or schema change):
+- **New top app frame** matching the approved "Front Page" mock: the **LifeOS**
+  nameplate (Fraunces), an edition line + today's date + the live clock, a
+  hairline rule, then a **nav strip — Today / Calendar / Settings** — with the
+  active item marked by a **terracotta underline**. Uses existing theme.css
+  variables only (no new colours).
+- **Three routes** (a simple in-app view switch — no router library, matching the
+  single-user app as it is):
+  - **Today** → renders the EXISTING task view for now (the real Today layout is
+    the next piece — not built yet).
+  - **Calendar** → the existing empty week-view shell (desktop) / day view (phone).
+  - **Settings** → a NEW page holding the **Categories manager moved here
+    unchanged**, plus the **signed-in email** and the **Log out** action.
+- **Retired the temporary entry points:** the old masthead Calendar/Categories
+  switch and the separate Tasks link are gone — their destinations now live in the
+  nav. **Categories is no longer a top-level destination** (it's under Settings).
+- **Optional flourishes built in but easy to drop** (your call as art director):
+  the "Vol. I · No. 142" edition line, the italic colophon at the foot, and the
+  "categories, account" subtitle under Settings. Say the word and I'll remove any.
+
+NOTE: the mock file `mockups/lifeos-today-frontpage.html` was NOT in the repo, so
+this was built from your written description + 06-design.md. Match it against your
+mock when you have it and I'll adjust.
+
+FILES TOUCHED:
+- New: `src/Settings.jsx`, `src/settings.css`
+- Edited: `src/Masthead.jsx` (two-tier header + new nav, Log out removed),
+  `src/masthead.css`, `src/LoggedIn.jsx` (3 routes + colophon footer),
+  `src/calendar.css` (colophon style)
+- NOT touched: `src/Categories.jsx` / `src/categories.css` (moved intact), all of
+  `db/` (no schema/RLS change).
+
+HOW TO VERIFY (on your Mac — no SQL):
+1. `npm run dev`, open http://localhost:5173, log in.
+2. You should see the **LifeOS** masthead with the date + live clock, a hairline
+   rule, and a **Today / Calendar / Settings** nav. **Today** is active (terracotta
+   underline) and shows **your tasks**.
+3. Click **Calendar** → the empty week-view shell. The underline moves to Calendar.
+4. Click **Settings** → you see **Signed in as <your email>**, a **Log out**
+   button, and the **Categories** manager below it.
+5. In Settings, **add or find a category** (e.g. type a name, Add) — it works
+   exactly as before.
+6. Click **Log out** from Settings → you're signed out. Log back in → you land on
+   **Today** with your tasks.
+7. Confirm there's no longer a separate "Tasks" or "Categories" link up top.
+
+KNOWN GAPS / RISKS:
+- **Today is a placeholder** — it shows the existing task list, NOT the real Today
+  front-page layout (that's NEXT).
+- Built from description, not the actual mock file (missing from repo) — spacing/
+  type may need a tweak once you compare to your mock.
+- The decorative flourishes are on by default; tell me if you want them off.
+
+NEXT: the Today home layout (the real Front Page — today's tasks + appointments,
+the day-column timeline comes with the calendar work).
+
+FOR THE CHECKER:
+- **No schema or RLS change.** `db/` is untouched; this is UI/routing only. No
+  query changed — Categories/Tasks read-write exactly as before.
+- **Categories moved into Settings intact** — `Categories.jsx`/`categories.css`
+  were not edited; Settings just renders `<Categories />` under an account band.
+- **The three routes each load the right screen:** Today → the task view,
+  Calendar → the week/day shell, Settings → Categories + email + Log out.
+
 ### 2026-06-22 — Phase 3 (Piece 2a) — Editing a task (title, notes, category, priority)
 WHAT CHANGED:
 - **Tap a task → an inline edit panel opens** (the same calm expand-on-tap

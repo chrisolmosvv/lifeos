@@ -71,6 +71,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Navigation skeleton brought forward (bones, not the redesign).**
+  Built the app's broadsheet top frame + a three-destination nav — **Today /
+  Calendar / Settings** (active item = terracotta underline) — replacing the
+  temporary entry points (the Calendar/Categories switch + the separate Tasks
+  link). Today renders the existing task view for now; Calendar is the empty
+  shell; **Categories now lives under Settings** (with the signed-in email + Log
+  out), and is no longer a top-level destination. UI/routing only — NO schema/RLS
+  change. Built from the owner's description (the mock file wasn't in the repo) +
+  06-design.md; decorative flourishes (edition line, colophon, Settings subtitle)
+  are optional/droppable. Recorded as NOT a reversal of "data foundation before
+  design" — the full per-screen redesign + Today layout stay in Phase 7. Builds
+  clean. **No phase marked done. NEXT: the real Today home layout.**
 - **2026-06-22 — Decision recorded: data foundation before design.** Build spine
   tables to their full shape first; keep interim verify UIs plain (not design-
   finalised) and save the look-and-feel work for a dedicated redesign phase. Added

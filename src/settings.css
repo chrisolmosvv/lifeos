@@ -1,0 +1,55 @@
+/* The Settings page — a fixed account band on top, the Categories manager
+   scrolling below it. Reuses the shared paper/ink/fonts. */
+
+.settings {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The account band: who you're signed in as, and the Log out action. Its inner
+   width matches the Categories list so the two line up. */
+.settings-account {
+  flex: none;
+  border-bottom: 1px solid var(--rule);
+  padding: 1.25rem 1.5rem;
+}
+.settings-acct-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.settings-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+.settings-email {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.settings-logout {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+.settings-logout:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* The Categories manager scrolls inside here (it brings its own scroll). */
+.settings-cats {
+  flex: 1;
+  min-height: 0;
+}
