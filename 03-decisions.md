@@ -9,6 +9,19 @@
 
 ---
 
+- **Tapping a scheduled-task block edits the task, from a shared editor (Phase 4,
+  Piece 4h).** On the calendar (day and week), tapping a dotted task block opens
+  the Piece-2a task editor (title / notes / category / priority) as a calm overlay
+  — so a task can be edited from the grid. **It stays a task** (the editor writes
+  only task columns; no type change). **Why this over a no-op (the owner's pick):**
+  full parity with events (which already edit on tap), and you can fix a task
+  without hunting for it in the list. **How (reuse, not duplicate):** the editor
+  fields were extracted from the list row into a shared `TaskEditForm`, used by
+  both the list's inline panel (`TaskRow`) and the calendar overlay (`TaskPanel`).
+  Saves inline (text on blur, chips/priority on tap), a Close button dismisses it.
+  Trade-off: one more overlay surface; offset by the shared form (no duplicated
+  fields).
+
 - **Cross-day drag = inject geometry into the shared hook; horizontal snaps to
   whole columns (Phase 4, Piece 4g).** The week reuses the day's drag hook rather
   than a second one; the only difference is geometry, so the hook now takes a

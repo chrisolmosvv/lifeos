@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { HOURS, HOUR_HEIGHT, formatHour, nowScrollTop } from './dateUtils'
 import EventPanel from './EventPanel'
+import TaskPanel from './TaskPanel'
 import DayColumn from './DayColumn'
 import { useEventDrag } from './useEventDrag'
 import './dayTimeline.css'
@@ -16,14 +17,20 @@ export default function DayTimeline({
   cats,
   today,
   pickable,
+  inboxColor,
   busy,
   scrollRef,
   onSaveEvent,
   onDeleteEvent,
   onScheduleTask,
   onUnscheduleTask,
+  onUpdateTask,
 }) {
   const [panel, setPanel] = useState(null) // null | {mode, event?, start?, end?}
+  const [taskPanelId, setTaskPanelId] = useState(null)
+  const editingTask = taskPanelId
+    ? scheduledTasks.find((t) => t.id === taskPanelId)
+    : null
 
   const dayStart = new Date(
     today.getFullYear(),
@@ -49,6 +56,7 @@ export default function DayTimeline({
     allowUnschedule: true,
     onSelect: (item) => {
       if (item.kind === 'event') setPanel({ mode: 'edit', event: item })
+      else setTaskPanelId(item.id) // tapping a task block edits the task
     },
     onDrop: (item, startIso, endIso) => {
       if (item.kind === 'task') onScheduleTask(item.id, startIso, endIso)
@@ -121,6 +129,17 @@ export default function DayTimeline({
           onSave={onSaveEvent}
           onDelete={onDeleteEvent}
           onClose={() => setPanel(null)}
+        />
+      )}
+
+      {editingTask && (
+        <TaskPanel
+          task={editingTask}
+          pickable={pickable}
+          inboxColor={inboxColor}
+          busy={busy}
+          onUpdate={onUpdateTask}
+          onClose={() => setTaskPanelId(null)}
         />
       )}
     </div>

@@ -174,12 +174,14 @@ export default function Today() {
           cats={cats}
           today={today}
           pickable={pickable}
+          inboxColor={inboxColor}
           busy={busy}
           scrollRef={scrollRef}
           onSaveEvent={onSaveEvent}
           onDeleteEvent={onDeleteEvent}
           onScheduleTask={onScheduleTask}
           onUnscheduleTask={onUnscheduleTask}
+          onUpdateTask={onUpdate}
         />
       </section>
 

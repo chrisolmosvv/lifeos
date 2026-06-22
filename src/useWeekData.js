@@ -1,0 +1,84 @@
+import { useEffect, useState } from 'react'
+import { supabase } from './supabaseClient'
+
+// The week's data layer: load this week's events + scheduled tasks + categories,
+// and the writes that the week view needs (all reload after). Kept apart so
+// WeekCalendar stays about interaction/render. Owner-only RLS applies to every
+// query; writes only touch existing columns (no schema change).
+export function useWeekData(days) {
+  const [events, setEvents] = useState([])
+  const [scheduled, setScheduled] = useState([])
+  const [cats, setCats] = useState([])
+  const [busy, setBusy] = useState(false)
+
+  async function load() {
+    const weekStart = new Date(days[0])
+    const weekEnd = new Date(days[0])
+    weekEnd.setDate(weekEnd.getDate() + 7)
+    const inWeek = (q, col) =>
+      q.gte(col, weekStart.toISOString()).lt(col, weekEnd.toISOString())
+
+    const [evRes, taskRes, catRes] = await Promise.all([
+      inWeek(
+        supabase.from('events').select('id, title, notes, start_at, end_at, location, category_id'),
+        'start_at',
+      ).order('start_at', { ascending: true }),
+      inWeek(
+        supabase
+          .from('tasks')
+          .select('id, title, notes, status, category_id, priority, scheduled_start, scheduled_end'),
+        'scheduled_start',
+      ),
+      supabase.from('categories').select('id, name, color, parent_id, sort_order'),
+    ])
+    setEvents(evRes.data || [])
+    setScheduled(taskRes.data || [])
+    setCats(catRes.data || [])
+  }
+
+  useEffect(() => {
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // One write, reload after; returns a plain message on error (for the panel).
+  async function write(query) {
+    setBusy(true)
+    const { error } = await query
+    setBusy(false)
+    if (error)
+      return error.code === '23514'
+        ? 'That event ends before it starts — check the times.'
+        : error.message || 'Something went wrong.'
+    await load()
+    return null
+  }
+
+  const onSaveEvent = (id, fields) =>
+    write(
+      id
+        ? supabase.from('events').update(fields).eq('id', id)
+        : supabase.from('events').insert(fields),
+    )
+  const onDeleteEvent = (id) => write(supabase.from('events').delete().eq('id', id))
+  const onScheduleTask = (id, startIso, endIso) =>
+    write(
+      supabase
+        .from('tasks')
+        .update({ scheduled_start: startIso, scheduled_end: endIso })
+        .eq('id', id),
+    )
+  const onUpdateTask = (id, fields) =>
+    write(supabase.from('tasks').update(fields).eq('id', id))
+
+  return {
+    events,
+    scheduled,
+    cats,
+    busy,
+    onSaveEvent,
+    onDeleteEvent,
+    onScheduleTask,
+    onUpdateTask,
+  }
+}

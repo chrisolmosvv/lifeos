@@ -35,6 +35,76 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 (Piece 4h) — Resize & create on the week + task editor on the calendar
+WHAT CHANGED (UI only — NO database/schema/RLS change; writes only existing columns):
+- **Resize on the week:** dragging a block's **top/bottom edge** now resizes it
+  (15-min snap, clamped so it can't invert) — exactly as the day column. An
+  **edge-grab resizes; a middle-grab moves** (incl. cross-day from 4g). The two
+  views now behave identically.
+- **Create on the week:** **tap an empty slot** in a day's column → the new-event
+  panel pre-filled at that day + time (one-hour default); a quiet **"+ Add event"**
+  bar above the grid opens the same panel at the next hour. Saves + re-renders
+  with the side-by-side overlap split.
+- **Tap a task block → edit the task** (your pick): on the day AND the week,
+  tapping a dotted task block opens the **task editor** (title / notes / category /
+  priority) as a calm overlay. It **stays a task** (writes only task columns). The
+  editor fields are now a shared `TaskEditForm` used by both the list row and the
+  calendar overlay (reuse, not a copy).
+- This brings the week to **full parity with the day column** — the calendar's
+  core interactions are complete.
+
+FILES TOUCHED:
+- New: `src/TaskEditForm.jsx` (shared task fields), `src/TaskPanel.jsx` (calendar
+  task overlay), `src/useWeekData.js` (week data + writes, split out to keep
+  WeekCalendar small)
+- Edited: `src/WeekCalendar.jsx` (resize on, create, task panel; uses useWeekData),
+  `src/DayTimeline.jsx` (task panel on the day), `src/Today.jsx` (passes the task
+  editor wiring), `src/TaskRow.jsx` (uses the shared TaskEditForm), `src/calendar.css`
+- NOT touched: `db/` (no schema/RLS change).
+
+HOW TO VERIFY (on your Mac, mouse/trackpad — no SQL):
+1. `npm run dev`, log in → **Calendar**.
+2. **Resize:** drag a block's **top** edge (start changes) and **bottom** edge
+   (end changes) → snaps to 15 min; reload → it kept the new size.
+3. **Move vs resize don't conflict:** grab the **middle** and drag → it **moves**
+   (and can cross to another day); grab an **edge** → it **resizes**.
+4. **Create by slot:** click an empty time on, say, Thursday's column → the panel
+   opens at Thursday, that hour, 3:00–4:00 default; add it → it appears there.
+5. **Create by button:** click **"+ Add event"** (top right) → the panel opens at
+   the next hour; add one.
+6. **Task editor:** tap a **dotted task block** → the task editor opens (title /
+   notes / category / priority); change its category or priority → it updates and
+   the task is **still in its Today/This Week list** (unchanged type).
+7. **Overlap:** resize/drag two items into the same time on one day → they **split
+   side by side**.
+8. **Reload**, then **Settings → Log out** and back in → everything persisted and
+   only yours.
+
+WHAT THE PHONE DOES (unchanged): the Calendar route still falls back to the
+single-day view on narrow screens; no touch interactions added here.
+
+KNOWN GAPS / RISKS:
+- Multi-day events still show on their start day only; no recurrence; no week
+  navigation to other weeks; nothing here touches Telegram/the brief.
+
+NEXT: **Phase 4 is feature-complete pending your verification.** This was the last
+of the calendar's core interactions (events + scheduled tasks, day + week, tap-
+edit / move / cross-day / resize / create). After you verify, tell me and I'll
+mark Phase 4 done in the roadmap. (I have NOT marked it done yet.) Then: Phase 5 —
+Telegram capture.
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` untouched; resize writes `start_at`/`end_at`
+  (events) or `scheduled_start`/`scheduled_end` (tasks); create inserts an event
+  with title/times/etc; the task editor writes title/notes/category_id/priority —
+  all existing columns; the four owner-only policies are intact.
+- **Edge-resize and create reuse the day column's paths** (the same `useEventDrag`
+  with `allowResize`, the same `EventPanel`) — not re-implementations.
+- **Edge-grab now resizes (not moves) on the week** — the two views match — and
+  middle-grab move / cross-day drag from 4g still work alongside it.
+- **The task editor is the shared Piece-2a form** (`TaskEditForm`), so a task is
+  edited the same way from the list and the calendar; it stays a task.
+
 ### 2026-06-22 — Phase 4 (Piece 4g) — Edit & move on the week (incl. cross-day drag)
 WHAT CHANGED (UI only — NO database/schema/RLS change; writes only existing time columns):
 - **The week view is now interactive** (was read-only in 4f):

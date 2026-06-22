@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { supabase } from './supabaseClient'
 import {
   HOURS,
   HOUR_HEIGHT,
@@ -10,84 +9,33 @@ import {
   nowScrollTop,
 } from './dateUtils'
 import { orderedTree, isInbox } from './categoryTree'
+import { INBOX_COLOR } from './palette'
 import DayColumn from './DayColumn'
 import EventPanel from './EventPanel'
+import TaskPanel from './TaskPanel'
 import WeekDragPreview from './WeekDragPreview'
 import { useEventDrag } from './useEventDrag'
+import { useWeekData } from './useWeekData'
 import './calendar.css'
 
-// Desktop week view: seven day columns Mon–Sun. Now interactive (4g): tap an
-// event to edit it, drag any block to move it — vertically for the time,
-// horizontally across columns to change the day. Reuses the day column's drag
-// hook (with week geometry), the shared DayColumn render and the edit panel.
-// Resize + create on the week are the next piece (4h). Writes only existing time
-// columns — no schema change.
+// Desktop week view: seven day columns Mon–Sun, at full parity with the day
+// column (4h): tap an event to edit / a task to edit it (stays a task); drag to
+// move (vertical = time; horizontal across columns = the day); drag an edge to
+// resize; tap an empty slot or "+ Add event" to create. Reuses the shared drag
+// hook (week geometry), DayColumn, EventPanel and TaskPanel. The data + writes
+// live in useWeekData. No schema change — writes only existing columns.
 export default function WeekCalendar({ days, today }) {
   const scrollRef = useRef(null)
   const bodyRef = useRef(null)
-  const [events, setEvents] = useState([])
-  const [scheduled, setScheduled] = useState([])
-  const [cats, setCats] = useState([])
-  const [busy, setBusy] = useState(false)
   const [panel, setPanel] = useState(null)
+  const [taskPanelId, setTaskPanelId] = useState(null)
+  const { events, scheduled, cats, busy, onSaveEvent, onDeleteEvent, onScheduleTask, onUpdateTask } =
+    useWeekData(days)
 
-  async function load() {
-    const weekStart = new Date(days[0])
-    const weekEnd = new Date(days[0])
-    weekEnd.setDate(weekEnd.getDate() + 7)
-    const inWeek = (q, col) =>
-      q.gte(col, weekStart.toISOString()).lt(col, weekEnd.toISOString())
-
-    const [evRes, taskRes, catRes] = await Promise.all([
-      inWeek(
-        supabase.from('events').select('id, title, notes, start_at, end_at, location, category_id'),
-        'start_at',
-      ).order('start_at', { ascending: true }),
-      inWeek(
-        supabase
-          .from('tasks')
-          .select('id, title, status, category_id, scheduled_start, scheduled_end'),
-        'scheduled_start',
-      ),
-      supabase.from('categories').select('id, name, color, parent_id, sort_order'),
-    ])
-    setEvents(evRes.data || [])
-    setScheduled(taskRes.data || [])
-    setCats(catRes.data || [])
-  }
-
-  useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = nowScrollTop(el.clientHeight)
   }, [])
-
-  // Writes (reload after). Event saves return a plain message for the panel.
-  async function writeEvent(query) {
-    setBusy(true)
-    const { error } = await query
-    setBusy(false)
-    if (error)
-      return error.code === '23514'
-        ? 'That event ends before it starts — check the times.'
-        : error.message || 'Something went wrong.'
-    await load()
-    return null
-  }
-  const onSaveEvent = (id, fields) =>
-    writeEvent(supabase.from('events').update(fields).eq('id', id))
-  const onDeleteEvent = (id) =>
-    writeEvent(supabase.from('events').delete().eq('id', id))
-  const onScheduleTask = (id, startIso, endIso) =>
-    writeEvent(
-      supabase
-        .from('tasks')
-        .update({ scheduled_start: startIso, scheduled_end: endIso })
-        .eq('id', id),
-    )
 
   // Week geometry: which day-column the pointer is over, and the minutes down
   // the shared hour grid. This is what makes cross-day dragging work.
@@ -108,10 +56,11 @@ export default function WeekCalendar({ days, today }) {
   const drag = useEventDrag({
     geometry,
     scrollRef,
-    allowResize: false, // resize on the week is 4h
+    allowResize: true, // edge-grab resizes (middle-grab still moves / crosses days)
     allowUnschedule: false,
     onSelect: (item) => {
       if (item.kind === 'event') setPanel({ mode: 'edit', event: item })
+      else setTaskPanelId(item.id) // tapping a task block edits the task
     },
     onDrop: (item, startIso, endIso) => {
       if (item.kind === 'task') onScheduleTask(item.id, startIso, endIso)
@@ -119,8 +68,33 @@ export default function WeekCalendar({ days, today }) {
     },
   })
 
+  // Create: tap an empty slot in a day's column → a one-hour event at that
+  // day/time; "+ Add event" → today (or the first day) at the next hour.
+  function openNewAt(day, e) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const hour = Math.max(0, Math.min(23, Math.floor((e.clientY - rect.top) / HOUR_HEIGHT)))
+    const start = new Date(day)
+    start.setHours(hour, 0, 0, 0)
+    const end = new Date(start)
+    end.setHours(hour + 1)
+    setPanel({ mode: 'new', start, end })
+  }
+  function openNewDefault() {
+    const base = days.find((d) => isSameDay(d, today)) || days[0]
+    const hour = Math.min(23, new Date().getHours() + 1)
+    const start = new Date(base)
+    start.setHours(hour, 0, 0, 0)
+    const end = new Date(start)
+    end.setHours(hour + 1)
+    setPanel({ mode: 'new', start, end })
+  }
+
   const pickable = orderedTree(cats).filter((c) => !isInbox(c))
+  const inboxColor = cats.find((c) => isInbox(c))?.color || INBOX_COLOR
   const catById = new Map(cats.map((c) => [c.id, c]))
+  const editingTask = taskPanelId
+    ? scheduled.find((t) => t.id === taskPanelId)
+    : null
 
   // The item under an active drag, for the floating preview.
   let dragItem = null
@@ -140,6 +114,11 @@ export default function WeekCalendar({ days, today }) {
 
   return (
     <div className="cal-week">
+    <div className="cal-bar">
+      <button className="dt-add" onClick={openNewDefault}>
+        + Add event
+      </button>
+    </div>
     <div className="cal-scroll" ref={scrollRef}>
       <div className="cal-head">
         <div className="cal-corner">
@@ -180,9 +159,9 @@ export default function WeekCalendar({ days, today }) {
               showNow={isToday}
               className={isToday ? 'is-today' : ''}
               interactive
-              resizable={false}
               bind={drag.bind}
               ghostId={drag.preview?.id}
+              onColClick={(e) => openNewAt(d, e)}
             />
           )
         })}
@@ -202,11 +181,24 @@ export default function WeekCalendar({ days, today }) {
         <EventPanel
           mode={panel.mode}
           event={panel.event}
+          start={panel.start}
+          end={panel.end}
           pickable={pickable}
           busy={busy}
           onSave={onSaveEvent}
           onDelete={onDeleteEvent}
           onClose={() => setPanel(null)}
+        />
+      )}
+
+      {editingTask && (
+        <TaskPanel
+          task={editingTask}
+          pickable={pickable}
+          inboxColor={inboxColor}
+          busy={busy}
+          onUpdate={onUpdateTask}
+          onClose={() => setTaskPanelId(null)}
         />
       )}
     </div>

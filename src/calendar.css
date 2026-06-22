@@ -95,14 +95,25 @@
 }
 
 /* ---- Desktop week view ---- */
-/* Positioned wrapper so the edit panel's overlay covers the calendar without
-   scrolling with the grid. */
+/* Positioned wrapper (so the edit panel's overlay covers the calendar without
+   scrolling with the grid) and a flex column (a thin action bar over the grid). */
 .cal-week {
   position: relative;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+/* The quiet "+ Add event" bar above the week grid. */
+.cal-bar {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.4rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
 }
 .cal-scroll {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }

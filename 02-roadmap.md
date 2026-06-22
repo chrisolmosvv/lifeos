@@ -71,6 +71,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 4, Piece 4h: resize & create on the week + task editor on the
+  calendar. ← PHASE 4 READY TO MARK DONE (pending owner verification).** Edge-drag now
+  resizes on the week (15-min snap, clamped); middle-grab still moves/crosses days —
+  the two views finally match. Create on the week: tap an empty slot → new-event panel
+  at that day/time; a "+ Add event" bar opens the same panel. Tapping a dotted task
+  block now opens the task editor (title/notes/category/priority) on BOTH day and week
+  — it stays a task; the Piece-2a fields were extracted into a shared `TaskEditForm`
+  (used by the list row and a new `TaskPanel` overlay). Split the week's data/writes
+  into `useWeekData` to keep WeekCalendar small. Reused the day's drag hook (allowResize)
+  + EventPanel — not re-implementations. UI only — NO schema/RLS change. Builds clean.
+  **This completes the calendar's core interactions (events + scheduled tasks; day +
+  week; tap-edit / move / cross-day / resize / create). NOT marked done in the doc yet —
+  owner to verify on the Mac, then confirm and I'll flip Phase 4 to ✅. NEXT after that:
+  Phase 5 — Telegram capture.**
 - **2026-06-22 — Phase 4, Piece 4g of several: edit & move on the week (incl. cross-day).**
   Made the week interactive: tap an event → the same edit panel as the day; drag to
   move within a day (15-min snap); and the new part — drag across day columns to
