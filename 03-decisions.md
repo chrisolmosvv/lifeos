@@ -9,6 +9,20 @@
 
 ---
 
+- **[Data foundation before design]** — Build all spine tables and data
+  structures to their full architecture-doc shape first; the interim UIs that
+  verify each piece stay deliberately plain and are NOT design-finalised. A
+  dedicated UX/UI redesign phase comes later, after the data foundation is
+  complete. **Why:** the data shapes are the expensive thing to get wrong — a
+  later redesign that only touches layout, type and colour is cheap because
+  nothing underneath has to move; polishing throwaway verify screens now is
+  effort we'd redo. **Trade-off:** the app looks plain and unfinished for a
+  while; visual choices (e.g. the task priority treatment) are intentionally left
+  un-locked until the redesign phase, so don't record them as final before then.
+  **For Claude Code:** stop asking the owner to art-direct interim verify screens
+  — keep them functional and calm but don't fine-tune; save design decisions for
+  the redesign phase.
+
 - **`tasks` table — the second spine table (Phase 3, Piece 1).** Built now to its
   FULL architecture shape so later pieces (priority, time-bucket views, due-date
   picker, subtasks, calendar time-blocking) bolt on with NO rebuild, even though

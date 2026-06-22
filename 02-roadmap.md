@@ -49,7 +49,16 @@ nudge + a suggestion to fill a gap.
 **Done when:** it texts me every morning and it's actually useful.
 **← This is the real V1 finish line.**
 
-## ⬜ Phase 7 — Signals & polish
+## ⬜ Phase 7 — The redesign (look & feel pass)
+The full UX/UI pass once the data foundation and core flows are real. Bring every
+screen up to the broadsheet identity in 06-design.md — layout, type, colour,
+motion, the per-screen feeling — replacing the plain interim verify UIs. The
+owner is art director here; this is where the design conversations that were
+deferred actually happen.
+**Done when:** the app looks and feels like the personal broadsheet, not a plain
+prototype.
+
+## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
 **Done when:** V1 done, foundations quietly logging for the future.
 
@@ -62,6 +71,11 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Decision recorded: data foundation before design.** Build spine
+  tables to their full shape first; keep interim verify UIs plain (not design-
+  finalised) and save the look-and-feel work for a dedicated redesign phase. Added
+  that phase as the new **Phase 7 — The redesign**, pushing the old "Signals &
+  polish" to **Phase 8**. See the decisions doc for the full reasoning.
 - **2026-06-22 — Phase 3, Piece 2a of several: editing a task (title, notes,
   category, priority).** First real task screen. Tap a task → an inline edit panel
   (reusing the Categories expand-on-tap pattern) to change title/notes, reassign
