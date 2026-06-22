@@ -40,17 +40,16 @@
   files small. Trade-off: relies on the model for date math — accepted because the
   owner verifies the reply before anything is saved.
 
-- **Gemini model: gemini-2.5-flash, not 2.0-flash (Phase 5, Piece 5c).** The
-  architecture doc says "Gemini Flash, free tier." We initially used `gemini-2.0-flash`
-  but its free tier now returns `limit: 0` (RESOURCE_EXHAUSTED on the first call), so
-  it's effectively unavailable without billing. `gemini-2.5-flash` works on the free
-  tier (confirmed by listing the key's models and a live call) and is the newer Flash,
-  so it's the choice. **Why this matters / how to change:** the model name is a single
-  `GEMINI_MODEL` const in `understand.ts` — if 2.5-flash's free quota changes, swap it
-  there (free options seen on this key include `gemini-2.5-flash-lite` and
-  `gemini-flash-latest`; flash-lite was confirmed to read the samples equally well and
-  has higher free limits — the go-to swap if rate limits ever bite). Still free, still
-  Flash — the paid-key switch for sensitive modules remains a LATER phase, unchanged.
+- **Gemini model: gemini-2.5-flash-lite (Phase 5, Piece 5c).** The architecture doc
+  says "Gemini Flash, free tier." Journey: `gemini-2.0-flash`'s free tier now returns
+  `limit: 0` (unusable without billing); `gemini-2.5-flash` works but has a low free
+  **daily** request cap that this session's testing exhausted (the owner then got
+  "hit my AI limit" repeatedly, a minute apart — a per-DAY limit, not per-minute).
+  **`gemini-2.5-flash-lite`** is the settled choice: confirmed to read the samples
+  equally well, with higher free limits and a separate (fresh) quota bucket. **How to
+  change:** the model name is a single `GEMINI_MODEL` const in `understand.ts` (other
+  free options on this key: `gemini-2.5-flash`, `gemini-flash-latest`). Still free,
+  still Flash — the paid-key switch for sensitive modules remains a LATER phase.
   Trade-off / failure handling: free Flash can briefly **503** ("high demand") or
   **429** (over the free per-minute/day limit). The function retries with backoff to
   ride out 503s, but treats a 429 distinctly — it stops (retrying in seconds can't help)

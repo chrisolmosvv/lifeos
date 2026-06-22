@@ -55,7 +55,7 @@ correctly → replies telling me exactly what it did and where.
   function: only chat id 8864259574 (stored as the `OWNER_CHAT_ID` secret) gets a
   reply; everyone else gets silence + 200. Owner's echo unchanged. No AI, no DB.
 - ✅ **5c — "Gemini reads it" (understanding only).** Marty sends the message +
-  today's local date/time to Gemini (gemini-2.5-flash, free tier), which returns
+  today's local date/time to Gemini (gemini-2.5-flash-lite, free tier), which returns
   structured fields (type/title/date/time/unsure); Marty replies with what he
   understood and "(Not saved yet.)". Rules baked in: Europe/Amsterdam, next-upcoming
   day, clock-time ⇒ event else task. NOTHING saved. Owner-gate still holds.

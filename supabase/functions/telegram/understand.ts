@@ -6,7 +6,7 @@
 // GEMINI_API_KEY lives in Supabase's secret store, never in this file or the repo.
 
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
-const GEMINI_MODEL = "gemini-2.5-flash"; // Flash, free tier (per the architecture doc)
+const GEMINI_MODEL = "gemini-2.5-flash-lite"; // Flash-lite: free tier, higher daily limit
 const TZ = "Europe/Amsterdam"; // all date/time reasoning is in the owner's local time
 
 export interface Understood {
