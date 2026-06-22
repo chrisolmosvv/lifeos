@@ -76,6 +76,16 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 3, Piece 3e: subtasks (one level). ← PHASE 3 READY TO MARK
+  FULLY DONE (pending owner verification).** Added one-level subtasks: "+ Add subtask"
+  on a top-level task's editor, subtasks rendered indented under their parent (calm
+  Categories tree look), a quiet "X of Y done" parent count that does NOT auto-complete,
+  and a "Delete task" action. One level only is enforced in the DB via a new trigger
+  (`db/05_subtasks_guard.sql` — **owner must run it**) as well as the UI. Parent-delete
+  promotes children to top-level (FK was already ON DELETE SET NULL — checked, kept).
+  No table schema / RLS change (the guard is an added trigger). Builds clean. **This is
+  the last Phase-3 piece — after the owner runs the SQL and verifies, Phase 3 can be
+  flipped to ✅. NOT marked done in the doc yet. Then: Phase 5 — Telegram capture.**
 - **2026-06-22 — Phase 3, Piece 3d done: the Someday view.** Added a quiet collapsed
   "Someday" expander below This Week (a single muted line + count + caret, not a third
   headline). Expanding reveals time_bucket='Someday' tasks using the exact shared task

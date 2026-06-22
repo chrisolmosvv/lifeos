@@ -35,6 +35,76 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 3 (Piece 3e) — Subtasks (one level) — LAST PHASE-3 PIECE
+⚠️ RUN THE SQL FIRST — the feature won't work (and the one-level rule won't be
+enforced) until you do. A missed SQL step has bitten this project before.
+
+SUPABASE STEP (required, once):
+1. Open the SQL editor:
+   https://supabase.com/dashboard/project/cntlptuacsujbdtwvbis/sql/new
+2. Open `db/05_subtasks_guard.sql`, copy the WHOLE file, paste it in, click **Run**.
+   You should see "Success. No rows returned."
+
+WHAT CHANGED (UI + one new DB guard — NO table schema or RLS change):
+- **Add a subtask:** tap a top-level task to open its editor → a calm **"+ Add
+  subtask"** there. Subtasks are real tasks (same row: tick, edit, priority, due
+  date, category). They inherit the parent's bucket.
+- **Nesting:** subtasks show **indented under their parent** in Today/This Week/
+  Someday, reusing the Categories tree's calm indentation. **One level only.**
+- **Parent count:** a parent with subtasks shows a quiet **"X of Y done"** — it
+  does **NOT** auto-complete and is never blocked; the parent has its own tick.
+- **Completing/reopening a subtask** updates the count; **completing the parent is
+  independent.**
+- **One level only is enforced in the DB** (new trigger `tasks_before_write` in
+  `db/05_subtasks_guard.sql`) as well as the UI (no "+ Add subtask" on a subtask).
+- **Parent-delete promotes children:** I added a **"Delete task"** action in the
+  list editor. The `parent_task_id` FK was ALREADY `ON DELETE SET NULL` (from
+  Piece 1) — so deleting a parent **promotes its subtasks to top-level (they
+  survive)**, never deletes them. (Checked the FK; no change needed.)
+
+FILES TOUCHED:
+- New: `db/05_subtasks_guard.sql` (the one-level DB guard — RUN IT)
+- Edited: `src/Today.jsx` (select parent_task_id; group subtasks; add-subtask +
+  delete handlers), `src/TaskBlock.jsx` (render parent + nested subtasks),
+  `src/TaskRow.jsx` (indent, count, "+ Add subtask", Delete), `src/tasks.css`
+- NOT touched: the tasks table schema / RLS policies (the guard is an added
+  trigger, not a schema/RLS change).
+
+HOW TO VERIFY (on your Mac — RUN THE SQL FIRST):
+1. After running the SQL: `npm run dev`, log in → **Today**.
+2. Add a **parent task**. Tap it → **"+ Add subtask"** → add **two** subtasks.
+   They appear **indented** under the parent, which shows **"0 of 2 done"**.
+3. **Complete one subtask** → the count becomes **"1 of 2 done"** and the parent
+   is **NOT** auto-completed.
+4. **You cannot add a subtask to a subtask** — tap a subtask: there's no "+ Add
+   subtask" option. (The database also refuses it if bypassed.)
+5. **Complete the parent** with its own tick → that's independent of the subtasks.
+6. **Delete the parent** (tap it → **Delete task**) → its subtasks **survive**,
+   now promoted to top-level tasks in their bucket (NOT gone).
+7. **Reload**, then **Settings → Log out** and back in → everything persisted and
+   only yours.
+
+KNOWN GAPS / RISKS:
+- **If the SQL isn't run:** the one-level rule isn't DB-enforced and adding a
+  subtask may error — run `db/05_subtasks_guard.sql` first.
+- One level only (by design); no drag-to-reorder, no drag-to-reparent, no subtask
+  nesting on the calendar grid. Delete has no confirm dialog (matches Categories;
+  parent-delete is non-destructive — children promote).
+
+NEXT: **Phase 3 is now fully closed pending your verification** (3a–3e all done).
+After you verify, tell me and I'll mark Phase 3 fully ✅. Then **Phase 5 — Telegram
+capture** (Phase 4 is already verified done).
+
+FOR THE CHECKER:
+- **One-level rule is enforced at the DATABASE** (`db/05_subtasks_guard.sql`'s
+  `tasks_before_write` trigger), not just the UI.
+- **RLS stays owner-only** — the trigger only validates (no SECURITY DEFINER); no
+  policy change.
+- **The parent shows a count and does NOT auto-complete** (and isn't blocked).
+- **Deleting a parent does NOT silently destroy its subtasks** — the FK is
+  `ON DELETE SET NULL`, so children are promoted to top-level.
+- No table schema / RLS change (a trigger was added; no columns or policies changed).
+
 ### 2026-06-22 — Phase 3 (Piece 3d) — The Someday view
 WHAT CHANGED (UI only — NO database/schema/RLS change; reads/writes time_bucket='Someday'):
 - **A quiet "Someday" expander below the This Week block**, collapsed by default —

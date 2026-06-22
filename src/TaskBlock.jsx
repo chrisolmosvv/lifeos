@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import TaskRow from './TaskRow'
 
 // One front-page block — a Fraunces headline over a calm list of its tasks,
@@ -14,10 +14,13 @@ export default function TaskBlock({
   pickable,
   expandedId,
   busy,
+  subtasksByParent,
   onToggleExpand,
   onToggleDone,
   onUpdate,
   onAdd,
+  onAddSubtask,
+  onDelete,
   scheduleBind,
   hideTitle, // Someday reuses this block under its own quiet expander header
 }) {
@@ -40,21 +43,42 @@ export default function TaskBlock({
         <p className="tb-empty">{emptyText}</p>
       ) : (
         <ul className="tasks-list">
-          {tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              cats={cats}
-              inboxColor={inboxColor}
-              pickable={pickable}
-              expanded={expandedId === task.id}
-              busy={busy}
-              onToggleExpand={() => onToggleExpand(task.id)}
-              onToggleDone={onToggleDone}
-              onUpdate={onUpdate}
-              scheduleBind={scheduleBind}
-            />
-          ))}
+          {tasks.map((task) => {
+            const subs = subtasksByParent?.get(task.id) || []
+            const common = {
+              cats,
+              inboxColor,
+              pickable,
+              busy,
+              onToggleDone,
+              onUpdate,
+              onDelete,
+              scheduleBind,
+            }
+            return (
+              <Fragment key={task.id}>
+                <TaskRow
+                  task={task}
+                  expanded={expandedId === task.id}
+                  onToggleExpand={() => onToggleExpand(task.id)}
+                  subtasks={subs}
+                  onAddSubtask={onAddSubtask}
+                  {...common}
+                />
+                {subs.map((sub) => (
+                  <TaskRow
+                    key={sub.id}
+                    task={sub}
+                    depth={1}
+                    isSubtask
+                    expanded={expandedId === sub.id}
+                    onToggleExpand={() => onToggleExpand(sub.id)}
+                    {...common}
+                  />
+                ))}
+              </Fragment>
+            )
+          })}
         </ul>
       )}
 

@@ -38,7 +38,7 @@ export default function Today() {
       supabase
         .from('tasks')
         .select(
-          'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end, created_at',
+          'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, parent_task_id, scheduled_start, scheduled_end, created_at',
         )
         .order('created_at', { ascending: true }),
       supabase
@@ -86,6 +86,25 @@ export default function Today() {
   // the DB defaults; category starts empty (Inbox) — set it later in the panel.
   const onAdd = (bucket, title) =>
     run(supabase.from('tasks').insert({ title, time_bucket: bucket }))
+
+  // Add a subtask under a parent. It's a real task; it inherits the parent's
+  // bucket (so if the parent is later deleted it lands somewhere sensible). The
+  // DB guard enforces one level only — the UI never offers this on a subtask.
+  const onAddSubtask = (parentId, title) => {
+    const parent = (tasks || []).find((t) => t.id === parentId)
+    return run(
+      supabase.from('tasks').insert({
+        title,
+        parent_task_id: parentId,
+        time_bucket: parent?.time_bucket || 'Today',
+      }),
+    )
+  }
+
+  // Delete a task. The parent FK is ON DELETE SET NULL, so deleting a parent
+  // PROMOTES its subtasks to top-level (they survive), not delete them.
+  const onDeleteTask = (id) =>
+    run(supabase.from('tasks').delete().eq('id', id))
 
   const onToggleDone = (task) =>
     run(
@@ -145,9 +164,19 @@ export default function Today() {
   const pickable = orderedTree(cats).filter((c) => !isInbox(c))
 
   const all = tasks || []
-  const todayTasks = all.filter((t) => t.time_bucket === 'Today')
-  const weekTasks = all.filter((t) => t.time_bucket === 'This Week')
-  const somedayTasks = all.filter((t) => t.time_bucket === 'Someday')
+  // Subtasks group under their parent; only top-level tasks fill the buckets.
+  const subtasksByParent = new Map()
+  for (const t of all) {
+    if (t.parent_task_id) {
+      const arr = subtasksByParent.get(t.parent_task_id) || []
+      arr.push(t)
+      subtasksByParent.set(t.parent_task_id, arr)
+    }
+  }
+  const topLevel = all.filter((t) => !t.parent_task_id)
+  const todayTasks = topLevel.filter((t) => t.time_bucket === 'Today')
+  const weekTasks = topLevel.filter((t) => t.time_bucket === 'This Week')
+  const somedayTasks = topLevel.filter((t) => t.time_bucket === 'Someday')
   // Tasks scheduled for today appear on the grid (still listed too).
   const scheduledTasks = all.filter(
     (t) => t.scheduled_start && isSameDay(new Date(t.scheduled_start), today),
@@ -159,10 +188,13 @@ export default function Today() {
     pickable,
     expandedId,
     busy,
+    subtasksByParent,
     onToggleExpand,
     onToggleDone,
     onUpdate,
     onAdd,
+    onAddSubtask,
+    onDelete: onDeleteTask,
     scheduleBind: schedule.bind,
   }
 

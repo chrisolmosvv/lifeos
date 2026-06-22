@@ -9,6 +9,31 @@
 
 ---
 
+- **Subtasks: one level only, enforced in the DB; parent shows a count and never
+  auto-completes; parent-delete promotes children (Phase 3, Piece 3e).**
+  - **One level only, enforced in BOTH places.** UI: "+ Add subtask" is offered
+    only on a top-level task, never on a subtask. DB: a new trigger
+    `tasks_before_write` (`db/05_subtasks_guard.sql`, mirroring the category
+    guards) refuses to give a parent to a task whose chosen parent is itself a
+    subtask, and refuses to turn a task that already has subtasks into a subtask —
+    so a three-deep mess can't be saved even if the UI is bypassed. **Why DB too:**
+    a UI-only rule can be bypassed; the one-level invariant is part of the spine.
+    The trigger only validates (no `SECURITY DEFINER`), so **RLS stays owner-only.**
+  - **The parent shows a quiet "X of Y done" count and does NOT auto-complete.**
+    The count is information; completing all subtasks does nothing automatic to the
+    parent, and the parent is never blocked from completing — it has its own tick,
+    under the owner's control. **Why:** the owner stays in charge; a list that
+    completes things on its own is surprising.
+  - **Deleting a parent PROMOTES its subtasks to top-level (they survive).** The
+    `parent_task_id` FK was already `ON DELETE SET NULL` from Piece 1, so this is
+    the existing behaviour — checked, kept, NOT cascade. Subtasks inherit the
+    parent's `time_bucket` on creation, so a promoted child lands in a sensible
+    bucket. **Why:** least-destructive, matching the categories reparent-up rule;
+    silent task loss is unacceptable. A task-delete action was added in the list
+    editor to make this reachable (lists only — not the calendar task overlay).
+  - Subtasks render indented under their parent (the calm Categories tree look),
+    one level. UI only beyond the guard — no schema/RLS change.
+
 - **Someday is a quiet collapsed drawer below This Week, opening a scroll region
   (Phase 3, Piece 3d).** Someday deliberately does NOT get equal billing with
   Today/This Week: collapsed by default, it's a single muted line (uppercase

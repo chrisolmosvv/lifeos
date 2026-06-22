@@ -1,11 +1,13 @@
+import { useState } from 'react'
 import CategoryTag from './CategoryTag'
 import TaskEditForm from './TaskEditForm'
 import { dueStatus, formatDue } from './dueDate'
 import './tasks.css'
 
 // One task line: a tick to mark it done, the title + its quiet meta (priority
-// kicker, category dot+tag, finish time), the drag grip, and — on tap — the
-// shared task editor (TaskEditForm). Persists to existing columns.
+// kicker, category dot+tag, due date, subtask count), the drag grip, and — on
+// tap — the shared task editor plus (for a parent) "+ Add subtask" and Delete.
+// A subtask renders indented; one level only (enforced in the DB too).
 export default function TaskRow({
   task,
   cats,
@@ -13,12 +15,30 @@ export default function TaskRow({
   pickable,
   expanded,
   busy,
+  depth = 0,
+  isSubtask = false,
+  subtasks = [],
   onToggleExpand,
   onToggleDone,
   onUpdate,
+  onAddSubtask,
+  onDelete,
   scheduleBind,
 }) {
+  const [addingSub, setAddingSub] = useState(false)
+  const [subValue, setSubValue] = useState('')
+
   const done = task.status === 'done'
+  const subDone = subtasks.filter((s) => s.status === 'done').length
+  const subTotal = subtasks.length
+
+  async function submitSub(e) {
+    e.preventDefault()
+    const v = subValue.trim()
+    if (!v || busy) return
+    const ok = await onAddSubtask(task.id, v)
+    if (ok) setSubValue('')
+  }
 
   // Display category: its category, or Inbox when uncategorised (category_id is
   // null — the one and only way a task means "Inbox").
@@ -30,7 +50,7 @@ export default function TaskRow({
     : { name: 'Inbox', color: inboxColor }
 
   return (
-    <li className="tasks-item">
+    <li className={'tasks-item' + (isSubtask ? ' is-subtask' : '')}>
       <div className="tasks-row">
         <button
           className={'tasks-check' + (done ? ' is-done' : '')}
@@ -84,6 +104,11 @@ export default function TaskRow({
                 {formatDue(task.due_date)}
               </span>
             )}
+            {subTotal > 0 && (
+              <span className="tasks-subcount tnum">
+                {subDone} of {subTotal} done
+              </span>
+            )}
           </span>
         </button>
 
@@ -100,13 +125,49 @@ export default function TaskRow({
       </div>
 
       {expanded && (
-        <TaskEditForm
-          task={task}
-          pickable={pickable}
-          inboxColor={inboxColor}
-          busy={busy}
-          onUpdate={onUpdate}
-        />
+        <div className="tasks-expanded">
+          <TaskEditForm
+            task={task}
+            pickable={pickable}
+            inboxColor={inboxColor}
+            busy={busy}
+            onUpdate={onUpdate}
+          />
+          <div className="tasks-rowactions">
+            {/* One level only: a subtask is not offered "+ Add subtask". */}
+            {!isSubtask &&
+              (addingSub ? (
+                <form className="tb-addform" onSubmit={submitSub}>
+                  <input
+                    className="tasks-input"
+                    autoFocus
+                    value={subValue}
+                    onChange={(e) => setSubValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Escape' && setAddingSub(false)}
+                    placeholder="New subtask"
+                    aria-label="New subtask"
+                  />
+                  <button className="tb-addbtn" type="submit" disabled={busy}>
+                    Add
+                  </button>
+                </form>
+              ) : (
+                <button
+                  className="tb-addlink"
+                  onClick={() => setAddingSub(true)}
+                >
+                  + Add subtask
+                </button>
+              ))}
+            <button
+              className="tasks-delete"
+              onClick={() => onDelete(task.id)}
+              disabled={busy}
+            >
+              Delete task
+            </button>
+          </div>
+        </div>
       )}
     </li>
   )
