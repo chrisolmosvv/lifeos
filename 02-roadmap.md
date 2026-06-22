@@ -19,12 +19,12 @@ Tasks:
 - ✅ First commit (first save point)
 - ✅ Build minimal React+Vite app and deploy live on Vercel
 
-## 🔨 Phase 1 — The skeleton you can see   ← CURRENT
+## ✅ Phase 1 — The skeleton you can see
 App shell deployed, login works, empty week-view calendar on desktop + a
 stripped phone layout.
 **Done when:** I open my app on my phone and log in.
 
-## ⬜ Phase 2 — Categories & Inbox
+## 🔨 Phase 2 — Categories & Inbox   ← CURRENT
 Create/edit buckets with colors and sub-levels; Inbox as the default.
 **Done when:** my real life categories exist.
 
@@ -62,6 +62,13 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 1 DONE & verified. Phase 2 is now current.** Pushed the
+  calendar commit to GitHub and added the two Supabase env vars
+  (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) in Vercel — that fixed the blank
+  live site. Owner then logged in successfully on both Mac and iPhone against the
+  live Vercel site and the empty week-view calendar shows on both. Phase 1's
+  "done when" (open the app on my phone and log in) is met. Next up: Phase 2 —
+  Categories & Inbox.
 - **2026-06-22 — Phase 1, step 2: empty calendar shell built.** After login, the
   "you're logged in" placeholder is replaced by the calendar. Desktop shows an
   empty Apple-Calendar-style week grid (Mon–Sun, hour rows, today's column marked

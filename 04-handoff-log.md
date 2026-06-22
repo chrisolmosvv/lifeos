@@ -35,6 +35,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 1 — DEPLOYED & VERIFIED (phase complete)
+WHAT CHANGED:
+- Pushed the calendar-shell commit to GitHub (it had been committed locally but
+  not pushed, so Vercel hadn't built it).
+- Diagnosed the blank live site: Vercel was missing the two Supabase env vars
+  because `.env` is gitignored and never reaches GitHub. Added `VITE_SUPABASE_URL`
+  and `VITE_SUPABASE_ANON_KEY` in the Vercel dashboard, then redeployed.
+- Owner verified end-to-end: logged in successfully on BOTH Mac and iPhone against
+  the LIVE Vercel site, and the empty week-view calendar renders on both. This
+  meets Phase 1's "done when" (open the app on my phone and log in). Phase 1 is
+  done; Phase 2 (Categories & Inbox) is now the current phase.
+- No code changed this session — this was deploy + verify only. Brain docs updated.
+
+FILES TOUCHED: 02-roadmap.md, 03-decisions.md, 04-handoff-log.md
+(no app source changed; the env vars live in the Vercel dashboard, not the repo)
+
+HOW TO VERIFY:
+1. On your iPhone, open the live Vercel URL, log in via the email magic link —
+   you should land on the empty single-day calendar view.
+2. On your Mac, open the same live Vercel URL (not localhost), log in — you should
+   see the full week grid. Both already confirmed working by the owner.
+3. Run `git log --oneline -1` in the lifeos folder and confirm the latest commit
+   is this session's brain-doc update, and `git status` shows nothing to push.
+
+KNOWN GAPS / RISKS:
+- The two Vercel env vars are a manual, off-GitHub step. If the Supabase keys ever
+  change, or a new deploy target is added, they must be re-entered in the Vercel
+  dashboard and the app redeployed (Vercel bakes them in at build time).
+- Still a visual-only shell — no categories, tasks, or events exist yet.
+- New-user signups remain open by default (noted in step-1 entry); fine for now
+  under single-user + RLS, lock down later.
+
+NEXT: Phase 2 — Categories & Inbox. Create/edit buckets with colors and
+sub-levels, with Inbox as the default bucket. (Done when my real-life categories
+exist.) This is the first phase that ADDS a real table — keep RLS on and do not
+touch the core task/event meaning.
+
+FOR THE CHECKER: Nothing to review in code this session (deploy + verify only).
+Going into Phase 2, please sanity-check the plan before building: confirm the new
+categories table is owner-only via RLS, has an Inbox default, and ADDS to the
+spine without changing the task/event/category core meaning per CLAUDE.md.
+
 ### 2026-06-22 — Phase 1 (step 2) — Empty week-view calendar shell
 WHAT CHANGED:
 - After login, the old "you're logged in" placeholder is gone — you now land on

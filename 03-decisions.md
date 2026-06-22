@@ -9,6 +9,17 @@
 
 ---
 
+- **Supabase env vars must be set in Vercel by hand (twice).** The app reads
+  `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from environment variables.
+  Locally these live in a `.env` file that is gitignored, so it never reaches
+  GitHub — and Vercel builds from GitHub. Why: keeping secrets out of GitHub is
+  correct, but it means Vercel has no copy of them unless we add them in the
+  Vercel dashboard (Settings → Environment Variables) ourselves. Without them the
+  live site builds but renders blank. Trade-off: a manual step we must remember
+  whenever the keys change or a new deploy target is added; Vercel bakes these in
+  at BUILD time, so changing them requires a redeploy to take effect. (The anon
+  key is safe to expose publicly — RLS is what protects the data, not the key.)
+
 - **Plain CSS + inline styles for now, not Tailwind (yet).** Why: the app was
   built with simple inline styles from the start; Tailwind (named in the
   architecture doc as the intended styling tool) was never actually installed.
