@@ -24,17 +24,11 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  return (
-    <div style={screen}>
-      {loading ? (
-        <p>Loading…</p>
-      ) : session ? (
-        <LoggedIn email={session.user.email} />
-      ) : (
-        <Login />
-      )}
-    </div>
-  )
+  // Logged in → the calendar fills the whole screen.
+  // Loading / logged out → a simple centered screen.
+  if (session) return <LoggedIn email={session.user.email} />
+
+  return <div style={screen}>{loading ? <p>Loading…</p> : <Login />}</div>
 }
 
 const screen = {

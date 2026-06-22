@@ -1,32 +1,35 @@
 import { supabase } from './supabaseClient'
+import { weekDays, formatRange } from './dateUtils'
+import WeekCalendar from './WeekCalendar'
+import DayAgenda from './DayAgenda'
+import './calendar.css'
 
-export default function LoggedIn({ email }) {
+// The logged-in app frame: a top bar plus the calendar.
+// Desktop sees the week grid; phone sees a clean single day.
+export default function LoggedIn() {
+  const today = new Date()
+  const days = weekDays(today)
+
   async function handleLogout() {
     await supabase.auth.signOut()
   }
 
   return (
-    <div style={wrap}>
-      <h1 style={{ fontSize: '2rem', margin: 0 }}>LifeOS</h1>
-      <p>You're logged in{email ? ` as ${email}` : ''}.</p>
-      <button onClick={handleLogout} style={button}>
-        Log out
-      </button>
+    <div className="app">
+      <header className="app-head">
+        <span className="app-title">LifeOS</span>
+        <span className="app-range">{formatRange(days)}</span>
+        <button className="logout" onClick={handleLogout}>
+          Log out
+        </button>
+      </header>
+
+      <div className="cal-wrap desktop-only">
+        <WeekCalendar days={days} today={today} />
+      </div>
+      <div className="cal-wrap phone-only">
+        <DayAgenda today={today} />
+      </div>
     </div>
   )
-}
-
-const wrap = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1rem',
-  textAlign: 'center',
-}
-const button = {
-  padding: '0.6rem 1rem',
-  fontSize: '1rem',
-  border: '1px solid #111',
-  borderRadius: '8px',
-  background: '#fff',
-  cursor: 'pointer',
 }

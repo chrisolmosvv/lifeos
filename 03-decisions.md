@@ -9,6 +9,14 @@
 
 ---
 
+- **Plain CSS + inline styles for now, not Tailwind (yet).** Why: the app was
+  built with simple inline styles from the start; Tailwind (named in the
+  architecture doc as the intended styling tool) was never actually installed.
+  Rather than bolt on a new tool mid-build, the calendar uses one small CSS file
+  (`src/calendar.css`) for the grid and the desktop/phone switch. Trade-off: not
+  yet on Tailwind as the architecture doc envisions — we can adopt it later if
+  styling grows complex; revisit before the styling gets large.
+
 - **GitHub repo is public.** Why: checker chats (Claude.ai) can read any file
   directly via its raw GitHub URL, with no login or file-upload needed. This
   keeps the review workflow smooth. Trade-off: source code is visible to anyone

@@ -62,6 +62,14 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 1, step 2: empty calendar shell built.** After login, the
+  "you're logged in" placeholder is replaced by the calendar. Desktop shows an
+  empty Apple-Calendar-style week grid (Mon–Sun, hour rows, today's column marked
+  with a red date circle + a live red "now" line). Phone shows a clean single-day
+  view instead of a squished grid. No data, no tables touched. Builds cleanly.
+  STILL TO DO for Phase 1: deploy to Vercel and log in on the phone.
+- **2026-06-21 — Phase 1, step 1: login built.** Supabase email magic-link login
+  working and confirmed on the owner's Mac.
 - **2026-06-21 — Phase 0 complete.** Created all five accounts (GitHub, Supabase,
   Vercel, Telegram bot, Gemini). Installed Claude Code. Created the `lifeos` repo,
   added and verified all seven brain docs, built a minimal React+Vite app (single

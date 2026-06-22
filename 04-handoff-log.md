@@ -35,6 +35,51 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 1 (step 2) — Empty week-view calendar shell
+WHAT CHANGED:
+- After login, the old "you're logged in" placeholder is gone — you now land on
+  the calendar. The Log out button moved into a top bar (always reachable).
+- Desktop: an empty Apple-Calendar-style WEEK view — 7 columns (Mon–Sun) with
+  hour rows down the left, the current week's date range in the top bar, today's
+  column subtly tinted with a red date circle, and a live red "now" line. It
+  scrolls and opens around 7am. No events — it's purely the visual shell.
+- Phone (narrow screens): instead of a squished 7-column grid, a clean single
+  DAY view for today — big date header, "Nothing scheduled yet", and the same
+  tidy hour list with the red now-line.
+- No data, no database, no task/event/category tables touched.
+
+FILES TOUCHED: src/App.jsx, src/LoggedIn.jsx (rewritten as the app frame),
+src/WeekCalendar.jsx (new), src/DayAgenda.jsx (new), src/NowLine.jsx (new),
+src/dateUtils.js (new), src/calendar.css (new)
+
+HOW TO VERIFY:
+Desktop (on your Mac):
+1. In Terminal, from the lifeos folder, run:  npm run dev
+2. Open  http://localhost:5173  and log in (email magic link, as before).
+3. You should see a full-screen week grid: a top bar reading "LifeOS",
+   the week's date range (e.g. "Jun 22–28, 2026"), and a "Log out" button.
+   Below: 7 day columns with hour labels down the side. Today's column is
+   faintly tinted, today's date sits in a red circle, and a thin red line
+   marks the current time. Scroll up/down through the hours. The grid is empty.
+4. Click "Log out" — you should return to the login screen.
+Phone (do this after we deploy, OR on your Mac to preview the layout):
+- Make the browser window very narrow (under ~768px wide) — the week grid
+  should switch to a single clean day view for today with a big date header.
+
+KNOWN GAPS / RISKS:
+- This is a visual shell only — nothing can be added to it yet (that's Phase 3+).
+- Not deployed to Vercel yet, so the phone test is best done after deploy.
+- Tailwind (named in the architecture doc) is still not used; we styled with a
+  small plain CSS file instead — see the new entry in the decisions doc.
+
+NEXT: Deploy this to Vercel (the same two env vars are already set there from
+step 1; just push and let it build), then open it on your phone and log in —
+that completes Phase 1's "done when".
+
+FOR THE CHECKER: Confirm no task/event/category tables or data were added (this
+should be visual-only), that the desktop week view and phone day view both render
+from the same data-free components, and that no Supabase keys are hard-coded.
+
 ### 2026-06-21 — Phase 1 (step 1) — Supabase connection + email magic-link login
 WHAT CHANGED:
 - Installed the official Supabase library and connected the app to Supabase

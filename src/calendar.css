@@ -1,0 +1,205 @@
+/* Calendar shell styling — Apple-Calendar-like, clean and empty. */
+
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1d1d1f;
+  background: #fff;
+}
+
+/* Top bar: title, the week/day range, and the log-out button. */
+.app-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #e5e5ea;
+  flex: none;
+}
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.app-range {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #8e8e93;
+}
+.logout {
+  margin-left: auto;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  border: 1px solid #d1d1d6;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.logout:hover {
+  background: #f5f5f7;
+}
+
+/* The calendar fills the rest of the screen and scrolls inside itself. */
+.cal-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Desktop vs phone: only one of the two views is shown. */
+.phone-only {
+  display: none;
+}
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+  .phone-only {
+    display: block;
+    height: 100%;
+  }
+  .app-head {
+    flex-wrap: wrap;
+  }
+  .app-range {
+    display: none; /* the phone day view shows the date itself */
+  }
+}
+
+/* ---- Shared grid bits (used by both week and day views) ---- */
+.cal-times {
+  width: 56px;
+  flex: none;
+}
+.cal-time-cell {
+  height: 48px;
+  position: relative;
+}
+.cal-time-cell span {
+  position: absolute;
+  top: -7px;
+  right: 6px;
+  font-size: 0.68rem;
+  color: #8e8e93;
+}
+.cal-col {
+  flex: 1;
+  position: relative;
+  border-left: 1px solid #f0f0f0;
+}
+.cal-hour-cell {
+  height: 48px;
+  border-top: 1px solid #ececec;
+}
+.cal-col.is-today {
+  background: rgba(255, 59, 48, 0.035);
+}
+
+/* The red "now" line. */
+.now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px solid #ff3b30;
+  z-index: 2;
+}
+.now-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff3b30;
+}
+
+/* ---- Desktop week view ---- */
+.cal-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.cal-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  background: #fff;
+  border-bottom: 1px solid #e5e5ea;
+}
+.cal-corner {
+  width: 56px;
+  flex: none;
+}
+.cal-dayhead {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-left: 1px solid #f0f0f0;
+}
+.dh-name {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8e8e93;
+}
+.dh-num {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.cal-dayhead.is-today .dh-name {
+  color: #ff3b30;
+}
+.cal-dayhead.is-today .dh-num {
+  width: 1.7rem;
+  height: 1.7rem;
+  line-height: 1.7rem;
+  border-radius: 50%;
+  background: #ff3b30;
+  color: #fff;
+}
+.cal-body {
+  display: flex;
+  position: relative;
+}
+
+/* ---- Phone day view ---- */
+.day {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.day-head {
+  flex: none;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5ea;
+}
+.day-weekday {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ff3b30;
+}
+.day-date {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.day-note {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: #8e8e93;
+}
+.day-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+.day-grid {
+  display: flex;
+  position: relative;
+}
