@@ -3,15 +3,26 @@
 //
 // Piece 5b (the gate): only the owner gets a response. Any other sender is read,
 // silently ignored (no reply), and acked with 200 so Telegram stops retrying.
-// Piece 5a (the echo, owner only): reply echoing the text and the chat ID.
-// No AI, no database, no saving.
+// Piece 5c (understanding): the owner's message goes to Gemini, which reads it
+// into structured fields; Marty replies with what he understood. SAVES NOTHING.
 //
 // Secrets live in Supabase's secret store, never in this file or the repo:
 //   TELEGRAM_BOT_TOKEN — the bot's key
 //   OWNER_CHAT_ID      — the only chat allowed a reply
+//   GEMINI_API_KEY     — the AI key (read in ./understand.ts)
+
+import { understand, formatReply } from "./understand.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const OWNER_CHAT_ID = Deno.env.get("OWNER_CHAT_ID");
+
+async function sendMessage(chatId: number | string, text: string) {
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text }),
+  });
+}
 
 Deno.serve(async (req) => {
   // Telegram ignores the response body — it only cares that we answer 200 so it
@@ -30,18 +41,16 @@ Deno.serve(async (req) => {
       return ack("ignored");
     }
 
-    // --- From here on it's the owner: the 5a echo, unchanged. ---
+    // --- The owner: read the message with Gemini and report (no saving). ---
     const text = message?.text;
     if (typeof text !== "string") return ack(); // e.g. a sticker — just ack.
 
-    const reply = `Got it: ${text} — your Telegram chat ID is ${chatId}`;
+    const understood = await understand(text);
+    const reply = understood
+      ? formatReply(understood)
+      : "I couldn't read that one just now — mind trying again? (Nothing saved.)";
 
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text: reply }),
-    });
-
+    await sendMessage(chatId, reply);
     return ack();
   } catch (_err) {
     // Bad/empty body or any hiccup: still ack so Telegram moves on.

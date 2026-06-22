@@ -54,9 +54,13 @@ correctly → replies telling me exactly what it did and where.
 - ✅ **5b — lock the bot to the owner's chat ID only.** Gate at the front of the
   function: only chat id 8864259574 (stored as the `OWNER_CHAT_ID` secret) gets a
   reply; everyone else gets silence + 200. Owner's echo unchanged. No AI, no DB.
-- 🔨 **5c — "Gemini reads it":** the bot understands a plain-English message
-  instead of echoing. (Saving to the DB comes after.)
-- ⬜ later — Gemini writes a real task/event → confirms what it did and where.
+- ✅ **5c — "Gemini reads it" (understanding only).** Marty sends the message +
+  today's local date/time to Gemini (gemini-2.5-flash, free tier), which returns
+  structured fields (type/title/date/time/unsure); Marty replies with what he
+  understood and "(Not saved yet.)". Rules baked in: Europe/Amsterdam, next-upcoming
+  day, clock-time ⇒ event else task. NOTHING saved. Owner-gate still holds.
+- 🔨 **5d — "save it for real":** turn what Gemini understood into a real task/event
+  row in the DB, and confirm what was saved and where.
 
 ## ⬜ Phase 6 — The 7am brief + anti-staleness engine
 Scheduler wakes the agent; Gemini writes a brief: day overview + stale-item
@@ -86,6 +90,19 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 5, Piece 5c: Gemini reads it (understanding only, saves
+  nothing).** Marty now sends the owner's message + today's local date/time to Gemini
+  and replies with structured understanding (type/title/date/time, or "unsure"),
+  always tagged "(Not saved yet.)". Baked in the owner's rules: Europe/Amsterdam tz,
+  vague day = next upcoming (today if today), clock-time ⇒ event else task. Forced
+  JSON-only output (strict schema, temp 0); malformed/unavailable → "couldn't read
+  that" (with a small retry). Split the function into index.ts (gate+plumbing) +
+  understand.ts (AI+reply) to stay small. Gemini key is the GEMINI_API_KEY secret
+  (free Flash), not the repo. Had to switch model **gemini-2.0-flash → gemini-2.5-flash**
+  (2.0's free tier is now limit 0). Verified all sample reads correct via a local
+  replica + one live deployed call. NO database touched. Owner-gate still holds.
+  **Phase 5 NOT done.** NEXT = 5d (save it for real). Note: the access token the owner
+  believed revoked still worked (3rd time) — owner to confirm dead tokens are gone.
 - **2026-06-22 — Phase 5, Piece 5b: locked the bot to the owner.** Added a gate at
   the very front of the `telegram` edge function — it reads the sender's chat id
   first and only the owner (8864259574) gets a reply; any other sender is read,

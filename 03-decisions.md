@@ -23,6 +23,35 @@
   be treated as dead. Trade-off: the CLI's plain `supabase login` picks the wrong account
   unless the browser is on the right one — use the access token to be sure.
 
+- **Gemini reads messages into structured JSON; understanding is a separate piece
+  from saving (Phase 5, Piece 5c).** Marty sends the owner's text + today's local
+  date/time to Gemini and gets back STRUCTURED fields (type/title/date/time +
+  needs_clarification + note), then replies in plain English with "(Not saved yet.)".
+  **Why split understanding from saving:** a misread is harmless this piece — the
+  owner just sees a wrong reply, no junk row in the DB — so we can tune the reading
+  before 5d ever writes. **How it's made reliable:** Gemini is given a strict
+  `responseSchema` with `responseMimeType: application/json` at temperature 0, so it
+  returns only JSON; if the call fails or the JSON is malformed, the function returns
+  null and Marty says "I couldn't read that one" rather than crashing (with up to 3
+  attempts to ride out a transient 503/429). The reading rules are the owner's:
+  Europe/Amsterdam timezone, a vague day = the next upcoming occurrence (today if it
+  is today), and a specific CLOCK TIME ⇒ event, otherwise task. Code is split into
+  `index.ts` (gate + transport) and `understand.ts` (prompt + call + reply) to keep
+  files small. Trade-off: relies on the model for date math — accepted because the
+  owner verifies the reply before anything is saved.
+
+- **Gemini model: gemini-2.5-flash, not 2.0-flash (Phase 5, Piece 5c).** The
+  architecture doc says "Gemini Flash, free tier." We initially used `gemini-2.0-flash`
+  but its free tier now returns `limit: 0` (RESOURCE_EXHAUSTED on the first call), so
+  it's effectively unavailable without billing. `gemini-2.5-flash` works on the free
+  tier (confirmed by listing the key's models and a live call) and is the newer Flash,
+  so it's the choice. **Why this matters / how to change:** the model name is a single
+  `GEMINI_MODEL` const in `understand.ts` — if 2.5-flash's free quota changes, swap it
+  there (free options seen on this key include `gemini-2.5-flash-lite` and
+  `gemini-flash-latest`). Still free, still Flash — the paid-key switch for sensitive
+  modules remains a LATER phase, unchanged. Trade-off: free Flash can briefly 503 under
+  load; the retry above absorbs it.
+
 - **The bot is locked to the owner by a chat-id gate at the front of the function;
   the id is a secret (Phase 5, Piece 5b).** The `telegram` function's first action
   is to read the sender's chat id and compare it (as a string) to `OWNER_CHAT_ID`;

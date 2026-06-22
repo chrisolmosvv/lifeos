@@ -35,6 +35,53 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 5 (Piece 5c) — "Gemini reads it" (understanding only, saves nothing)
+WHAT CHANGED:
+- Marty now sends your message (plus today's local date/time) to Gemini, which
+  reads it into structured fields, and he replies telling you what he understood.
+  NOTHING is saved — every reply ends with "(Not saved yet.)" / "(Nothing saved.)".
+- Rules baked in (your choices): timezone Europe/Amsterdam; a vague day = the next
+  upcoming one (today if it's today); a specific clock time ⇒ EVENT, otherwise TASK.
+- Gemini is forced to return ONLY structured JSON (strict schema, temperature 0);
+  if it returns junk or is unavailable, Marty says "I couldn't read that one"
+  instead of crashing (with a small auto-retry for transient blips).
+- Gemini key stored as the Supabase secret GEMINI_API_KEY (free Flash tier), never
+  in the repo. The 5b owner-gate still holds. Function split into index.ts (gate +
+  plumbing) and understand.ts (the AI + reply) to stay small.
+
+FILES TOUCHED: supabase/functions/telegram/index.ts,
+supabase/functions/telegram/understand.ts (new), 02-roadmap.md, 03-decisions.md,
+04-handoff-log.md
+
+HOW TO VERIFY (from your phone, then check the app shows NOTHING new):
+1. Text Marty "dentist Thursday 2pm" → "I read that as an EVENT: 'dentist',
+   Thu 25 Jun, 14:00. (Not saved yet.)"
+2. "call the plumber" → "a TASK: 'call the plumber', no date."
+3. "lunch with Mum Friday" → "a TASK: 'lunch with Mum', Fri 26 Jun." (no clock
+   time, so TASK — this is the no-time case to eyeball before 5d saves anything.)
+4. "buy milk tomorrow" → "a TASK: 'buy milk', Tue 23 Jun."
+5. Gibberish (e.g. "asdkjh qwe") → "I'm not sure I understood that — could you
+   rephrase?" (he invents nothing).
+6. Open the app: your tasks/calendar are UNCHANGED. Nothing was saved.
+
+KNOWN GAPS / RISKS:
+- Saves nothing yet (by design) — that's 5d.
+- "lunch with Mum Friday" reads as a TASK (no clock time). If you'd rather social
+  things default to events, that's a rule tweak to decide before 5d.
+- "gym at 7" resolved to 19:00 (7pm) — Gemini picks a sensible time when am/pm is
+  omitted; worth watching.
+- Model: had to use gemini-2.5-flash — gemini-2.0-flash's free tier is now limit 0
+  (see decisions). Free Flash can briefly 503 ("high demand"); the retry covers it.
+- The access token the owner believed was revoked STILL worked this session (third
+  time) — owner to confirm at the tokens page that dead tokens are actually gone.
+
+NEXT: 5d — "save it for real": take what Gemini understood and write it as a real
+task/event in the database (and confirm what was saved + where).
+
+FOR THE CHECKER: confirm nothing is written to the DB (no client/insert), the
+owner-gate still runs first, Gemini is asked for JSON-only and malformed output is
+handled, and the key lives in a secret. Source: supabase/functions/telegram/*.ts.
+
 ### 2026-06-22 — Phase 5 (Piece 5b) — Lock the bot to the owner's chat ID
 WHAT CHANGED:
 - Added a gate at the very front of the `telegram` function: it reads the
