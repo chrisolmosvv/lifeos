@@ -9,6 +9,31 @@
 
 ---
 
+- **A scheduled task STAYS a task — scheduling only sets times (Phase 4, Piece
+  4e).** Dragging a task onto the day grid sets its `scheduled_start`/
+  `scheduled_end` and nothing else. It does **not** become an event and does not
+  change type: it still appears in its Today/This Week list, is still completed by
+  ticking it there, and its grid block is just a second view of the same task.
+  Unscheduling clears those two columns back to null — nothing is deleted.
+  **Why (owner's decision, per the architecture doc):** tasks and events share one
+  timeline but stay distinct types; one move (set times) is all scheduling should
+  be, so the spine stays clean and there's no type-conversion to undo. **Built-in
+  details:**
+  - **Dotted (dashed) block on the grid** marks a scheduled task, vs an event's
+    solid border — same category colour/kicker language otherwise. (This puts the
+    mock's time-blocked-task treatment into use.)
+  - **One-hour default** on drop (drop time → +1h), then adjustable with the 4d
+    edge-drag. Snaps to 15 min like events.
+  - **Unschedule two ways** (both built, owner's choice): drag the block off the
+    grid's right edge (toward the task list), OR the small "×" on the block. Both
+    just clear the scheduled times.
+  - Move/resize of a placed task block **reuses the 4d drag hook** (writing
+    `scheduled_start`/`scheduled_end` instead of `start_at`/`end_at`); task and
+    event blocks join the **same side-by-side overlap layout**.
+  - The list→grid drag is a separate small hook (`useScheduleDrag`) started from a
+    quiet grip on each task row; mouse only (touch unchanged). Trade-off: a grip
+    per row — kept subtle to respect "no clutter."
+
 - **Drag on the day column: 15-minute snap + a 4px tap-vs-drag threshold (Phase
   4, Piece 4d).** Events can be dragged to move (duration fixed) or resized by
   their top/bottom edge, snapping to **15-minute** steps live as they move (the

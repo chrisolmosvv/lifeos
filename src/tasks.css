@@ -35,12 +35,36 @@
 .tasks-item {
   border-bottom: 1px solid var(--rule);
 }
-/* The always-visible line: the tick + the tappable title/meta. */
+/* The always-visible line: the tick + the tappable title/meta + drag grip. */
 .tasks-row {
   display: flex;
   align-items: flex-start;
   gap: 0.7rem;
   padding: 0.7rem 0.25rem;
+}
+
+/* The grip — press and drag onto "The Day" to schedule the task. Quiet; the
+   accent on hover marks it as draggable. Mouse only (touch keeps scrolling). */
+.tasks-grip {
+  flex: none;
+  align-self: center;
+  color: var(--ink-muted);
+  cursor: grab;
+  user-select: none;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0.2rem;
+}
+.tasks-grip:hover {
+  color: var(--accent);
+}
+
+/* A quiet "scheduled" note on a task that currently has a time block. */
+.tasks-scheduled {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
 }
 
 /* The done/open tick — a quiet hollow circle that fills with the accent when

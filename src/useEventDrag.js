@@ -1,24 +1,24 @@
 import { useRef, useState } from 'react'
 import { HOUR_HEIGHT } from './dateUtils'
 
-// Direct-manipulation drag for the day column: move an event (duration fixed) or
-// resize it by its top/bottom edge. Kept apart from the render so the gesture
-// logic is isolated and testable.
+// Direct-manipulation drag for the day column: move a block (duration fixed) or
+// resize it by its top/bottom edge. Works for both events and scheduled-task
+// blocks — the caller routes the save by the item's `kind`. Dragging a TASK
+// block off the right edge of the grid unschedules it. Kept apart from the
+// render so the gesture logic is isolated and testable.
 //
-// The tap-vs-drag rule is the careful bit: a press only becomes a drag once the
-// pointer crosses THRESHOLD px. Selection (open the edit panel) stays on the
-// native click — so a plain tap, and a touch tap, still open the panel; a real
-// drag sets a flag that swallows the click that follows it. Touch never starts a
-// drag, so narrow screens keep tap-to-edit / tap-to-create exactly as before.
-const THRESHOLD = 4 // px before a press counts as a drag
-const SNAP = 15 // snap to 15-minute steps
-const MIN_DUR = 15 // an event can't get shorter than one snap step (no backwards end)
-const EDGE = 7 // px hit zone at each edge for resize
+// Tap-vs-drag: a press only becomes a drag past THRESHOLD px. Selection stays on
+// the native click (so taps, incl. touch taps, still work); a real drag swallows
+// the click that follows it. Touch never starts a drag.
+const THRESHOLD = 4
+const SNAP = 15
+const MIN_DUR = 15
+const EDGE = 7
 const DAY = 24 * 60
-const EDGE_SCROLL = 24 // auto-scroll when the pointer is within this of an edge
+const EDGE_SCROLL = 24
 
-export function useEventDrag({ today, scrollRef, onSave, onSelect }) {
-  const [preview, setPreview] = useState(null) // {id, top, height} while dragging
+export function useEventDrag({ today, scrollRef, onDrop, onSelect, onUnschedule }) {
+  const [preview, setPreview] = useState(null) // {id, top, height, removing}
   const drag = useRef(null)
   const justDragged = useRef(false)
 
@@ -33,13 +33,16 @@ export function useEventDrag({ today, scrollRef, onSave, onSelect }) {
   const minToPx = (min) => (min / 60) * HOUR_HEIGHT
   const isoAt = (min) => new Date(dayStart + min * 60000).toISOString()
 
-  // Pointer's Y in the scroll content (so auto-scroll stays correct).
   function contentY(clientY) {
     const el = scrollRef.current
     const rect = el.getBoundingClientRect()
     return clientY - rect.top + el.scrollTop
   }
-
+  // Dragged a task block out past the grid's right edge → drop onto the list.
+  function offGrid(clientX) {
+    const el = scrollRef.current
+    return clientX > el.getBoundingClientRect().right
+  }
   function autoScroll(clientY) {
     const el = scrollRef.current
     const rect = el.getBoundingClientRect()
@@ -47,29 +50,27 @@ export function useEventDrag({ today, scrollRef, onSave, onSelect }) {
     else if (clientY > rect.bottom - EDGE_SCROLL) el.scrollTop += 8
   }
 
-  function start(e, ev) {
+  function start(e, item) {
     justDragged.current = false
-    if (e.pointerType === 'touch') return // touch keeps native scroll / tap
+    if (e.pointerType === 'touch') return
     if (e.pointerType === 'mouse' && e.button !== 0) return
 
     const rect = e.currentTarget.getBoundingClientRect()
     const localY = e.clientY - rect.top
-    const edge = Math.min(EDGE, rect.height / 3) // always leave a move zone
+    const edge = Math.min(EDGE, rect.height / 3)
     const mode =
       localY <= edge ? 'top' : localY >= rect.height - edge ? 'bottom' : 'move'
 
-    const startMin = (new Date(ev.start_at).getTime() - dayStart) / 60000
-    const endMin = (new Date(ev.end_at).getTime() - dayStart) / 60000
-    const refPx = minToPx(mode === 'bottom' ? endMin : startMin)
-
+    const startMin = (new Date(item.start_at).getTime() - dayStart) / 60000
+    const endMin = (new Date(item.end_at).getTime() - dayStart) / 60000
     drag.current = {
-      id: ev.id,
+      item,
       mode,
       startMin,
       endMin,
       durMin: endMin - startMin,
       downY: e.clientY,
-      grabOffset: contentY(e.clientY) - refPx,
+      grabOffset: contentY(e.clientY) - minToPx(mode === 'bottom' ? endMin : startMin),
       moved: false,
       curStart: null,
       curEnd: null,
@@ -99,7 +100,8 @@ export function useEventDrag({ today, scrollRef, onSave, onSelect }) {
     }
     d.curStart = s
     d.curEnd = en
-    setPreview({ id: d.id, top: minToPx(s), height: minToPx(en - s) })
+    const removing = d.item.kind === 'task' && offGrid(e.clientX)
+    setPreview({ id: d.item.id, top: minToPx(s), height: minToPx(en - s), removing })
   }
 
   function onEnd(e) {
@@ -111,8 +113,11 @@ export function useEventDrag({ today, scrollRef, onSave, onSelect }) {
     drag.current = null
     setPreview(null)
     justDragged.current = d.moved
-    if (d.moved && (d.curStart !== d.startMin || d.curEnd !== d.endMin)) {
-      onSave(d.id, { start_at: isoAt(d.curStart), end_at: isoAt(d.curEnd) })
+    if (!d.moved) return
+    if (d.item.kind === 'task' && offGrid(e.clientX)) {
+      onUnschedule(d.item)
+    } else if (d.curStart !== d.startMin || d.curEnd !== d.endMin) {
+      onDrop(d.item, isoAt(d.curStart), isoAt(d.curEnd))
     }
   }
 
@@ -121,21 +126,18 @@ export function useEventDrag({ today, scrollRef, onSave, onSelect }) {
     setPreview(null)
   }
 
-  // A block click: never let it reach the grid (which would create an event),
-  // and open the edit panel only when this wasn't the tail of a drag.
-  function onClickBlock(e, ev) {
+  function onClickBlock(e, item) {
     e.stopPropagation()
     if (justDragged.current) return
-    onSelect(ev)
+    onSelect(item)
   }
 
-  // The handlers a block element spreads.
-  const bind = (ev) => ({
-    onPointerDown: (e) => start(e, ev),
+  const bind = (item) => ({
+    onPointerDown: (e) => start(e, item),
     onPointerMove: onMove,
     onPointerUp: onEnd,
     onPointerCancel: onCancel,
-    onClick: (e) => onClickBlock(e, ev),
+    onClick: (e) => onClickBlock(e, item),
   })
 
   return { preview, bind }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { HOURS, HOUR_HEIGHT, formatHour } from './dateUtils'
 import NowLine from './NowLine'
 import EventBlock from './EventBlock'
@@ -7,29 +7,37 @@ import { layoutEvents } from './eventLayout'
 import { useEventDrag } from './useEventDrag'
 import './dayTimeline.css'
 
-// "The Day" column: a 24-hour grid with today's events as blocks and the
-// terracotta now-line. Now editable — tap an empty slot to create at that time
-// (1-hour default), "+ Add event" to create at the next hour, tap a block to
-// edit, delete from the panel. The panel is a calm overlay; the grid stays put
-// (the page never scrolls). Writes go through the parent's event handlers.
+// "The Day" column: a 24-hour grid showing today's events (solid blocks) and
+// scheduled tasks (dashed blocks — still tasks, just a time view) in one shared
+// overlap layout. Editable: tap empty to create an event, tap an event to edit,
+// drag any block to move/resize, drag a task block off the right edge (or its ×)
+// to unschedule. `scrollRef` is owned by Today (so the schedule-drop shares it).
 export default function DayTimeline({
   events,
+  scheduledTasks,
   cats,
   today,
   pickable,
   busy,
+  scrollRef,
   onSaveEvent,
   onDeleteEvent,
+  onScheduleTask,
+  onUnscheduleTask,
 }) {
-  const scrollRef = useRef(null)
   const [panel, setPanel] = useState(null) // null | {mode, event?, start?, end?}
 
-  // Drag-to-move / drag-to-resize. A plain tap still opens the edit panel.
   const drag = useEventDrag({
     today,
     scrollRef,
-    onSave: onSaveEvent,
-    onSelect: (ev) => setPanel({ mode: 'edit', event: ev }),
+    onSelect: (item) => {
+      if (item.kind === 'event') setPanel({ mode: 'edit', event: item })
+    },
+    onDrop: (item, startIso, endIso) => {
+      if (item.kind === 'task') onScheduleTask(item.id, startIso, endIso)
+      else onSaveEvent(item.id, { start_at: startIso, end_at: endIso })
+    },
+    onUnschedule: (item) => onUnscheduleTask(item.id),
   })
 
   // Open centred around now, or at ~7am if now is outside working hours.
@@ -44,9 +52,8 @@ export default function DayTimeline({
     } else {
       el.scrollTop = 7 * HOUR_HEIGHT
     }
-  }, [])
+  }, [scrollRef])
 
-  // A new event spanning one hour from a given start hour today.
   function openNewAt(hour) {
     const start = new Date(today)
     start.setHours(hour, 0, 0, 0)
@@ -54,10 +61,7 @@ export default function DayTimeline({
     end.setHours(start.getHours() + 1)
     setPanel({ mode: 'new', start, end })
   }
-  // "+ Add event" → the next whole hour.
   const openNewNext = () => openNewAt(Math.min(23, new Date().getHours() + 1))
-
-  // Tap on empty grid → the hour you tapped.
   function onGridClick(e) {
     const rect = e.currentTarget.getBoundingClientRect()
     const hour = Math.floor((e.clientY - rect.top) / HOUR_HEIGHT)
@@ -69,8 +73,22 @@ export default function DayTimeline({
     today.getMonth(),
     today.getDate(),
   ).getTime()
-  const laidOut = layoutEvents(events, dayStart)
   const catById = new Map(cats.map((c) => [c.id, c]))
+
+  // Events + scheduled tasks share one overlap layout.
+  const items = [
+    ...events.map((e) => ({ ...e, kind: 'event' })),
+    ...scheduledTasks.map((t) => ({
+      id: t.id,
+      kind: 'task',
+      title: t.title,
+      category_id: t.category_id,
+      status: t.status,
+      start_at: t.scheduled_start,
+      end_at: t.scheduled_end,
+    })),
+  ]
+  const laidOut = layoutEvents(items, dayStart)
 
   return (
     <div className="dt">
@@ -99,7 +117,7 @@ export default function DayTimeline({
               const dragging = drag.preview?.id === it.ev.id
               return (
                 <EventBlock
-                  key={it.ev.id}
+                  key={it.ev.kind + ':' + it.ev.id}
                   ev={it.ev}
                   cat={it.ev.category_id ? catById.get(it.ev.category_id) : null}
                   top={dragging ? drag.preview.top : it.top}
@@ -107,7 +125,9 @@ export default function DayTimeline({
                   col={dragging ? 0 : it.col}
                   cols={dragging ? 1 : it.cols}
                   dragging={dragging}
+                  removing={dragging && drag.preview.removing}
                   handlers={drag.bind(it.ev)}
+                  onUnschedule={() => onUnscheduleTask(it.ev.id)}
                 />
               )
             })}

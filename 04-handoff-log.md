@@ -35,6 +35,76 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 (Piece 4e) — Drag a task onto the grid to schedule it
+WHAT CHANGED (UI only — NO database/schema/RLS change; writes only scheduled_start/scheduled_end):
+- **Drag a task from its list row (a quiet grip "⠿") onto "The Day"** → it gets a
+  time block: `scheduled_start` at the drop time, `scheduled_end` one hour later
+  (snapped to 15 min). Saves on drop. A ghost chip follows the pointer.
+- **A scheduled task STAYS a task** (the core rule): it still shows in its Today/
+  This Week list (now with a small "scheduled" note), is still ticked complete
+  there, and its grid block is just a second view. Ticking it done in the list
+  shows the grid block struck through.
+- **Scheduled tasks render as dashed/dotted blocks** on the grid — visually
+  distinct from events (solid) — same category colour + kicker otherwise.
+- **Move/resize a task block reuses the 4d drag** (writes scheduled_start/
+  scheduled_end). **Task and event blocks share the same side-by-side overlap
+  layout** — overlapping ones split, both readable.
+- **Unschedule two ways:** drag the block off the grid's right edge (it fades as
+  you cross), OR click the small "×" on the block. Either way the task returns to
+  a plain list item with no time block — nothing deleted, just the times cleared.
+
+FILES TOUCHED:
+- New: `src/useScheduleDrag.js` (list→grid scheduling drag)
+- Edited: `src/useEventDrag.js` (now kind-aware: events vs scheduled-task blocks,
+  + unschedule on off-grid drop), `src/DayTimeline.jsx` (merges events + scheduled
+  tasks into one layout; routes saves by kind), `src/EventBlock.jsx` (dashed task
+  block, completion, "×" unschedule), `src/Today.jsx` (shared scrollRef, schedule/
+  unschedule handlers, scheduled-task data, ghost), `src/TaskBlock.jsx` +
+  `src/TaskRow.jsx` (the drag grip), `src/dayTimeline.css`, `src/tasks.css`,
+  `src/today.css`
+- NOT touched: `db/` (no schema/RLS change).
+
+HOW TO VERIFY (on your Mac, with a mouse/trackpad — no SQL):
+1. `npm run dev`, log in → **Today**. Have a task or two in the **Today** block.
+2. **Schedule:** press the grip (⠿) on a Today task and drag it onto the grid at
+   ~3pm, release → it appears as a **dashed block, 3:00–4:00**, AND the task is
+   **still listed in Today** (now tagged "scheduled").
+3. **Resize:** drag the block's bottom edge → its end changes; release. Reload →
+   the new size persisted.
+4. **Completion reflects:** tick the task complete in the **Today list** → the
+   grid block shows **struck through**. Untick → back to normal.
+5. **Unschedule (both ways):** click the block's **×** → it leaves the grid and
+   the task stays in the list. Schedule it again, then **drag it off to the right
+   edge** → same result (it fades, then on release it unschedules).
+6. **Overlap:** schedule a task over an existing event (same time) → they **split
+   side by side**, both readable.
+7. **Reload**, then **Settings → Log out** and back in → everything persisted and
+   only yours. (Nothing was deleted by unscheduling — the tasks are all still there.)
+
+WHAT TOUCH DOES (unchanged — touch-drag isn't the target):
+- On touch, the grip does nothing (touch never starts a drag); tasks stay in their
+  blocks and the timeline still taps to edit/create. No touch-drag this piece.
+
+KNOWN GAPS / RISKS:
+- Tapping a scheduled-task *block* on the grid does nothing (edit a task's details
+  in its list row — it's still a task); the block's controls are drag + the ×.
+- Scheduling is by drag only (no "type a time" in a panel) — that can come later.
+- **The week view is still 4f/4g** — this is the day column only. No recurrence,
+  no multi-day.
+
+NEXT: Phase 4, Piece 4f — make the week view real.
+
+FOR THE CHECKER:
+- **No schema/RLS change.** `db/` is untouched; scheduling writes only
+  `scheduled_start`/`scheduled_end` (unschedule sets them null) on existing task
+  columns; the four owner-only policies are intact.
+- **A scheduled task is STILL a task** — same row in the tasks table (type
+  unchanged), still in its Today/This Week list, still ticked there; only its two
+  scheduled_* columns change.
+- **Scheduled-task blocks join the same overlap layout as events** (one
+  `layoutEvents` call over both), so a task block and an event block overlapping
+  split side by side.
+
 ### 2026-06-22 — Phase 4 (Piece 4d) — Drag to move / resize events on the day column
 WHAT CHANGED (UI only — NO database/schema/RLS change; drag writes only start_at/end_at):
 - **Drag an event block up/down to move it** (duration stays fixed); **drag its

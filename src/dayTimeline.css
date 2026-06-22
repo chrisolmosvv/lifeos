@@ -63,6 +63,40 @@
   user-select: none;
   touch-action: pan-y; /* let touch scroll the column; mouse handles drag */
 }
+/* A scheduled TASK block: dashed edges mark it as a task (vs a solid event).
+   It's still a task — this is just its time view. */
+.dt-event.is-task {
+  border-style: dashed;
+}
+/* A completed scheduled task: struck through, quietly faded. */
+.dt-event.is-done {
+  opacity: 0.75;
+}
+.dt-event.is-done .dt-event-title {
+  text-decoration: line-through;
+  color: var(--ink-muted);
+}
+/* While a task block is dragged off the grid's edge → about to unschedule. */
+.dt-event.is-removing {
+  opacity: 0.4;
+}
+
+/* The small "unschedule" control on a task block (clears its time block). */
+.dt-unschedule {
+  margin-left: auto;
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0 0 0 0.2rem;
+  cursor: pointer;
+}
+.dt-unschedule:hover {
+  color: var(--accent);
+}
+
 /* The block being dragged floats clearly above the rest, full width. */
 .dt-event.is-dragging {
   z-index: 4;

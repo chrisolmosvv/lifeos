@@ -1,17 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { orderedTree, isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import TaskBlock from './TaskBlock'
 import DayTimeline from './DayTimeline'
+import { useScheduleDrag } from './useScheduleDrag'
+import { isSameDay } from './dateUtils'
 import './today.css'
 
 // The Today home — the front page. Two columns: "The Day" timeline on the left
-// (today's events, read-only) and the task blocks on the right, split by time
-// bucket: Today and This Week. (Someday isn't shown here.) RLS makes every query
-// owner-only; no schema change — everything here just reads existing tables.
+// (today's events + scheduled tasks) and the task blocks on the right, split by
+// time bucket. Drag a task onto the grid to schedule it (a scheduled task STAYS
+// a task — it just gains a time block). RLS makes every query owner-only; no
+// schema change — scheduling only writes scheduled_start/scheduled_end.
 export default function Today() {
   const today = new Date()
+  const scrollRef = useRef(null) // the day grid's scroll element (shared)
   const [tasks, setTasks] = useState(null) // null = still loading
   const [cats, setCats] = useState([])
   const [events, setEvents] = useState([]) // today's events only
@@ -33,7 +37,7 @@ export default function Today() {
       supabase
         .from('tasks')
         .select(
-          'id, title, notes, status, completed_at, category_id, priority, time_bucket, created_at',
+          'id, title, notes, status, completed_at, category_id, priority, time_bucket, scheduled_start, scheduled_end, created_at',
         )
         .order('created_at', { ascending: true }),
       supabase
@@ -116,12 +120,36 @@ export default function Today() {
   const onDeleteEvent = (id) =>
     writeEvent(supabase.from('events').delete().eq('id', id))
 
+  // Scheduling a task only sets its scheduled_start/scheduled_end (it stays a
+  // task, still in its list). Unscheduling clears them back to null.
+  const onScheduleTask = (id, startIso, endIso) =>
+    run(
+      supabase
+        .from('tasks')
+        .update({ scheduled_start: startIso, scheduled_end: endIso })
+        .eq('id', id),
+    )
+  const onUnscheduleTask = (id) =>
+    run(
+      supabase
+        .from('tasks')
+        .update({ scheduled_start: null, scheduled_end: null })
+        .eq('id', id),
+    )
+
+  // Drag a task's grip from its list row onto the grid → schedule it there.
+  const schedule = useScheduleDrag({ today, scrollRef, onSchedule: onScheduleTask })
+
   const inboxColor = cats.find((c) => isInbox(c))?.color || INBOX_COLOR
   const pickable = orderedTree(cats).filter((c) => !isInbox(c))
 
   const all = tasks || []
   const todayTasks = all.filter((t) => t.time_bucket === 'Today')
   const weekTasks = all.filter((t) => t.time_bucket === 'This Week')
+  // Tasks scheduled for today appear on the grid (still listed too).
+  const scheduledTasks = all.filter(
+    (t) => t.scheduled_start && isSameDay(new Date(t.scheduled_start), today),
+  )
 
   const blockProps = {
     cats,
@@ -133,6 +161,7 @@ export default function Today() {
     onToggleDone,
     onUpdate,
     onAdd,
+    scheduleBind: schedule.bind,
   }
 
   return (
@@ -141,12 +170,16 @@ export default function Today() {
         <h2 className="today-day-title">The Day</h2>
         <DayTimeline
           events={events}
+          scheduledTasks={scheduledTasks}
           cats={cats}
           today={today}
           pickable={pickable}
           busy={busy}
+          scrollRef={scrollRef}
           onSaveEvent={onSaveEvent}
           onDeleteEvent={onDeleteEvent}
+          onScheduleTask={onScheduleTask}
+          onUnscheduleTask={onUnscheduleTask}
         />
       </section>
 
@@ -173,6 +206,16 @@ export default function Today() {
         )}
         {error && <p className="today-error">{error}</p>}
       </div>
+
+      {/* The chip that follows the pointer while dragging a task onto the grid. */}
+      {schedule.ghost && (
+        <div
+          className="sched-ghost"
+          style={{ left: schedule.ghost.x, top: schedule.ghost.y }}
+        >
+          {schedule.ghost.title}
+        </div>
+      )}
     </div>
   )
 }

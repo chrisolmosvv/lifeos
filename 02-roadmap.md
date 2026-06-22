@@ -71,6 +71,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 4, Piece 4e of several: drag a task onto the grid to schedule
+  it.** Drag a task from its list row (a quiet grip) onto "The Day" → it gets a time
+  block (scheduled_start at drop, +1h, 15-min snap). A scheduled task STAYS a task —
+  still in its Today/This Week list, still ticked there, type unchanged; the grid
+  block is just a second view, drawn dashed (vs solid events) and reflecting
+  completion. Move/resize reuses the 4d drag (writes scheduled_*); task + event
+  blocks share one overlap layout (split side by side). Unschedule two ways: drag
+  off the grid's right edge, or the block's ×. UI only — NO schema/RLS change
+  (writes only scheduled_start/scheduled_end). New `useScheduleDrag` hook; extended
+  `useEventDrag` to be kind-aware. Touch unchanged (no touch-drag). Builds clean.
+  **Phase 4 is NOT done — NEXT: 4f make the week view real; 4g drag there.**
 - **2026-06-22 — Phase 4, Piece 4d of several: drag to move / resize events on the
   day column.** Events can be dragged to move (duration fixed) or resized by their
   top/bottom edge, snapping to 15-min steps live with a calm preview; on release the

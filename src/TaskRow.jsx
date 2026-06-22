@@ -23,6 +23,7 @@ export default function TaskRow({
   onToggleExpand,
   onToggleDone,
   onUpdate,
+  scheduleBind,
 }) {
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes || '')
@@ -100,8 +101,22 @@ export default function TaskRow({
                 Done · {formatDoneAt(task.completed_at)}
               </span>
             )}
+            {task.scheduled_start && (
+              <span className="tasks-scheduled">scheduled</span>
+            )}
           </span>
         </button>
+
+        {scheduleBind && (
+          <span
+            className="tasks-grip"
+            title="Drag onto The Day to schedule"
+            aria-label="Drag to schedule"
+            {...scheduleBind(task)}
+          >
+            ⠿
+          </span>
+        )}
       </div>
 
       {expanded && (

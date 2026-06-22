@@ -96,6 +96,25 @@
   font-size: 0.85rem;
 }
 
+/* The ghost chip that follows the pointer while dragging a task onto the grid.
+   Fixed to the viewport, offset from the cursor, never intercepts pointer. */
+.sched-ghost {
+  position: fixed;
+  z-index: 20;
+  transform: translate(12px, 12px);
+  pointer-events: none;
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0.25rem 0.55rem;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
 /* Phone: stack to one column and let it scroll; the timeline placeholder sits
    on top with a hairline beneath instead of beside. */
 @media (max-width: 768px) {

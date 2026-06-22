@@ -18,6 +18,7 @@ export default function TaskBlock({
   onToggleDone,
   onUpdate,
   onAdd,
+  scheduleBind,
 }) {
   const [adding, setAdding] = useState(false)
   const [value, setValue] = useState('')
@@ -50,6 +51,7 @@ export default function TaskBlock({
               onToggleExpand={() => onToggleExpand(task.id)}
               onToggleDone={onToggleDone}
               onUpdate={onUpdate}
+              scheduleBind={scheduleBind}
             />
           ))}
         </ul>
