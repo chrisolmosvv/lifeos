@@ -35,6 +35,21 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 verified DONE; roadmap corrected; 3c–3e are next
+WHAT CHANGED (docs only — no code/schema/RLS):
+- **Phase 4 (the calendar) is owner-verified complete** → marked ✅ in the roadmap.
+- **Phase 3 marker corrected:** it had been functionally done for several sessions
+  but still read "🔨 CURRENT" while Phase 4 was built on top — flipped to ✅ for the
+  core (add/edit/complete/prioritise/time-bucket, tasks reference categories,
+  schedulable onto the calendar).
+- **Three deferred Phase-3 pieces** — subtasks, the due-date picker, the Someday
+  view — were never built and are the immediate next builds, **in this order:
+  3c due-dates → 3d Someday → 3e subtasks**, before Phase 5. UI only (the columns
+  already exist from Piece 1; no schema change). Recorded in the decisions doc.
+
+NEXT: Piece 3c — the due-date picker (then 3d Someday, 3e subtasks, then Phase 5 —
+Telegram capture).
+
 ### 2026-06-22 — Phase 4 (Piece 4h) — Resize & create on the week + task editor on the calendar
 WHAT CHANGED (UI only — NO database/schema/RLS change; writes only existing columns):
 - **Resize on the week:** dragging a block's **top/bottom edge** now resizes it

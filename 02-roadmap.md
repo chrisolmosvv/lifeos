@@ -28,17 +28,22 @@ stripped phone layout.
 Create/edit buckets with colors and sub-levels; Inbox as the default.
 **Done when:** my real life categories exist.
 
-## 🔨 Phase 3 — Tasks   ← CURRENT
+## ✅ Phase 3 — Tasks
 Add, edit, complete, prioritize, time-bucket, subtasks, due dates.
 **Done when:** I'm putting in real tasks and checking them off.
+Core is done: add/edit/complete/prioritise/time-bucket, tasks reference categories,
+and tasks are schedulable onto the calendar. Subtasks, the due-date picker, and the
+Someday view were deferred and are being built now as Pieces 3c–3e — so the core is
+✅ but those three trailing pieces are in progress before Phase 5.
 
-## ⬜ Phase 4 — Events & the week calendar
+## ✅ Phase 4 — Events & the week calendar
 Add events; see events + scheduled tasks together; drag a task onto a slot.
 Feels like Apple Calendar.
-**Done when:** my week looks right and I'm living in it.
-(This is where it's genuinely usable as a manual tool — before any AI.)
+**Done when:** my week looks right and I'm living in it. — owner-verified.
+Create/edit/move/resize events and scheduled tasks, day + week views, cross-day drag,
+side-by-side overlap. This is where it's genuinely usable as a manual tool (before any AI).
 
-## ⬜ Phase 5 — Telegram capture
+## ⬜ Phase 5 — Telegram capture   ← NEXT (after the 3c–3e trailing pieces)
 Connect the bot. Text "dentist Thursday 2pm" → Gemini reads it → it logs
 correctly → replies telling me exactly what it did and where.
 **Done when:** I add things by texting.
@@ -71,6 +76,14 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Roadmap corrected: Phase 4 verified DONE; Phase 3 marker fixed.** The
+  owner verified the calendar — **Phase 4 → ✅**. **Phase 3** had been functionally done
+  for several sessions but its marker was never flipped (still said "🔨 CURRENT" while
+  Phase 4 was built on top); corrected to **✅** for the core. Three Phase-3 pieces that
+  were never built — **subtasks, the due-date picker, and the Someday view** — are now
+  being built as **Pieces 3c–3e** (in order: due-dates, Someday, subtasks) before
+  starting **Phase 5 — Telegram capture**. UI only; the columns already exist (no schema
+  change).
 - **2026-06-22 — Phase 4, Piece 4h: resize & create on the week + task editor on the
   calendar. ← PHASE 4 READY TO MARK DONE (pending owner verification).** Edge-drag now
   resizes on the week (15-min snap, clamped); middle-grab still moves/crosses days —

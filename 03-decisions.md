@@ -9,6 +9,16 @@
 
 ---
 
+- **[Phase 3 trailing pieces built after Phase 4]** — subtasks, the due-date
+  picker, and the Someday-bucket view were not built during the main Phase 3 work
+  and were finished after Phase 4 as Pieces 3c–3e, before starting Phase 5.
+  **Why:** they slipped past as the calendar work took over; rather than carry
+  them as silent gaps into the Telegram phase, we close them out so Phase 3 is
+  honestly complete. **Trade-off:** a short detour back to tasks before Phase 5 —
+  accepted, to avoid forgotten loose ends. The columns (`parent_task_id`,
+  `due_date`, `time_bucket='Someday'`) already existed in the tasks table from
+  Piece 1, so this is UI only, no schema change.
+
 - **Tapping a scheduled-task block edits the task, from a shared editor (Phase 4,
   Piece 4h).** On the calendar (day and week), tapping a dotted task block opens
   the Piece-2a task editor (title / notes / category / priority) as a calm overlay
