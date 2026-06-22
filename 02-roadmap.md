@@ -76,11 +76,20 @@ ignore everyone but the owner.
   db/06_telegram_saves.sql), deleting exactly that row by id, owner-only — never an
   app-made row. Owner-verified on phone.
 
-## ⬜ Phase 6 — The 7am brief + anti-staleness engine   ← NEXT (the real V1 finish line)
+## 🔨 Phase 6 — The 7am brief + anti-staleness engine   ← CURRENT (the real V1 finish line)
 Scheduler wakes the agent; Gemini writes a brief: day overview + stale-item
 nudge + a suggestion to fill a gap.
 **Done when:** it texts me every morning and it's actually useful.
 **← This is the real V1 finish line.**
+- ✅ **6a — the empty pipe (Marty texts me unprompted, on demand).** New SEPARATE
+  edge function `brief` (where all brief logic lives from the start, so the 7am alarm
+  calls it directly later — never inside the telegram webhook). This piece it only
+  sends one FIXED Telegram message. Deployed PRIVATE (jwt verification ON) so its URL
+  refuses anonymous calls — only a service-role caller (telegram now, the alarm later)
+  gets in. Texting Marty "brief" (a reserved trigger word) fires it, after the secret
+  check + owner-gate, and skips the capture flow; every other message is unchanged.
+  No AI, no data-reading, no schedule, no DB change. (Owner verifies on phone.)
+- ⬜ **6b — the brief reads my real day** (today's events + tasks).
 
 ## ⬜ Phase 7 — The redesign (look & feel pass)
 The full UX/UI pass once the data foundation and core flows are real. Bring every
@@ -104,6 +113,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 6 STARTED. Piece 6a: the empty pipe (on demand).** Built a new,
+  separate `brief` edge function — the home for ALL brief logic from the start, so the
+  later 7am alarm calls it directly and the webhook function never holds brief code.
+  This piece it sends ONE fixed Telegram message and nothing more (no AI, no reading my
+  day, no scheduler, no DB change). It's deployed PRIVATE (jwt verification ON), so its
+  public URL refuses anonymous calls — only a service-role caller can invoke it (the
+  telegram function now, the alarm later); confirmed live (anonymous POST → 401).
+  Texting Marty the reserved word "brief" fires it (after the secret check + owner-gate)
+  and skips normal capture; every other message behaves exactly as before. Deployed to
+  the real cntlptuacsujbdtwvbis project. **Owner verifies on phone** (text "brief" → get
+  the test message; "call mum tomorrow" → still captured; "brief" again → arrives again).
+  Phase 6 NOT done. NEXT: 6b — the brief reads my real day.
 - **2026-06-22 — PHASE 5 COMPLETE & owner-verified. Telegram capture works end to end.**
   All of 5a–5e are done and confirmed on the owner's phone: (5a) the round trip — the
   project's first edge function (`telegram`), webhook registered, `--no-verify-jwt`;

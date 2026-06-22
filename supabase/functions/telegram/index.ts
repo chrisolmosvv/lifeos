@@ -8,6 +8,8 @@
 // Piece 5c (understanding) → 5d (saving): a confident read is written as a real
 // task/event owned by the owner; an unsure read saves nothing.
 // Piece 5e (undo): texting "undo" removes the single most recent item Marty saved.
+// Piece 6a (brief): texting "brief" fires the separate, private `brief` function
+//   (which texts the owner the morning brief). "brief" is a reserved trigger word.
 //
 // Secrets live in Supabase's secret store, never in this file or the repo:
 //   TELEGRAM_BOT_TOKEN       — the bot's key
@@ -24,6 +26,9 @@ import { undoLast } from "./undo.ts";
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const OWNER_CHAT_ID = Deno.env.get("OWNER_CHAT_ID");
 const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
+// Auto-injected by the platform; used to call the PRIVATE `brief` function.
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 async function sendMessage(chatId: number | string, text: string) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -31,6 +36,22 @@ async function sendMessage(chatId: number | string, text: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, text }),
   });
+}
+
+// Fire the separate `brief` function (it texts the owner itself). It's deployed
+// PRIVATE (jwt verification on), so we authenticate with the service-role key this
+// function already runs with. Returns true if the brief accepted the call.
+async function fireBrief(): Promise<boolean> {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/brief`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}` },
+    });
+    return res.ok;
+  } catch (_err) {
+    return false;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -56,6 +77,17 @@ Deno.serve(async (req) => {
 
     const text = message?.text;
     if (typeof text !== "string") return ack(); // e.g. a sticker — just ack.
+
+    // --- BRIEF (6a): "brief" fires the separate brief function and stops here. ---
+    // The brief function texts the owner itself, so we don't send our own reply on
+    // success; only speak up if firing it failed. No capture/understand/save runs.
+    if (text.trim().toLowerCase() === "brief") {
+      const ok = await fireBrief();
+      if (!ok) {
+        await sendMessage(chatId, "I couldn't fetch your brief just now — try again in a moment.");
+      }
+      return ack();
+    }
 
     let reply: string;
     if (text.trim().toLowerCase() === "undo") {

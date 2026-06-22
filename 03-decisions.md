@@ -9,6 +9,27 @@
 
 ---
 
+- **The brief lives in its own PRIVATE edge function, fired by the reserved word
+  "brief" (Phase 6, Piece 6a).** A new, SEPARATE function `brief`
+  (supabase/functions/brief/index.ts) holds all brief logic from the very first
+  piece, even though 6a only sends a fixed message. **Why separate, not inside
+  telegram:** the 7am scheduler will call the brief DIRECTLY in a later piece, so its
+  logic must not be tangled inside the Telegram webhook handler — keeping them apart
+  means the alarm path and the chat path never interfere, and the brief can grow
+  (reading the day, the AI) without bloating the webhook. **Why PRIVATE (deployed WITH
+  jwt verification, NOT --no-verify-jwt):** the brief is never called by Telegram, only
+  by trusted server callers (the telegram function today, the 7am alarm later) that
+  hold the service-role key — so its public URL should refuse anonymous calls outright.
+  This is deliberately STRICTER than the telegram function, which must stay public
+  (--no-verify-jwt) because Telegram's webhook can't send a Supabase JWT. Verified live:
+  an anonymous POST to the brief URL returns 401. **The trigger:** texting Marty the
+  single word "brief" (trimmed, lowercased) is reserved from now on; the telegram
+  function, AFTER its secret check + owner-gate, invokes the brief with its service-role
+  key and STOPS — no capture/save for that message. On success the brief texts the
+  owner itself (no duplicate reply); telegram only speaks up if firing it failed.
+  Trade-off: "brief" can't be captured as a task title by text (negligible), and there's
+  one more deployed function to keep matched to the repo.
+
 - **The REAL Supabase project is `cntlptuacsujbdtwvbis`; an old `qupudazcutkbnxseciwn`
   exists and must be ignored (Phase 5, Piece 5a).** Setting up the first edge function
   revealed the Supabase CLI was logged into an account whose only "lifeos" project was

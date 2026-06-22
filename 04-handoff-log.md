@@ -35,6 +35,61 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 6 (Piece 6a) — The empty pipe (Marty texts me unprompted, on demand)
+WHAT CHANGED:
+- Built a NEW, SEPARATE edge function `brief` (supabase/functions/brief/index.ts).
+  This is the function the 7am alarm will call directly in a later piece, so the
+  brief logic lives here from the start — never inside the telegram/webhook function.
+  Its ONLY job this piece: send ME one fixed Telegram message ("Good morning. This
+  is your LifeOS brief — just testing the wiring today; the real edition is coming
+  soon."). No AI, no reading tasks/events, no schedule, no database.
+- `brief` is deployed PRIVATE (normal deploy, jwt verification ON — NOT
+  --no-verify-jwt), so its public URL refuses anonymous calls. Only a caller holding
+  the service-role key (the telegram function today, the 7am alarm later) can invoke
+  it. Deliberately stricter than the telegram webhook (which must stay public).
+- In the existing `telegram` function: after the webhook-secret check and the
+  owner-gate, if the message text (trimmed, lowercased) is exactly "brief", it
+  invokes the `brief` function with the service-role key it already runs with, then
+  STOPS — the capture/understand/save flow does NOT run for that message. "brief" is
+  now a RESERVED trigger word. Every other message behaves exactly as before.
+- On success the brief function sends the morning message itself (telegram sends no
+  duplicate reply); only if firing it fails does telegram say "I couldn't fetch your
+  brief just now — try again in a moment."
+
+FILES TOUCHED: supabase/functions/brief/index.ts (new),
+supabase/functions/telegram/index.ts, 02-roadmap.md, 03-decisions.md, 04-handoff-log.md
+
+DEPLOY STATE: both functions deployed to the REAL project cntlptuacsujbdtwvbis
+(Frankfurt) via a personal access token from the correct account (token NOT stored
+in any file/repo — used inline for the deploy only). Verified live: an anonymous POST
+to the brief URL returns 401 (private — refuses anonymous), and an unsecured POST to
+telegram still returns 401 (webhook-secret check intact). No Vercel redeploy (no src/
+change). NO database/schema change, NO new tables, NO change to tasks/events/categories.
+
+HOW TO VERIFY (from your phone):
+1. Text Marty the single word "brief" → within a few seconds you get the fixed
+   "Good morning… just testing the wiring today" message — one you did NOT trigger
+   by sending a task.
+2. Text a normal item like "call mum tomorrow" → it's still captured as a task
+   exactly as before (the new trigger didn't break normal capture).
+3. Text "brief" again → the test message arrives again.
+
+KNOWN GAPS / RISKS:
+- The brief is a FIXED message — it doesn't read your real day yet (that's 6b).
+- No scheduler yet — it only fires when you text "brief". The 7am alarm is a later
+  piece; this proves the pipe first so you can test without waiting for 7am.
+- "brief" is now reserved — a task literally titled "brief" can't be captured by text
+  (negligible; type more words).
+
+NEXT: Phase 6, Piece 6b — the brief reads my real day (today's events + tasks).
+
+FOR THE CHECKER: confirm `brief` is its own function (not logic inside telegram),
+deployed WITH jwt verification (its URL returns 401 anonymously), and that telegram's
+"brief" branch sits AFTER the secret check + owner-gate, fires brief with the
+service-role key, and returns without running capture/save. No DB/schema change; no
+secret/token in the repo. Source: supabase/functions/brief/index.ts,
+supabase/functions/telegram/index.ts.
+
 ### 2026-06-22 — Phase 5 COMPLETE & owner-verified (close-out)
 WHAT THE WHOLE PHASE DELIVERS: I add things to LifeOS by texting Marty.
 - He only listens to me (owner chat-id gate) and only accepts genuine Telegram
