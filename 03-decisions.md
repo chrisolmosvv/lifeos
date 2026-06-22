@@ -23,6 +23,36 @@
   be treated as dead. Trade-off: the CLI's plain `supabase login` picks the wrong account
   unless the browser is on the right one — use the access token to be sure.
 
+- **The bot's public endpoint is authenticated by a Telegram webhook secret token,
+  fail-closed (Phase 5, Piece 5e).** With `--no-verify-jwt` the function URL is publicly
+  reachable, and the 5b owner-gate only checks the chat id inside the (forgeable) request
+  body — so a forged "message from the owner" could otherwise inject rows. Fix: a random
+  secret is set on the Telegram webhook (`setWebhook secret_token`) and stored as the
+  `TELEGRAM_WEBHOOK_SECRET` Supabase secret; Telegram sends it in the
+  `X-Telegram-Bot-Api-Secret-Token` header on every call. The function's FIRST action is
+  to compare that header to the stored secret and return 401 on any mismatch — **fail
+  closed** (if the secret env is missing, reject everything, never run open). The owner-gate
+  stays as a second check behind it. **Why keep --no-verify-jwt:** Telegram can't send a
+  Supabase JWT; the secret token is the right authenticator for a webhook. Verified: no
+  header / wrong header → 401; correct → 200. Trade-off: none meaningful; rotating the
+  secret means re-running setWebhook + updating the secret.
+
+- **Undo uses a separate `telegram_saves` log table; deletes exactly one row by id
+  (Phase 5, Piece 5e).** "undo" must remove the last thing the BOT saved and never touch a
+  row the owner made in the app. Tasks carry `source='telegram'`, but the events table has
+  no such column and we will NOT add one or repurpose the reserved `external_id` (that would
+  touch the spine's meaning). **Chosen (owner's pick): a new, separate `telegram_saves`
+  table** (db/06_telegram_saves.sql) that records each bot-saved item's `item_table` +
+  `item_id` (+ title). Undo reads the owner's single most recent log entry and deletes that
+  EXACT row by its unique id, filtered to `user_id = owner` (defence in depth; service-role
+  bypasses RLS so the explicit filter is the guard). **Why a separate table:** it adds a
+  module table without changing the core tables' meaning ("protect the spine"), works
+  uniformly for tasks and events, and makes "the last item" a precise lookup. App-made rows
+  are never in the log, so undo can't reach them — verified live (a hand-made task survived
+  "undo"). No FK from the log to the core rows (a row deleted in the app just makes the log
+  entry stale → undo says "already gone" and clears it). One level only (the last item).
+  Trade-off: a tiny extra table + a log write per save — cheap for safe, precise undo.
+
 - **Bot-saved rows: service-role write + explicit owner user_id; mapping rules
   (Phase 5, Piece 5d).** Marty writes a confident read straight into the spine tables,
   matching their existing shapes exactly (no new columns, no schema change, db/

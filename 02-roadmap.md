@@ -65,10 +65,14 @@ correctly → replies telling me exactly what it did and where.
   key, user_id set to the owner so RLS owner-only stays intact; unsure reads save
   nothing. Verified all cases against the deployed function. Model → gemini-3.1-flash-
   lite (500/day) since the 2.5 flash tiers are only ~20/day.
-- 🔨 **5e — graceful misses + undo + lock to real Telegram.** Undo a save; kinder
-  handling of misreads; and verify a Telegram webhook secret so the public endpoint
-  only accepts genuine Telegram calls (today the owner-gate trusts the forgeable
-  chat id in the body). THIS is the trustworthiness piece — Phase 5 done after it.
+- ✅ **5e — make it trustworthy (security + misses + undo).** (A) The function now
+  rejects any call without the Telegram webhook secret (X-Telegram-Bot-Api-Secret-Token,
+  fails closed) before anything else, with the owner-gate behind it. (B) Chit-chat /
+  gibberish / unsure reads save nothing and get a kind reply. (C) "undo" removes the
+  single most recent bot-saved item (via a new `telegram_saves` log table,
+  db/06_telegram_saves.sql), deleting exactly that row by id, owner-only — never an
+  app-made row. Self-verified live; **awaiting owner's phone confirmation before Phase 5
+  is marked done.**
 
 ## ⬜ Phase 6 — The 7am brief + anti-staleness engine
 Scheduler wakes the agent; Gemini writes a brief: day overview + stale-item
@@ -98,6 +102,21 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 5, Piece 5e: trustworthy (security + misses + undo). PHASE 5
+  READY, pending owner phone verify.** (A) Security: the function rejects any request
+  whose `X-Telegram-Bot-Api-Secret-Token` header != the stored `TELEGRAM_WEBHOOK_SECRET`
+  (set on the webhook via setWebhook secret_token), as its first action, fail-closed;
+  owner-gate stays behind it. Verified: no/wrong secret -> 401, correct -> 200. (B) Misses:
+  chit-chat/gibberish/unsure save nothing, kinder reply. (C) Undo: "undo" removes the
+  single most recent bot-saved item via a NEW `telegram_saves` log table (applied via the
+  management API; db/06_telegram_saves.sql is the record; RLS owner-only). Deletes exactly
+  one row by id, owner-only — verified it leaves a hand-made app row untouched. New files
+  db.ts + undo.ts; all function files <140 lines. No core-table schema/meaning change.
+  **Do NOT mark Phase 5 done until the owner verifies on their phone**, then flip together.
+  NEXT: Phase 6 — the 7am brief.
+- **2026-06-22 — Phase 5, Piece 5d: save it for real.** Marty writes confident reads as
+  real tasks/events (service-role + explicit owner user_id; RLS intact); unsure saves
+  nothing. Model -> gemini-3.1-flash-lite (500/day). See handoff for detail.
 - **2026-06-22 — Phase 5, Piece 5c: Gemini reads it (understanding only, saves
   nothing).** Marty now sends the owner's message + today's local date/time to Gemini
   and replies with structured understanding (type/title/date/time, or "unsure"),

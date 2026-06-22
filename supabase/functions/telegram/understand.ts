@@ -130,8 +130,9 @@ export function isUnsure(u: Understood): boolean {
   return u.needs_clarification || u.type === "unknown" || !u.title.trim();
 }
 
-// The plain-English "I didn't understand" reply (saves nothing).
+// The plain-English "that wasn't a task/event" reply (saves nothing). Kind, and
+// clear that nothing was stored — covers chit-chat and gibberish alike.
 export function unsureReply(u: Understood): string {
   const why = u.note?.trim() ? ` (${u.note.trim()})` : "";
-  return `I'm not sure I understood that — could you rephrase?${why}\n(Nothing saved.)`;
+  return `That didn't look like a task or an appointment to me, so I didn't save anything.${why}\nSend me something to do, or an appointment with a time, and I'll file it.`;
 }

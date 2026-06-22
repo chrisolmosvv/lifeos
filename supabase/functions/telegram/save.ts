@@ -13,33 +13,14 @@
 // events(start_at/end_at with end >= start). No new columns, no schema change.
 
 import { humanDate, todayYMD, TZ, type Understood } from "./understand.ts";
-
-const SB_URL = Deno.env.get("SUPABASE_URL");
-const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const OWNER_USER_ID = Deno.env.get("OWNER_USER_ID"); // the owner's auth.users id
+import { dbConfigured, insert, OWNER_USER_ID } from "./db.ts";
 
 const SAVE_FAILED = "I understood it, but couldn't save it just now — nothing was saved. Mind sending it again?";
 
-// Insert one row via PostgREST using the service-role key. Returns the saved row,
-// or null on any failure (so the caller reports honestly rather than crashing).
-async function insert(table: string, row: Record<string, unknown>): Promise<Record<string, unknown> | null> {
-  try {
-    const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
-      method: "POST",
-      headers: {
-        "apikey": SERVICE_KEY!,
-        "Authorization": `Bearer ${SERVICE_KEY}`,
-        "Content-Type": "application/json",
-        "Prefer": "return=representation",
-      },
-      body: JSON.stringify(row),
-    });
-    if (!res.ok) return null;
-    const rows = await res.json();
-    return Array.isArray(rows) ? (rows[0] ?? null) : null;
-  } catch (_err) {
-    return null;
-  }
+// Record a saved item in the undo log so "undo" can later remove this exact row.
+// Best-effort: if logging fails the item is still saved; undo just won't see it.
+async function logSave(table: "tasks" | "events", id: unknown, title: string) {
+  await insert("telegram_saves", { user_id: OWNER_USER_ID, item_table: table, item_id: id, title });
 }
 
 // How far ahead of UTC the timezone is (in minutes) at a given instant.
@@ -73,7 +54,7 @@ function plusOneHourClock(time: string): string {
 // Save the understood item and return the confirmation text. Caller guarantees the
 // item is NOT unsure (unsure items save nothing and never reach here).
 export async function saveAndConfirm(u: Understood): Promise<string> {
-  if (!SB_URL || !SERVICE_KEY || !OWNER_USER_ID) return SAVE_FAILED;
+  if (!dbConfigured) return SAVE_FAILED;
   const title = u.title.trim();
 
   // EVENT — needs a clock time. Default the date to today if none was stated.
@@ -90,6 +71,7 @@ export async function saveAndConfirm(u: Understood): Promise<string> {
       end_at: end.toISOString(),
     });
     if (!saved) return SAVE_FAILED;
+    await logSave("events", saved.id, title);
     return `Saved an EVENT: '${title}', ${humanDate(date)} ${u.time}–${plusOneHourClock(u.time)}, Inbox.\nOpen the app to see it on your calendar.`;
   }
 
@@ -109,6 +91,7 @@ export async function saveAndConfirm(u: Understood): Promise<string> {
     source: "telegram",
   });
   if (!saved) return SAVE_FAILED;
+  await logSave("tasks", saved.id, title);
   const dueStr = hasDate ? `due ${humanDate(u.date)}` : "no due date";
   return `Saved a TASK: '${title}', ${dueStr}, ${bucket}, Inbox.`;
 }

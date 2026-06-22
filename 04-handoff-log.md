@@ -35,6 +35,69 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 5 (Piece 5e) — "Make it trustworthy" (security + misses + undo) — PHASE 5 READY (pending owner verify)
+WHAT CHANGED (three parts):
+- (A) SECURITY: the function now REJECTS any request whose Telegram secret-token
+  header doesn't match our stored secret — as its very first action, before reading
+  anything. We set a random secret on the Telegram webhook (`setWebhook secret_token`)
+  and stored it as the `TELEGRAM_WEBHOOK_SECRET` Supabase secret; Telegram sends it in
+  the `X-Telegram-Bot-Api-Secret-Token` header on every call. Fails CLOSED (if the
+  secret isn't configured, everything is rejected). The 5b owner-gate (chat id = mine)
+  stays as a second check behind it. Kept `--no-verify-jwt` (the secret token is what
+  authenticates now). In plain English: the bot's public web address is now useless to
+  anyone who doesn't have the secret, so a forged "message from me" can't get in.
+- (B) GRACEFUL MISSES: an unsure read, or anything that isn't a task/event (chit-chat
+  like "how are you", gibberish), SAVES NOTHING and gets a kinder reply ("That didn't
+  look like a task or appointment… send me something to do or an appointment and I'll
+  file it"). No junk rows, ever.
+- (C) UNDO: texting "undo" removes the SINGLE most recent item Marty saved and confirms
+  ("Removed the event 'dentist'."). One level only. If there's nothing to undo, it says
+  so. Built on a NEW small log table `telegram_saves` (db/06_telegram_saves.sql) that
+  records each bot-saved item's table + id; undo reads the latest entry and deletes that
+  EXACT row by id, owner-only. It can never touch a row you made in the app (those are
+  never in the log).
+
+HOW THE LOG TABLE WAS ADDED: it's a SEPARATE table (does not change tasks/events/
+categories meaning — "modules add tables, protect the spine"). I applied it for you via
+Supabase's management API, so you didn't need the SQL editor; db/06_telegram_saves.sql is
+the record (RLS owner-only, confirmed: 4 policies, RLS on).
+
+DATA SAFETY (the 5d slip does not recur): undo deletes exactly ONE row, by its unique id,
+filtered to user_id = me — no pattern/broad deletes. Verified live: a hand-made app task
+(not logged) was untouched by "undo". RLS owner-only on all tables is unchanged.
+
+FILES TOUCHED: supabase/functions/telegram/{index.ts, understand.ts, save.ts, db.ts (new),
+undo.ts (new)}, db/06_telegram_saves.sql (new), 02-roadmap.md, 03-decisions.md,
+04-handoff-log.md
+
+HOW TO VERIFY (from your phone):
+- (A) Security — your real texts work as normal (Telegram sends the secret for you). To
+  see a forged call refused: I tested it directly — a request to the function URL with no
+  secret token (or a wrong one) gets "401 forbidden" and does nothing; only the correct
+  secret returns 200. You can't easily forge a request from your phone, which is the point.
+- (B) Misses — text "how are you" and a gibberish string → kind reply, and the app shows
+  NOTHING new (I confirmed 0 rows saved for both).
+- (C) Undo — text "dentist Thursday 2pm" (it saves) → text "undo" → "Removed the event
+  'dentist'." → app: it's gone. Text "undo" again → "nothing recent to undo". Then make a
+  task yourself in the app and text "undo" → it will NOT remove your hand-made task (it
+  only removes things Marty saved). Reload / log out & in → state persists, only yours.
+(I verified all of the above against the deployed function; all test rows removed, your
+test/test2 events untouched.)
+
+KNOWN GAPS / RISKS:
+- One message = one item still (multi-item not parsed).
+- Undo is one level (just the last item), by design.
+- Free-tier Gemini limit (gemini-3.1-flash-lite, 500/day) — heavy bursts can still 429
+  ("hit my AI limit"); handled gracefully.
+
+NEXT: Phase 5's "done when" (I add things by texting, safely) is MET pending your phone
+check. After you confirm, we mark Phase 5 ✅ together. Then Phase 6 — the 7am brief.
+
+FOR THE CHECKER: confirm the secret-token check is first and fails closed; undo deletes
+exactly one row by id filtered to the owner and can't hit app-made rows; the new table
+doesn't change core-table meaning; RLS unchanged; no secret/key in the repo. Source:
+supabase/functions/telegram/*.ts, db/06_telegram_saves.sql.
+
 ### 2026-06-22 — Phase 5 (Piece 5d) — "Save it for real"
 WHAT CHANGED:
 - Marty now WRITES a confident read into your data and confirms exactly what
