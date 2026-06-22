@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { orderedTree, isInbox } from './categoryTree'
+import { INBOX_COLOR } from './palette'
 import CategoryRow from './CategoryRow'
 import './categories.css'
 
@@ -18,16 +19,25 @@ export default function Categories() {
   async function load() {
     const { data, error } = await supabase
       .from('categories')
-      .select('id, name, parent_id, sort_order')
+      .select('id, name, parent_id, sort_order, color')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true })
     if (error) {
       setError(friendly(error))
       setCats([])
-    } else {
-      setError('')
-      setCats(data)
+      return
     }
+    // Inbox carries Slate by default — set it once if it's still uncoloured.
+    const inbox = data.find((c) => isInbox(c))
+    if (inbox && !inbox.color) {
+      await supabase
+        .from('categories')
+        .update({ color: INBOX_COLOR })
+        .eq('id', inbox.id)
+      inbox.color = INBOX_COLOR
+    }
+    setError('')
+    setCats(data)
   }
 
   useEffect(() => {
@@ -62,6 +72,8 @@ export default function Categories() {
     run(supabase.from('categories').insert({ name: childName, parent_id: parentId }))
   const onMove = (id, parentId) =>
     run(supabase.from('categories').update({ parent_id: parentId }).eq('id', id))
+  const onSetColor = (id, colorId) =>
+    run(supabase.from('categories').update({ color: colorId }).eq('id', id))
   const onDelete = (id) => {
     setExpandedId(null)
     return run(supabase.from('categories').delete().eq('id', id))
@@ -74,8 +86,8 @@ export default function Categories() {
       <div className="cats-inner">
         <h1 className="cats-title">Categories</h1>
         <p className="cats-sub">
-          Your buckets. Tap one to rename, nest or remove it. Inbox is the
-          fallback and stays put.
+          Your buckets. Tap one to rename, nest, colour or remove it. Inbox is
+          the fallback and stays put.
         </p>
 
         {cats === null ? (
@@ -96,6 +108,7 @@ export default function Categories() {
                 onRename={onRename}
                 onAddChild={onAddChild}
                 onMove={onMove}
+                onSetColor={onSetColor}
                 onDelete={onDelete}
               />
             ))}

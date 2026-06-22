@@ -55,9 +55,6 @@
   font-size: 0.7rem;
   color: var(--ink-muted);
 }
-.cats-name {
-  font-size: 1rem;
-}
 
 /* Inbox: protected, no actions. */
 .is-inbox {
@@ -98,6 +95,41 @@
   border: 1px solid var(--rule);
   border-radius: 8px;
   padding: 0.4rem 0.5rem;
+}
+
+/* The curated colour picker (the set only — no free hex). */
+.cats-colour {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.cats-collabel {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+.cats-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.cats-swatch {
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(28, 25, 22, 0.08);
+}
+.cats-swatch.is-none {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+.cats-swatch.is-on {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink);
+}
+.cats-swatch:disabled {
+  cursor: default;
 }
 
 .cats-note {

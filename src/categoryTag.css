@@ -1,0 +1,25 @@
+/* The category mark: small coloured dot + short uppercase tag. Calm, small,
+   reusable (Categories list now; calendar later). Never a big block of colour. */
+
+.cat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.cat-dot {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+/* Uncoloured category: a quiet hollow dot, not a filled one. */
+.cat-dot.is-empty {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+.cat-tag-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+}

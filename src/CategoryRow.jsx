@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { descendantIds, orderedTree, isInbox } from './categoryTree'
+import { PALETTE, INBOX_COLOR } from './palette'
+import CategoryTag from './CategoryTag'
 
 // One category line. Tap it to expand calm inline actions: rename, move it
 // inside another bucket, add a sub-category, or delete it. Inbox is shown
@@ -15,6 +17,7 @@ export default function CategoryRow({
   onRename,
   onAddChild,
   onMove,
+  onSetColor,
   onDelete,
 }) {
   const [rename, setRename] = useState(cat.name)
@@ -30,7 +33,7 @@ export default function CategoryRow({
   if (inbox) {
     return (
       <li className="cats-item is-inbox" style={indent}>
-        <span className="cats-name">{cat.name}</span>
+        <CategoryTag name={cat.name} color={cat.color || INBOX_COLOR} />
         <span className="cats-tag">default bucket</span>
       </li>
     )
@@ -63,7 +66,7 @@ export default function CategoryRow({
     <li className="cats-item" style={indent}>
       <button className="cats-rowhead" onClick={onToggle} aria-expanded={expanded}>
         <span className="cats-caret">{expanded ? '▾' : '▸'}</span>
-        <span className="cats-name">{cat.name}</span>
+        <CategoryTag name={cat.name} color={cat.color} />
       </button>
 
       {expanded && (
@@ -109,6 +112,30 @@ export default function CategoryRow({
               Add inside
             </button>
           </form>
+
+          <div className="cats-colour">
+            <span className="cats-collabel">Colour</span>
+            <div className="cats-swatches">
+              <button
+                type="button"
+                title="No colour"
+                className={'cats-swatch is-none' + (cat.color ? '' : ' is-on')}
+                disabled={busy}
+                onClick={() => onSetColor(cat.id, null)}
+              />
+              {PALETTE.map((p) => (
+                <button
+                  type="button"
+                  key={p.id}
+                  title={p.name}
+                  className={'cats-swatch' + (cat.color === p.id ? ' is-on' : '')}
+                  style={{ background: p.light }}
+                  disabled={busy}
+                  onClick={() => onSetColor(cat.id, p.id)}
+                />
+              ))}
+            </div>
+          </div>
 
           <button
             className="cats-delete"

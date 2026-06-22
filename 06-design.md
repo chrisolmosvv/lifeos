@@ -87,12 +87,21 @@ little colour earns its place.
   in doubt, *don't* use the accent. (Not finally locked — see open questions.
   We can warm it toward terracotta if the owner prefers.)
 - **Category colours** — a small, **muted, editorial** set, like magazine
-  section colours, never neon. Working set: Uni teal `#3B6B6B`, Health sage
-  `#6E8B5A`, Social plum `#9A6A7B`, Admin ochre `#A87B3A`, Inbox slate
-  `#6B7280`, plus warm tones for food and a muted green for money as those pages
-  arrive. On calendars and lists they show as a small **dot + a short uppercase
-  tag** — calm, not big blocks of colour. A category's colour can be used more
-  fully on that category's own page.
+  section colours, never neon. **LOCKED (Phase 2, Piece 3b)** — source of truth
+  is `src/palette.js`; stored in the DB as a colour *id* (e.g. `teal`), not a hex.
+  - **Core 12 (distinct):** Slate `#6B7280`, Stone `#8C8275`, Teal `#3B6B6B`,
+    Pine `#41705A`, Sage `#6E8B5A`, Olive `#87833F`, Ochre `#A87B3A`, Brick
+    `#A85C44`, Wine `#874E58`, Plum `#9A6A7B`, Mauve `#7E6597`, Steel `#4E789C`.
+  - **4 shades (for sub-categories):** Moss `#9AAC7B`, Sky `#84A6C4`, Lilac
+    `#B08FB8`, Sand `#C2A56B`.
+  - We deliberately did **not** force 16 equal hues: 12 stand alone, 4 are
+    lighter family shades. **Inbox = Slate** by default; new categories start
+    **uncoloured** until the owner picks from the set. Warm reds are kept darker
+    than the accent so a dot never reads as "urgent". Dark-mode values: deferred
+    (structure ready, none built yet).
+  - On calendars and lists they show as a small **dot + a short uppercase tag**
+    — calm, not big blocks of colour. A category's colour can be used more fully
+    on that category's own page.
 - **Light is home; dark is the evening edition.** Light mode (paper + ink) is
   the default and the priority. A dark mode — soft charcoal, never true black,
   off-white text, the accent brightened just enough to still glow — is a

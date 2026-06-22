@@ -35,6 +35,60 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 2 (Piece 3b) — Category colour palette wired in (PHASE 2 DONE)
+WHAT CHANGED:
+- **Locked the 16-colour palette** (12 distinct + 4 lighter shades) after you
+  signed off on the eye-validation preview. The full set with names + hexes is in
+  the decisions doc and `06-design.md`; the editable source is `src/palette.js`.
+- **Removed the temporary "Palette" preview tab** (and its files) now that it's
+  done its job.
+- **Colour on the Categories list:** tap a category → an expanded panel now has a
+  **Colour** row of the curated swatches (the set only — no free hex picker).
+  Pick one and the row shows the calm **coloured dot + short uppercase tag**.
+  There's a "no colour" hollow swatch to clear it again.
+- **Inbox** shows **Slate** by default (set once on load). **New categories start
+  uncoloured** — a quiet hollow dot — until you pick.
+- The dot/tag is a **reusable component** (`CategoryTag`) so the calendar can use
+  the exact look later. It is **not** wired into the calendar/tasks/events — the
+  Categories view is the only place colour shows for now.
+- **No database change** — colour reuses the existing `color` column (it stores
+  the colour's name-id like `teal`, not a hex). RLS untouched.
+
+FILES TOUCHED:
+- New: `src/palette.js`, `src/CategoryTag.jsx`, `src/categoryTag.css`
+- Edited: `src/Categories.jsx`, `src/CategoryRow.jsx`, `src/categories.css`,
+  `src/Masthead.jsx`, `src/LoggedIn.jsx`
+- Removed: `src/PalettePreview.jsx`, `src/palettePreview.css`
+
+HOW TO VERIFY (on your Mac — no SQL needed this time):
+1. `npm run dev`, open http://localhost:5173, log in, click **Categories**.
+2. **Inbox** should show a **Slate** dot beside its uppercase tag.
+3. Tap one of your categories (e.g. "Uni"). In the expanded panel, under
+   **Colour**, click a swatch (say Teal). The row's dot turns that colour and the
+   name shows as a small uppercase tag.
+4. Click the hollow "no colour" swatch — the dot goes back to an empty outline.
+5. Give a couple of categories different colours so you can see them side by side.
+6. **Proof it persists & is only yours:** **Log out**, log back in, open
+   Categories — your colours are exactly as you left them.
+
+KNOWN GAPS / RISKS:
+- Colour shows on the Categories view only — the calendar/tasks don't use it yet
+  (Phases 3–4), though `CategoryTag` is ready for them.
+- Dark-mode colours aren't built — the palette is structured for them, but there's
+  no dark mode to validate against yet.
+- No drag-to-reorder; ordering is still by creation.
+- Local preview only this session (not redeployed).
+
+NEXT: **Phase 3 — Tasks.** Add/edit/complete/prioritise tasks, time-buckets,
+subtasks, due dates — tasks reference a category. This is the next real spine
+table; same rules (RLS owner-only, ADD to the spine, don't change core meaning).
+
+FOR THE CHECKER: Confirm there was **no schema or policy change** — colour is just
+the existing `categories.color` text column (now holding a palette id like
+`'teal'`), and **RLS is untouched** (still the four owner-only `auth.uid() =
+user_id` policies from Pieces 2/3a). Confirm nothing touches tasks/events/the
+calendar, and that the colour set is the curated list (no free hex input).
+
 ### 2026-06-22 — Phase 2 (Piece 3a) — Real category manager: rename, nest, delete
 WHAT CHANGED:
 - The Categories page is now a real manager. Buckets show as an **indented tree**.

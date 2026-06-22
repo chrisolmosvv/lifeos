@@ -24,11 +24,11 @@ App shell deployed, login works, empty week-view calendar on desktop + a
 stripped phone layout.
 **Done when:** I open my app on my phone and log in.
 
-## 🔨 Phase 2 — Categories & Inbox   ← CURRENT
+## ✅ Phase 2 — Categories & Inbox
 Create/edit buckets with colors and sub-levels; Inbox as the default.
 **Done when:** my real life categories exist.
 
-## ⬜ Phase 3 — Tasks
+## 🔨 Phase 3 — Tasks   ← CURRENT
 Add, edit, complete, prioritize, time-bucket, subtasks, due dates.
 **Done when:** I'm putting in real tasks and checking them off.
 
@@ -62,6 +62,14 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 2 COMPLETE (Piece 3b: colour palette wired in).** Locked the
+  16-colour palette (12 distinct + 4 shades) after eye-validation, removed the
+  temporary preview tab, and wired colour into the Categories list: pick a colour
+  from the curated set, each row shows the calm dot + uppercase tag (reusable
+  `CategoryTag`, not yet on the calendar). Inbox defaults to Slate; new categories
+  start uncoloured. No schema/RLS change — reused the existing `color` column.
+  Palette recorded in the decisions doc and `06-design.md`. Phase 2's "done when"
+  (my real-life categories exist) is met. **Next: Phase 3 — Tasks (now current).**
 - **2026-06-22 — Phase 2, Piece 3a: the real category manager (rename/nest/delete,
   NO colour).** Turned the bare list into an indented tree with expand-on-tap
   actions: rename, move-inside (nesting), add sub-category, delete. Delete

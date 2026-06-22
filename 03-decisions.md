@@ -9,6 +9,36 @@
 
 ---
 
+- **The category colour palette is LOCKED (Phase 2, Piece 3b).** 16 muted,
+  editorial hues — the official record (source of truth: `src/palette.js`; mood
+  record: `06-design.md`). The DB `color` column stores the colour **id** (e.g.
+  `'teal'`), not a hex, so re-tuning a hue is a one-value edit with no data
+  migration. **Why these / this structure:** kept the design doc's five anchors
+  (Teal/Sage/Plum/Ochre/Slate) and filled the wheel evenly; warm reds are darker
+  than the terracotta accent so a dot never reads as "urgent".
+  - **Core 12 (distinct at a glance):** Slate `#6B7280`, Stone `#8C8275`, Teal
+    `#3B6B6B`, Pine `#41705A`, Sage `#6E8B5A`, Olive `#87833F`, Ochre `#A87B3A`,
+    Brick `#A85C44`, Wine `#874E58`, Plum `#9A6A7B`, Mauve `#7E6597`, Steel
+    `#4E789C`.
+  - **4 shades (lighter family variants, for sub-categories):** Moss `#9AAC7B`,
+    Sky `#84A6C4`, Lilac `#B08FB8`, Sand `#C2A56B`.
+  - **16-vs-12 decision:** we did NOT force 16 equal hues. True at-a-glance
+    distinctness caps ~12, so the 12 are the standalone core and the 4 are
+    explicit shades of existing families (green/blue/purple/gold). Validated by
+    eye in the dot/tag preview before locking. Trade-off: the 4 shades aren't
+    independently distinct — by design.
+  - **Dark mode:** structure only. Each palette entry is an object so a per-colour
+    `dark` value drops in later; no dark values built/validated yet (no dark mode
+    to see them in).
+
+- **New categories start UNCOLOURED until the owner picks; Inbox defaults to Slate
+  (Piece 3b).** A new category shows a quiet hollow dot until a colour is chosen
+  from the set. **Why:** colour stays intentional and "earns its place" (design
+  doc) and the quick-add flow stays calm — auto-assigning would spend colours
+  meaninglessly and repeat them. Colour is chosen from the curated set only (no
+  free hex picker). Inbox is set to Slate once, on load, if still uncoloured.
+  Trade-off: a brand-new category carries no colour until you give it one.
+
 - **Deleting a category reparents its children UP one level (Phase 2, Piece 3a).**
   When a category is deleted, its sub-categories attach to the deleted one's
   parent; if it was top-level, they become top-level (`parent_id = null`).
