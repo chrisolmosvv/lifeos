@@ -62,6 +62,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 3, Piece 2a of several: editing a task (title, notes,
+  category, priority).** First real task screen. Tap a task → an inline edit panel
+  (reusing the Categories expand-on-tap pattern) to change title/notes, reassign
+  category via selectable dot+tag chips (reusing `CategoryTag`, with an Inbox
+  option), and set priority None/Low/Med/High. Inline save — text on blur, chips/
+  priority on tap — all to columns that already existed (NO schema/RLS change;
+  `db/` untouched). Priority shows in the list calmly via ink + weight, NOT colour
+  (terracotta stays reserved for today/overdue): High = full-ink kicker + slightly
+  bolder title, Med = muted kicker, Low/None = nothing. Owner to eye-check the
+  priority treatment before it's locked in decisions. Split out `TaskRow.jsx` to
+  keep files small. Builds clean. **Phase 3 is NOT done — Piece 2b (time-bucket
+  views) is next.**
 - **2026-06-22 — Phase 3, Piece 1 of several: the tasks spine table + bare-bones
   verify UI.** Created the `tasks` table in Supabase (`db/03_tasks.sql`) to its
   FULL architecture shape so later pieces bolt on without a rebuild — RLS on,

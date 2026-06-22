@@ -35,6 +35,80 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 3 (Piece 2a) — Editing a task (title, notes, category, priority)
+WHAT CHANGED:
+- **Tap a task → an inline edit panel opens** (the same calm expand-on-tap
+  pattern as the Categories manager). In it you can edit the **title**, add/edit
+  **notes**, **reassign the category** (selectable dot+tag chips reusing the
+  `CategoryTag` look, including an "Inbox" option), and set **priority**
+  (None / Low / Med / High).
+- **Saving is inline, no Save button:** title + notes persist when you click away
+  (on blur); category + priority persist the moment you tap. All writes go to
+  columns that already existed from Piece 1.
+- **Priority now shows in the list, calmly** (see the choice below).
+- The tick-to-complete and add-by-title behaviour from Piece 1 are unchanged.
+- Split the row into its own `TaskRow.jsx` to keep files small.
+
+PRIORITY-DISPLAY CHOICE (and why — tweak this freely, you're the art director):
+- I did NOT use colour for priority. The design doc reserves the terracotta
+  accent for today / the now-line / overdue, and keeps warm reds darker than it
+  so nothing falsely reads as "urgent". A red "high" flag would fight that.
+- Instead, priority reads through **ink and weight**, the broadsheet way:
+  - **High:** a small uppercase **"High"** kicker in full-strength ink, and the
+    task title nudged to medium weight — the "lead item" feel. It quietly draws
+    the eye without shouting.
+  - **Med:** a small uppercase **"Med"** kicker in muted grey. Present, but it
+    doesn't pull focus.
+  - **Low / None:** nothing shown at all — near-invisible, so only what matters
+    draws the eye.
+  - Priority marks hide on a done task (it's no longer pending).
+- If you'd prefer a different mark (a small dot/square, italics, a thin rule, or
+  showing Low too), it's a quick change — tell me and I'll tune it, then I'll
+  record the locked choice in the decisions doc.
+
+FILES TOUCHED:
+- New: `src/TaskRow.jsx`
+- Edited: `src/Tasks.jsx` (refactored to use TaskRow + edit handlers),
+  `src/tasks.css` (edit panel, chips, priority styles)
+- NO database files touched (`db/` unchanged).
+
+HOW TO VERIFY (on your Mac — no SQL this time):
+1. `npm run dev`, open http://localhost:5173, log in, click **Tasks**.
+2. **Tap a task's title** (not the circle). A panel opens below it.
+3. Change the **title**, then click away → the line above updates and it sticks.
+4. Type some **notes**, click away (notes are kept; they'll be shown in a later
+   piece — for now just confirm they persist, step 7).
+5. Under **Category**, tap a different category chip → the dot+tag on the task
+   updates immediately. Tap **Inbox** → it goes back to the Inbox tag.
+6. Under **Priority**, tap **High** → the title gets a touch bolder and a small
+   "High" kicker appears. Tap **Med** → it changes to a muted "Med". Tap
+   **None** → the mark disappears.
+7. **Reload the page** (Cmd-R). Open the same task again — your title, notes,
+   category and priority are all still there.
+8. **Log out and back in**, open **Tasks** — everything persisted and it's only
+   yours (owner-only).
+
+KNOWN GAPS / RISKS:
+- The priority display is intentionally up for your eye (see the choice above) —
+  not yet locked in the decisions doc.
+- Still bare on purpose: no time-bucket views, no due-date picker, no subtasks UI
+  (those columns exist; their UI is Pieces 2b–2d). No per-task delete in the UI
+  yet.
+- Notes are saved but not shown in the calm list line yet (kept minimal); they
+  appear in the edit panel.
+
+NEXT: Phase 3, Piece 2b — time-bucket views (Today / This Week / Someday) and
+moving tasks between them.
+
+FOR THE CHECKER:
+- **No schema or RLS change.** `db/` is untouched; the edit panel only writes to
+  columns that already existed (`title`, `notes`, `category_id`, `priority`).
+  The four owner-only policies on `tasks` are exactly as shipped in Piece 1.
+- **Nothing touches events or the calendar** — this piece is the tasks list only.
+- Category reassignment keeps the Piece-1 rule: a task means "Inbox" by having
+  `category_id = null` (the "Inbox" chip writes null), never by pointing at the
+  Inbox row's id.
+
 ### 2026-06-22 — Phase 3 (Piece 1) — Tasks spine table + bare-bones verify UI
 WHAT CHANGED:
 - **New `tasks` table in Supabase**, built to the FULL architecture shape so

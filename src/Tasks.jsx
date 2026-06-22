@@ -2,19 +2,20 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { orderedTree, isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
-import CategoryTag from './CategoryTag'
+import TaskRow from './TaskRow'
 import './tasks.css'
 
-// Bare-bones tasks view (Phase 3, Piece 1) — NOT the real task manager (that's
-// Piece 2). Just enough to prove the spine: a calm list of the owner's tasks,
-// add one by typing a title (lands in Today by default), mark it done / reopen
-// it (exercises status + completed_at), and optionally pick a category on add.
-// RLS makes every query owner-only; the DB keeps completed_at honest.
+// The tasks view (Phase 3, Piece 2a). The list is calm by default; tapping a
+// task opens an inline panel to edit its title, notes, category and priority
+// (the expand-on-tap pattern from the Categories manager). Add-by-title still
+// lands a task in Today. RLS makes every query owner-only; the DB keeps
+// completed_at honest. No schema change this piece — every field already exists.
 export default function Tasks() {
   const [tasks, setTasks] = useState(null) // null = still loading
   const [cats, setCats] = useState([])
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState('') // '' = Inbox (stored as null)
+  const [expandedId, setExpandedId] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -22,7 +23,9 @@ export default function Tasks() {
     const [taskRes, catRes] = await Promise.all([
       supabase
         .from('tasks')
-        .select('id, title, status, completed_at, category_id, created_at')
+        .select(
+          'id, title, notes, status, completed_at, category_id, priority, created_at',
+        )
         .order('created_at', { ascending: true }),
       supabase
         .from('categories')
@@ -75,7 +78,7 @@ export default function Tasks() {
 
   // Flip a task done/open. The DB trigger stamps or clears completed_at — we
   // just send the new status.
-  const onToggle = (task) =>
+  const onToggleDone = (task) =>
     run(
       supabase
         .from('tasks')
@@ -83,19 +86,14 @@ export default function Tasks() {
         .eq('id', task.id),
     )
 
-  // The category mark for a task: its category, or Inbox when uncategorised
-  // (category_id is null — the one and only way a task means "Inbox").
-  const inboxColor = cats.find((c) => isInbox(c))?.color || INBOX_COLOR
-  function tagFor(task) {
-    if (!task.category_id) return { name: 'Inbox', color: inboxColor }
-    const cat = cats.find((c) => c.id === task.category_id)
-    return cat
-      ? { name: cat.name, color: cat.color }
-      : { name: 'Inbox', color: inboxColor }
-  }
+  // Save edited fields (title / notes / category_id / priority) to existing
+  // columns. Owner-only RLS and the existing policies are untouched.
+  const onUpdate = (id, fields) =>
+    run(supabase.from('tasks').update(fields).eq('id', id))
 
-  // Categories offered in the add picker, in tree order (Inbox handled by the
-  // built-in default option, so it's filtered out here).
+  // Inbox's colour (for the "Inbox" tag/chip) and the categories a task can be
+  // filed under, in tree order (Inbox itself is offered separately as null).
+  const inboxColor = cats.find((c) => isInbox(c))?.color || INBOX_COLOR
   const pickable = orderedTree(cats).filter((c) => !isInbox(c))
 
   return (
@@ -103,8 +101,8 @@ export default function Tasks() {
       <div className="tasks-inner">
         <h1 className="tasks-title">Tasks</h1>
         <p className="tasks-sub">
-          Type a task and it lands in Today. Tick it off to mark it done; untick
-          to reopen. Tasks with no category sit in Inbox.
+          Type a task and it lands in Today. Tap one to edit it; tick it off to
+          mark it done. Tasks with no category sit in Inbox.
         </p>
 
         {tasks === null ? (
@@ -113,36 +111,22 @@ export default function Tasks() {
           <p className="tasks-note">No tasks yet — add your first below.</p>
         ) : (
           <ul className="tasks-list">
-            {tasks.map((task) => {
-              const done = task.status === 'done'
-              const tag = tagFor(task)
-              return (
-                <li className="tasks-item" key={task.id}>
-                  <button
-                    className={'tasks-check' + (done ? ' is-done' : '')}
-                    onClick={() => onToggle(task)}
-                    disabled={busy}
-                    aria-label={done ? 'Reopen task' : 'Mark task done'}
-                    title={done ? 'Reopen' : 'Mark done'}
-                  >
-                    {done ? '✓' : ''}
-                  </button>
-                  <div className="tasks-body">
-                    <span className={'tasks-text' + (done ? ' is-done' : '')}>
-                      {task.title}
-                    </span>
-                    <span className="tasks-meta">
-                      <CategoryTag name={tag.name} color={tag.color} />
-                      {done && task.completed_at && (
-                        <span className="tasks-doneat tnum">
-                          Done · {formatDoneAt(task.completed_at)}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                </li>
-              )
-            })}
+            {tasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                cats={cats}
+                inboxColor={inboxColor}
+                pickable={pickable}
+                expanded={expandedId === task.id}
+                busy={busy}
+                onToggleExpand={() =>
+                  setExpandedId(expandedId === task.id ? null : task.id)
+                }
+                onToggleDone={onToggleDone}
+                onUpdate={onUpdate}
+              />
+            ))}
           </ul>
         )}
 
@@ -163,7 +147,7 @@ export default function Tasks() {
             <option value="">Inbox</option>
             {pickable.map((c) => (
               <option key={c.id} value={c.id}>
-                {'  '.repeat(c.depth) + c.name}
+                {'  '.repeat(c.depth) + c.name}
               </option>
             ))}
           </select>
@@ -176,15 +160,6 @@ export default function Tasks() {
       </div>
     </div>
   )
-}
-
-// A quiet "finished at" stamp, e.g. "Jun 22, 14:45". Local time.
-function formatDoneAt(iso) {
-  const d = new Date(iso)
-  const MO = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  const p = (n) => String(n).padStart(2, '0')
-  return `${MO[d.getMonth()]} ${d.getDate()}, ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
 // Turn a Supabase/Postgres error into one plain sentence.
