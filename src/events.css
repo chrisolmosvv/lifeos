@@ -1,0 +1,142 @@
+/* Events verify UI — plain and calm, reusing the shared paper/ink/fonts. A
+   throwaway list+add+delete to prove the events spine; the real events live on
+   the Phase-4b timeline. Scrolls inside itself so the desktop never gains page
+   scroll. */
+
+.events {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.5rem 1.5rem 2rem;
+  box-sizing: border-box;
+}
+.events-inner {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.events-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.4rem;
+  margin: 0;
+}
+.events-sub {
+  margin: 0.25rem 0 1.25rem;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.events-list {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.events-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.7rem 0.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+.events-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.events-name {
+  font-size: 0.98rem;
+  color: var(--ink);
+}
+.events-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+.events-when {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+.events-del {
+  flex: none;
+  align-self: center;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.events-del:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.events-note {
+  color: var(--ink-muted);
+  padding: 0.7rem 0.25rem;
+}
+
+/* Add row: title on its own line, then start / end / category / button. */
+.events-add {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.events-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+.events-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+.events-input,
+.events-field input,
+.events-field select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+}
+.events-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.events-field input,
+.events-field select {
+  text-transform: none;
+  letter-spacing: normal;
+}
+.events-btn {
+  padding: 0.55rem 1rem;
+  font: inherit;
+  font-weight: 500;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.events-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.events-error {
+  margin-top: 0.75rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+}

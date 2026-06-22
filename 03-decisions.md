@@ -9,6 +9,39 @@
 
 ---
 
+- **`events` table — the third spine table (Phase 4, Piece 4a).** Built now to
+  its FULL architecture-doc shape so the Phase-4b timeline and future Apple
+  Calendar sync bolt on with NO rebuild, even though this piece's UI only proves
+  an event saves/reads/deletes. Final shape (source of truth: `db/04_events.sql`):
+  `id` uuid PK · `user_id` uuid not null (default `auth.uid()`, FK→auth.users, on
+  delete cascade — same anti-spoof pattern as tasks/categories) · `title` text
+  not null · `notes` text null · `category_id` uuid null (FK→categories, **on
+  delete SET NULL**) · `start_at` timestamptz not null · `end_at` timestamptz not
+  null · `location` text null · `repeat_rule` text null (string only — NO
+  recurrence logic yet) · `external_id` text null (hidden, never shown — free prep
+  for Apple Calendar sync) · `created_at` timestamptz default now() · **CHECK
+  `end_at >= start_at`** (a backwards event can never be stored; zero-length ok).
+  - **Why this shape:** matches the architecture doc's events list exactly
+    (calendar-standard span, location, repeat rule, hidden external_id). RLS is ON
+    with owner-only select/insert/update/delete (all keyed to `auth.uid() =
+    user_id`). Indexes on `user_id`, `category_id` and `start_at` (the 4b timeline
+    reads a day's events in start order). This ADDS to the spine; it does not
+    change the tasks/categories tables' meaning.
+  - Trade-off: `repeat_rule`/`external_id` exist with no behaviour yet — intended
+    (they reserve the shape so later pieces don't migrate).
+
+- **Deleting a category EMPTIES its events (set-null), mirroring tasks (Phase 4,
+  Piece 4a).** When a category is deleted, its events have their `category_id`
+  emptied (they fall to uncategorised), enforced at the DB by `ON DELETE SET NULL`
+  — never cascade. **Why:** this deliberately mirrors the tasks rule exactly
+  (see "Deleting a category EMPTIES its tasks into Inbox") — least destructive,
+  silent loss of events is unacceptable, and an event can never point at a
+  category that no longer exists. The alternatives (cascade-delete the events;
+  block deleting a non-empty category) were already weighed and rejected for
+  tasks for the same reasons; events follow suit for consistency. Trade-off: a
+  deleted category's events lose their label and need re-filing — acceptable and
+  reversible.
+
 - **[Today's left "The Day" column is a placeholder until Phase 4]** — The real
   Today home is built to the approved two-column Front Page shape, but the left
   "The Day" timeline needs events, which don't exist until Phase 4. So the left

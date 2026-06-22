@@ -35,6 +35,79 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 4 (Piece 4a) — Events spine table + bare-bones verify UI
+WHAT CHANGED:
+- **New `events` table in Supabase**, built to the FULL architecture shape so the
+  4b timeline + future Apple-sync bolt on with no rebuild: title, notes, category,
+  start_at / end_at (calendar-standard span), location, repeat_rule, the hidden
+  external_id, created_at. SQL: `db/04_events.sql` (run it once — steps below).
+  RLS ON, owner-only (the same four `auth.uid() = user_id` policies as tasks).
+- **Category link is set-null-on-delete, NEVER cascade** — deleting a category
+  empties its events' category (they fall to uncategorised) instead of deleting
+  them. Mirrors the tasks rule exactly. Enforced in the DB.
+- **Backwards-event guard in the DB** — a CHECK constraint (`end_at >= start_at`)
+  means an event that ends before it starts can never be stored.
+- **A calm Events (verify) section** lists events with their span + category
+  dot+tag, adds one (title + start + end pickers + optional category), and
+  deletes one. Reuses the paper/ink/Fraunces foundation + `CategoryTag`. This is
+  a throwaway verify UI — the real events live on the Phase-4b timeline.
+- NOT built: the timeline / hour grid, event blocks, the now-line, drag-to-
+  schedule, recurrence logic, overlap handling, the week/day calendar split. The
+  schema has the fields; the UI just proves save/read/delete.
+
+WHERE I PUT THE VERIFY UI:
+- Inside **Settings**, below the Categories manager (a temporary section behind a
+  hairline). It's throwaway — it'll be removed when the real calendar lands.
+
+FILES TOUCHED:
+- New: `db/04_events.sql`, `src/EventsVerify.jsx`, `src/events.css`
+- Edited: `src/Settings.jsx` (renders the verify section), `src/settings.css`
+- NOT touched: `db/03_tasks.sql`, the categories SQL, any task/category code.
+
+SUPABASE STEP (do this once, before verifying):
+1. Open the SQL editor:
+   https://supabase.com/dashboard/project/cntlptuacsujbdtwvbis/sql/new
+2. Open `db/04_events.sql`, copy the WHOLE file, paste it in, click **Run**.
+   You should see "Success. No rows returned." (It needs the earlier db/ files,
+   which are already run.)
+
+HOW TO VERIFY (on your Mac):
+1. `npm run dev`, open http://localhost:5173, log in, go to **Settings**.
+2. Scroll to **Events (verify)** (below Categories).
+3. Type an event title, pick a **Start** and an **End** (end after start),
+   optionally pick a category, click **Add event** → it appears in the list with
+   its time span and its category dot+tag.
+4. **Category-survives test:** give an event a category, then go up to the
+   Categories manager and **delete that category**. Back in Events, the event is
+   **still there**, now showing **Uncategorised** (NOT gone).
+5. **Backwards-event test:** add an event with the **End before the Start** →
+   it's **refused** with a plain message ("That event ends before it starts").
+6. **Delete** an event with its Delete button → it disappears.
+7. **Log out and back in** (Settings → Log out), reopen Settings → your events
+   are still there. Confirms they persisted and are only yours.
+
+KNOWN GAPS / RISKS:
+- The verify UI is deliberately plain and parked in Settings — no timeline yet.
+- Uncategorised events show a hollow "Uncategorised" dot/tag (events don't use the
+  Inbox bucket — that's a tasks concept).
+- Times are entered/shown in your local wall-clock; stored as proper UTC
+  timestamps.
+
+NEXT: Phase 4, Piece 4b — the day-column timeline (renders events + scheduled
+tasks together; fills the Today "The Day" column for real).
+
+FOR THE CHECKER (please confirm against `db/04_events.sql`):
+- The `events` table is **owner-only**: RLS enabled, all four policies
+  (select/insert/update/delete) keyed to `auth.uid() = user_id`; `user_id`
+  defaults to `auth.uid()` so an owner can't be forged.
+- `category_id` **references `public.categories(id)` with `ON DELETE SET NULL`**
+  (NOT cascade) — matches the tasks table exactly; deleting a category empties its
+  events, never deletes them.
+- The **end-before-start guard** exists: CHECK `end_at >= start_at`.
+- `external_id` is **present but unused** (nullable, shown in no UI).
+- This **ADDS** the events table and does **NOT** change the tasks or categories
+  tables or their meaning (no edits to their SQL or code).
+
 ### 2026-06-22 — The real Today home — Today / This Week task blocks (Front Page)
 WHAT CHANGED (UI only — NO database or schema change):
 - **Built the real Today screen** to the approved Front Page two-column shape,

@@ -71,6 +71,19 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 4, Piece 4a of several: the events spine table + bare-bones
+  verify UI.** Created the `events` table in Supabase (`db/04_events.sql`) to its
+  FULL architecture shape so the 4b timeline + future Apple-sync bolt on without a
+  rebuild — RLS on, owner-only (same four policies as tasks); category link is
+  set-null-on-delete (deleting a category empties its events' category, never
+  deletes them — mirrors tasks); a DB CHECK (`end_at >= start_at`) blocks backwards
+  events; `external_id` reserved (hidden) for Apple sync. Added a throwaway
+  **Events (verify)** section inside **Settings** (below Categories): list with
+  span + category dot+tag, add (title + start/end + optional category), delete.
+  NO timeline/calendar built this piece (that's 4b). Reuses the paper/ink/Fraunces
+  foundation + `CategoryTag`. Builds clean. **Owner still needs to run the SQL and
+  verify on the Mac. Phase 4 is NOT done — Piece 4b (the day-column timeline) is
+  next.**
 - **2026-06-22 — The real Today home (Front Page): Today + This Week task blocks.**
   Built the approved two-column Today screen, replacing the temporary task view.
   Right side is real — a **Today** block (time_bucket = Today) and a **This Week**

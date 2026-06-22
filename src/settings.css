@@ -53,3 +53,12 @@
   flex: 1;
   min-height: 0;
 }
+
+/* The temporary events verify UI sits below Categories, behind a hairline, and
+   scrolls inside its own region. Both halves share the height; the page itself
+   never scrolls. */
+.settings-events {
+  flex: 1;
+  min-height: 0;
+  border-top: 1px solid var(--rule);
+}
