@@ -23,6 +23,23 @@
   be treated as dead. Trade-off: the CLI's plain `supabase login` picks the wrong account
   unless the browser is on the right one — use the access token to be sure.
 
+- **The bot is locked to the owner by a chat-id gate at the front of the function;
+  the id is a secret (Phase 5, Piece 5b).** The `telegram` function's first action
+  is to read the sender's chat id and compare it (as a string) to `OWNER_CHAT_ID`;
+  a non-match returns 200 immediately with NO reply sent. **Why a front gate, not
+  per-feature checks:** one choke point means every later piece (Gemini, DB writes)
+  is owner-only by construction — you can't forget to guard a new path. **Why the id
+  is a Supabase secret, not hard-coded:** keeps a personal identifier out of the
+  public repo, same discipline as the tokens; re-pointing to a different id is a
+  secret change, no redeploy of logic. **Verification without a second account:** the
+  function still answers Telegram 200 in both cases (so Telegram stops retrying), but
+  returns the internal body `"ok"` when it processed the owner vs `"ignored"` when it
+  blocked a stranger. Telegram ignores the response body, so nothing in any chat
+  changes — but a direct test call can confirm the gate (stranger id → "ignored", no
+  message; owner id → "ok", real reply). Trade-off: the distinct body faintly signals
+  "a gate exists" to anyone probing the URL — harmless, since the owner id isn't
+  revealed and the function touches no data.
+
 - **Telegram bot calls the edge function with JWT verification OFF (Phase 5, Piece 5a).**
   The `telegram` function is deployed with `--no-verify-jwt`. **Why:** Telegram's webhook
   calls carry no Supabase login token, so with JWT checking on they'd all be rejected

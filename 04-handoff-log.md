@@ -35,6 +35,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 5 (Piece 5b) — Lock the bot to the owner's chat ID
+WHAT CHANGED:
+- Added a gate at the very front of the `telegram` function: it reads the
+  sender's chat ID first, and only the owner (chat id 8864259574) gets a reply.
+  Anyone else is read, ignored (no message sent), and acked with 200.
+- The owner's chat ID is stored as a Supabase secret (`OWNER_CHAT_ID`), NOT
+  hard-coded in the file or committed to GitHub (same discipline as the tokens).
+- Owner's own experience is unchanged: you still get the 5a echo.
+- No AI, no database, no schema change. Redeployed with `--no-verify-jwt`.
+
+FILES TOUCHED: supabase/functions/telegram/index.ts, 02-roadmap.md,
+03-decisions.md, 04-handoff-log.md
+
+HOW TO VERIFY:
+1. From your phone (your account), text Marty: hello
+   → you STILL get "Got it: hello — your Telegram chat ID is 8864259574".
+2. (Optional, the real lock test) From a DIFFERENT Telegram account that isn't
+   you, text Marty anything → you get NOTHING back. Silence is success.
+3. Can't use a second account? It was already proven without one: a direct test
+   call with a stranger's id (9999) returned "ignored" and sent no message, while
+   a call with your id returned "ok" and delivered a real reply to your phone.
+   (The function answers Telegram 200 either way; it returns the internal word
+   "ok" vs "ignored" purely so the gate is checkable from outside — Telegram
+   ignores the response body, so nothing in any chat changes.)
+
+KNOWN GAPS / RISKS:
+- The bot is now owner-only, but it still just echoes — it does NOT understand
+  or save anything yet. That's 5c.
+- Setup note: the access token the owner believed was revoked still worked this
+  session — owner to confirm at the tokens page that any token meant to be dead
+  is actually gone.
+
+NEXT: 5c — "Gemini reads it": the bot understands a plain-English message (e.g.
+"dentist Thursday 2pm") instead of just echoing it. (Saving comes after.)
+
+FOR THE CHECKER: confirm the gate is the first thing the function does (before any
+reply), that the owner id lives in a secret (not the file/repo), that deploy used
+--no-verify-jwt, and that the owner's echo is unchanged. Source:
+supabase/functions/telegram/index.ts.
+
 ### 2026-06-22 — Phase 5 (Piece 5a) — Telegram "round trip" (plumbing only)
 WHAT CHANGED:
 - Built the project's first cloud (edge) function, `telegram`. When you text the
