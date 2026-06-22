@@ -35,6 +35,32 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 5 COMPLETE & owner-verified (close-out)
+WHAT THE WHOLE PHASE DELIVERS: I add things to LifeOS by texting Marty.
+- He only listens to me (owner chat-id gate) and only accepts genuine Telegram
+  calls (webhook secret-token check, fail-closed).
+- He reads a plain-English message with Gemini (Europe/Amsterdam; vague day = next
+  upcoming; a clock time ⇒ event, otherwise a task) and SAVES the right row:
+  EVENT = a 1-hour calendar block; dated TASK = a due date (deadline, not a block);
+  bot items land in Inbox, in Today (no date / today) or This Week (a future date);
+  he never guesses a category. Then he confirms exactly what + where.
+- Chit-chat / gibberish / unsure reads save NOTHING and get a kind reply.
+- "undo" removes the single most recent thing he saved (one level), via the
+  telegram_saves log — exactly that row by id, owner-only, never a row I made in
+  the app.
+VERIFIED on the owner's phone: security (forged calls rejected, real texts work),
+graceful misses, and undo (incl. confirming a hand-made app task is left untouched).
+DEPLOY STATE: the edge function deploys to Supabase (not Vercel) and is already
+live; the live function matches the repo (nothing unpushed). Phase 5 changed NO
+browser-app (src/) code and NO core schema/meaning — so NO Vercel redeploy was
+needed. Only addition to the DB was the separate, owner-only telegram_saves log
+table (db/06_telegram_saves.sql), which ADDS to the spine without changing it.
+SECRETS in place (Supabase secret store, never the repo): TELEGRAM_BOT_TOKEN,
+TELEGRAM_WEBHOOK_SECRET, OWNER_CHAT_ID, OWNER_USER_ID, GEMINI_API_KEY.
+NEXT: Phase 6 — the 7am brief + anti-staleness engine (the real V1 finish line):
+the scheduler wakes the agent each morning and Gemini writes a brief (day overview
++ a nudge on stale items + a suggestion to fill a gap), sent over Telegram.
+
 ### 2026-06-22 — Phase 5 (Piece 5e) — "Make it trustworthy" (security + misses + undo) — PHASE 5 READY (pending owner verify)
 WHAT CHANGED (three parts):
 - (A) SECURITY: the function now REJECTS any request whose Telegram secret-token

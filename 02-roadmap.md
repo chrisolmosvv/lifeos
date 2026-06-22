@@ -44,10 +44,13 @@ Feels like Apple Calendar.
 Create/edit/move/resize events and scheduled tasks, day + week views, cross-day drag,
 side-by-side overlap. This is where it's genuinely usable as a manual tool (before any AI).
 
-## 🔨 Phase 5 — Telegram capture   ← CURRENT
+## ✅ Phase 5 — Telegram capture  (owner-verified)
 Connect the bot. Text "dentist Thursday 2pm" → Gemini reads it → it logs
 correctly → replies telling me exactly what it did and where.
-**Done when:** I add things by texting.
+**Done when:** I add things by texting. ✓ Met & verified on the owner's phone:
+texting Marty reads the message, saves the right task/event in Inbox, confirms what
+and where, "undo" removes the last bot-saved item, and a secured webhook + owner-gate
+ignore everyone but the owner.
 - ✅ **5a — the round trip (plumbing only).** First edge function (`telegram`),
   deployed `--no-verify-jwt`; webhook registered; replies "Got it: <text> — your
   Telegram chat ID is <id>". No AI, no DB. Owner-verified on phone.
@@ -71,10 +74,9 @@ correctly → replies telling me exactly what it did and where.
   gibberish / unsure reads save nothing and get a kind reply. (C) "undo" removes the
   single most recent bot-saved item (via a new `telegram_saves` log table,
   db/06_telegram_saves.sql), deleting exactly that row by id, owner-only — never an
-  app-made row. Self-verified live; **awaiting owner's phone confirmation before Phase 5
-  is marked done.**
+  app-made row. Owner-verified on phone.
 
-## ⬜ Phase 6 — The 7am brief + anti-staleness engine
+## ⬜ Phase 6 — The 7am brief + anti-staleness engine   ← NEXT (the real V1 finish line)
 Scheduler wakes the agent; Gemini writes a brief: day overview + stale-item
 nudge + a suggestion to fill a gap.
 **Done when:** it texts me every morning and it's actually useful.
@@ -102,6 +104,23 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — PHASE 5 COMPLETE & owner-verified. Telegram capture works end to end.**
+  All of 5a–5e are done and confirmed on the owner's phone: (5a) the round trip — the
+  project's first edge function (`telegram`), webhook registered, `--no-verify-jwt`;
+  (5b) owner-lock — only the owner's chat id gets a reply; (5c) Gemini reading — message
+  + local date/time → structured fields, with the agreed rules (Europe/Amsterdam, next-
+  upcoming day, clock-time ⇒ event else task); (5d) real saving — a confident read writes
+  a real row owned by the owner: EVENT with a 1-hour default (start=time, end=+1h), a dated
+  TASK gets a due_date (a deadline, NOT a calendar block), bot items land uncategorised
+  (Inbox) in Today (no date/today) or This Week (a future date), no category guessing;
+  (5e) the trust layer — a Telegram secret-token header check (fail-closed) in front of
+  the owner-gate so a forged request is refused, chit-chat/gibberish save nothing with a
+  kind reply, and "undo" removes the single most recent bot-saved item via a new
+  `telegram_saves` log (deletes exactly that row by id, owner-only, never a hand-made row).
+  Model: gemini-3.1-flash-lite (free, 500/day). NO browser-app (src/) or core-schema change
+  in Phase 5 — function logic + one added log table only; the live edge function matches the
+  repo (nothing unpushed); no Vercel redeploy needed. **NEXT: Phase 6 — the 7am brief +
+  anti-staleness engine (the real V1 finish line).**
 - **2026-06-22 — Phase 5, Piece 5e: trustworthy (security + misses + undo). PHASE 5
   READY, pending owner phone verify.** (A) Security: the function rejects any request
   whose `X-Telegram-Bot-Api-Secret-Token` header != the stored `TELEGRAM_WEBHOOK_SECRET`

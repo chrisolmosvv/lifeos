@@ -24,6 +24,16 @@
 - **Gemini** — Google's AI that writes the morning brief in real words.
 - **Telegram bot** — the chat account you text to add things and that texts
   you back.
+- **Marty** — the name of your Telegram bot (@lifeos_marty_bot).
+- **Webhook** — a "ping me when something happens" link: Telegram calls your
+  cloud function at this address every time you text the bot.
+- **Secret token** — a private password Telegram sends in a hidden header on
+  every webhook call; the function refuses any request without it, so the public
+  address can't be abused.
+- **Undo (Marty)** — text "undo" and Marty removes the single most recent thing
+  *he* saved. Never touches tasks/events you made in the app yourself.
+- **Marty's save log (telegram_saves)** — a small private list noting what Marty
+  saved, so "undo" knows exactly which one row to remove.
 - **Token** — a chunk of text (roughly a few characters). AI usage and cost are
   measured in tokens.
 - **Context window** — how much an AI can "hold in its head" at once. When it's

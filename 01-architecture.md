@@ -47,6 +47,17 @@ Health and Life pillars plug in with no rebuild.
 - Note: "what triggers doomscrolling" needs a data source we don't have yet
   (arrives with the Mind module + Screen Time). Don't fake it.
 
+### Added module tables (ADD to the spine, never change it)
+- **telegram_saves** (added Phase 5) — the Telegram bot's own bookkeeping log so it can
+  "undo" the last thing IT saved. One row per bot-saved item: `item_table`
+  ('tasks'|'events') + `item_id` (the saved row's id) + `title` + `user_id` +
+  `created_at`. RLS owner-only (same as the spine). It does **not** change the meaning of
+  categories/tasks/events — it only records pointers to rows the bot created, so undo can
+  delete exactly that row by id and never touch a task/event made in the app. No foreign
+  key to the core rows (a row deleted elsewhere just leaves a stale log entry that undo
+  reports as "already gone"). This is the architecture's "modules add tables, protect the
+  spine" pattern in practice.
+
 ## How the pieces connect (runtime)
 You → the app → Supabase (read/write your data). Supabase's agent talks to
 Telegram (two-way chat) and Gemini (writes the brief). The 7am alarm wakes the
