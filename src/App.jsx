@@ -36,5 +36,5 @@ const screen = {
   justifyContent: 'center',
   alignItems: 'center',
   minHeight: '100vh',
-  fontFamily: 'sans-serif',
+  // fonts + paper/ink come from the global theme (theme.css)
 }

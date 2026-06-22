@@ -1,0 +1,77 @@
+/* The masthead — a quiet edition header, not a banner. ONE thin strip across
+   the top of the app, with a hairline rule beneath. Stays compact so the
+   desktop never gains page-level scroll. */
+
+.masthead {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* The nameplate — Fraunces, set once, the way a paper prints its name. */
+.mast-name {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-size: 1.4rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+/* Today's dateline + the live clock, set off by a hairline. */
+.mast-dateline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--rule);
+}
+.mast-date {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+.mast-time {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Pushes the controls to the right. Weather will slot in around here later —
+   there's no source yet, so nothing is shown for it. */
+.mast-spacer {
+  margin-left: auto;
+}
+.mast-logout {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+}
+.mast-logout:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .masthead {
+    padding: 0.5rem 1rem;
+    gap: 0.6rem;
+  }
+  .mast-dateline {
+    padding-left: 0.6rem;
+    gap: 0.5rem;
+  }
+  /* The phone day view prints today's date itself — don't repeat it here. */
+  .mast-date {
+    display: none;
+  }
+}

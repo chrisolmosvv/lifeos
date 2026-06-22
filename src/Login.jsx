@@ -34,7 +34,7 @@ export default function Login() {
           <br />
           <strong>{email}</strong>.
         </p>
-        <p style={{ fontSize: '0.85rem', color: '#666' }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--ink-muted)' }}>
           Tap the link on this device to come back logged in.
         </p>
       </div>
@@ -44,7 +44,7 @@ export default function Login() {
   return (
     <form onSubmit={handleSubmit} style={card}>
       <h1 style={title}>LifeOS</h1>
-      <label style={{ fontSize: '0.9rem', color: '#444', textAlign: 'left' }}>
+      <label style={{ fontSize: '0.9rem', color: 'var(--ink-muted)', textAlign: 'left' }}>
         Email
         <input
           type="email"
@@ -59,7 +59,7 @@ export default function Login() {
         {status === 'sending' ? 'Sending…' : 'Send me a login link'}
       </button>
       {status === 'error' && (
-        <p style={{ color: '#c0392b', fontSize: '0.85rem' }}>{errorMsg}</p>
+        <p style={{ color: 'var(--accent)', fontSize: '0.85rem' }}>{errorMsg}</p>
       )}
     </form>
   )
@@ -74,22 +74,30 @@ const card = {
   padding: '0 1.5rem',
   textAlign: 'center',
 }
-const title = { fontSize: '2rem', fontWeight: 'bold', margin: 0 }
+const title = {
+  fontFamily: 'var(--font-serif)',
+  fontSize: '2.4rem',
+  fontWeight: 500,
+  color: 'var(--ink)',
+  margin: 0,
+}
 const input = {
   width: '100%',
   marginTop: '0.4rem',
   padding: '0.6rem 0.75rem',
   fontSize: '1rem',
-  border: '1px solid #ccc',
+  color: 'var(--ink)',
+  background: 'var(--paper)',
+  border: '1px solid var(--rule)',
   borderRadius: '8px',
   boxSizing: 'border-box',
 }
 const button = {
   padding: '0.7rem 1rem',
   fontSize: '1rem',
-  fontWeight: 600,
-  color: '#fff',
-  background: '#111',
+  fontWeight: 500,
+  color: 'var(--paper)',
+  background: 'var(--ink)',
   border: 'none',
   borderRadius: '8px',
   cursor: 'pointer',

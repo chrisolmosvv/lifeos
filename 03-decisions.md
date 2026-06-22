@@ -9,6 +9,32 @@
 
 ---
 
+- **Visual foundation: Fraunces + Inter, terracotta accent, one theme file.**
+  (Phase 2, Piece 1 — *starting values, owner is art director and will tweak
+  before we lock.*) Why each:
+  - **Fonts loaded from Google Fonts** via two `<link>` tags in `index.html`
+    (with `preconnect` + `display=swap`), only the two weights we use —
+    regular (400) and medium (500) — of **Fraunces** (serif: masthead +
+    headlines) and **Inter** (sans: body, UI, all numbers). Why this way:
+    lightest possible, no build/install step, no offline font files to ship;
+    `display=swap` means text never blank-flashes. Trade-off: depends on a
+    Google request at load (can self-host later if we want zero third-party
+    calls). This **replaces** the design doc's earlier working faces
+    (UnifrakturCook / Playfair / Libre Caslon) — those were explicitly listed
+    as open questions for the owner to settle.
+  - **Numbers use Inter's tabular figures** (`font-variant-numeric: tabular-nums`)
+    on the masthead clock and the calendar's hour/date labels, so digits never
+    shift width.
+  - **One theme file** (`src/theme.css`) holds every colour + font as CSS
+    variables on `:root`, imported once globally so login and calendar both
+    inherit. Starting hexes (warm, mine to tweak): `--paper #F4EFE4`,
+    `--ink #1C1916`, `--ink-muted #5C564C`, `--rule #D8D0BE`,
+    `--rule-faint #E7E0D0` (extra-light line for the hour grid),
+    `--accent #C8643D` (warm terracotta, owner's pick over the doc's broadsheet
+    red). A commented dark-mode block sits in the same file so the "evening
+    edition" is a drop-in later — no rewrite. Trade-off: none meaningful;
+    structured for easy tuning.
+
 - **Supabase env vars must be set in Vercel by hand (twice).** The app reads
   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from environment variables.
   Locally these live in a `.env` file that is gitignored, so it never reaches

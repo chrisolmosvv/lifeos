@@ -62,6 +62,14 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 2, Piece 1 of 3: shared visual foundation built (not yet
+  locked).** Loaded Fraunces + Inter (Google Fonts, two weights each), added a
+  single theme file of CSS variables (warm paper/ink palette + terracotta
+  accent `#C8643D`), built one masthead strip (nameplate, live clock with
+  tabular figures, hairline rule, Log out moved in), and made login + calendar
+  inherit the new type and colours. No categories, no Inbox, no palette, no
+  tables — those are Pieces 2 & 3. Builds clean. **Showing the owner to tweak
+  the fonts/colours before locking; Phase 2 is NOT done.**
 - **2026-06-22 — Phase 1 DONE & verified. Phase 2 is now current.** Pushed the
   calendar commit to GitHub and added the two Supabase env vars
   (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) in Vercel — that fixed the blank

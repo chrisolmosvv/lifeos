@@ -21,6 +21,10 @@ const MO = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ]
+const MO_FULL = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
 
 // The Monday that starts the week containing `date`.
 export function startOfWeek(date) {
@@ -81,4 +85,15 @@ export function formatRange(days) {
 // "June 21, 2026" style (used on the phone day view).
 export function formatLongDate(d) {
   return `${MO[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
+}
+
+// The masthead dateline: "Monday, June 22, 2026".
+export function formatMastheadDate(d) {
+  return `${WD_FULL[d.getDay()]}, ${MO_FULL[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
+}
+
+// The live clock, zero-padded 24-hour: "09:07:32".
+export function formatClock(d) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 }

@@ -35,6 +35,67 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 2 (Piece 1 of 3) — Shared visual foundation (NOT locked)
+WHAT CHANGED:
+- Loaded two fonts: **Fraunces** (the serif, for the masthead + headlines) and
+  **Inter** (the sans, for body, UI and all numbers), regular + medium only,
+  straight from Google Fonts in `index.html`. Numbers use Inter's tabular
+  figures so they line up and the clock doesn't jitter.
+- Added one small **theme file** (`src/theme.css`) holding every colour and
+  font as variables, so the whole look is tweakable from one place. Starting
+  colours (warm, all yours to change): paper `#F4EFE4`, ink `#1C1916`, muted
+  grey `#5C564C`, hairline `#D8D0BE`, terracotta accent `#C8643D`. A dark-mode
+  block is pre-written and commented out for later.
+- Built one **masthead** strip across the top: the "LifeOS" nameplate in
+  Fraunces, today's date, a live ticking clock, and a thin hairline beneath.
+  Moved the **Log out** button into it, so there's now a single top bar (the
+  old duplicate one is gone). Left a gap where weather will slot in later — no
+  weather is shown (we have no source yet).
+- Made the **login screen** and the **calendar** inherit the new fonts and
+  paper/ink automatically. Removed the calendar's own duplicate "LifeOS" text
+  (the masthead provides it now). The calendar's grid/layout is unchanged — it
+  just picked up the warm colours and the terracotta now-line/today marker.
+
+FILES TOUCHED: index.html, src/main.jsx, src/theme.css (new),
+src/masthead.css (new), src/Masthead.jsx (new), src/dateUtils.js,
+src/LoggedIn.jsx, src/App.jsx, src/Login.jsx, src/calendar.css
+
+HOW TO VERIFY (on your Mac):
+1. In Terminal, from the lifeos folder, run:  `npm run dev`
+2. Open  http://localhost:5173 .
+3. **Login screen** (if logged out): "LifeOS" should now be in the Fraunces
+   serif, on a warm off-white (not white) background, with a near-black
+   button. (If you're already logged in, click Log out to see it.)
+4. **Calendar** (after logging in): up top, a single thin strip — "LifeOS" in
+   serif on the left, today's date in small uppercase letters, and a clock
+   ticking every second beside it (the digits should NOT jiggle as seconds
+   change), with Log out on the right and a hairline rule under the whole
+   strip. The grid below should look the same shape as before but warmer: off-
+   white paper, terracotta "now" line and today circle, hour labels lined up.
+5. Make the window narrow (under ~768px) — the masthead stays one strip and the
+   single-day phone view shows, both in the new colours.
+
+KNOWN GAPS / RISKS:
+- **Not locked.** These are starting fonts/colours — the owner wants to eyeball
+  and tweak before we commit to them. Do not treat the palette as final.
+- Fonts load from Google's servers; on a cold load there can be a brief moment
+  before Fraunces/Inter swap in (text shows in a fallback first, no blank flash).
+- Visual only — still no categories, Inbox, colour palette, tasks or events.
+- Not deployed to Vercel yet (local preview only this session).
+
+NEXT: **Phase 2, Piece 2** — categories (the buckets) with their own table and
+the Inbox as default. (First piece that adds a real table: RLS on, owner-only,
+adds to the spine without changing the task/event/category core meaning.) Do
+NOT start it until the owner has signed off on Piece 1's look.
+
+FOR THE CHECKER: This is visual-only — confirm no database tables, categories,
+Inbox or category-colour palette were added (those are Pieces 2 & 3). Confirm
+all colours/fonts come from the one theme file (`src/theme.css`) via CSS
+variables, that there's a single top bar (no stacked headers), and that the
+calendar grid's layout is unchanged from the prior shell (only colours/type
+differ). Note the type/accent now depart from the design doc's old working
+faces — that was the owner's art-director call, recorded in the decisions doc.
+
 ### 2026-06-22 — Phase 1 — DEPLOYED & VERIFIED (phase complete)
 WHAT CHANGED:
 - Pushed the calendar-shell commit to GitHub (it had been committed locally but
