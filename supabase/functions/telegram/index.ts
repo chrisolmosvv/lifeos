@@ -45,10 +45,15 @@ Deno.serve(async (req) => {
     const text = message?.text;
     if (typeof text !== "string") return ack(); // e.g. a sticker — just ack.
 
-    const understood = await understand(text);
-    const reply = understood
-      ? formatReply(understood)
-      : "I couldn't read that one just now — mind trying again? (Nothing saved.)";
+    const result = await understand(text);
+    let reply: string;
+    if (result.kind === "ok") {
+      reply = formatReply(result.value);
+    } else if (result.kind === "rate_limit") {
+      reply = "I've hit my AI limit for the moment — give it a minute and send it again. (Nothing saved.)";
+    } else {
+      reply = "I couldn't read that one just now — mind trying again? (Nothing saved.)";
+    }
 
     await sendMessage(chatId, reply);
     return ack();

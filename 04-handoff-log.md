@@ -71,7 +71,13 @@ KNOWN GAPS / RISKS:
 - "gym at 7" resolved to 19:00 (7pm) — Gemini picks a sensible time when am/pm is
   omitted; worth watching.
 - Model: had to use gemini-2.5-flash — gemini-2.0-flash's free tier is now limit 0
-  (see decisions). Free Flash can briefly 503 ("high demand"); the retry covers it.
+  (see decisions). Free Flash can briefly 503 ("high demand") or 429 (over the
+  free per-minute/day limit). Handling: retry with backoff rides out 503s; a 429
+  gets a distinct, honest reply ("I've hit my AI limit — try again in a minute")
+  instead of "couldn't read that". A real owner-test ("dinner with Alex…Friday,
+  18:00") hit a 429 because MY testing had just drained the per-minute quota — it
+  reads fine otherwise. gemini-2.5-flash-lite is a confirmed higher-limit fallback
+  (reads equally well) if rate limits ever become a nuisance — one-line model swap.
 - The access token the owner believed was revoked STILL worked this session (third
   time) — owner to confirm at the tokens page that dead tokens are actually gone.
 

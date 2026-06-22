@@ -57,10 +57,16 @@ function nowLocal(): string {
   return `${weekday} ${date} ${time}`;
 }
 
-// Ask Gemini to read the message. Returns null if the call or parse fails
-// (so the caller can say so plainly rather than crash).
-export async function understand(text: string): Promise<Understood | null> {
-  if (!GEMINI_KEY) return null;
+// The outcome of a read: understood, over the free AI limit, or unreadable.
+// Lets the caller give the right plain-English reply instead of one catch-all.
+export type ReadResult =
+  | { kind: "ok"; value: Understood }
+  | { kind: "rate_limit" }
+  | { kind: "error" };
+
+// Ask Gemini to read the message. Never throws — always returns a ReadResult.
+export async function understand(text: string): Promise<ReadResult> {
+  if (!GEMINI_KEY) return { kind: "error" };
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
   const body = {
     systemInstruction: { parts: [{ text: SYSTEM }] },
@@ -75,8 +81,9 @@ export async function understand(text: string): Promise<Understood | null> {
     },
   };
 
-  // Up to 3 attempts: Flash occasionally returns a transient 503/429 ("high
-  // demand") that clears on a quick retry, so a blip doesn't reach the owner.
+  // Up to 3 attempts. A transient "high demand" (503) usually clears on a quick
+  // retry. A 429 means we're over the free-tier limit — retrying in seconds won't
+  // help, so report that distinctly and stop (don't waste the quota or stall).
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch(url, {
@@ -84,22 +91,23 @@ export async function understand(text: string): Promise<Understood | null> {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      if (res.status === 429) return { kind: "rate_limit" };
       if (!res.ok) {
-        await new Promise((r) => setTimeout(r, 1200));
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
         continue;
       }
       const data = await res.json();
       const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (typeof raw !== "string") return null;
+      if (typeof raw !== "string") return { kind: "error" };
       const parsed = JSON.parse(raw);
       // Basic shape check — if Gemini wandered off the schema, treat as unreadable.
-      if (typeof parsed?.type !== "string" || typeof parsed?.title !== "string") return null;
-      return parsed as Understood;
+      if (typeof parsed?.type !== "string" || typeof parsed?.title !== "string") return { kind: "error" };
+      return { kind: "ok", value: parsed as Understood };
     } catch (_err) {
-      await new Promise((r) => setTimeout(r, 1200));
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
     }
   }
-  return null;
+  return { kind: "error" };
 }
 
 // "2026-06-25" -> "Thu 25 Jun" (in Europe/Amsterdam). Noon-UTC avoids any

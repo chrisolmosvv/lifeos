@@ -48,9 +48,16 @@
   so it's the choice. **Why this matters / how to change:** the model name is a single
   `GEMINI_MODEL` const in `understand.ts` — if 2.5-flash's free quota changes, swap it
   there (free options seen on this key include `gemini-2.5-flash-lite` and
-  `gemini-flash-latest`). Still free, still Flash — the paid-key switch for sensitive
-  modules remains a LATER phase, unchanged. Trade-off: free Flash can briefly 503 under
-  load; the retry above absorbs it.
+  `gemini-flash-latest`; flash-lite was confirmed to read the samples equally well and
+  has higher free limits — the go-to swap if rate limits ever bite). Still free, still
+  Flash — the paid-key switch for sensitive modules remains a LATER phase, unchanged.
+  Trade-off / failure handling: free Flash can briefly **503** ("high demand") or
+  **429** (over the free per-minute/day limit). The function retries with backoff to
+  ride out 503s, but treats a 429 distinctly — it stops (retrying in seconds can't help)
+  and Marty replies "I've hit my AI limit — try again in a minute" rather than the
+  misleading "couldn't read that". In real single-user use the limits are rarely hit;
+  the one 429 seen in testing was self-inflicted (heavy test calls draining the
+  per-minute quota just before an owner message).
 
 - **The bot is locked to the owner by a chat-id gate at the front of the function;
   the id is a secret (Phase 5, Piece 5b).** The `telegram` function's first action
