@@ -9,6 +9,28 @@
 
 ---
 
+- **The REAL Supabase project is `cntlptuacsujbdtwvbis`; an old `qupudazcutkbnxseciwn`
+  exists and must be ignored (Phase 5, Piece 5a).** Setting up the first edge function
+  revealed the Supabase CLI was logged into an account whose only "lifeos" project was
+  `qupudazcutkbnxseciwn` (created 2026-06-02 — *before* this build started). The project
+  the live app actually reads/writes is **`cntlptuacsujbdtwvbis`** (created 2026-06-21,
+  Frankfurt), which lives under a **different Supabase account**. **Why this matters:**
+  deploying functions / setting secrets / running the scheduler must always target
+  `cntlptuacsujbdtwvbis`, or they'd be wired to the wrong (empty) backend. **How we
+  connect the CLI:** a personal access token generated from the correct account (passed
+  as `SUPABASE_ACCESS_TOKEN` per command, never written to a file or the repo); the repo
+  is linked to `cntlptuacsujbdtwvbis` via `supabase link`. The `qupudaz…` project should
+  be treated as dead. Trade-off: the CLI's plain `supabase login` picks the wrong account
+  unless the browser is on the right one — use the access token to be sure.
+
+- **Telegram bot calls the edge function with JWT verification OFF (Phase 5, Piece 5a).**
+  The `telegram` function is deployed with `--no-verify-jwt`. **Why:** Telegram's webhook
+  calls carry no Supabase login token, so with JWT checking on they'd all be rejected
+  (401) and the bot would stay silent. **Trade-off / safety:** the endpoint is publicly
+  callable, so security can't lean on the JWT gate — Piece 5b locks behaviour to the
+  owner's chat id, and the function touches no database (nothing to leak). The bot token
+  lives only in Supabase's secret store (`TELEGRAM_BOT_TOKEN`), never the repo.
+
 - **Subtasks: one level only, enforced in the DB; parent shows a count and never
   auto-completes; parent-delete promotes children (Phase 3, Piece 3e).**
   - **One level only, enforced in BOTH places.** UI: "+ Add subtask" is offered

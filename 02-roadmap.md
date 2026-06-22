@@ -44,10 +44,15 @@ Feels like Apple Calendar.
 Create/edit/move/resize events and scheduled tasks, day + week views, cross-day drag,
 side-by-side overlap. This is where it's genuinely usable as a manual tool (before any AI).
 
-## ⬜ Phase 5 — Telegram capture   ← NEXT
+## 🔨 Phase 5 — Telegram capture   ← CURRENT
 Connect the bot. Text "dentist Thursday 2pm" → Gemini reads it → it logs
 correctly → replies telling me exactly what it did and where.
 **Done when:** I add things by texting.
+- 🔨 **5a — the round trip (plumbing only).** First edge function (`telegram`),
+  deployed `--no-verify-jwt`; webhook registered; replies "Got it: <text> — your
+  Telegram chat ID is <id>". No AI, no DB. Owner to verify from phone.
+- ⬜ 5b — lock the bot to the owner's chat ID only.
+- ⬜ later — Gemini reads the text → writes a real task/event → confirms what it did.
 
 ## ⬜ Phase 6 — The 7am brief + anti-staleness engine
 Scheduler wakes the agent; Gemini writes a brief: day overview + stale-item
@@ -77,6 +82,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 5, Piece 5a: the Telegram round trip (plumbing only).** Built
+  the project's FIRST edge function (`supabase/functions/telegram/index.ts`): reads an
+  incoming message's text + chat id and replies "Got it: <text> — your Telegram chat ID
+  is <id>". No AI, no DB, no schema change. Deployed with **`--no-verify-jwt`** (so
+  Telegram's tokenless calls aren't rejected) and pointed Telegram's webhook at it;
+  `getWebhookInfo` shows it registered with 0 pending and no errors, and a tokenless POST
+  returns 200. **Setup gotcha resolved:** the Supabase CLI was logged into an OLD/abandoned
+  "lifeos" project (`qupudazcutkbnxseciwn`, created 2026-06-02); the REAL project the app
+  uses is **`cntlptuacsujbdtwvbis`** (created 2026-06-21, Frankfurt). Linked via a personal
+  access token from the correct account (token not stored anywhere). Bot token is in
+  Supabase's secret store as `TELEGRAM_BOT_TOKEN`, never the repo. **Phase 5 NOT done.**
+  Owner verifies on phone; NEXT = 5b (lock to owner's chat id).
 - **2026-06-22 — Deployed live + brain docs reconciled. Phases 0–4 DONE; Phase 5 next.**
   Pushed all 17 Phase 2–4 commits to GitHub; Vercel built & deployed; the live site
   (cntlptuacsujbdtwvbis.supabase.co backend) was verified by the owner on Mac + iPhone

@@ -35,6 +35,42 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 5 (Piece 5a) — Telegram "round trip" (plumbing only)
+WHAT CHANGED:
+- Built the project's first cloud (edge) function, `telegram`. When you text the
+  bot, it replies "Got it: <your text> — your Telegram chat ID is <number>". No
+  AI, no database, no schema change — this only proves Telegram → cloud → reply.
+- Deployed it with the login-check OFF (`--no-verify-jwt`) so Telegram's calls
+  aren't rejected, and pointed Telegram's webhook at it.
+- Stored the bot token in Supabase's encrypted secret store (`TELEGRAM_BOT_TOKEN`),
+  never in the repo/GitHub.
+- Setup fix: the Supabase command-line tool was logged into an OLD abandoned
+  "lifeos" project; connected it to the REAL one (`cntlptuacsujbdtwvbis`) via an
+  access token from the correct account. (See decisions doc.)
+
+FILES TOUCHED: supabase/functions/telegram/index.ts, supabase/config.toml (new),
+supabase/.gitignore (new), 02-roadmap.md, 03-decisions.md, 04-handoff-log.md
+
+HOW TO VERIFY (on your phone):
+1. Open Telegram and go to your bot's chat.
+2. Send it: hello
+3. Within a second or two you should get back:
+   "Got it: hello — your Telegram chat ID is <some number>"
+4. Send me that number — Piece 5b uses it to lock the bot to only you.
+
+KNOWN GAPS / RISKS (expected, not bugs):
+- The bot replies to ANYONE who messages it until 5b locks it to your chat id.
+  Fine for now — nobody knows it exists.
+- No saving yet: it does not create tasks/events and does not use Gemini. That
+  starts after 5b.
+- Stickers/photos/voice (messages with no text) are quietly ignored for now.
+
+NEXT: 5b — lock the bot to your Telegram chat id only (using the number you send).
+
+FOR THE CHECKER: confirm the function is small and only echoes (no DB writes, no
+schema change); that deploy used --no-verify-jwt; and that no token is committed
+to the repo. Source: supabase/functions/telegram/index.ts.
+
 ### 2026-06-22 — Phase 3 (Piece 3e) — Subtasks (one level) — LAST PHASE-3 PIECE
 ⚠️ RUN THE SQL FIRST — the feature won't work (and the one-level rule won't be
 enforced) until you do. A missed SQL step has bitten this project before.
