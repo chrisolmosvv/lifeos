@@ -9,6 +9,30 @@
 
 ---
 
+- **The "fill a gap" suggestion: reserved, code-picked, one per brief, never named
+  twice (Phase 6, Piece 6e).** The brief offers to use a free stretch of today for a
+  pressing task — but only when it's genuinely useful. **GAP** = a continuous free
+  stretch in today's calendar of ≥ GAP_MIN_HOURS (2h), inside GAP_WINDOW_START–
+  GAP_WINDOW_END (08:00–20:00 Europe/Amsterdam), containing NO events and NO
+  time-blocked tasks; the earliest qualifying stretch wins (named constants in gap.ts,
+  easy to change). **RESERVED — worth-doing candidate** (priority order, first that
+  exists): 1) the 6d forgotten task, 2) the most overdue open task, 3) a task due
+  today, 4) a high-priority open Today/This Week task. If none exist → NO suggestion;
+  a low/none-priority undated task that isn't the forgotten one never qualifies. A
+  suggestion needs BOTH a gap AND a candidate; hard cap ONE per brief; it's an OFFER,
+  never a command. **CODE finds the gap and picks the task (deterministic, verifiable);
+  Gemini only PHRASES it** — it can't choose the slot/task or invent one. **No double
+  mention:** if the gap task is already mentioned elsewhere (the forgotten line, an
+  overdue/due-today body item, or a high-priority Today task in the TODAY list), the
+  writer gets a `sameItem` flag and folds it into ONE coherent thought; if it's the
+  exact forgotten task, the checklist also merges the two lines. **In BOTH prose and
+  the checklist fallback,** so it survives a Gemini outage. Refactor: the shared
+  read-only DB helper moved to brief/sb.ts (used by day.ts + gap.ts). Read-only, free
+  tier, no schedule, no schema/column change. Trade-offs (accepted): candidate order is
+  forgotten-first, so under "brief test" the offer pairs with the forgotten task rather
+  than a high-priority one; and a task already scheduled today can still be the
+  candidate (the rules don't exclude it) — both refinable later.
+
 - **The forgotten-task nudge: code-picked, one per brief, keyed off created_at
   because there's no updated_at (Phase 6, Piece 6d).** The brief surfaces the single
   most-forgotten task — the whole point of the product — but stays calm: at most ONE

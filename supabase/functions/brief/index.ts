@@ -10,9 +10,11 @@
 // Piece 6c (write it): hand 6b's SAME verified facts to Gemini and send its written
 //   version in the "quiet broadsheet" voice. If Gemini fails, send the plain
 //   checklist instead — never go silent.
-// Piece 6d (THIS): the code also picks the ONE most-forgotten This Week task (or
-//   none) and threads it into BOTH the prose and the checklist fallback, so the
-//   gentle nudge survives even when Gemini is unavailable. Still no schedule (6e+).
+// Piece 6d (forgotten): the code picks the ONE most-forgotten This Week task (or
+//   none) and threads it into BOTH the prose and the checklist fallback.
+// Piece 6e (THIS): the code also finds a real free stretch in today's calendar and a
+//   worth-doing task for it (reserved — often nothing), and offers ONE gentle
+//   suggestion; also in both prose and fallback. Still no schedule (6f).
 //
 // TEMPORARY TEST AID (6d): if the caller passes { test: true }, the forgotten-task
 //   threshold is 0 days (so the picker fires on real This Week tasks immediately,
@@ -32,6 +34,7 @@
 // (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are auto-injected by the platform.)
 
 import { factsForGemini, FORGOTTEN_DAYS, formatChecklist, gatherDay, pickForgotten } from "./day.ts";
+import { pickGapOffer } from "./gap.ts";
 import { writeBrief } from "./write.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -70,10 +73,13 @@ Deno.serve(async (req) => {
     return new Response("sent", { status: 200 });
   }
 
-  // The CODE picks the one forgotten task (or none); put it in BOTH the prose facts
-  // and the checklist fallback so the nudge holds even if Gemini is unavailable.
+  // The CODE picks the one forgotten task (6d) and the one gap offer (6e) — or none
+  // of either; put both in the prose facts AND the checklist fallback so the nudges
+  // hold even if Gemini is unavailable. The gap offer reuses the forgotten task as
+  // its top-priority candidate, so it's computed after.
   const forgotten = await pickForgotten(test ? 0 : FORGOTTEN_DAYS);
-  const text = await writeBrief(factsForGemini(day, forgotten), formatChecklist(day, forgotten));
+  const gap = await pickGapOffer(forgotten);
+  const text = await writeBrief(factsForGemini(day, forgotten, gap), formatChecklist(day, forgotten, gap));
   await sendMessage(OWNER_CHAT_ID, text);
   return new Response("sent", { status: 200 });
 });

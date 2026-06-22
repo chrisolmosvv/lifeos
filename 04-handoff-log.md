@@ -35,6 +35,85 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 6 (Piece 6e) — The "fill a gap" suggestion (reserved mode)
+WHAT CHANGED:
+- When today has a real empty stretch AND a genuinely worth-doing task is waiting, the
+  brief now offers ONE gentle suggestion to use that time for it. Reserved, not eager —
+  when in doubt it says nothing. CODE finds the gap and picks the task (deterministic);
+  Gemini only phrases the offer (it can't pick the slot/task or invent one).
+- GAP = a continuous free stretch in TODAY's calendar of ≥ GAP_MIN_HOURS (2h), inside
+  GAP_WINDOW_START–GAP_WINDOW_END (08:00–20:00 Europe/Amsterdam), with NO events and NO
+  time-blocked tasks; earliest qualifying stretch wins. (Named constants in gap.ts.)
+- WORTH-DOING candidate (in priority order, first that exists): 1) the 6d forgotten
+  task, 2) most overdue open task, 3) a task due today, 4) a high-priority open Today/
+  This Week task. None of those → NO suggestion (a low/none-priority undated task that
+  isn't the forgotten one never qualifies — that's the reserved gate).
+- Both a gap AND a candidate are required, else no line. Hard cap ONE suggestion. It's
+  an OFFER, never a command, in the quiet-broadsheet voice.
+- NO DOUBLE MENTION: if the gap task is already mentioned elsewhere (the 6d forgotten
+  line, or an overdue/due-today body item, or a high-priority Today task in the TODAY
+  list), the writer gets a `sameItem` flag and folds it into ONE coherent thought. If
+  it's the exact forgotten task, the checklist also merges the two into one line.
+- In BOTH the prose AND the plain-checklist fallback ("FREE WINDOW / • <start>–<end> —
+  could tackle: <title>", or merged into BEEN WAITING), so it survives a Gemini outage.
+- Refactor: the shared read-only DB helper moved to brief/sb.ts (used by day.ts +
+  gap.ts); 6b read, 6c writer, 6d picker behave exactly as verified.
+
+FILES TOUCHED: supabase/functions/brief/sb.ts (new — shared read helper + today
+window), supabase/functions/brief/gap.ts (new — gap finder + candidate + offer),
+supabase/functions/brief/day.ts (use sb.ts; thread gap into checklist/facts),
+supabase/functions/brief/index.ts (compute + pass the gap offer),
+supabase/functions/brief/write.ts (prompt: the gentle free-window offer),
+02-roadmap.md, 03-decisions.md, 04-handoff-log.md
+
+SAFETY / RLS: still READ-ONLY — only SELECTs, every read filtered to the owner's
+user_id; NO new columns, NO schema change, db/ untouched. No src/ change → no Vercel
+redeploy. `brief` redeployed PRIVATE (anonymous POST → 401 confirmed). The telegram
+function was NOT changed this piece (the "brief"/"brief test" triggers from 6d are
+unchanged); the gap logic runs identically under both. Free Gemini tier only.
+
+PREVIEW OF MY REAL DATA (so expectations match): today is packed 08:00–20:00 (event
+08–10, event 11:15–14:15, Homework 15:00–17:30, Call mom 19:15–20:00), so the largest
+free stretch is 17:30–19:15 = 1h45 — UNDER 2h → NO gap line right now (correct). The
+forgotten pick under "brief test" is still "tesrt".
+
+HOW TO VERIFY (from your phone):
+1. FORCE A SUGGESTION: in the app clear a free afternoon today (≥2h with no event/
+   scheduled task between 08:00–20:00) AND make sure you have a worth-doing task — set
+   one to HIGH priority, or due today, or leave an overdue one. Then text "brief" (or
+   "brief test") → the brief includes ONE gentle gap offer naming that free window and
+   that task. Only one.
+   NOTE on which task it names: the candidate order takes the FORGOTTEN task first. So
+   under "brief test" (everything counts as forgotten) the offer pairs with your oldest
+   waiting This Week task, folded into one "been waiting + free window" line. To test
+   the overdue/due-today/high-priority branch specifically, use plain "brief" (today
+   nothing is 3+ days old, so there's no forgotten task and the pressing one is chosen).
+2. Fill the day so there's no 2-hour gap → text again → NO gap line (correct).
+3. Make the only waiting task low-priority with no date → text again → NO gap line
+   (reserved mode staying quiet — correct).
+4. If the gap task is also your forgotten task → confirm it reads as ONE combined line,
+   not the task named twice.
+5. Text a normal item like "book dentist" → still captured as a task as before.
+
+KNOWN GAPS / RISKS:
+- Candidate order is forgotten-first (per the agreed rules), so under "brief test" the
+  gap pairs with the forgotten task, not necessarily a high-priority one — see the note.
+- A worth-doing task that's ALREADY scheduled today can still be the gap candidate (the
+  rules don't exclude it); it would read a little oddly but the sameItem fold keeps it
+  to one mention. Refine later if wanted.
+- Gap ignores any sub-2h free slivers and anything outside 08:00–20:00 (by design).
+- Still on-demand only — the 7am schedule is 6f.
+
+NEXT: Phase 6, Piece 6f — the 7am alarm (the scheduler calls the brief automatically)
++ the silent-failure safety net.
+
+FOR THE CHECKER: confirm the gap (≥2h, 08:00–20:00, no events/scheduled tasks, earliest)
+and the candidate (forgotten→overdue→due-today→high-priority, else none) are CODE-picked;
+that a suggestion needs BOTH and is capped at one; that a same-as-existing task is folded
+(no double mention); that it's in prose AND the checklist fallback; that it's READ-ONLY,
+no schema/column change; and that `brief` stays private. Source:
+supabase/functions/brief/{gap.ts, day.ts, index.ts, write.ts, sb.ts}.
+
 ### 2026-06-22 — Phase 6 (Piece 6d) — The anti-staleness nudge (the real point)
 WHAT "FORGOTTEN / UNTOUCHED" MEANS (given the columns that actually exist):
 - I inspected the live tasks table. Its only timestamp columns are: created_at,

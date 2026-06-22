@@ -112,8 +112,16 @@ nudge + a suggestion to fill a gap.
   created_at only (the tasks table has no updated_at — so moving buckets doesn't reset
   it; flagged). Temporary "brief test" trigger runs it at a 0-day threshold to verify
   now. Read-only, no schema/column change. (Owner verifies via "brief test".)
-- ⬜ **6e — the "fill a gap in the day" suggestion.**
-- ⬜ **6f — the 7am schedule** (the alarm calls the brief automatically).
+- ✅ **6e — the "fill a gap" suggestion** (reserved mode). When today has a real free
+  stretch (≥2h inside 08:00–20:00, no events/scheduled tasks, earliest) AND a worth-
+  doing task is waiting (forgotten → most overdue → due today → high-priority, else
+  nothing), the brief offers ONE gentle "could be a good window for X". CODE finds the
+  gap + picks the task; Gemini only phrases it. If that task is already mentioned, it's
+  folded into one line — never named twice. In prose AND the checklist fallback.
+  Read-only, no schema/column change. (Owner verifies by clearing an afternoon + a
+  pressing task.)
+- ⬜ **6f — the 7am schedule** (the alarm calls the brief automatically) + the
+  silent-failure safety net.
 
 ## ⬜ Phase 7 — The redesign (look & feel pass)
 The full UX/UI pass once the data foundation and core flows are real. Bring every
@@ -137,6 +145,21 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 6, Piece 6e: the "fill a gap" suggestion (reserved mode).** When
+  today has a real free stretch (≥2h inside 08:00–20:00 Amsterdam, no events/scheduled
+  tasks, earliest one) AND a worth-doing task is waiting, the brief offers ONE gentle
+  "could be a good window for X". Worth-doing candidate, in order: the 6d forgotten task
+  → most overdue → due today → high-priority Today/This Week; none → no suggestion
+  (reserved). Needs BOTH a gap and a candidate; capped at one; an offer, never a command.
+  CODE finds the gap + picks the task (deterministic); Gemini only phrases it. If the gap
+  task is already mentioned elsewhere it's folded into ONE line (never named twice). In
+  prose AND the checklist fallback. New gap.ts + sb.ts (shared read helper); day.ts/
+  index.ts/write.ts wired; 6b/6c/6d unchanged. Read-only, no DB/schema/column/src change;
+  brief redeployed private (401), telegram untouched. With today's packed calendar there's
+  no 2h gap, so no gap line yet (correct). **Owner verifies on phone**: clear an afternoon
+  + have a pressing task → "brief" shows one gap offer; fill the day → none; only waiting
+  task low-priority undated → none; gap task = forgotten → one combined line; "book
+  dentist" still captured. Phase 6 NOT done. NEXT: 6f — the 7am alarm + silent-failure net.
 - **2026-06-22 — Phase 6, Piece 6d: the anti-staleness nudge (the real point).** The
   brief now surfaces the ONE most-forgotten task, gently, at most one per brief. The
   CODE picks it deterministically: an open 'This Week' task created 3+ days ago

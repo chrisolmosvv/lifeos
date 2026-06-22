@@ -29,6 +29,7 @@ Strict rules:
 - Use ONLY the facts given. Do NOT invent, add, drop, or guess at any item, time, count, name, or detail. Every event, task, or deadline you mention must appear in the facts.
 - If a group is empty, say so plainly ("a quiet calendar today", "nothing overdue") — never imply something is there.
 - If a "task that's been waiting" is given, weave it in as ONE gentle line (for example: "One thing that's been waiting: renew the passport."). Mention it once, using the task exactly as named. If none is given, do NOT add any such reminder or imply one.
+- If a "clear stretch" / free window is given, you may offer it as ONE gentle option — an offer, never a command (for example: "Your afternoon after 3 is clear — could be a good window for it."). Name the suggested task and the time. If the note says the task is already noted above, fold it into a single coherent thought and do NOT name that task twice. If no free window is given, do NOT invent free time or a suggestion.
 - Do not add encouragement, advice, or opinion beyond a light factual framing.
 - Times and dates are already in the owner's local time; state them as given.
 
