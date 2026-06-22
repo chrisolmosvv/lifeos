@@ -35,6 +35,59 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 7, Piece 1 — open the redesign (clean save point + record decisions)
+WHAT CHANGED: (paperwork only — NO app code, NO schema change)
+- Made a **clean pre-redesign save point**: a labeled commit at the exact Phase 6
+  working state, so we can roll the whole redesign back to here if it goes wrong.
+- Added **`07-ux-flows.md`** to the repo as Phase 7's **behaviour reference** —
+  the agreed description of how the core experience should work. It is **NOT
+  locked**: it carries a status banner saying every flow is open to relitigation
+  screen by screen as we redesign, and it flags two spots where it describes
+  future intent rather than what Phase 6 actually shipped (the proactive layer
+  splitting into brief + nudges; the "tasks today / next 7 days" home model).
+- Recorded the **opening Phase 7 decisions** (locked) in `03-decisions.md` and
+  mirrored the doc-level ones into `06-design.md`; flipped the roadmap's Phase 7
+  to in-progress with a Piece-1 line + session note. The seven decisions: styling
+  = a **small reusable component kit** on the existing theme tokens (over plain
+  CSS / Tailwind; animation + chart toolkits added later); Phase 7 **may make
+  schema/logic changes** when the UX needs them (reverses the old "look-only"
+  stance — each such change surfaced first and built as its own verified piece);
+  visual target = the approved **Apple-tinted** look with **blackletter masthead +
+  folio header**; **masthead stays blackletter** (settles that open question);
+  **paper → `#F6F5F1`** (from cream `#F4EFE4`; the theme.css change is Piece 2);
+  calendar category = **soft tinted block** Apple-Calendar style (overrides the
+  old "small dot, not big blocks of colour" line); Today home model = **"tasks
+  today" + "next 7 days"** (display-logic only, a later piece).
+FILES TOUCHED: 07-ux-flows.md (new), 03-decisions.md, 06-design.md, 02-roadmap.md,
+04-handoff-log.md. (Plus two git commits — the empty save-point marker, then this
+docs commit. No src/, no db/, no schema.)
+HOW TO VERIFY (owner):
+- In a terminal in the project, run `git log --oneline -3`. You should see, newest
+  first: this Phase-7-Piece-1 docs commit, then **"Phase 7 start — save point
+  before the redesign (Phase 6 working state)."**, then the Phase 6 close-out.
+  That middle commit is the rollback point.
+- Open `07-ux-flows.md` — it sits next to the other 0x- brain docs and opens with a
+  "Phase 7 behaviour reference, NOT locked" banner.
+- Skim the top of `03-decisions.md` — the new "Phase 7 — the redesign: opening
+  decisions" block is there; and `06-design.md` now says paper `#F6F5F1`, masthead
+  stays blackletter, and calendar categories as tinted blocks.
+KNOWN GAPS / RISKS:
+- Nothing visual changed yet — the app still looks exactly like Phase 6. All the
+  colour/masthead/calendar choices are *recorded*, not *built*; they land from
+  Piece 2 on. (The `#F6F5F1` paper is still the old cream in the running app until
+  Piece 2 touches `src/theme.css`.)
+- The save point is an empty marker commit (a clean label, no file changes) — a
+  stray `.DS_Store` Finder-metadata change was discarded so the point is clean.
+- `07-ux-flows.md` deliberately describes some behaviour that differs from what's
+  built (see its banner) — it's a *target/reference*, not a claim of current state.
+NEXT: Phase 7, Piece 2 — the theme/token + component-kit groundwork, including the
+`#F6F5F1` paper change in `src/theme.css` (the first piece that touches app code).
+FOR THE CHECKER: confirm (1) no src/ or db/ file was touched and no schema changed;
+(2) the recorded decisions match this instruction set; (3) each doc-level decision
+that overrides an earlier line in 06-design.md is amended in place (not silently),
+and the "look-only / zero schema" reversal points back to the old
+[Data foundation before design] decision rather than deleting it.
+
 ### 2026-06-22 — Phase 6 COMPLETE & owner-verified (close-out) — the V1 finish line
 WHAT THE WHOLE PHASE DELIVERS (plain English): every morning at 7am Amsterdam, Marty
 texts me a short, warm recap of my day — on his own, with nobody watching.

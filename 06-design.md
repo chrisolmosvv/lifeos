@@ -75,8 +75,11 @@ ordered, a little bit special. You feel *on top of things*, not buried by them.
 Colour is used **sparingly and on purpose**. Mostly it's ink on warm paper; a
 little colour earns its place.
 
-- **Paper** — a warm off-white, like good newsprint or uncoated stock. Working
-  value `#F4EFE4`. The background is never stark white.
+- **Paper** — a warm off-white, like good newsprint or uncoated stock. **Phase 7
+  (Piece 1) cooled this to a cleaner near-white `#F6F5F1`** (was the cream
+  `#F4EFE4`, which read a touch too yellow next to the Apple-tinted direction).
+  Still never stark white — the broadsheet rule holds. (The `src/theme.css` token
+  change lands in Piece 2; recorded in the decisions doc.)
 - **Ink** — a soft near-black, easy on the eye. Working value `#1C1916`. Plus a
   muted grey for secondary text and labels (around `#5C564C`).
 - **Rules** — hairline divides, drawn in ink at full or low strength. These are
@@ -100,9 +103,15 @@ little colour earns its place.
     **uncoloured** until the owner picks from the set. Warm reds are kept darker
     than the accent so a dot never reads as "urgent". Dark-mode values: deferred
     (structure ready, none built yet).
-  - On calendars and lists they show as a small **dot + a short uppercase tag**
-    — calm, not big blocks of colour. A category's colour can be used more fully
-    on that category's own page.
+  - In **lists** they show as a small **dot + a short uppercase tag** — calm. A
+    category's colour can be used more fully on that category's own page.
+  - **On the CALENDAR — amended (Phase 7, Piece 1):** a category now shows as a
+    **soft tinted block** (the category colour at low opacity as a fill + a
+    coloured left bar), Apple-Calendar style — **not** the small dot. This
+    **overrides** the earlier "calm, not big blocks of colour" rule *for the
+    calendar specifically*: the owner chose the tinted block in Phase 7 because it
+    reads at a glance on a lived-in calendar. The tint stays soft/low-opacity so
+    it still reads as paper, never a loud dashboard. (Lists keep the dot+tag.)
 - **Light is home; dark is the evening edition.** Light mode (paper + ink) is
   the default and the priority. A dark mode — soft charcoal, never true black,
   off-white text, the accent brightened just enough to still glow — is a
@@ -121,7 +130,9 @@ work that colour and boxes do in other apps.
 - **The nameplate / masthead** — a **blackletter** wordmark ("LifeOS"), the way
   a classic paper sets its name. Distinctive, characterful, used once at the
   top. (Working face: UnifrakturCook. If it ever reads as costume rather than
-  craft, we revisit — owner's call.)
+  craft, we revisit — owner's call.) **SETTLED (Phase 7, Piece 1): the masthead
+  stays blackletter** — the owner chose to keep the blackletter nameplate over a
+  quieter serif. This closes the open question below.
 - **Headlines & titles** — a **high-contrast serif** with character (working:
   Playfair Display). Confident, editorial, the thing your eye lands on first.
 - **Body, labels & data** — a **readable book serif** (working: Libre Caslon
@@ -227,6 +238,16 @@ should read like a short, warm recap of the day ahead.
 
 *Recorded as we build, so nothing drifts. Still the owner's to tweak in Phase 7.*
 
+- **Phase 7 redesign — opening direction (Piece 1):** the look we're building
+  toward is the approved **"Apple-tinted"** version — the warm broadsheet kept,
+  with softer Apple-style tinting where it earns it (notably the calendar's
+  tinted category blocks above), the **classic blackletter masthead + a folio
+  (dateline/edition) header**, and paper cooled to `#F6F5F1`. The styling is
+  built as a **small reusable component kit** on top of `src/theme.css` (an
+  animation toolkit and, later, charts come on top — see the decisions doc).
+  Per-screen layouts are still proposed-and-approved with the owner, screen by
+  screen; the behaviour reference is `07-ux-flows.md` (open to relitigation).
+
 - **Type direction (Phase 2, Piece 1) — in use:** the masthead + headlines are set
   in **Fraunces** (a warm high-contrast serif), and all body, UI and numbers in
   **Inter**, two weights each (regular + medium). This supersedes the earlier
@@ -276,8 +297,9 @@ alone:
 - **Dark mode tones** — the whole "evening edition" palette, to tune later.
 - **The category palette** — LOCKED (Phase 2, Piece 3b); eye-validated in light.
   Still open: the dark-mode variants of each colour, to tune with dark mode later.
-- **The blackletter nameplate** — keep it, or choose a quieter high-contrast
-  serif wordmark, if it ever feels like costume.
+- **The blackletter nameplate** — ~~keep it, or choose a quieter high-contrast
+  serif wordmark, if it ever feels like costume.~~ **RESOLVED (Phase 7, Piece 1):
+  kept blackletter** (owner's call). No longer open.
 - **How "one sheet" we stay** — per screen, and especially on the phone, where
   some scrolling may be unavoidable.
 - **Serif vs a tabular companion for dense data** — only if legibility ever

@@ -132,14 +132,28 @@ offer. **This is the V1 finish line — the proactive engagement layer is alive.
   (0 5,6 * * *). The temporary `brief_test_every3min` proving job has been removed (only
   the real 7am job remains). No spine/src change.
 
-## ⬜ Phase 7 — The redesign (look & feel pass)   ← NEXT
+## 🔨 Phase 7 — The redesign (look & feel pass)   ← IN PROGRESS
 The full UX/UI pass once the data foundation and core flows are real. Bring every
 screen up to the broadsheet identity in 06-design.md — layout, type, colour,
 motion, the per-screen feeling — replacing the plain interim verify UIs. The
 owner is art director here; this is where the design conversations that were
-deferred actually happen.
+deferred actually happen. The agreed **behaviour reference** for the phase is the
+new **`07-ux-flows.md`** (itself open to relitigation screen by screen).
+**Reversal recorded (Piece 1):** Phase 7 is **no longer look-only** — it MAY make
+schema/logic changes where the UX genuinely needs them, each surfaced first and
+built as its own small, separately-verified piece, never folded into a styling
+commit (see 03-decisions.md). Styling is built as a small reusable component kit
+on the existing theme tokens.
 **Done when:** the app looks and feels like the personal broadsheet, not a plain
 prototype.
+- ✅ **Piece 1 — open the redesign (paperwork, no code).** Clean pre-redesign save
+  point committed; `07-ux-flows.md` added as the behaviour reference (open, not
+  locked); the opening decisions locked in 03-decisions.md and mirrored into
+  06-design.md (component-kit styling; schema/logic changes now allowed;
+  Apple-tinted direction; masthead stays blackletter; paper → `#F6F5F1`; calendar
+  category = soft tinted block; home model → "tasks today" + "next 7 days"). NO
+  src/ or schema change. NEXT: Piece 2 — the theme/token + component-kit groundwork
+  (incl. the `#F6F5F1` paper change in `src/theme.css`).
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -154,6 +168,26 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Phase 7 OPENED. Piece 1 (paperwork only, no app code).** Made a
+  clean pre-redesign **save point** (a labeled commit at the Phase 6 working
+  state, to roll back to if the redesign goes wrong). Added **`07-ux-flows.md`** to
+  the repo as the phase's **behaviour reference** — agreed, but **open to
+  relitigation** screen by screen (it carries a status banner saying so, and flags
+  two spots where it describes future intent, not what Phase 6 shipped). Locked the
+  opening **design decisions** in 03-decisions.md and mirrored the doc-level ones
+  into 06-design.md: styling = a **small reusable component kit** on the existing
+  theme tokens (over plain CSS / Tailwind; animation + chart toolkits come later);
+  Phase 7 **may now make schema/logic changes** where the UX needs them (reverses
+  the old "redesign is look-only" stance, each change its own verified piece);
+  visual target = the approved **Apple-tinted** look with the **blackletter
+  masthead + folio header** (this settles the blackletter-vs-quiet-serif open
+  question — blackletter stays); **paper cooled to `#F6F5F1`** (from the cream
+  `#F4EFE4`; theme.css change happens in Piece 2); calendar categories become a
+  **soft tinted block** Apple-Calendar style (overrides the old "small dot, not big
+  blocks of colour" line); and the Today home model becomes **"tasks today" +
+  "next 7 days"** (display-logic only, a later piece). NO src/ or schema change
+  this piece. **NEXT: Phase 7, Piece 2 — theme tokens + the start of the component
+  kit (incl. the `#F6F5F1` paper change in `src/theme.css`).**
 - **2026-06-22 — PHASE 6 COMPLETE & owner-verified. The V1 finish line is reached.**
   The brief now RUNS ITSELF at 7am Amsterdam and texts a warm "quiet broadsheet" recap
   of the day — events + time-blocked tasks, Today tasks, due-today, overdue — plus at

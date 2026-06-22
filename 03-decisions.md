@@ -9,6 +9,94 @@
 
 ---
 
+## Phase 7 — the redesign: opening decisions (LOCKED 2026-06-22, Piece 1)
+
+> Recorded together at the start of Phase 7. These are settled; the per-screen
+> *layouts* are still an owner-art-directed conversation, but the choices below
+> are the frame everything is built inside. Behaviour reference for the phase is
+> the new `07-ux-flows.md` (which is itself **open to relitigation** screen by
+> screen — see its status banner). Doc-level items below are mirrored into
+> 06-design.md and/or 02-roadmap.md.
+
+- **[Styling approach = a small reusable component kit]** — We build the look on
+  top of the existing `src/theme.css` tokens (paper/ink/accent/category colours,
+  type), and turn the repeating "furniture" (mastheads, rules, kickers, task
+  rows, calendar blocks, etc.) into a handful of **sealed, reusable building
+  blocks** we assemble screens from. **Chosen over** (a) plain ad-hoc CSS per
+  screen — too easy to drift, every screen reinvents the same parts, the mess
+  CLAUDE.md warns about; and (b) Tailwind — a whole utility vocabulary to learn,
+  markup fills with class soup, and it pulls against the calm hand-set
+  broadsheet feel. **Why the kit:** one place to define each piece of furniture,
+  so the whole paper stays consistent and a change lands everywhere at once;
+  small files; the tokens we already trust stay the source of truth. **Note:**
+  this is the *styling* foundation only — an **animation toolkit (e.g. Motion)**
+  is added on top later in Phase 7 for the editorial motion, and a **chart
+  toolkit** comes later still with the data pillars (Gym/Nutrition/Finance), not
+  now. **Trade-off:** a little up-front work building the kit before screens
+  speed up — accepted, it pays back immediately.
+
+- **[Phase 7 MAY include schema and logic changes — reverses the earlier
+  "redesign is look-only / zero schema" stance]** — When the UI/UX genuinely
+  needs a data or logic change to work right, Phase 7 is allowed to make it.
+  **This reverses** the expectation in **[Data foundation before design]** below
+  (and the roadmap's framing) that the redesign would "only touch layout, type
+  and colour" with "nothing underneath has to move." **Why:** living with the
+  real flows (see `07-ux-flows.md`) surfaces places where the right experience
+  needs more than paint — e.g. a true last-touched signal for staleness, or
+  fields a flow assumes. Pretending those are look-only would either fake the UX
+  or smuggle schema work into a styling commit. **The discipline that keeps the
+  spine safe:** every such change is (1) **surfaced to the owner first**, (2)
+  built as **its own small, separately-verified piece** with its own SQL/handoff
+  entry, and (3) **never folded into a look-only commit**. The architecture
+  guardrails still hold — new shapes get recorded here with a reason, the core
+  task/event/category meaning is protected. **Trade-off:** Phase 7 is no longer
+  purely cosmetic, so it's a bit larger and slower — accepted, because the point
+  of the phase is the app actually *feeling* finished, not just repainted.
+
+- **[Today's design direction = the "Apple-tinted" approved mockup]** — The look
+  we're building toward is the **Apple-tinted** version the owner approved: the
+  warm broadsheet, kept, with softer Apple-style tinting where it earns it (see
+  the calendar decision below). It keeps the **classic blackletter masthead + a
+  folio (dateline/edition) header**. This is the agreed visual target for the
+  phase; individual screen layouts are still proposed-and-approved per screen.
+
+- **[Masthead stays blackletter]** — The "LifeOS" nameplate stays a **blackletter
+  wordmark**. **This settles the open question** in 06-design.md ("keep the
+  blackletter nameplate, or switch to a quieter high-contrast serif") — we keep
+  blackletter. **Why:** it carries the most character and reads as a real paper's
+  name; the owner wants that signature, not a quieter serif. (Mirrored into
+  06-design.md: the open question is now resolved.)
+
+- **[Paper warmed down to a cooler near-white `#F6F5F1`]** — The page background
+  moves from the cream **`#F4EFE4`** to a cooler near-white **`#F6F5F1`**. **Why:**
+  the cream read a touch too warm/yellow next to the Apple-tinted direction; the
+  cooler near-white still isn't stark white (the broadsheet rule holds) but feels
+  cleaner and more modern. **Mirrored** in 06-design.md's Colour section now; the
+  actual `src/theme.css` token change happens in **Piece 2** (this piece touches
+  no code).
+
+- **[Calendar category = a soft tinted block, Apple-Calendar style]** — On the
+  calendar, a category shows as a **soft tinted block**: the category colour at
+  **low opacity as a fill** plus a **coloured left bar**, the way Apple Calendar
+  colours an event — not a bare dot. **This overrides** the line in 06-design.md
+  that said calendar colour should stay a small dot, "calm, not big blocks of
+  colour." **Why:** on a real lived-in calendar the tint makes categories
+  readable at a glance without shouting; the owner chose this treatment in Phase
+  7. **Mirrored** in 06-design.md (the dot line is amended with a note that the
+  owner picked the tinted block here). The tint stays soft/low-opacity so it
+  still reads as paper, not a Temu dashboard.
+
+- **[Today's content model = "tasks today" + "the next 7 days"]** — The home
+  screen's task side moves from **Today / This Week / Someday** to two reads:
+  **"tasks today"** (due today, scheduled today, or in the Today bucket) and
+  **"the next 7 days"** (tomorrow → +7, so it never repeats today). This matches
+  §3 of `07-ux-flows.md`. **This is a display-logic change only — NO schema
+  change** (the Today/This Week/Someday buckets still exist in the data; this is
+  how the *home page* reads them). Built as **its own verified piece later** in
+  Phase 7, not in this paperwork piece. **Trade-off:** the explicit "Someday"
+  drawer leaves the home screen — it still lives in the data and elsewhere; the
+  home page is deliberately about now and the week ahead.
+
 - **Phase 6 close-out — the seven decisions behind the 7am brief (recap; per-piece
   detail in the entries below).** Recorded together at phase close so the shape of the
   whole brief is in one place:
@@ -582,6 +670,13 @@
   **For Claude Code:** stop asking the owner to art-direct interim verify screens
   — keep them functional and calm but don't fine-tune; save design decisions for
   the redesign phase.
+  - **AMENDED (Phase 7, Piece 1):** the part of this that framed the redesign as
+    "only touches layout, type and colour" with "nothing underneath has to move"
+    is **superseded** by **[Phase 7 MAY include schema and logic changes]** at the
+    top of this doc — Phase 7 may make data/logic changes where the UX genuinely
+    needs them, each as its own surfaced, separately-verified piece. The rest of
+    this decision (build the spine fully first; keep interim verify UIs plain)
+    still stands.
 
 - **`tasks` table — the second spine table (Phase 3, Piece 1).** Built now to its
   FULL architecture shape so later pieces (priority, time-bucket views, due-date
