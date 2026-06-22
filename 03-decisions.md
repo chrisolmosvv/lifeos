@@ -9,6 +9,31 @@
 
 ---
 
+- **The 7am alarm: pg_cron at 05:00 + 06:00 UTC, a 7am-Amsterdam hour gate in the
+  function, service-role key from Vault, always-send (Phase 6, Piece 6f).** The brief
+  runs itself daily with nobody watching. **Scheduling mechanism:** Supabase pg_cron
+  invokes the PRIVATE brief function over HTTPS via pg_net, authenticating with the
+  service-role key. **Key handling (security):** the key is stored in Supabase Vault
+  (secret `brief_service_role_key`) and read at run time from `vault.decrypted_secrets`
+  — never hardcoded in the cron SQL (cron defs live in the DB), never in the repo, never
+  in the function files. **DST-safe 7am, exactly once/day, no manual switching:** the
+  job fires at BOTH 05:00 and 06:00 UTC (`0 5,6 * * *`), and the function PROCEEDS only
+  when the current Europe/Amsterdam hour is 7 — 05:00 UTC = 07:00 in summer, 06:00 UTC =
+  07:00 in winter — so exactly one fire/day lands at 7am Amsterdam year-round and the
+  other exits sending nothing. (DST transitions happen at ~02:00–03:00 local, well
+  before the fire times, so both can never map to hour 7 — no double-send.) **Why this
+  over a single fixed UTC time:** a fixed UTC time drifts by an hour across DST and would
+  need manual switching twice a year; the two-fire + hour-gate pattern needs zero
+  maintenance. **ALWAYS-SEND (owner's chosen safety net):** the scheduled run always
+  sends — a calm "quiet one" on an empty day, and a minimal "had trouble" line if
+  building throws — so a silent morning means the JOB broke (silence = the failure
+  signal). 6c's plain-checklist fallback (Gemini down) stays. **DB changes (scheduling
+  infra ONLY):** enabled pg_cron + pg_net; the Vault secret; cron jobs
+  `brief_daily_7am_ams` and a TEMPORARY `brief_test_every3min` (every 3 min, force-sends,
+  bypasses the gate, to be removed after the owner sees it fire). No spine/schema/column
+  change; the brief stays read-only and private. Trade-off: pg_net is fire-and-forget
+  (a network-level failure misses that day, no retry) — acceptable for a personal brief.
+
 - **The "fill a gap" suggestion: reserved, code-picked, one per brief, never named
   twice (Phase 6, Piece 6e).** The brief offers to use a free stretch of today for a
   pressing task — but only when it's genuinely useful. **GAP** = a continuous free

@@ -12,14 +12,20 @@
 //   checklist instead — never go silent.
 // Piece 6d (forgotten): the code picks the ONE most-forgotten This Week task (or
 //   none) and threads it into BOTH the prose and the checklist fallback.
-// Piece 6e (THIS): the code also finds a real free stretch in today's calendar and a
+// Piece 6e (gap): the code also finds a real free stretch in today's calendar and a
 //   worth-doing task for it (reserved — often nothing), and offers ONE gentle
-//   suggestion; also in both prose and fallback. Still no schedule (6f).
+//   suggestion; also in both prose and fallback.
+// Piece 6f (THIS): the 7am alarm. pg_cron calls this function (service-role key from
+//   Vault) at 05:00 AND 06:00 UTC; a SCHEDULED run proceeds only in the 7am Amsterdam
+//   hour (DST-safe, exactly once/day) — unless { force: true } (the temp test job).
+//   The scheduled run ALWAYS sends, even on an empty day, and an internal error still
+//   attempts a minimal "had trouble" message — so a silent morning means the job broke.
 //
-// TEMPORARY TEST AID (6d): if the caller passes { test: true }, the forgotten-task
-//   threshold is 0 days (so the picker fires on real This Week tasks immediately,
-//   no 3-day wait). Plain calls use the real FORGOTTEN_DAYS rule. Telegram maps the
-//   text "brief test" to test mode. We may remove this aid later.
+// REQUEST BODY (all optional):
+//   { test: true }       — forgotten-task threshold 0 days (telegram "brief test").
+//   { scheduled: true }  — a cron run: apply the 7am-Amsterdam-hour gate + always-send.
+//   { force: true }      — bypass the hour gate (the temporary every-3-min test job).
+// No body / on-demand "brief" = the normal real-rule brief, exactly as before.
 //
 // PRIVATE: this function is deployed WITH jwt verification (NOT --no-verify-jwt),
 // so its public URL refuses anonymous calls. Only a caller holding the service-role
@@ -36,15 +42,21 @@
 import { factsForGemini, FORGOTTEN_DAYS, formatChecklist, gatherDay, pickForgotten } from "./day.ts";
 import { pickGapOffer } from "./gap.ts";
 import { writeBrief } from "./write.ts";
+import { localHour } from "../_shared/datetime.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const OWNER_CHAT_ID = Deno.env.get("OWNER_CHAT_ID");
+const SEND_HOUR = 7; // 07:00 Europe/Amsterdam
 
 // Sent only if we couldn't READ the day at all (a transient DB blip) — never a
 // half-brief. (An AI failure is different: there we still have the day, so we send
 // the plain checklist — see writeBrief's fallback.)
 const READ_FAILED =
   "I couldn't read your day just now — give it a moment and ask again.";
+// The scheduled-run safety net: even if building the brief throws, the owner still
+// gets a sign of life — so a truly silent morning means the job itself broke.
+const TROUBLE =
+  "Good morning — I had trouble building your brief today. I'll try again tomorrow.";
 
 async function sendMessage(chatId: number | string, text: string) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -54,25 +66,14 @@ async function sendMessage(chatId: number | string, text: string) {
   });
 }
 
-Deno.serve(async (req) => {
-  if (!BOT_TOKEN || !OWNER_CHAT_ID) {
-    return new Response("not configured", { status: 500 });
-  }
-
-  // Test aid: { test: true } drops the forgotten-task threshold to 0 days (no body
-  // / bad body = the normal brief). See the header note.
-  let test = false;
-  try {
-    const body = await req.json();
-    test = body?.test === true;
-  } catch (_err) { /* no/!json body — a normal brief */ }
-
+// Build today's brief text and send it. On an empty day this still sends a calm
+// "quiet one" (gatherDay returns empty groups, not null) — the always-send behaviour.
+async function buildAndSend(test: boolean) {
   const day = await gatherDay();
   if (!day) {
-    await sendMessage(OWNER_CHAT_ID, READ_FAILED);
-    return new Response("sent", { status: 200 });
+    await sendMessage(OWNER_CHAT_ID!, READ_FAILED);
+    return;
   }
-
   // The CODE picks the one forgotten task (6d) and the one gap offer (6e) — or none
   // of either; put both in the prose facts AND the checklist fallback so the nudges
   // hold even if Gemini is unavailable. The gap offer reuses the forgotten task as
@@ -80,6 +81,35 @@ Deno.serve(async (req) => {
   const forgotten = await pickForgotten(test ? 0 : FORGOTTEN_DAYS);
   const gap = await pickGapOffer(forgotten);
   const text = await writeBrief(factsForGemini(day, forgotten, gap), formatChecklist(day, forgotten, gap));
-  await sendMessage(OWNER_CHAT_ID, text);
-  return new Response("sent", { status: 200 });
+  await sendMessage(OWNER_CHAT_ID!, text);
+}
+
+Deno.serve(async (req) => {
+  if (!BOT_TOKEN || !OWNER_CHAT_ID) {
+    return new Response("not configured", { status: 500 });
+  }
+
+  let test = false, scheduled = false, force = false;
+  try {
+    const body = await req.json();
+    test = body?.test === true;
+    scheduled = body?.scheduled === true;
+    force = body?.force === true;
+  } catch (_err) { /* no/!json body — a normal on-demand brief */ }
+
+  // DST-safe 7am: a scheduled run fires at both 05:00 and 06:00 UTC; only the one in
+  // the 7am Amsterdam hour proceeds (so exactly one send/day, year-round). The temp
+  // every-3-min test job passes { force: true } to bypass this gate.
+  if (scheduled && !force && localHour() !== SEND_HOUR) {
+    return new Response("skipped (not 7am Amsterdam)", { status: 200 });
+  }
+
+  try {
+    await buildAndSend(test);
+    return new Response("sent", { status: 200 });
+  } catch (_err) {
+    // Always-send safety net: never die silently — attempt a minimal sign of life.
+    try { await sendMessage(OWNER_CHAT_ID, TROUBLE); } catch { /* nothing more we can do */ }
+    return new Response("error-handled", { status: 200 });
+  }
 });

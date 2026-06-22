@@ -120,8 +120,15 @@ nudge + a suggestion to fill a gap.
   folded into one line — never named twice. In prose AND the checklist fallback.
   Read-only, no schema/column change. (Owner verifies by clearing an afternoon + a
   pressing task.)
-- ⬜ **6f — the 7am schedule** (the alarm calls the brief automatically) + the
-  silent-failure safety net.
+- ✅ **6f — the 7am alarm + always-send safety net** (pending the owner seeing it fire).
+  pg_cron calls the private brief function (service-role key from Vault) at 05:00 AND
+  06:00 UTC; the function proceeds only in the 7am Amsterdam hour → DST-safe, exactly
+  once/day, no manual switching. The scheduled run ALWAYS sends (a calm "quiet one" on
+  an empty day; a "had trouble" line if building throws) — so a silent morning means
+  the job broke. DB changes (scheduling infra only): enabled pg_cron + pg_net; a Vault
+  secret `brief_service_role_key`; cron jobs `brief_daily_7am_ams` (0 5,6 * * *) and the
+  TEMPORARY `brief_test_every3min` (*/3, force-sends, to be removed). No spine/src
+  change. (Owner verifies: unprompted briefs arrive within minutes, then the real 7am.)
 
 ## ⬜ Phase 7 — The redesign (look & feel pass)
 The full UX/UI pass once the data foundation and core flows are real. Bring every

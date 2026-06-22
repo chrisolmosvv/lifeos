@@ -35,6 +35,79 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-22 — Phase 6 (Piece 6f) — The 7am alarm + the always-send safety net
+WHAT CHANGED (the brief now runs ITSELF, on a schedule, with nobody watching):
+- The PRIVATE `brief` edge function is now invoked by Supabase's scheduler (pg_cron),
+  authenticating with the service-role key read from Vault. The function gained:
+  - a SCHEDULED mode ({ scheduled: true }) that applies a 7am-Amsterdam-hour gate and
+    ALWAYS sends (even an empty day sends a calm "quiet one" — silence now means the
+    JOB broke, the owner's chosen failure signal);
+  - a FORCE flag ({ force: true }) that bypasses the hour gate (the temp test job);
+  - an always-send safety net: if building the brief throws, it still attempts a
+    minimal "Good morning — I had trouble building your brief today" rather than dying
+    silently. 6c's plain-checklist fallback (Gemini down) stays.
+- On-demand "brief" (real 3-day rule) and "brief test" (0-day) are UNCHANGED.
+
+EXACTLY WHAT CHANGED IN THE DATABASE (only scheduling infrastructure — the checker
+should review these):
+1. EXTENSIONS ENABLED (both were available, now installed):
+   - pg_cron 1.6.4 (the scheduler).
+   - pg_net 0.20.3 (lets the database make the outbound HTTPS call to the function).
+   - supabase_vault 0.3.1 was already enabled (not changed).
+2. VAULT SECRET created: name `brief_service_role_key` = the project's service-role
+   key. The cron SQL reads it from `vault.decrypted_secrets` at run time — the key is
+   NOT hardcoded in any cron definition, NOT in the repo, NOT in the function files.
+3. TWO CRON JOBS created (cron.job):
+   - `brief_daily_7am_ams` — schedule `0 5,6 * * *` (fires 05:00 AND 06:00 UTC). Calls
+     the brief function with body { scheduled: true }. DST-safe 7am: the function
+     proceeds ONLY when the Europe/Amsterdam hour is 7, so exactly ONE of the two
+     daily fires sends (05:00 UTC = 07:00 in summer; 06:00 UTC = 07:00 in winter) —
+     year-round, no manual switching, never double-sends.
+   - `brief_test_every3min` — schedule `*/3 * * * *` (every 3 minutes). Calls the brief
+     with body { scheduled: true, force: true } so it BYPASSES the hour gate and always
+     sends. ⚠️ TEMPORARY — proves the wiring; must be removed once you've seen it fire.
+- NO change to tasks/events/categories, NO new app columns, NO writes to the spine, NO
+  activity_log. NO src/ change → no Vercel redeploy. The brief stays READ-ONLY on the
+  spine and stays PRIVATE (jwt-verified; anonymous POST → 401).
+
+FILES TOUCHED (code): supabase/functions/brief/index.ts (scheduled/force/always-send +
+error safety net), supabase/functions/_shared/datetime.ts (localHour helper),
+02-roadmap.md, 03-decisions.md, 04-handoff-log.md. (The cron jobs/extensions/Vault
+secret live in the database, not in the repo.)
+
+HOW TO VERIFY (no waiting until 7am):
+1. WITHIN ~3-6 MINUTES of now, with you doing NOTHING, a brief should arrive on your
+   phone on its own (from brief_test_every3min) — proving scheduler → function →
+   Telegram end to end. It should arrive again ~3 min later.
+2. Text "brief" yourself → still works exactly as before (on-demand path intact).
+3. On an empty test day the message reads as a calm "quiet one," not silence.
+
+⚠️ REMOVE THE TEMP TEST SCHEDULE (do this once you've seen it fire — it's texting you
+every 3 minutes). The exact one line (run in the Supabase SQL editor, or I can run it):
+    select cron.unschedule('brief_test_every3min');
+The real `brief_daily_7am_ams` job stays. (To check what's scheduled:
+`select jobname, schedule, active from cron.job;`)
+
+KNOWN GAPS / RISKS:
+- The temp 3-min job is LIVE and will text you every 3 minutes until unscheduled — the
+  immediate next step is to remove it.
+- DST correctness rests on the function's hour gate (05:00/06:00 UTC fire, proceed only
+  at Amsterdam hour 7). Verified by reasoning; the real proof is tomorrow's 7am send.
+- pg_net sends the HTTP call fire-and-forget; if a single morning's call fails at the
+  network layer, that day is missed (no retry) — acceptable for a personal brief; the
+  always-send + the "had trouble" net cover function-side failures.
+
+NEXT: remove the temp `brief_test_every3min` schedule, then confirm tomorrow's real
+07:00 Amsterdam brief lands on its own. Only after the owner sees BOTH the unprompted
+fire AND the real 7am delivery do we mark Phase 6 ✅ (the V1 finish line).
+
+FOR THE CHECKER: review the three DB changes above (extensions pg_cron/pg_net; the
+Vault secret brief_service_role_key; the two cron jobs and their UTC schedules + bodies).
+Confirm the service-role key is read from Vault (not hardcoded in cron SQL or the repo),
+the brief stays private and read-only on the spine, the 7am gate is DST-safe and
+single-send, and the scheduled run always sends. Source: supabase/functions/brief/index.ts,
+_shared/datetime.ts; cron.job + vault.secrets in the database.
+
 ### 2026-06-22 — Phase 6 (Piece 6e) — The "fill a gap" suggestion (reserved mode)
 WHAT CHANGED:
 - When today has a real empty stretch AND a genuinely worth-doing task is waiting, the

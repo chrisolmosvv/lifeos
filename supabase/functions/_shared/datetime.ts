@@ -53,6 +53,15 @@ export function localToUtc(date: string, time: string): Date {
   return new Date(utc);
 }
 
+// The current hour (0-23) in the owner's timezone. The scheduled brief fires at both
+// 05:00 and 06:00 UTC and proceeds only when this is 7 — so exactly one run lands in
+// the 7am Amsterdam hour year-round, with no manual daylight-saving switching.
+export function localHour(): number {
+  const h = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", hour12: false }).format(new Date());
+  const n = parseInt(h, 10);
+  return n === 24 ? 0 : n;
+}
+
 // Whole days from one calendar date to another (toYmd - fromYmd). Noon-UTC on both
 // sides cancels any DST hour so the difference is a clean day count.
 export function daysBetweenYMD(fromYmd: string, toYmd: string): number {
