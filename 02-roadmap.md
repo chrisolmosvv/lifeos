@@ -28,22 +28,23 @@ stripped phone layout.
 Create/edit buckets with colors and sub-levels; Inbox as the default.
 **Done when:** my real life categories exist.
 
-## ✅ Phase 3 — Tasks
+## ✅ Phase 3 — Tasks  (fully complete & verified)
 Add, edit, complete, prioritize, time-bucket, subtasks, due dates.
 **Done when:** I'm putting in real tasks and checking them off.
-Core is done: add/edit/complete/prioritise/time-bucket, tasks reference categories,
-and tasks are schedulable onto the calendar. Subtasks, the due-date picker, and the
-Someday view were deferred and are being built now as Pieces 3c–3e — so the core is
-✅ but those three trailing pieces are in progress before Phase 5.
+All done & verified: add/edit/complete/prioritise; the Today / This Week / Someday
+buckets; tasks reference categories and are schedulable onto the calendar; due dates
+(with the calm brick overdue treatment); and one-level subtasks (DB-guarded, parent
+shows a count, parent-delete promotes children). Pieces 3c (due dates), 3d (Someday)
+and 3e (subtasks) are all in — no trailing pieces remain.
 
-## ✅ Phase 4 — Events & the week calendar
+## ✅ Phase 4 — Events & the week calendar  (owner-verified)
 Add events; see events + scheduled tasks together; drag a task onto a slot.
 Feels like Apple Calendar.
-**Done when:** my week looks right and I'm living in it. — owner-verified.
+**Done when:** my week looks right and I'm living in it.
 Create/edit/move/resize events and scheduled tasks, day + week views, cross-day drag,
 side-by-side overlap. This is where it's genuinely usable as a manual tool (before any AI).
 
-## ⬜ Phase 5 — Telegram capture   ← NEXT (after the 3c–3e trailing pieces)
+## ⬜ Phase 5 — Telegram capture   ← NEXT
 Connect the bot. Text "dentist Thursday 2pm" → Gemini reads it → it logs
 correctly → replies telling me exactly what it did and where.
 **Done when:** I add things by texting.
@@ -76,6 +77,15 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-22 — Deployed live + brain docs reconciled. Phases 0–4 DONE; Phase 5 next.**
+  Pushed all 17 Phase 2–4 commits to GitHub; Vercel built & deployed; the live site
+  (cntlptuacsujbdtwvbis.supabase.co backend) was verified by the owner on Mac + iPhone
+  (login, tasks, events, calendar, add/drag, persists on reload). Confirmed the live DB
+  has categories/tasks/events with all later-piece columns and RLS owner-only. **Phase 3
+  is now fully ✅** (3c due dates, 3d Someday, 3e subtasks all complete & verified — no
+  trailing pieces). Then reconciled the seven brain docs to current reality (roadmap
+  markers, architecture's Tailwind→plain-CSS fix, glossary terms, design's "settled so
+  far"). NEXT: **Phase 5 — Telegram capture.**
 - **2026-06-22 — Phase 3, Piece 3e: subtasks (one level). ← PHASE 3 READY TO MARK
   FULLY DONE (pending owner verification).** Added one-level subtasks: "+ Add subtask"
   on a top-level task's editor, subtasks rendered indented under their parent (calm

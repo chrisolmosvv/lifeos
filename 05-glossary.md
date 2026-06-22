@@ -32,3 +32,19 @@
 - **Backend** — the parts you don't see (database, agent code, scheduler).
 - **Deploy** — to put the app online so you can open it from anywhere.
 - **Vercel** — the free service that hosts (deploys) your app.
+- **Bucket (time bucket)** — which list a task sits in: **Today**, **This Week**,
+  or **Someday**. Every task is in exactly one. Someday is the quiet "not now,
+  but don't lose it" drawer.
+- **Due date** — "this is due *by* this day" — a deadline, no time of day. Shows
+  as a calm dateline on the task; turns brick-coloured when it's in the past
+  (overdue). It does **not** put the task on the calendar.
+- **Scheduled task (time-block)** — a task you've dragged onto the calendar to
+  block time to *do* it (it gets a start and end time). It's still a task (still
+  in its list, still ticked there); the calendar block is just a second view of
+  it. Different from a due date: a due date is *when it's due*, a time-block is
+  *when you'll do it*.
+- **Subtask** — a smaller task nested under a parent task. One level only (a
+  subtask can't have its own subtasks). The parent shows an "X of Y done" count
+  but isn't completed automatically.
+- **Now-line** — the thin terracotta line across today's calendar column showing
+  the current time (like Apple Calendar's red line).

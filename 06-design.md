@@ -81,11 +81,12 @@ little colour earns its place.
   muted grey for secondary text and labels (around `#5C564C`).
 - **Rules** — hairline divides, drawn in ink at full or low strength. These are
   the main way we separate things. No heavy borders, no rounded boxes.
-- **The accent** — a **warm broadsheet red / vermilion** (working `#B23A2E`).
-  Used rarely, for things that genuinely matter: today, what's urgent or
-  overdue, the live "now" line, a record or a key number, the add action. When
-  in doubt, *don't* use the accent. (Not finally locked — see open questions.
-  We can warm it toward terracotta if the owner prefers.)
+- **The accent** — a **warm broadsheet red / vermilion** (original working
+  `#B23A2E`; **now warmed to terracotta `#C8643D` and in use — see "Settled so
+  far"**). Used rarely, for things that genuinely matter: today, the live "now"
+  line, the add action, a key number. When in doubt, *don't* use the accent.
+  (Note: *overdue* now has its own darker brick `--overdue` colour, so it doesn't
+  share the accent — keeps the accent from over-firing.)
 - **Category colours** — a small, **muted, editorial** set, like magazine
   section colours, never neon. **LOCKED (Phase 2, Piece 3b)** — source of truth
   is `src/palette.js`; stored in the DB as a colour *id* (e.g. `teal`), not a hex.
@@ -224,29 +225,49 @@ should read like a short, warm recap of the day ahead.
 
 ## Settled so far (working direction, tune on screen)
 
-*Recorded as we build, so nothing drifts. Still the owner's to tweak.*
+*Recorded as we build, so nothing drifts. Still the owner's to tweak in Phase 7.*
 
-- **Type direction (Phase 2, Piece 1):** the masthead + headlines are set in
-  **Fraunces** (a warm high-contrast serif), and all body, UI and numbers in
+- **Type direction (Phase 2, Piece 1) — in use:** the masthead + headlines are set
+  in **Fraunces** (a warm high-contrast serif), and all body, UI and numbers in
   **Inter**, two weights each (regular + medium). This supersedes the earlier
-  *working* faces above (UnifrakturCook / Playfair / Libre Caslon), which were
-  listed as open. Numbers use Inter's tabular figures so they line up. To be
-  confirmed once the owner sees it on screen.
-- **Accent (Phase 2, Piece 1):** warmed from broadsheet red to a **terracotta
-  `#C8643D`**. Used for today, the now-line, key marks. Being validated by eye.
+  *working* faces above (UnifrakturCook / Playfair / Libre Caslon). Numbers use
+  Inter's tabular figures so they line up. Now live across the whole app.
+- **Accent (Phase 2, Piece 1) — in use:** warmed from broadsheet red to a
+  **terracotta `#C8643D`**. Used sparingly for today, the now-line, the add
+  action, key marks. Validated live through Phases 2–4 (still tweakable in Phase 7).
+- **Category palette — LOCKED (Phase 2, Piece 3b):** the 16-colour muted set
+  (12 distinct + 4 shades), source of truth `src/palette.js`, stored as a colour
+  *id*. See the Colour section above and the decisions doc. (This resolves the
+  old "category palette" open question below.)
+- **Overdue colour (Phase 3, Piece 3c):** a separate **brick `--overdue #A85C44`**
+  token (the palette's brick), for a past-due task's dateline — kept darker than
+  the terracotta accent on purpose, so a deadline never reads as "urgent now". The
+  accent stays reserved.
+- **Navigation + core layouts now EXIST as built (Phases 2–4):** previously this
+  doc was mood-only; these are now real screens —
+  - the **broadsheet masthead** (Fraunces nameplate, dateline + live clock) with a
+    **Today / Calendar / Settings** nav (active item marked by a terracotta
+    underline); Categories lives under Settings;
+  - the **Today "Front Page"**: a two-column page — "The Day" timeline on the left,
+    the **Today / This Week** task blocks (+ a quiet **Someday** drawer) on the right;
+  - the **Calendar**: a day-column timeline and a seven-day week, events + scheduled
+    tasks as blocks, the now-line, side-by-side overlap.
+  These are the *built, working* layouts — calm and functional, but **not** the
+  finished design. The full per-screen polish (type/colour/motion, the per-page
+  feeling) is still **Phase 7 — the redesign**, where the owner art-directs.
 - **Theme variables:** all colours/fonts live in `src/theme.css` (see decisions
-  doc for the exact starting hexes).
+  doc for the exact hexes).
 
 ## Open questions — decide these *with* the owner
 
 Be honest about what isn't settled. None of these get answered by Claude Code
 alone:
 
-- **The exact accent** — broadsheet red vs a warmer terracotta. Not locked.
+- **The exact accent** — settled in use as terracotta `#C8643D` (see "Settled so
+  far"); still open to a final tweak in the Phase-7 redesign.
 - **Dark mode tones** — the whole "evening edition" palette, to tune later.
-- **The category palette** — the muted set works on paper; validate it by eye in
-  both light and dark before committing, and decide how many colours we really
-  need.
+- **The category palette** — LOCKED (Phase 2, Piece 3b); eye-validated in light.
+  Still open: the dark-mode variants of each colour, to tune with dark mode later.
 - **The blackletter nameplate** — keep it, or choose a quieter high-contrast
   serif wordmark, if it ever feels like costume.
 - **How "one sheet" we stay** — per screen, and especially on the phone, where

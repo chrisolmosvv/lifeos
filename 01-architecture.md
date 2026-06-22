@@ -5,7 +5,7 @@
 ## The stack (six free helpers)
 | Piece | Job | Service | Cost |
 |---|---|---|---|
-| The app | What you see and tap; installs to phone + desktop (PWA) | React + Vite + Tailwind, hosted on Vercel | Free |
+| The app | What you see and tap; installs to phone + desktop (PWA) | React + Vite (plain CSS — see note), hosted on Vercel | Free |
 | The brain | Stores data, handles login, runs the agent code | Supabase (Postgres + Auth + RLS + Edge Functions) | Free tier |
 | The messenger | You ↔ agent chat | Telegram bot | Free |
 | The intelligence | Reads the day, writes the brief in real words | Gemini API (Flash, free tier) | Free |
@@ -13,6 +13,11 @@
 | The vault | Saves every version of the code | GitHub | Free |
 
 Build tool: **Claude Code** on the owner's Claude Max plan.
+
+> **Styling note (reality check):** Tailwind was named here originally but never
+> installed. The app uses **plain CSS** — one small `.css` file per area, all
+> colours/fonts as variables in `src/theme.css`. See the decisions doc ("Plain CSS
+> + inline styles, not Tailwind"). Revisit only if styling grows complex.
 
 ## The data foundation (the part that lets pillars bolt on later)
 Everything is a few simple lists that point at each other. V1 only fills in
