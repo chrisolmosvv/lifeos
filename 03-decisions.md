@@ -9,6 +9,28 @@
 
 ---
 
+## Phase 7 — Calendar C7: all-day/multi-day band + the one schema change (2026-06-23)
+
+- **[Model (a): an `all_day` flag + existing start/end carrying the date(s)]** — Chosen over (b)
+  (date-only/normalised everywhere) for simplicity. `all_day=true` → the event is all-day; start/end
+  carry the dates, the time is ignored by the grid. **Storage convention: local midnight,
+  end-EXCLUSIVE** (a Mon–Wed all-day stores `start_at = Mon 00:00`, `end_at = Thu 00:00`). **Why
+  end-exclusive:** it matches the EXISTING multi-day span detection (`monthLayout` reads `end_at −
+  1ms`), so all-day and timed multi-day share ONE span model — no special-casing. The form shows the
+  **inclusive** last date (`end_at − 1 day`).
+- **[Migration-first, verified on the LIVE table before any UI (Phase 4 rule)]** — `db/10` adds
+  `all_day boolean not null default false` — additive, idempotent (`if not exists`), existing rows
+  backfill to false, no renames/drops, RLS unchanged. The owner ran it in the Supabase SQL editor;
+  **proven applied** by re-probing the live REST endpoint (`select=all_day` went `42703 column does
+  not exist` → `200`) + the owner's row-count check. **No UI was written until that passed.** This is
+  the **only** database change in the entire Calendar rebuild — **flagged for the checker.**
+- **[The band is fully separate from the timed grid; one shared form]** — `WeekGrid`'s timed columns
+  receive **only timed events** (all-day routed to the band), so an all-day item can never disturb the
+  timed even-split/overlap below. Band interactions live in a small day-grained `useBandDrag` sibling
+  (mirrors the gesture idiom; the timed `useWeekGrid` is untouched). The All-day toggle reuses the one
+  shared `ItemForm` — no second form, no parallel all-day store. The band sits in a **sticky head+band
+  block** (so it stays fixed while the timed grid scrolls) and **auto-collapses when empty**.
+
 ## Phase 7 — Calendar C6: Month view; all-day band split out to C7 (2026-06-23)
 
 - **[C6 = Month only; the all-day band is now its own piece C7]** — The original C6 ("all-day band +

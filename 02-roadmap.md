@@ -397,11 +397,20 @@ separately-verified pieces; old Calendar code retired conservatively in C4, not 
   event" greyed in Month (week tools). Motion: month zoom-in (reduced-motion respected). Save point
   `aa9305b`. *(CHECKER: read-only — `useMonthData` only reads a month's range; no writes/schema;
   Week/Today/All Tasks/tray unchanged.)*
-- ⬜ **C7 — All-day band + multi-day editing** (split out of the old C6). The interactive all-day band
-  (auto-height; click to create, drag across days, drag to move) + creating/editing multi-day events;
-  these strips already **render** in Week/Month from C6. ⚠️ **Needs the flagged additive schema** (an
-  `all_day` flag on `events`; multi-day = an end on a later day) — confirm against the live table and
-  build as its own flagged piece. The C3 form's **All-day toggle** goes live here.
+- ✅ **C7 — All-day band + multi-day editing** (the ONLY DB change in the rebuild). ⚠️ **SCHEMA:**
+  `db/10_events_all_day.sql` adds `events.all_day boolean not null default false` (additive,
+  idempotent, existing rows → false). **Migration-first + verified-applied on the LIVE table** before
+  any UI (probe: `select=all_day` flipped `42703 → 200`; owner confirmed rows intact). Model **(a)**:
+  `all_day` flag + start/end carry the date(s), stored at local midnight, **end-EXCLUSIVE**. Reads
+  flag-aware (`useWeekData`/`useMonthData`). The shared form's **All-day toggle is live** (on → hide
+  time fields, date-only fields, write midnight/end-exclusive, item moves to the band; off → timed
+  block) — one shared form. New `kit/AllDayBand.jsx` + `allDayBand.css` + `kit/useBandDrag.js`
+  (day-grained): band above the timed grid in a sticky head+band block, auto-height, multi-day bars,
+  **collapses when empty**; click empty cell → create (form, all-day preset), drag bar → move, drag
+  edge → span; past bars grey. `WeekGrid` timed columns get **only timed events** (all-day → band), so
+  the timed even-split/overlap is untouched. `monthLayout` all-day-aware (all-day → strip). Save
+  points `41c654b` (migration) + `2da8d97` (UI). **CHECKER: the schema change is flagged here; timed
+  grid / tray / Today / All Tasks / old engine untouched.**
 
 ### Phase 7 — DEPLOY + VERIFY STATE (updated 2026-06-23)
 ✅ **FULL STACK DEPLOYED (A3b deploy, 2026-06-23):** `origin/main` = `fa3bfc2`; Vercel Production

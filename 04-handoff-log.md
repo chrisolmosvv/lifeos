@@ -35,6 +35,60 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C7 — all-day / multi-day band (⚠️ SCHEMA CHANGE — verified applied)
+⚠️ **THIS PIECE CHANGED THE DATABASE** — the only schema change in the whole Calendar rebuild.
+`db/10_events_all_day.sql` adds one column: `events.all_day boolean not null default false`
+(additive, idempotent, existing rows default false, nothing renamed/dropped, RLS unchanged). It was
+run in the Supabase SQL editor and **verified applied on the live table BEFORE any UI** (the REST
+probe `select=all_day` flipped from `42703 column does not exist` to `200`; owner confirmed the event
+count unchanged + all false). UI was built only after that passed.
+WHAT CHANGED:
+- Events can now be **all-day** (and multi-day). A new **all-day band** sits just above the hour grid:
+  all-day items show as bars there (multi-day stretch across the days they cover). The band **grows
+  with the number of rows and disappears entirely when empty**.
+- The shared form's **All-day toggle is live**: switch it on → the time fields become **date** fields
+  and the item moves to the band; off → it's a timed block again. Same one form as everywhere.
+- **Click an empty band cell** to create an all-day item; **drag a bar** to move it; **drag a bar's
+  edge** to change how many days it spans (all day-grained — no minute snapping on the band).
+- **Month** now shows all-day + multi-day items as strips too.
+- Past all-day bars grey like other past blocks.
+FILES TOUCHED: added `db/10_events_all_day.sql` (the migration), `kit/AllDayBand.jsx`,
+`kit/allDayBand.css`, `kit/useBandDrag.js`; edited `useWeekData.js` + `useMonthData.js` (read
+`all_day`), `kit/ItemForm.jsx` + `kit/ItemTypeFields.jsx` + `kit/todayForm.css` (live toggle),
+`kit/WeekGrid.jsx` + `kit/weekGrid.css` (mount band in a sticky block), `WeekView.jsx` (split timed
+vs all-day + band wiring), `monthLayout.js` (all-day-aware). Build passes; saves `41c654b` (migration)
++ `2da8d97` (UI). Timed grid / tray / Today / All Tasks / old engine untouched.
+HOW TO VERIFY (dev: http://localhost:5174/):
+  1. **Migration first:** in Supabase, the `events` table now has an **`all_day`** column and your
+     existing events are all there with `all_day = false` (you already ran + checked this).
+  2. **Toggle to all-day:** open/create an event → flip **All-day** ON → the time fields become **date**
+     fields; save → the event **leaves the timed grid and appears as a bar in the all-day band** at the
+     top. Flip it OFF and save → it returns to a timed block.
+  3. **Create from the band:** click an empty cell in the all-day band → the form opens preset to
+     all-day on that day; save → a 1-day bar.
+  4. **Drag across days:** drag a bar's right edge across a few days → it spans them; **drag the bar
+     body** → it moves to other days. (Whole-day steps.)
+  5. **Auto-height:** with no all-day items the band is **gone** (zero height); add one and it appears;
+     add overlapping ones and it grows; remove them and it collapses — the timed grid shifts to suit.
+  6. **Month:** all-day + multi-day items show as **strips** across their days.
+  7. **Past greys:** an all-day item in the past is greyed.
+  8. **No regressions (look here):** timed create/move/resize/re-day still work and **an all-day item
+     does NOT change the overlap/even-split of timed blocks below**; the tray, Month nav, Today, and
+     All Tasks all behave as before.
+KNOWN GAPS / RISKS:
+- All-day storage is **end-exclusive midnight** (a Mon–Wed all-day stores end = Thu 00:00); the form
+  shows the inclusive last date. If a bar extends beyond the visible week, dragging still edits the
+  true span.
+- Recurrence (Repeat) is still a disabled placeholder (**T10**).
+- Not deployed — local save points only.
+NEXT: **C4** — collapse `useTodayGrid` + `useWeekGrid` into one grid hook and delete the dead old
+Calendar cluster (`WeekCalendar` + panels + drag engine) — closing out the rebuild.
+FOR THE CHECKER: **the schema change lives here** — `db/10_events_all_day.sql`, additive
+`all_day boolean default false`, **verified applied on the live table before any UI** (probe + owner
+count-check). Confirm: existing events intact + defaulted false; the timed grid's even-split/overlap
+is unaffected by all-day items; the All-day toggle round-trips (timed ↔ all-day) through the one
+shared form; Today / All Tasks / tray unchanged.
+
 ### 2026-06-23 — Phase 7, C6 — Month view + live Week/Month toggle (Calendar)
 WHAT CHANGED:
 - The **Week/Month toggle** is now live. **Week stays the landing view**; switching to **Month**
