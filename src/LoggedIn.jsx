@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { weekDays } from './dateUtils'
 import WeekCalendar from './WeekCalendar'
 import DayAgenda from './DayAgenda'
-import Masthead from './Masthead'
+import EditionHeader from './EditionHeader'
 import Today from './Today'
 import Settings from './Settings'
 import './calendar.css'
@@ -18,7 +18,7 @@ export default function LoggedIn({ email }) {
 
   return (
     <div className="app">
-      <Masthead view={view} onNavigate={setView} />
+      <EditionHeader view={view} onNavigate={setView} />
 
       {view === 'today' ? (
         <div className="cal-wrap">

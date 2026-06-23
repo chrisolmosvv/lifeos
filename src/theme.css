@@ -5,7 +5,8 @@
 
 :root {
   /* Paper & ink — the warm broadsheet palette */
-  --paper:      #F4EFE4; /* warm off-white background, never stark white */
+  --paper:      #F6F5F1; /* cooler near-white background (Phase 7 T1; was the cream
+                            #F4EFE4). Still never stark white. */
   --ink:        #1C1916; /* soft near-black body text */
   --ink-muted:  #5C564C; /* secondary text, labels, datelines */
   --rule:       #D8D0BE; /* hairline divider (the main separators) */
@@ -17,6 +18,9 @@
   /* Type — two weights only: regular (400) + medium (500) */
   --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* The blackletter nameplate face (Phase 7 T1) — used ONLY for the "LifeOS"
+     wordmark in the masthead, the way a classic paper sets its name. */
+  --font-black: 'UnifrakturMaguntia', 'UnifrakturCook', Georgia, serif;
 }
 
 /* The "evening edition" — dark mode. Soft charcoal, never true black; the

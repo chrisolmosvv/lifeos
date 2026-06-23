@@ -178,10 +178,16 @@ pieces are flagged for the checker.** (This is the plan; pieces get their own
 ✅/🔨/⬜ as we go.) **The save point committed before T1 is the sacred rollback
 point** — the working plain Phase 6 Today; if the rebuild goes wrong we roll back to
 it rather than dig (see the Piece-1c decision).
-- ⬜ **T1 — Foundation: paper token + the reusable component kit.** Build the kit
-  (header, hairline, small-caps label, tinted calendar block, task row, status
-  pill, motion timings) and apply the **header + `#F6F5F1` paper**. First piece that
-  touches `src/`.
+- ✅ **T1 — Foundation: paper token + the reusable component kit (header part).**
+  Paper cooled to `#F6F5F1` in `src/theme.css`; started the sealed kit in `src/kit/`
+  with the five header blocks (Masthead = blackletter "LifeOS" wordmark, Topline,
+  Folio = date · motto · live clock · edition, HairlineRule, SmallCapsLabel); loaded
+  the `UnifrakturMaguntia` webfont (only new asset, no JS libs); renamed the old
+  header to `EditionHeader` which composes the kit + the **unchanged** nav; applied
+  across all three screens (one shared header). LOOK ONLY — nothing below the header
+  or in the data layer touched; build passes. Sacred rollback point: commit
+  `ac665cb`. *(The calendar-block / task-row / status-pill / motion kit blocks come
+  with their screens in later T-pieces, not here.)* **Owner verifies on Mac + phone.**
 - ⬜ **T2 — Additive schema check + additions** *(flag for checker)*. Confirm what
   the spine already has, then add **only the fields confirmed missing** (candidates:
   task notes, task priority, event location, event notes — note `tasks` likely
@@ -216,6 +222,23 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T1 DONE (first code piece; LOOK ONLY). The broadsheet header
+  + cooler paper are live across the app.** Made the **sacred save point** first
+  (commit `ac665cb` — clean Phase 6 Today, the rollback target). Then: paper cooled to
+  **`#F6F5F1`** (one token in `theme.css`); started the **reusable component kit** in a
+  new sealed `src/kit/` folder with the five header blocks (**Masthead** = blackletter
+  "LifeOS" wordmark, **Topline**, **Folio** = date · motto · live ticking clock ·
+  edition, **HairlineRule**, **SmallCapsLabel**); loaded the **UnifrakturMaguntia**
+  blackletter webfont (the only new asset — no JS libraries); renamed the old
+  `Masthead.jsx` → **`EditionHeader.jsx`** so the kit owns the "Masthead" name, with
+  `EditionHeader` composing the kit top block + the **unchanged** Today/Calendar/
+  Settings nav. The header is shared by all three screens, so all three got it at once.
+  **Everything below the header is untouched** (the Phase 6 calendar/tasks/settings are
+  exactly as before); **no data reads/writes, no behaviour, no schema, no new JS dep.**
+  Build passes clean. No colour nudges (ink/muted read fine on the cooler paper).
+  Couldn't self-verify the logged-in look (magic-link login). **NEXT: T2 — the additive
+  schema CHECK (add only fields confirmed missing; `tasks` likely already has notes +
+  priority), flagged for the checker; its own save point first.**
 - **2026-06-23 — Phase 7, Piece 1c (paperwork only, no app code). The Today rebuild
   is now the owner's explicit, recorded decision.** Today (desktop) is a **clean
   front-end rebuild of that one screen** — an eyes-open escalation from the phase's

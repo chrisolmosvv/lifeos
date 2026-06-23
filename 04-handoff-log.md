@@ -35,6 +35,72 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T1 — paper token + reusable header kit, applied to every screen (LOOK ONLY)
+WHAT CHANGED: (presentation only — no behaviour, no data reads/writes, no schema)
+- **Paper cooled to `#F6F5F1`** (from the cream `#F4EFE4`) in `src/theme.css` — one
+  token, so it changes the whole app's background at once (incl. the login screen,
+  which inherits it). Added a `--font-black` variable for the blackletter nameplate.
+- **Started the reusable component kit** in a new sealed folder `src/kit/`: the five
+  header blocks the broadsheet top needs — **Masthead** (the blackletter "LifeOS"
+  wordmark), **Topline** (the thin uppercase strapline above it), **Folio** (the line
+  under it: date · motto · live clock · edition no.), **HairlineRule**, and
+  **SmallCapsLabel** (the kicker, built now for later screens). Each block is
+  self-contained and its CSS lives in one `kit/kit.css` where every class is prefixed
+  `kit-` and used ONLY by the kit, so a tweak on one screen can't leak to another.
+- **Loaded the blackletter webfont** `UnifrakturMaguntia` (Google Fonts) — added to
+  the existing font `<link>` in `index.html` alongside Fraunces + Inter (both already
+  loaded, confirmed). A font is the only new asset T1 added; **no JS libraries**.
+- **The folio clock ticks live and is display-only** — it reads the device clock
+  (`new Date()`) and nothing else; it touches no app data.
+- **Renamed the old header** `src/Masthead.jsx` → `src/EditionHeader.jsx` (and
+  `masthead.css` → `editionHeader.css`) so the kit can own the name "Masthead" for
+  the wordmark. `EditionHeader` now composes the kit top block (topline + blackletter
+  masthead + folio + hairline) and then renders the **existing nav unchanged**.
+- **Applied across screens:** the header is shared by all three logged-in destinations
+  (Today / Calendar / Settings) via the single instance in `LoggedIn.jsx`, so
+  upgrading that one header upgrades all three. **Everything below the header is
+  untouched** — the Phase 6 calendar, task lists and settings are exactly as they were.
+SACRED SAVE POINT (Step 0, the rollback target): **commit `ac665cb`** — "Phase 7 T1
+save point — clean Phase 6 Today (sacred rollback)." If T1 ever needs undoing, roll
+back to this.
+COLOUR NUDGES: **none.** Ink (`#1C1916`) and muted-ink (`#5C564C`) actually gain a
+hair of contrast on the cooler paper and read cleanly; the hairline `--rule`
+(`#D8D0BE`) reads a touch warmer than the new paper but still works as a quiet
+divider, so I left it. (Cooling the rule tone is a fine on-screen tweak to do together
+later if you want it.)
+FILES TOUCHED: index.html, src/theme.css, src/LoggedIn.jsx (header import + tag only —
+the below-header rendering is unchanged); ADDED src/EditionHeader.jsx,
+src/editionHeader.css, src/kit/{Masthead,Topline,Folio,HairlineRule,SmallCapsLabel}.jsx,
+src/kit/kit.css; REMOVED src/Masthead.jsx, src/masthead.css (renamed). NO db/, NO
+supabase/, NO data-layer or below-header file changed. `npm run build` passes clean
+(116 modules).
+HOW TO VERIFY (owner — on Mac AND phone):
+- The paper is the cooler off-white **everywhere** (incl. the login screen).
+- The **blackletter "LifeOS"** nameplate renders at the top, with the uppercase
+  topline above it and the folio line below (date · motto · clock · edition).
+- The **folio clock ticks** every second.
+- **Below the header still behaves exactly like Phase 6:** click Today / Calendar /
+  Settings and confirm nav still switches screens; the existing calendar and task list
+  still look and work as before. (Nothing below the header was changed.)
+KNOWN GAPS / RISKS:
+- **Couldn't visually verify the logged-in masthead myself** — it only shows after a
+  magic-link login, which I can't do headlessly. I verified the **build compiles
+  clean** and the wiring by code; the on-screen look is your check on Mac/phone.
+- **Folio/topline copy is placeholder** ("A Personal Daily" / "All the day that's fit
+  to do" / "Vol. I · No. 142") — not final, easy to change in `EditionHeader.jsx`.
+- **Login screen left as-is** (deliberate): it has no nav, so it keeps its own centred
+  Fraunces "LifeOS" card and just inherits the new paper. If you'd like its title in
+  the blackletter face too, that's a tiny follow-up — say the word.
+- `SmallCapsLabel` is built but not yet rendered anywhere (it's kit groundwork for the
+  module kickers in later T-pieces).
+NEXT: T2 — the additive schema CHECK (then add only the fields confirmed missing;
+remember `tasks` likely already has notes + priority). Flagged for the checker. Its own
+save point before it.
+FOR THE CHECKER: confirm (1) LOOK ONLY — no data reads/writes, no behaviour, no schema,
+no new JS dependency (only the blackletter webfont); (2) nothing below the header
+changed and nav still works; (3) the kit CSS is sealed (all classes `kit-` prefixed,
+used only by kit components); (4) the folio clock reads the device clock only.
+
 ### 2026-06-23 — Phase 7, Piece 1c — record the Today rebuild decision (owner's explicit call)
 WHAT CHANGED: (paperwork only — NO app code, NO schema change)
 - Recorded in `03-decisions.md` the owner's **explicit, eyes-open decision**: Today

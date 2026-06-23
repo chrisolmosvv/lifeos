@@ -1,0 +1,101 @@
+/* The reusable component kit — sealed broadsheet "furniture" (Phase 7, T1).
+   Every class here is prefixed `kit-` and is used ONLY by the kit components in
+   this folder, so a tweak to one screen can never leak into another. All colour
+   and type come from the shared theme (theme.css); nothing here hard-codes a
+   value. These blocks are meant to be reused by every later screen. */
+
+/* --- Topline: the thin uppercase line above the nameplate. ----------------- */
+.kit-topline {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+/* --- Masthead: the blackletter "LifeOS" nameplate, set once. --------------- */
+.kit-wordmark {
+  font-family: var(--font-black);
+  font-weight: 400;
+  font-size: 2.4rem;
+  line-height: 1.04;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-align: center;
+}
+
+/* --- Folio: date · motto · live clock · edition, the line under the name. --- */
+.kit-folio {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+}
+.kit-folio-date {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.kit-folio-motto {
+  flex: 1;
+  text-align: center;
+  font-style: italic;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kit-folio-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+.kit-folio-time {
+  font-weight: 500;
+  color: var(--ink);
+}
+.kit-folio-sep {
+  color: var(--ink-muted);
+}
+.kit-folio-edition {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
+/* --- HairlineRule: the thin rule block we organise with, not boxes. -------- */
+.kit-rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  height: 0;
+}
+.kit-rule--faint {
+  border-top-color: var(--rule-faint);
+}
+
+/* --- SmallCapsLabel (kicker): the quiet uppercase section label. ----------- */
+.kit-kicker {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+
+/* On the phone, keep the folio compact: the motto steps aside so the date and
+   clock never collide. */
+@media (max-width: 768px) {
+  .kit-wordmark {
+    font-size: 2rem;
+  }
+  .kit-folio-motto {
+    display: none;
+  }
+}
