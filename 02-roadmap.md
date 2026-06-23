@@ -369,8 +369,22 @@ separately-verified pieces; old Calendar code retired conservatively in C4, not 
   (provably unused, separate commits): `WeekCalendar.jsx` + `DayColumn`/`EventBlock`/`WeekDragPreview`
   + the drag hooks + **`EventPanel`/`TaskPanel`/`TaskEditForm`** (retired in C3, files left until here
   so the dead `WeekCalendar` keeps no broken import) + `eventPanel.css`.
-- ⬜ **C5 — The tray.** Button, push-to-squeeze, working mini-list (+ add, complete, drag-to-schedule,
-  drag-off-to-unschedule); tray stays open after a drop.
+- ✅ **C5 — The unscheduled tray** (right-side **push** drawer). The tasks unscheduled in C2 finally
+  get an on-Calendar home. Reuses Today's module-to-grid drag by **mirroring its tray gesture into
+  `useWeekGrid`** (the documented twin) with the week's own x→day + y→time drop geometry —
+  `useTodayGrid`/Today untouched, old `useScheduleDrag` not revived. New `kit/TrayDrawer.jsx` +
+  `trayDrawer.css`: a flex sibling of the grid (opening squeezes the 7 columns narrower; geometry
+  reads body width live, so the squeeze needs no JS), a due-soonest mini-list (tick · dot · tag ·
+  title · due), inline **"+ add"**, **tick-to-complete**, **drag-a-row→1-hour block**, **click-a-row
+  →shared form**; empty = blank. Tray contents = **(a) the VIEWED week** (undated + due-this-viewed-
+  week, not time-blocked). `useWeekData` gained the tray query + `onAddLooseTask`; one reload
+  refreshes tray + scheduled together, so **the C2 round-trip closes itself** (off-grid → back in
+  tray). `CalendarWeek` Tray button live; **Month stays greyed**. **No schema; existing write paths.**
+  Save point `b071c2e`. ⚠️ **OPEN GATE: squeeze readability** — verify the squeezed 7-column week is
+  actually readable with real overlapping events at a normal window before calling C5 done; if tight,
+  decide (overlay-below-a-width | fewer-days-in-view) together. *(CHECKER: "+ add" inserts
+  time_bucket='Someday' explicitly so a loose task never lands in Today's bucket; complete + schedule
+  are existing paths.)*
 - ⬜ **C6 — All-day band + Month.** Auto-height interactive band + multi-day spans; standard Month
   with events + tasks, "+N more", navigational clicks, strips. *(Flag any all-day/multi-day schema
   need for the checker first — spec §6/§18.)*

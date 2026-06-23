@@ -9,6 +9,32 @@
 
 ---
 
+## Phase 7 — Calendar C5: the unscheduled tray (viewed-week, push, mirrored drag) (2026-06-23)
+
+- **[Tray contents = (a) the VIEWED week, not the fixed current week]** — The tray shows undated
+  tasks + tasks due in the **week currently on screen** that aren't time-blocked (due-soonest, undated
+  last). **Why:** the tray's whole intent is "plan THIS stretch of days onto real slots" — arrowing to
+  next week should redraw the tray to next week's loose tasks; a fixed current-week tray (b) would sit
+  showing this week while you look at next week (quietly confusing). (a) is also the cheaper build —
+  it keys off the `days` WeekView already has and rides the per-week remount. (The undated backlog
+  shows either way; only the dated slice differs.)
+- **[Drag-to-schedule reuses Today's mechanism by MIRRORING it into `useWeekGrid`]** — Today's
+  module-to-grid drag is the `tray` gesture in `useTodayGrid` (`startTray`/ghost/`trayBind` →
+  `onSchedule`). C5 adds the **same** gesture to the C2 sibling `useWeekGrid`, but the drop computes
+  the **day from x** (`dayStartMsAt`) + **time from y** (`minutesAt`) — Today's mechanism + the week's
+  drop geometry. `useTodayGrid`/Today untouched; the old `useScheduleDrag` is **not** revived (C4
+  deletes it). Same documented-twin pattern as C2/C3 → cheap C4 collapse.
+- **[Push, not overlay; the squeeze needs no JS]** — The drawer is a flex sibling of the grid, so
+  opening it narrows the grid; because `dayStartMsAt`/`offGrid` read the body/scroll rects **live**,
+  x→day re-maps automatically. **Open gate:** the squeezed 7-column week must stay *readable* with
+  real overlapping events (not just geometrically correct) — verified visually before C5 is "done";
+  if a narrow column makes title-only blocks or even-split slivers unreadable, we choose together
+  between **overlay-below-a-width** or **fewer-days-in-view** (not picked unilaterally).
+- **[A loose task is `time_bucket='Someday'`, set EXPLICITLY]** — The `tasks.time_bucket` column
+  **defaults to 'Today'**, so the "+ add" insert sets `'Someday'` explicitly (with null due/scheduled)
+  — an undated backlog task must never land in Today's bucket. The C2 off-grid unschedule + this one
+  reload share the data path, so off-grid → reappears-in-tray falls out for free.
+
 ## Phase 7 — Calendar C3: ONE shared form (promote TodayForm), type-locked on edit (2026-06-23)
 
 - **[The form converges by PROMOTING `TodayForm` → canonical `ItemForm`, both screens point at it]**

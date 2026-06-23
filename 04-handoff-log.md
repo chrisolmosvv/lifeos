@@ -35,6 +35,51 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C5 — the unscheduled tray (Calendar)
+WHAT CHANGED:
+- A **right-side tray drawer** on Calendar, opened by the now-live **Tray** button. It **pushes**
+  the week (the 7 columns get narrower, all stay visible); closing restores full width.
+- The tray is a **working list** of your loose / this-week tasks that aren't on the clock yet
+  (due-soonest): **"+ add"** a loose task, **tick** to complete, **drag a row onto a slot** to
+  schedule it as a 1-hour block, or **click a row** to edit it in the shared form.
+- After you drop a task on the grid it **leaves the tray and the tray stays open** for the next one.
+  And the **C2 loop closes**: drag a block **off** the grid → it clears its time and **comes back in
+  the tray**.
+- Empty tray = blank (no copy). Built by reusing Today's drag mechanism (Today itself untouched).
+FILES TOUCHED: added `kit/TrayDrawer.jsx` + `kit/trayDrawer.css`; edited `kit/useWeekGrid.js` (tray
+gesture + ghost + trayBind), `useWeekData.js` (tray query + onAddLooseTask), `WeekView.jsx` (push row
++ wiring + ghost), `CalendarWeek.jsx` + `calendarWeek.css` (live Tray button). Build passes; save
+`b071c2e`. Today/All Tasks/old engine untouched; Month stays greyed.
+HOW TO VERIFY (dev: http://localhost:5174/ → Calendar):
+  1. **Open the tray:** click **Tray** (top-right) → a drawer slides in on the right and the week
+     squeezes to 7 narrower columns (still all visible). Click again → closes, full width returns.
+  2. **⚠️ READABILITY GATE (the one to really look at):** with the tray OPEN, put **several real,
+     overlapping events** on a day at your **normal window size** — confirm the squeezed columns +
+     the even-split blocks are still **readable** (titles legible, not unreadable slivers). If it's
+     tight, **tell me** — we'll choose overlay-below-a-width or fewer-days-in-view together (I have
+     NOT shipped either; the squeeze is the plain push).
+  3. **"+ add":** click "+ add", type a title, Enter → it appears in the tray (undated, at the
+     bottom). It should NOT appear in Today's "Tasks today".
+  4. **Tick complete:** click a row's tick → it greys + strikes; click again → back to normal.
+  5. **Drag to schedule:** drag a tray row onto a grid slot → a 1-hour block appears there, the task
+     **leaves the tray**, the tray **stays open**.
+  6. **Round-trip:** drag that block **off** the grid (past the edge) → it disappears from the week
+     and **returns to the tray**.
+  7. **Click a row** → the shared edit form opens for that task.
+  8. **Unchanged:** Today, All Tasks, and Calendar navigation behave exactly as before.
+KNOWN GAPS / RISKS:
+- **OPEN GATE — squeeze readability** (item 2): correct + built, but the *visual* "is it readable at
+  a narrow column" check is yours on real data; C5 isn't "done" until you've eyeballed it.
+- Tray = **top-level tasks** only (subtasks excluded) and the **viewed** week's dated slice + undated.
+- A completed loose task stays greyed in the tray (no midnight roll-off logic this piece).
+- Month still greyed (**C6**). Not deployed — local save point only.
+NEXT: **C6 — all-day band + Month** (incl. the flagged all-day/multi-day schema check first).
+FOR THE CHECKER: three writes, all existing paths / **no schema** — **"+ add"** INSERTs
+`time_bucket='Someday'` explicitly (column defaults to 'Today'; a loose task must never land in
+Today's bucket) with null due/scheduled; **tick** = `onUpdateTask({status})`; **schedule** =
+`onScheduleTask`. Confirm a loose task does NOT show in Today's Today bucket, and the off-grid→tray
+round-trip works. The tray drag reuses Today's mechanism via the `useWeekGrid` twin (Today untouched).
+
 ### 2026-06-23 — Phase 7, C3 — one shared create/edit form (Today + Calendar)
 WHAT CHANGED:
 - There is now **ONE form** for creating and editing, used by **both Today and Calendar** (and All
