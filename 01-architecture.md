@@ -21,15 +21,26 @@ Build tool: **Claude Code** on the owner's Claude Max plan.
 > blocks, task rows, the status pill, the form + drill-in category picker, toast,
 > etc.). See the decisions doc ("component kit, not Tailwind/plain-CSS-per-screen").
 
-> **Front-end shape (Phase 7 rebuild).** The logged-in app is a single shell
-> (`LoggedIn`) over four views switched by state — **Today** (the rebuilt home: a
-> 7am–midnight workspace grid + "tasks today" / "next 7 days" modules), **Calendar**
-> (still the Phase-6 week/day screen — its rebuild is pending), **All Tasks** (the
+> **Front-end shape (Phase 7 rebuild — Calendar rebuild COMPLETE).** The logged-in
+> app is a single shell (`LoggedIn`) over four views switched by state — **Today**
+> (the rebuilt home: a 7am–midnight workspace grid + "tasks today" / "next 7 days"
+> modules), **Calendar** (rebuilt on Today's kit — see below), **All Tasks** (the
 > by-category inventory), **Settings** (account + the category manager + Archive),
-> plus the **Archive** screen. Today/All-Tasks share a Today-scoped form, grid hook
-> and read path that are deliberately SEPARATE from Calendar's older shared
-> `useWeekData`/`useEventDrag`/panels — duplication that converges when Calendar is
-> rebuilt.
+> plus the **Archive** screen.
+>
+> **Calendar (rebuilt, C1–C7 + C4).** `CalendarWeek` (toolbar + today-anchored
+> rolling/Monday-week nav via `weekNav` + the Week/Month toggle) over `WeekView`
+> (per-week data via `useWeekData`, the shared form, the tray) → `WeekGrid` +
+> `WeekColumn` (the 24h sheet, tinted title-only blocks, the all-day band) and
+> `MonthView`/`MonthCell` (read-only month via `useMonthData`). **The Today/Calendar
+> duplication has CONVERGED:** both screens now share **one** grid-interaction hook
+> **`kit/useGridDrag`** (parameterised; it replaced the old `useTodayGrid` +
+> `useWeekGrid` twins) and **one** create/edit form **`kit/ItemForm`** (it replaced
+> the old `EventPanel`/`TaskPanel`). The old Calendar cluster (`WeekCalendar`, the
+> old day-column/block renderers, `useEventDrag`/`useScheduleDrag`, the old panels)
+> has been **deleted**. The week reads stay on `useWeekData`; the all-day band drag
+> is a small day-grained `useBandDrag`. (The phone keeps the simpler `DayAgenda`
+> day view; a dedicated mobile Calendar is a later spec.)
 
 > **Sign-in (Phase 7 AUTH).** Login is **email + password** (with "Forgot password?"
 > → an in-app reset page). Single-user, **public sign-up disabled**. Magic link was
@@ -54,6 +65,11 @@ the first three, but the shapes are built to grow.
 - **events** — things that *happen* and you attend. Built to the calendar
   standard: start, end, location, repeat rule, plus a hidden **external_id**
   field (free prep for future Apple Calendar sync), + the archive columns below.
+  **`all_day` (boolean, default false — Phase 7 C7)**: when true the event is an
+  all-day item — start/end carry the date(s) at local midnight, **end-exclusive**
+  (a Mon–Wed all-day stores `end_at` = Thu 00:00); the time is ignored and the item
+  renders in the calendar's all-day band / as a Month strip. Additive (`db/10`);
+  existing rows default false. (`repeat_rule` is still unused — recurrence is T10.)
 
 ### The one move that unlocks everything
 Every task carries an optional **source** ("typed by me", later "meal planner",

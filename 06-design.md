@@ -253,12 +253,17 @@ should read like a short, warm recap of the day ahead.
   + folio** are live (header + login). **Built and deployed** to the broadsheet
   identity: the **Today** home (the 7am–midnight workspace grid with soft tinted
   category blocks, the now-line, the status pill, the create/edit form + drill-in
-  picker, date arrows) and **All Tasks**; **functional-but-not-yet-polished**: the
-  **Settings category manager** and the **Archive** screen (polish lands with the
-  Settings re-skin); the **login screen** got its broadsheet design (blackletter
-  masthead, email+password). **Still on the OLD look** (rebuild/re-skin pending): the
-  **Calendar** screen, the rest of **Settings**, and **mobile** layouts. Owner has
-  **verified & approved** Today + All Tasks; the rest awaits its per-screen turn.
+  picker, date arrows), **All Tasks**, and now the **Calendar** — rebuilt on the same
+  kit (the 24h week sheet with soft tinted title-only blocks, the rolling/Monday-week
+  nav + Week/Month toggle, the unscheduled tray, the all-day band, and the Month
+  view), sharing **one** grid hook + the **one** create/edit form with Today;
+  **functional-but-not-yet-polished**: the **Settings category manager** and the
+  **Archive** screen (polish lands with the Settings re-skin); the **login screen**
+  got its broadsheet design (blackletter masthead, email+password). **Still on the OLD
+  look** (re-skin pending): the rest of **Settings**, and **mobile** layouts. Owner
+  has **verified & approved** Today + All Tasks; Calendar's per-piece verification is
+  in progress (a couple of visual gates — the tray squeeze, the all-day band — were
+  flagged for an eyes-on check on real data).
 
 - **Type direction (Phase 2, Piece 1) — in use:** the masthead + headlines are set
   in **Fraunces** (a warm high-contrast serif), and all body, UI and numbers in

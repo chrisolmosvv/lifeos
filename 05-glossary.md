@@ -97,3 +97,24 @@
 - **Email + password (sign-in)** — the login: your email and a password, with a
   "Forgot password?" reset by email. The old **magic link** (a login-link email) was
   the first method and has been retired from the app.
+- **Calendar (rebuilt)** — the week sheet, rebuilt to match Today: a full-day grid
+  with soft, title-only colour blocks. It opens on a **rolling week** (today is the
+  first column, the next six days follow); the arrows then step standard
+  **Monday–Sunday** weeks, and **"Back to this week"** returns to the rolling start.
+- **Week / Month toggle** — switch the Calendar between the **Week** sheet and a
+  **Month** zoom-out. Month is a "how loaded am I" view: each day shows its events +
+  tasks, capped with a "+N more"; clicking anything **jumps to that week** (Month
+  never opens an edit form).
+- **The tray (unscheduled)** — a drawer on the right of the Calendar holding loose /
+  not-yet-time-blocked tasks. Open it and the week squeezes to make room. You can
+  **+ add** a loose task, tick one done, **drag a row onto the grid** to schedule it,
+  or click a row to edit it. Drag a block **off** the grid and it drops back here.
+- **All-day band** — the strip above the timed grid for **all-day** items; a
+  multi-day item stretches across the days it covers. It grows with how many all-day
+  items there are and disappears when there are none.
+- **All-day item** — an event with no specific time (it sits in the all-day band,
+  not on the hour grid). Toggle **All-day** in the form to make one; multi-day spans
+  are all-day items across several days.
+- **The shared form** — **one** create/edit form used everywhere (Today, Calendar,
+  All Tasks). A task/event toggle on top while creating; once saved, the type is
+  fixed. Same form, so the screens never drift.

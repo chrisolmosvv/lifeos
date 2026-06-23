@@ -352,8 +352,12 @@ increments so the calendar never looks subtly misaligned.
 > rebuild-and-converge (frame, 24h grid, rolling/Mon-week nav, tinted title-only
 > blocks, tray, all-day band, Month, the shared form, motion). It **supersedes the
 > desktop description below**; the prose here stays as the original behaviour sketch
-> + the mobile notes (mobile Calendar is a separate later spec). Build sequence:
-> **C1 → C6** (see the roadmap). **C1 (week-grid display, read-only) is built.**
+> + the mobile notes (mobile Calendar is a separate later spec).
+> **STATUS: the desktop Calendar rebuild is COMPLETE** — C1 (week grid) → C2
+> (interactions) → C3 (shared form) → C5 (tray) → C6 (Month) → C7 (all-day band, +
+> the one schema change `events.all_day`) → C4 (dead-cluster removal + the twin-hook
+> collapse into one `useGridDrag`). Built on Today's kit; one grid hook + one form
+> shared with Today. (Recurrence/Repeat is still T10; mobile Calendar is its own spec.)
 
 Events and time-blocked tasks share **one timeline** (not two lists).
 
