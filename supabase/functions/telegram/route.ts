@@ -17,6 +17,7 @@ import { undoLast, undoNamed } from "./undo.ts";
 import { classify } from "./intent.ts";
 import { answerQuery } from "./query.ts";
 import { handleEdit } from "./edit.ts";
+import { clearPending, completePending, getPending, parseTimeAnswer, setPending, timeQuestion } from "./pending.ts";
 
 // Used only to fire the separate PRIVATE brief function (it texts the owner itself).
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -59,6 +60,22 @@ async function fireBrief(test: boolean): Promise<boolean> {
 export async function route(text: string): Promise<string> {
   const lower = text.trim().toLowerCase();
 
+  // 0. PENDING follow-up (M4): if we're waiting on the answer to a one-time question,
+  // only the VERY NEXT message can complete it, and only if it's actually a time. A
+  // reserved command, or anything that isn't a time, abandons the stale question and is
+  // handled normally below.
+  const pending = await getPending();
+  if (pending) {
+    const isCommand = lower === "undo" || lower.startsWith("undo ") || lower === "brief" || lower === "brief test";
+    if (!isCommand) {
+      const ans = await parseTimeAnswer(text, pending.draft);
+      if (ans.kind === "time") return await completePending(pending.draft, ans.time); // clears + saves
+      if (ans.kind === "rate_limit") return AI_LIMIT; // keep the pending so the owner can answer again
+      // not_time / error → fall through: drop the question, handle this message normally.
+    }
+    await clearPending();
+  }
+
   // 1. Reserved trigger words — no AI, behaviour exactly as before.
   if (lower === "brief" || lower === "brief test") {
     const ok = await fireBrief(lower === "brief test");
@@ -87,6 +104,13 @@ export async function route(text: string): Promise<string> {
   if (good.length === 0) {
     // One unsure item keeps its tailored "that wasn't a task" reply; nothing/many → generic.
     return result.value.length === 1 ? unsureReply(result.value[0]) : NONE_USABLE;
+  }
+
+  // M4: ONE event-shaped item with no time → ask once and park it; the next message
+  // completes it. (Only single-item captures; a clear capture saves with no follow-up.)
+  if (good.length === 1 && good[0].needs_time && !good[0].time) {
+    if (await setPending(good[0], timeQuestion(good[0]))) return timeQuestion(good[0]);
+    // Couldn't park it (e.g. table not set up yet) → just save it normally, no broken question.
   }
   return await saveItems(good);
 }

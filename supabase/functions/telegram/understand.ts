@@ -18,6 +18,7 @@ export interface Understood {
   date: string; // resolved YYYY-MM-DD, or "" if none
   time: string; // HH:MM 24-hour, or "" if none
   bare_date: boolean; // true only for an absolute month-day with NO year (e.g. "Jan 10")
+  needs_time: boolean; // true if this is an appointment/event that wants a clock time but none was given
   needs_clarification: boolean;
   note: string; // short reason when unsure (may be "")
 }
@@ -41,6 +42,7 @@ Rules:
   - "date": the resolved calendar date as YYYY-MM-DD, or "" if none is implied.
   - "time": the clock time as HH:MM 24-hour, or "" if none.
   - "bare_date": true ONLY when "date" came from an absolute month-and-day with NO year (e.g. "Jan 10"). For relative words ("today", "tomorrow", "Friday", "next week", "yesterday") or when a year was given, set it false.
+  - "needs_time": true ONLY if this is an appointment or event that normally happens at a specific clock time (e.g. lunch, dinner, a meeting, a party, an appointment, a call at a set time) but NO time was given. For ordinary to-dos and errands (buy milk, call mum, pay rent, email someone) set it false. If a time IS given, set it false.
   - If that item is unclear, gibberish, or you cannot confidently extract a task or event, set "needs_clarification" to true (and "type" to "unknown" if it is neither). Never invent details you were not given.
   - "note": one short clause explaining any uncertainty, else "".
 Output ONLY a JSON array of item objects. No prose, no markdown.`;
@@ -53,10 +55,11 @@ const ITEM_SCHEMA = {
     date: { type: "string" },
     time: { type: "string" },
     bare_date: { type: "boolean" },
+    needs_time: { type: "boolean" },
     needs_clarification: { type: "boolean" },
     note: { type: "string" },
   },
-  required: ["type", "title", "date", "time", "bare_date", "needs_clarification", "note"],
+  required: ["type", "title", "date", "time", "bare_date", "needs_time", "needs_clarification", "note"],
 };
 
 // The reply is an ARRAY of items (one element for a single-item message).
