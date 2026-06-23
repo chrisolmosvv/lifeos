@@ -1,0 +1,115 @@
+/* Calendar (desktop) C1 — the container + toolbar shell. `cw-`-prefixed. Reuses
+   the theme tokens (no new colours). Fills the calendar wrapper as a flex column:
+   a fixed toolbar over the internally-scrolling week grid. The page never scrolls. */
+
+.cw {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The toolbar: arrows · week range · "Back to this week" … then the right cluster
+   (Week/Month toggle, tray, "+ Add event"). Full-width with a comfortable frame. */
+.cw-toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 0.7rem 3.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* The paired arrow cluster — fixed together so it never shifts (like Today). */
+.cw-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.cw-arrow {
+  font: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.cw-arrow:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--ink);
+}
+
+.cw-range {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.cw-back {
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+}
+.cw-back:hover {
+  text-decoration: underline;
+}
+
+/* The right cluster pushes to the far edge. */
+.cw-toolbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+/* Week/Month toggle — INERT this piece. Week reads active; Month reads disabled. */
+.cw-toggle {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.cw-toggle-seg {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.7rem;
+  color: var(--ink-muted);
+  border-left: 1px solid var(--rule);
+}
+.cw-toggle-seg:first-child {
+  border-left: none;
+}
+.cw-toggle-seg.is-on {
+  color: var(--paper);
+  background: var(--ink);
+}
+.cw-toggle-seg.is-off {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Tray + "+ Add event" — INERT placeholders, clearly non-functional. */
+.cw-tool {
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 0.3rem 0.7rem;
+  cursor: not-allowed;
+  opacity: 0.55;
+}

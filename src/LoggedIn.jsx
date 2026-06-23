@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { weekDays } from './dateUtils'
-import WeekCalendar from './WeekCalendar'
+import CalendarWeek from './CalendarWeek'
 import DayAgenda from './DayAgenda'
 import EditionHeader from './EditionHeader'
 import Today from './Today'
@@ -37,7 +37,7 @@ export default function LoggedIn({ email }) {
       ) : view === 'calendar' ? (
         <>
           <div className="cal-wrap desktop-only">
-            <WeekCalendar days={days} today={today} />
+            <CalendarWeek />
           </div>
           <div className="cal-wrap phone-only">
             <DayAgenda today={today} />

@@ -1,0 +1,145 @@
+/* WeekGrid — the Calendar week sheet (Phase 7, C1). `wk-`-prefixed, used ONLY by
+   WeekGrid. Reuses the theme tokens (no new colours) and Today's tinted block
+   (.tk-block, styled in todayKit.css). The whole sheet scrolls inside .wk-scroll;
+   the page itself never scrolls. The day-header row is sticky so it stays put and
+   stays aligned with the columns. */
+
+.wk {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wk-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* The sticky day-header row: a corner spacer over the gutter, then 7 day heads. */
+.wk-head {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.wk-corner {
+  width: 52px;
+  flex: none;
+}
+.wk-dayhead {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-left: 1px solid var(--rule-faint);
+}
+.wk-dh-name {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+.wk-dh-num {
+  font-size: 1.05rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+/* Today's header: terracotta name + a filled terracotta date circle. */
+.wk-dayhead.is-today .wk-dh-name {
+  color: var(--accent);
+}
+.wk-dayhead.is-today .wk-dh-num {
+  width: 1.7rem;
+  height: 1.7rem;
+  line-height: 1.7rem;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--paper);
+}
+
+/* The timed body: the hour gutter + the seven columns. */
+.wk-body {
+  display: flex;
+}
+
+/* The 24-hour gutter, two-digit labels (00..23) + a trailing 00 at midnight. */
+.wk-gutter {
+  width: 52px;
+  flex: none;
+  position: relative;
+}
+.wk-gutter-cell {
+  height: 48px; /* must equal HOUR_HEIGHT in dateUtils.js */
+  position: relative;
+}
+.wk-gutter-cell span {
+  position: absolute;
+  top: -0.5em;
+  right: 6px;
+  font-size: 0.62rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wk-gutter-end {
+  position: absolute;
+  right: 6px;
+  bottom: -0.5em;
+  font-size: 0.62rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* One day column: hour-line backdrop + absolutely-placed blocks. */
+.wk-col {
+  flex: 1;
+  position: relative;
+  border-left: 1px solid var(--rule-faint);
+}
+.wk-col.is-today {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.wk-hour {
+  height: 48px; /* must equal HOUR_HEIGHT */
+  border-top: 1px solid var(--rule-faint);
+}
+
+/* The past goes quiet: a soft paper veil greys past blocks + hours together.
+   Pointer-events off, so a past block underneath is still tappable to edit. */
+.wk-pastveil {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: var(--paper);
+  opacity: 0.55;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* The now-line — today's column only, drawn over the veil. */
+.wk-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px solid var(--accent);
+  z-index: 5;
+  pointer-events: none;
+}
+.wk-now::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
