@@ -575,10 +575,16 @@ its own small, owner-verified piece.
   so the answer completes into the SAME action — undo still pulls the whole batch); 2+ missing
   a time → save the clear ones and list which still need one (no multiple follow-ups). Reuses
   M2 batch parsing + M4 pending — no new mechanism.
-- ⬜ M6 — category learning · ⬜ M7 — voice notes · ⬜ M8 — interactive brief ·
-  ⬜ M9 — daytime nudges · ⬜ M10 — hardening + retire test aids.
-  *(M5 = multi-item capture took the M5 slot, shifting the rest down one → track now M0–M10;
-  see `08-marty-upgrade.md`.)*
+- 🔨 **M6 — category guessing that learns (built + deployed; AWAITING SQL run + checker).**
+  Capture now GUESSES a category from the owner's real categories and SHOWS it (Inbox when
+  nothing fits); a worded correction ("that's Errands") refiles that item via the M3 edit
+  path (undoable). Corrections logged to new table **`marty_category_learning`**; a learned
+  preference applies only after the SAME kind of correction happens **2** times (threshold),
+  then similar captures auto-file there — a one-off never retrains. **Not done until
+  `db/13_marty_category_learning.sql` is run and the checker signs off.** (Guessing is live
+  on deploy; learning activates once the SQL is run.)
+- ⬜ M7 — voice notes · ⬜ M8 — interactive brief · ⬜ M9 — daytime nudges ·
+  ⬜ M10 — hardening + retire test aids. *(see `08-marty-upgrade.md`.)*
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -593,6 +599,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Marty track M6 — category guessing that learns (built + deployed; AWAITING SQL + checker).**
+  Capture stops dumping everything in Inbox. New `categorize.ts`: `guessCategories` reads the owner's REAL
+  categories (excludes the literal "Inbox" → null) + the learned corrections; a met learned preference wins
+  (>= LEARN_THRESHOLD=2 corrections to the same category among items sharing a content word), else the AI's
+  pick from the real list, else Inbox. The guess is SHOWN in the confirmation. `save.ts` now writes the
+  guessed `category_id` (threaded through saveBatch + appendToAction). Worded correction "that's Errands"
+  → new `categorize` op in the classifier + `opCategorize` in edit.ts, which refiles via the EXISTING edit
+  commit path (undoable) and logs the correction on success (`marty_category_learning`, a new table). Found
+  M3 had NO category op — added one on M3's machinery (not a parallel path). Confirmed Inbox = null (the
+  seeded Inbox row is excluded from guesses). ⚠️ **SCHEMA CHANGE — checker-gated like M2/M4: not done until
+  `db/13_marty_category_learning.sql` is run AND the checker reviews. Threshold = 2.** Guessing is live on
+  deploy (reads existing categories); learning activates after the SQL. Committed `d432a49`; deployed both
+  functions to Frankfurt. **NEXT: owner runs the SQL → phone checks → checker sign-off; then M7 — voice
+  notes.**
 - **2026-06-23 — Marty track M5 — multi-item capture (built + deployed; no schema change).** One message →
   several items with clear-save-ask-unclear. Confirmed the batch parsing already existed (M2) — extended it
   rather than rebuilt. Rule: all clear → save together; exactly ONE missing a time → save the clear ones

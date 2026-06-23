@@ -9,7 +9,34 @@
 
 ---
 
-## Marty M5 — multi-item capture: save the clear ones, ask about only the one unclear (2026-06-23)
+## Marty M6 — category guessing that learns; guess shown + correctable, learning by pattern not one-off (2026-06-23)
+
+- **[Capture GUESSES a category from the owner's REAL categories and SHOWS it; never invents, never silent]**
+  — `guessCategories` reads the actual categories table; the AI picks from that exact list or returns Inbox
+  (null) when nothing fits. The guess is in the confirmation text ("Saved 'call plumber' → Admin"). **Why:**
+  an honest "I don't know → Inbox" beats a bad guess, and a soft AI guess must be visible to be correctable.
+  **Trade-off:** capture now makes an extra Gemini call (classify + understand + guess); fine for one user,
+  a candidate for M10 hardening.
+- **[Inbox stays `null`; the seeded "Inbox" category row is excluded from guesses]** — the spine convention
+  is category_id null = Inbox, so the guess maps "no fit"/"Inbox" to null and never assigns the Inbox row's
+  id. **Why:** consistency with the existing capture + app behaviour; don't create a second meaning of Inbox.
+- **[A worded correction reuses the M3 edit path — a new `categorize` op, NOT a parallel write]** — M3 had
+  no category op, so one was added on M3's `commit` machinery (logs before-values → undoable). "that's
+  Errands" refiles the LAST captured item; "call plumber is Work" refiles a named one. **Why:** the spec's
+  "reuse the existing edit path, the fix is itself undoable." **Trade-off:** a bare "that's X" needs the
+  last-created item to be unambiguous (one item); after a batch it asks which.
+- **[Learning is by PATTERN (threshold = 2), enforced in code — a single correction never retrains]** — each
+  correction is logged; a learned preference for a new item applies only when >= 2 past corrections to the
+  SAME category exist among items SHARING a content word with it. So: 1 correction = a one-off fix; the 2nd
+  matching correction establishes the pattern; the next similar capture auto-files. **Why:** the spec — don't
+  change the habit on a one-off. The threshold is deterministic and code-side (not left to the AI). **Trade-off:**
+  the "same kind" match is a shared-content-word heuristic (no embeddings), so it can be a touch broad — but
+  the result is always SHOWN and correctable, which the design depends on.
+- **[New `marty_category_learning` table — additive, owner-only, NO FK to the spine — CHECKER-GATED]** — it
+  logs (title, guessed_category_id, corrected_category_id); the category ids are plain uuids (NOT FKs) so a
+  deleted category can't block/cascade through the log (a stale preference is just ignored). It changes no
+  spine meaning; the only spine behaviour change is writing a real category_id (a value the column already
+  allowed) instead of null. Must be run + checker-reviewed before M6 is done.
 
 - **[Don't block a batch on one ambiguous item — save the clear ones immediately, then ask about the one
   unclear]** — when most items are savable and exactly one is an event missing its time, the clear items

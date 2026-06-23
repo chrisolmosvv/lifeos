@@ -35,6 +35,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M6 — category guessing that learns. ⚠️ SCHEMA CHANGE — CHECKER-GATED, not done yet.
+WHAT CHANGED:
+- Capture no longer dumps everything in Inbox. Marty GUESSES a category from your REAL categories and SHOWS
+  it ("Saved 'call plumber' → Admin"); when nothing fits it's an honest Inbox. The guess is the AI's soft
+  judgement, so it's always visible and easily corrected.
+- Correct in words ("that's Errands", or "call plumber is Work") → Marty refiles THAT item immediately via
+  the M3 edit path, so the fix is itself undoable ("undo" puts the category back). M3 had no category op, so
+  a `categorize` op was added on M3's existing commit machinery — not a parallel write path.
+- Learning is by PATTERN, not one-off. Corrections are logged to the new `marty_category_learning` table; a
+  learned preference applies to a new item only once there are **>= 2** past corrections to the SAME category
+  among items that share a content word with it (LEARN_THRESHOLD = 2, in categorize.ts). So: 1 correction is
+  a one-off fix; the 2nd matching correction establishes the pattern; the NEXT similar capture auto-files
+  there.
+FILES TOUCHED: **new** `db/13_marty_category_learning.sql`, `telegram/categorize.ts`; edited `save.ts`
+(write the guessed category_id + show it), `find.ts` (read category_id), `intent.ts` (categorize op +
+new_category), `edit.ts` (opCategorize + last-captured-item lookup). No `src/`. All files <250 (edit.ts 232).
+Committed `d432a49`; **deployed both functions to Frankfurt**. Code is safe before the SQL: GUESSING is live
+on deploy (it reads your existing categories); LEARNING activates once the table exists (logging no-ops
+until then, so corrections still apply, just aren't remembered).
+
+⚠️ FOR THE CHECKER — THIS IS A SCHEMA CHANGE; please confirm (all hold):
+  1. **Additive + owner-only RLS** — `marty_category_learning` is a brand-new table, same owner-only policies
+     as the other Marty tables; no existing table/column/policy changed.
+  2. **NO foreign key into categories/tasks/events** — guessed_category_id / corrected_category_id are plain
+     uuids (not FKs), so deleting a category can never be blocked or cascaded by this log; a stale preference
+     is simply ignored (the code checks the category still exists).
+  3. **Does not change spine meaning** — it only LOGS corrections; the sole spine behaviour change is writing
+     a real category_id on capture (a value the column already allowed) instead of always null.
+  THRESHOLD (for the record): a learned preference needs **2** matching corrections — see LEARN_THRESHOLD.
+
+OWNER — RUN THIS SQL FIRST (before testing the LEARNING checks), in the Supabase SQL editor:
+  • Open Supabase → SQL Editor → New query → paste the WHOLE of `db/13_marty_category_learning.sql` → Run.
+  • Expect "Success. No rows returned." (Guessing + worded corrections already work after deploy; only the
+    pattern-learning needs this table.)
+
+HOW TO VERIFY (owner — phone + Mac). First, make sure you have a couple of real categories in the app
+(e.g. "Admin", "Errands"):
+  1. **Guess is shown:** text **"call plumber"** → the confirmation names a guessed category (e.g. "→ Admin"),
+     NOT just Inbox. (If you have no categories, it'll say Inbox — that's correct.)
+  2. **Worded correction + undo:** after #1, text **"that's Errands"** → "Filed 'call plumber' under Errands."
+     Check the app: it's under Errands. Then **"undo"** → it goes back to the previous category.
+  3. **Pattern learning (threshold 2):** correct the SAME kind of item to the SAME category twice — e.g.
+     "call plumber" → "that's Errands"; "call electrician" → "that's Errands". Now text a THIRD similar one,
+     **"call the handyman"** → it should auto-file under **Errands** on its own (shown in the confirmation).
+  4. **One-off safety:** do a SINGLE odd correction (e.g. "buy milk" → "that's Errands" once), then capture
+     another **"buy bread"** → it must NOT auto-go to Errands (one correction never retrains).
+  5. **No-match fallback:** capture something with no fitting category → it lands in **Inbox**.
+KNOWN GAPS / RISKS:
+- "Same kind" matching is a shared-content-word heuristic (no embeddings), so a learned pattern can be a bit
+  broad (e.g. learning on "call" would also nudge "call mum") — but every guess is shown and correctable.
+- Undoing a correction reverts the item's category but leaves the correction logged (it still counts toward
+  a pattern) — minor, noted.
+- Capture now makes an extra AI call (guess) — fine for one user; a candidate for M10 hardening.
+NEXT: owner runs SQL → 5 phone checks → **checker sign-off**. Only then is M6 done. Then **M7 — voice notes**.
+Do NOT start M7 until the checker approves M6.
+FOR THE CHECKER: see the ⚠️ block above (the three confirmations + the threshold).
+
 ### 2026-06-23 — Marty track M5 — multi-item capture (save clear, ask the one unclear). No schema change.
 WHAT CHANGED:
 - One message → several items, with clear-save-ask-unclear. The batch PARSING already existed (built in M2

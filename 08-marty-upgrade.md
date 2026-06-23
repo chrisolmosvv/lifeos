@@ -110,8 +110,14 @@ verify, and its own decision entry when we actually build it. The order may shif
   missing a time → save the clear ones and **list which still need a time** (never fire
   multiple follow-ups). Reuses M2's batch parsing + M4's pending — no new mechanism.
 
-- **M6 — Category learning.** Instead of everything landing in **Inbox**, Marty
-  suggests/uses the right category, learning from how you file things.
+- **M6 — Category guessing that learns.** *(built + deployed — awaiting SQL run + checker.)*
+  Capture no longer dumps everything in Inbox: Marty GUESSES a category from your REAL
+  categories and SHOWS it ("Saved 'call plumber' → Admin"); Inbox (null) when nothing fits.
+  You correct in words ("that's Errands") → it refiles THAT item immediately via the M3
+  edit path (so it's undoable). Learning is by PATTERN, not one-off: corrections are logged
+  to a new table **`marty_category_learning`**, and a learned preference only kicks in once
+  the SAME kind of correction has happened **2** times (LEARN_THRESHOLD) — then the next
+  similar capture auto-files there. A single odd correction never retrains him.
 
 - **M7 — Voice notes.** A Telegram voice message → transcribed → straight into the
   capture path. (Today non-text messages are silently dropped.)
