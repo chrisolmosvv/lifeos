@@ -46,47 +46,57 @@ verify, and its own decision entry when we actually build it. The order may shif
   endpoint, and the fetch+retry+rate-limit loop. Pure refactor — **no behaviour
   change**. Makes a future switch to a paid Gemini key a one-place change.
 
-- **M1 — The router (the seam for everything after).** Replace the inline
-  word-ladder in `telegram/index.ts` with a small, readable step that decides what
-  a message *is*: a command (undo/brief), a **question**, an **edit/delete**, or a
-  **capture**. Nothing new for the user yet — same behaviour, but now there's a
-  clean place to add the new message types.
+- **M1 — The router + read-only questions.** *(built — the router seam and the
+  question types, originally sketched as two phases, were built together.)* Routing
+  pulled out of `telegram/index.ts` into `route.ts` (the thin front door now just does
+  security → owner gate → text check → hand off). A Gemini **intent step** (`intent.ts`,
+  via the M0 seam, temperature 0) labels each message **question / capture / unclear** —
+  and on a genuine toss-up returns **unclear** so Marty ASKS rather than risk a wrong
+  save. Three **read-only** question types (`query.ts`, imports only `select` — no write
+  code at all): **"what's on Thursday?"** (that day's events + tasks, time order),
+  **"what did I forget?"** (overdue + due today), **"am I free Friday afternoon?"** (gap
+  check). Plain-text answers; capture behaviour unchanged.
 
-- **M2 — Questions ("what's on Thursday?").** Read-only. Marty reads the relevant
-  day/range and answers in plain words. Never writes anything.
-
-- **M3 — Edit / delete / move by chat.** "move the dentist to Friday", "rename …",
+- **M2 — Edit / delete / move by chat.** "move the dentist to Friday", "rename …",
   "delete the call to mum". Extends the bookkeeping so these actions can be
   reversed too (today's `undo` is **create-only** — it can only remove things Marty
   *made*; this phase has to design for reversing changes).
 
-- **M4 — Multi-turn capture.** When a capture is missing something (no date, an
+- **M3 — Multi-turn capture.** When a capture is missing something (no date, an
   ambiguous time, no obvious category), Marty asks **one** short follow-up instead
-  of guessing — and remembers the half-finished item until you answer.
+  of guessing — and remembers the half-finished item until you answer. (Builds on the
+  M1 "unclear → ask" pattern, which is stateless today.)
 
-- **M5 — Category learning.** Instead of everything landing in **Inbox**, Marty
+- **M4 — Category learning.** Instead of everything landing in **Inbox**, Marty
   suggests/uses the right category, learning from how you file things.
 
-- **M6 — Voice notes.** A Telegram voice message → transcribed → straight into the
+- **M5 — Voice notes.** A Telegram voice message → transcribed → straight into the
   capture path. (Today non-text messages are silently dropped.)
 
-- **M7 — The interactive brief.** Reply to the 7am brief to act on it — tick a
+- **M6 — The interactive brief.** Reply to the 7am brief to act on it — tick a
   nudge done, reschedule a forgotten task, accept a free-window offer — by chat.
 
-- **M8 — Daytime nudges.** A gentle, reserved midday check-in (the same
+- **M7 — Daytime nudges.** A gentle, reserved midday check-in (the same
   "proactive engagement" idea as the brief, but during the day), built on the same
   safety rails: never spammy, never invents work.
 
-- **M9 — Hardening + retire the test scaffolding.** Remove the temporary aids
+- **M8 — Hardening + retire the test scaffolding.** Remove the temporary aids
   ("brief test" 0-day threshold, the brief's `force` gate, the every-3-min test
   job) once the real features make them unnecessary; tighten and tidy.
+
+> **Numbering note:** the track is still "the M-track." M1 merged the router seam with
+> the read-only question types (the original sketch listed them separately), so the
+> remaining phases shifted up one to **M2–M8**. The exact shape past M2 is still open.
 
 ---
 
 ## Known things to design around (carried from the M0 recon)
 - **Bare dates with no year** (e.g. "Jan 10") have no explicit rule today and could
-  resolve to a *past* date — pin this down before leaning harder on capture (M1/M4).
-- **`undo` is create-only and one level** — editing/deleting (M3) needs its own
+  resolve to a *past* date — pin this down before leaning harder on capture/edit
+  (M2/M3). The M1 **"what did I forget?"** answer can already surface a phantom-overdue
+  task because of this; we left the bug **visible** (reported as-is), not hidden, and
+  M1 does not depend on it. Deciding whether to fix bare-dates is a separate call.
+- **`undo` is create-only and one level** — editing/deleting (M2) needs its own
   reversal design; the current `telegram_saves` log only points at created rows.
 - **`source='telegram'` is stamped on tasks but not events** — remember this if a
   feature wants "everything Marty made" uniformly.

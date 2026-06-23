@@ -539,9 +539,18 @@ its own small, owner-verified piece.
   (key + model + endpoint + fetch/retry/429 in one place), so a later switch to a paid
   key is a one-place change. Pure refactor — capture, events, and the brief behave
   exactly as before. Each caller kept its OWN parsing + OWN fallback.
-- ⬜ M1 — the router (the seam) · ⬜ M2 — questions · ⬜ M3 — edit/delete/move ·
-  ⬜ M4 — multi-turn capture · ⬜ M5 — category learning · ⬜ M6 — voice notes ·
-  ⬜ M7 — interactive brief · ⬜ M8 — daytime nudges · ⬜ M9 — hardening + retire test aids.
+- ✅ **M1 — the router + read-only questions (backend, deployed Frankfurt).** Pulled
+  routing out of `index.ts` into `route.ts` (thin front door: security → owner gate →
+  text → hand off). Added a Gemini **intent step** (`intent.ts`, via the M0 seam, temp 0)
+  that labels each message **question / capture / unclear** — on a genuine toss-up it
+  returns **unclear** and Marty ASKS rather than risk a wrong save. New **read-only**
+  query path (`query.ts`, imports only `select` — no write code at all) answers three
+  question types: **what's on [day]**, **what did I forget** (overdue + due today), **am
+  I free [day/part]**. Plain-text answers; capture unchanged.
+- ⬜ M2 — edit/delete/move by chat · ⬜ M3 — multi-turn capture · ⬜ M4 — category
+  learning · ⬜ M5 — voice notes · ⬜ M6 — interactive brief · ⬜ M7 — daytime nudges ·
+  ⬜ M8 — hardening + retire test aids. *(M1 merged the old "router" + "questions"
+  sketch, so the rest shifted up one — see `08-marty-upgrade.md`.)*
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -556,6 +565,16 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Marty track M1 — conversational queries (read-only), deployed.** Marty now answers
+  questions and changes nothing. Split routing out of `telegram/index.ts` into `route.ts` (index is now
+  just security + owner gate + text check + hand-off); added `intent.ts` (Gemini classifies
+  question/capture/unclear via the M0 seam, temp 0 — "unclear" makes Marty ASK rather than risk a wrong
+  save) and `query.ts` (read-only **by construction** — imports only `select`, no write code anywhere).
+  Three question types: what's-on-[day], what-did-I-forget (overdue + due today), am-I-free-[day/part].
+  Capture path untouched (`understand.ts` unchanged). All files <250 lines. Committed `6775646`;
+  **deployed both functions to Frankfurt** (telegram changed; brief unchanged, redeployed for parity).
+  Known bare-date bug respected, not fixed (the "forgot" answer can show a phantom-overdue task). **NEXT:
+  owner runs the phone checks; then M2 — edit/delete/move by chat.** Don't start M2 until M1 verifies.
 - **2026-06-23 — Marty track M0 — prep + one Gemini config seam (backend only, no behaviour change).**
   Opened the backend Marty track (M0–M9) to make the bot conversational, kept entirely separate from
   the paused Phase 7 front-end redesign (different folder: `supabase/functions/` vs `src/`). Two commits:

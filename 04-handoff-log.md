@@ -35,6 +35,51 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M1 — conversational queries (READ-ONLY): router split + intent step + query path
+WHAT CHANGED:
+- **Marty can now answer questions and changes NOTHING doing it.** Three question types: **"what's on
+  Thursday?"** (that day's events + time-blocked tasks in time order, plus anything due that day),
+  **"what did I forget?"** (overdue + due today), **"am I free Friday afternoon?"** (checks the named
+  window and says plainly whether it's open).
+- **Router split.** `telegram/index.ts` is now the thin front door (security → owner gate → text check →
+  hand to the router). New `route.ts` owns the decisions: trigger words (brief/undo) as before → else
+  classify → question / capture / unclear.
+- **Intent step.** New `intent.ts` asks Gemini (through the M0 `_shared/gemini.ts` seam, temperature 0)
+  to label the message. On a genuine toss-up it returns **"unclear"** and Marty asks a one-line "did you
+  mean to add that, or are you asking?" — it never guesses capture (a wrong guess would WRITE).
+- **Read-only query path.** New `query.ts` answers the questions. It imports **only** `select` from
+  `db.ts` — no insert/update/delete code exists in it. Reads are owner-scoped + active-only
+  (`archived_at IS NULL`), same as the brief.
+- **Capture untouched.** A clear capture still goes `understand.ts` → `save.ts` exactly as before
+  (`understand.ts` not edited). A clear capture now makes two AI calls (classify, then parse) — fine on
+  the free tier for one user.
+FILES TOUCHED: `telegram/index.ts` (slimmed); **new** `telegram/route.ts`, `telegram/intent.ts`,
+`telegram/query.ts`. No `src/`, no schema, no secret change. Docs: `08-marty-upgrade.md` (M1 reflowed),
+`02-roadmap.md`, `03-decisions.md`, this log. All telegram files <250 lines (largest is query.ts at 179).
+DEPLOY: committed `6775646`; **deployed both functions to Frankfurt** (`cntlptuacsujbdtwvbis`) — telegram
+`--no-verify-jwt` (public), brief default (private). telegram is the one that changed; brief was
+redeployed unchanged for parity. Both clean.
+HOW TO VERIFY (owner, on your phone — text Marty):
+  1. **"what's on Thursday?"** → you get Thursday's events + tasks in time order (or "a clear day").
+  2. **"what did I forget?"** → your overdue + due-today list (or "you're on top of things").
+  3. **"am I free Friday afternoon?"** → a plain "you're free…" or "not totally free… you've got…".
+  4. **A normal capture still works:** "call mum tomorrow" → saved as a task in Inbox, same as before;
+     "dentist Friday 3pm" → saved as an event, 1-hour block.
+  5. **On the Mac, open the app:** nothing new should have appeared from asking the three questions — a
+     question must never create a task/event. Confirm no phantom items.
+KNOWN GAPS / RISKS:
+- **Bare-date bug respected, not fixed:** "what did I forget?" can show a phantom-overdue task if a bare
+  date ("Jan 10") resolved to the past at capture time. Left visible on purpose; M1 doesn't depend on it.
+- The "unclear → ask" reply is **stateless** (no memory of the half-finished thought) — multi-turn is M3.
+- If the intent step is ever rate-limited/errors, Marty says "AI limit / couldn't read that — nothing
+  saved" and does nothing (safe).
+- All-day events show with a midnight-ish clock in answers (same limitation the brief has) — minor.
+NEXT: owner runs the 5 phone checks above. Once verified → **M2 — edit/delete/move by chat** (which also
+has to design real undo for changes, since today's undo is create-only). Do NOT start M2 until M1 verifies.
+FOR THE CHECKER: confirm (a) `query.ts` truly has no write path (imports only `select`); (b) a question
+can never fall through to capture (router sends question → answerQuery, not understand); (c) a clear
+capture still classifies as capture and saves exactly as before; (d) reads are owner + active-only filtered.
+
 ### 2026-06-23 — Marty track M0 — prep + one Gemini config seam (backend only, NO behaviour change)
 WHAT CHANGED:
 - Opened the **backend Marty track (M0–M9)** to make the Telegram bot conversational. Added the plan

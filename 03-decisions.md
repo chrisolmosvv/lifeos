@@ -9,7 +9,37 @@
 
 ---
 
-## Marty conversation work is tracked as M0–M9, separate from the Phase 7 redesign numbering (2026-06-23)
+## Marty M1 — router split + a Gemini intent step that asks when unsure; query path is read-only by construction (2026-06-23)
+
+- **[Routing moved into its own `route.ts`; `index.ts` is a thin front door]** — `index.ts` now only does
+  security → owner gate → text check → hand the message to `route()`. **Why:** new message types
+  (questions now, edit/delete later) need a clean place to slot in; the old inline word-ladder would have
+  ballooned `index.ts` and tangled security with intent. **Trade-off:** one more file and a hop, for a
+  front door that stays small and a router that's easy to extend.
+- **[A Gemini intent step decides question vs capture — and returns "unclear" on a toss-up, so Marty ASKS
+  rather than guess]** — `intent.ts` classifies each non-trigger message (via the M0 `_shared/gemini.ts`
+  seam, temperature 0) as **question / capture / unclear**. **Why:** a wrong "capture" guess would WRITE
+  something the owner didn't ask for; making the model fall back to "unclear → ask a one-liner" keeps a
+  bad guess from silently saving. **Trade-off:** a clear capture now costs **two** Gemini calls (classify,
+  then the unchanged capture parse) instead of one, and an occasional genuine capture might get the
+  "did you mean to add that?" question. We accept both: safety over a silent wrong write, and the free
+  tier easily covers one owner's volume. Clear captures are anchored with examples so they pass straight
+  through; capture behaviour itself is byte-for-byte unchanged (`understand.ts` untouched).
+- **[The query path is read-only BY CONSTRUCTION, not by discipline]** — `query.ts` imports **only**
+  `select` from `db.ts` (never `insert`/`del`); there is no write/update/delete code in it at all. Reads
+  are owner-scoped AND active-only (`archived_at IS NULL`), the same rules the brief uses. **Why:** "a
+  question must never change data" is enforced by what the module *can* do, not by remembering not to
+  call a writer. **Trade-off:** none worth noting.
+- **[Reuse judgement: shared date helpers, not the brief's today-locked readers]** — M1 reuses
+  `_shared/datetime.ts` (the genuinely shared date math) and writes its own small per-question readers,
+  rather than refactoring the brief's `day.ts`/`gap.ts` (which are hard-wired to "today"). **Why:**
+  parameterising the verified brief readers by arbitrary date is real surgery on a working feature;
+  keeping M1 self-contained in `telegram/` avoids risking the brief. **Trade-off:** a little read logic
+  resembles the brief's; extracting a shared day-reader is a possible later cleanup, noted in the plan.
+- **[Known bare-date bug is respected, not fixed, and not hidden]** — "what did I forget?" reports
+  overdue as the data says, which can include a phantom-overdue task caused by the un-guarded bare-date
+  resolution. M1 neither fixes that bug nor builds anything that hides or depends on it. **Why:** fixing
+  bare-dates is a separate decision (before or after this track); M1 stays scoped.
 
 - **[The Telegram-bot upgrade is its own track, prefixed M0–M9, not folded into the phase numbers]** —
   The redesign is **Phase 7** and is unfinished; the bot upgrade is a second, independent body of work.
