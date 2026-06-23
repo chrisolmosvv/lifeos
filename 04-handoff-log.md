@@ -35,6 +35,78 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T5 — Today's grid workspace interactions (create / move / resize / drag to & from modules)
+ROADMAP MAPPING: **T5** (calendar workspace interactions). No overlap — it reuses the T6 form
+as the create/edit target and excludes date-arrows (T8).
+THE CRITICAL SCOPE RULE — HONOURED: Calendar's shared drag/layout code (`useEventDrag`,
+`useScheduleDrag`, `eventLayout`, `DayColumn`, `NowLine`) was **NOT edited**. Today's grid uses
+a **new Today-scoped hook `useTodayGrid`** — a deliberate sealed twin built for Today's
+7am-offset coordinates and its two module drop-zones, which the shared hooks can't express
+without edits. Only the **pure overlap maths** (`eventLayout`'s `buildDayItems`/`layoutEvents`)
+is reused **read-only** (in DayGrid). Temporary duplication is intentional (converges when
+Calendar is rebuilt).
+WHAT I BUILT (Today only; writes via existing paths):
+- **`useTodayGrid`** (new sealed hook) owns all grid pointer gestures (mouse only):
+  • **Click/drag-to-create** on the empty lane → a span (15-min snap; a plain click = 1-hr)
+    → opens the **T6 `TodayForm` in create mode with an event/task toggle, defaulting to
+    EVENT**; cancel creates nothing.
+  • **Drag-move** a block; **edge-resize** (top/bottom); 15-min snap; min length 15 min.
+  • **Overlap re-splits live** as a block moves (DayGrid feeds the drag position back into
+    `layoutEvents`, so neighbours re-flow).
+  • **Drag a task off onto a module:** "tasks today" → today, no time; "next 7 days" → +7
+    days, no time. Events dragged off **snap back** (events live on the clock).
+- **Drag a task from a module onto the grid** (a row grip → `trayBind`) schedules it at the
+  drop time (+1h). Done rows have no grip.
+- `TintedBlock` now spreads a `bind` (move/resize/tap) + shows `is-dragging`/`is-removing`;
+  `DayGrid` wires the lane (create), blocks (move/resize), the live preview, and the create
+  draft; `TodayForm` gained the create-only **Task/Event toggle** (and now reports the chosen
+  kind to `onSave`).
+EXACT FIELDS WRITTEN (match the T4 content model):
+- schedule / move-scheduled-task: `tasks.update({ scheduled_start, scheduled_end })`.
+- move event: `events.update({ start_at, end_at })`.
+- off → tasks-today: `tasks.update({ scheduled_start:null, scheduled_end:null, due_date:TODAY,
+  time_bucket:'Today' })` → shows in "tasks today".
+- off → next-7: `tasks.update({ scheduled_start:null, scheduled_end:null, due_date:TODAY+7,
+  time_bucket:'This Week' })` → shows in "the next 7 days" (and NOT in tasks-today, since
+  bucket≠Today and it isn't due/scheduled today).
+- create: `events.insert` (or `tasks.insert` if toggled), via the same T6 form/path.
+SHARED PIECES — REUSED READ-ONLY vs DUPLICATED:
+- Reused read-only: `eventLayout` (`buildDayItems`/`layoutEvents`), `dateUtils` (HOUR_HEIGHT,
+  formatHour, isSameDay), `palette`, `categoryTree`.
+- Duplicated Today-side (on purpose): the drag/interaction logic → `useTodayGrid` (twin of the
+  untouched shared `useEventDrag`/`useScheduleDrag`).
+CHOICES: min block length 15 min; tap-vs-drag threshold 4px; **done/completed blocks are
+tap-only (not draggable)**; **past events are movable**; mouse-only (touch keeps tapping +
+column-scrolling). No edge auto-scroll during drag (omitted for safety; the 7am–midnight
+window mostly fits).
+SAVE POINT (Step 0): **`ffdf62d`** — "Phase 7 T5 save point — before Today grid interactions."
+FILES TOUCHED: src/Today.jsx, src/kit/DayGrid.jsx, src/kit/TintedBlock.jsx, src/kit/TodayTaskRow.jsx,
+src/kit/TodayForm.jsx, src/kit/todayKit.css, src/kit/todayForm.css; ADDED src/kit/useTodayGrid.js.
+**No db/, no schema, no category writes.**
+CONFIRMATIONS: **No shared drag/layout/hook or TaskPanel/EventPanel changed**; Calendar +
+Settings behave identically (diff shows none of useEventDrag/useScheduleDrag/eventLayout/
+DayColumn/NowLine/EventBlock/TaskBlock/WeekCalendar/Settings touched). All writes via existing
+task/event update+insert paths. Frankfurt only context; no DB op this piece. Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed, NOT deployed.** On the Mac (run locally);
+not on the phone yet.
+⚠️ HONEST RISK: drag is **build-verified + logic-reviewed but not visually run** (headless login).
+If a gesture misbehaves, the doom-loop rule applies — roll back to `ffdf62d`, don't dig.
+HOW TO VERIFY (owner — Mac with a mouse):
+- Click an empty slot → 1-hr block; the form opens (event default); save → block appears.
+- Click-drag empty → exact span (snaps to 15 min).
+- Drag a block to a new time; drag its top/bottom edge to resize → times update and persist.
+- Two overlapping blocks split side-by-side, including while one is dragged.
+- Drag a task from "tasks today"/"next 7 days" (the ⠿ grip) onto the grid → it schedules.
+- Drag a scheduled block off onto "tasks today" (→ today, no time) and onto "next 7 days"
+  (→ +7, no time); drag an event off → it snaps back.
+- A plain tap on a block still opens the edit form (drag didn't eat the tap).
+- The now-line and column scroll still work; **Calendar + Settings unchanged**.
+NEXT: T8 — date arrows / day-flipping (Today shows only the current day for now), or T11 —
+the All Tasks inventory screen.
+FOR THE CHECKER (highest-risk piece): confirm zero shared drag/layout/hook/panel edits,
+Calendar/Settings identical, all writes via existing paths, no schema, no category writes,
+save point exists, and the off-grid field-writes match the T4 content model (above).
+
 ### 2026-06-23 — Phase 7, T6 — Today's create/edit form + "+ add" + delete/undo + drill-in category picker
 ROADMAP MAPPING: this is **T6** (the create/edit form + "+ add"). Per the explicit Steps 4 & 5
 it also absorbed **T9 (delete + undo toast)** and the **T3 drill-in picker** sub-item — both

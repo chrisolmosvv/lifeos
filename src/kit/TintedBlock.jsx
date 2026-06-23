@@ -2,12 +2,13 @@ import './todayKit.css'
 
 // TintedBlock — an Apple-style soft tinted block on the day grid: the category
 // colour as a low-opacity fill plus a full-strength coloured left bar. Used for
-// both events and scheduled tasks. Sealed kit block; display + a tap callback
-// only (no drag/resize this piece). Position (top/height/col/cols) is computed
-// by DayGrid; the colour is the category's stored hex, used as-is.
+// both events and scheduled tasks. Sealed kit block; presentation only — all
+// interaction (move/resize/tap) is wired by the caller via `bind` (a set of
+// pointer/click handlers spread onto the root). `dragging`/`removing` are just
+// visual states during a drag.
 //
-// Props: title, time, hex, done, top, height, col, cols, onClick.
-export default function TintedBlock({ title, time, hex, done, top, height, col, cols, onClick }) {
+// Props: title, time, hex, done, top, height, col, cols, bind, dragging, removing.
+export default function TintedBlock({ title, time, hex, done, top, height, col, cols, bind, dragging, removing }) {
   const width = `calc(${100 / cols}% - 4px)`
   const left = `calc(${(col * 100) / cols}% + 2px)`
   const style = {
@@ -20,9 +21,14 @@ export default function TintedBlock({ title, time, hex, done, top, height, col, 
   }
   return (
     <div
-      className={'tk-block' + (done ? ' is-done' : '')}
+      className={
+        'tk-block' +
+        (done ? ' is-done' : '') +
+        (dragging ? ' is-dragging' : '') +
+        (removing ? ' is-removing' : '')
+      }
       style={style}
-      onClick={onClick}
+      {...bind}
     >
       {height >= 30 && time && <div className="tk-block-time">{time}</div>}
       <div className="tk-block-title">{title}</div>

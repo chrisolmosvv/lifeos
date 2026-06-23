@@ -19,8 +19,9 @@ const PRIORITIES = [
   { id: 'high', label: 'High' },
 ]
 
-export default function TodayForm({ kind, item, create, cats, inboxColor, busy, onSave, onDelete, onClose }) {
+export default function TodayForm({ kind, item, create, toggle, cats, inboxColor, busy, onSave, onDelete, onClose }) {
   const t = item || {}
+  const [k, setK] = useState(kind) // the effective kind (a toggle can flip it on create)
   const [title, setTitle] = useState(t.title || '')
   const [notes, setNotes] = useState(t.notes || '')
   const [categoryId, setCategoryId] = useState(t.category_id ?? null)
@@ -46,7 +47,7 @@ export default function TodayForm({ kind, item, create, cats, inboxColor, busy, 
     const ttl = title.trim()
     if (!ttl) return setErr('Give it a title.')
     let fields
-    if (kind === 'task') {
+    if (k === 'task') {
       let ss = null
       let se = null
       if (schStart) {
@@ -75,11 +76,11 @@ export default function TodayForm({ kind, item, create, cats, inboxColor, busy, 
         location: location.trim() || null,
       }
     }
-    const msg = await onSave(fields)
+    const msg = await onSave(fields, k)
     if (msg) setErr(msg)
   }
 
-  const heading = (create ? 'New ' : 'Edit ') + kind
+  const heading = (create ? 'New ' : 'Edit ') + k
 
   return (
     <div className="tk-form-scrim" onClick={onClose}>
@@ -106,11 +107,29 @@ export default function TodayForm({ kind, item, create, cats, inboxColor, busy, 
           </div>
         ) : (
           <div className="tk-form-body">
+            {toggle && (
+              <div className="tk-form-toggle">
+                <button
+                  type="button"
+                  className={'tk-form-tog' + (k === 'event' ? ' is-on' : '')}
+                  onClick={() => setK('event')}
+                >
+                  Event
+                </button>
+                <button
+                  type="button"
+                  className={'tk-form-tog' + (k === 'task' ? ' is-on' : '')}
+                  onClick={() => setK('task')}
+                >
+                  Task
+                </button>
+              </div>
+            )}
             <input
               className="tk-form-input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={kind === 'task' ? 'Task title' : 'Event title'}
+              placeholder={k === 'task' ? 'Task title' : 'Event title'}
               aria-label="Title"
               autoFocus
             />
@@ -121,7 +140,7 @@ export default function TodayForm({ kind, item, create, cats, inboxColor, busy, 
               <span className="tk-form-catchev">›</span>
             </button>
 
-            {kind === 'task' ? (
+            {k === 'task' ? (
               <>
                 <div className="tk-form-field">
                   <span className="tk-form-fieldlabel">Status</span>

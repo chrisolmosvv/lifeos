@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { isSameDay } from './dateUtils'
 import { buildToday } from './todayModel'
+import { useTodayGrid } from './kit/useTodayGrid'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
 import TodayTaskRow from './kit/TodayTaskRow'
@@ -11,20 +12,25 @@ import TodayForm from './kit/TodayForm'
 import Toast from './kit/Toast'
 import './today.css'
 
-// The Today home (Phase 7). The B layout — "the day" grid on the left, "tasks
-// today" over "the next 7 days" on the right. T6 adds the full create/edit form
-// (a Today-scoped sealed kit, SEPARATE from Calendar's shared panels), "+ add",
-// delete with an undo toast, and the drill-in category picker. All writes go
-// through the existing Supabase task/event paths; no schema change.
+// The Today home (Phase 7). T5 turns the day grid into a workspace: click/drag to
+// create, drag to move/resize, drag a task from a module onto the grid to schedule,
+// and drag a block off onto a module to re-date it. All writes go through the
+// EXISTING Supabase task/event paths; no schema. The interaction logic is a
+// Today-scoped hook (useTodayGrid) — it does NOT touch Calendar's shared drag code.
 export default function Today() {
   const today = new Date()
-  const [tasks, setTasks] = useState(null) // null = still loading
+  const [tasks, setTasks] = useState(null)
   const [cats, setCats] = useState([])
-  const [events, setEvents] = useState([]) // today's events only
+  const [events, setEvents] = useState([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState(null) // null | { kind, item, create }
+  const [form, setForm] = useState(null) // null | { kind, item, create, toggle }
   const [toast, setToast] = useState(null)
+
+  const scrollRef = useRef(null)
+  const laneRef = useRef(null)
+  const todayModRef = useRef(null)
+  const weekModRef = useRef(null)
 
   async function load() {
     const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
@@ -65,9 +71,7 @@ export default function Today() {
     load()
   }, [])
 
-  // The existing write paths — the same Supabase insert/update/delete the app
-  // already uses. A task helper and an event helper, each returns a plain
-  // message on failure or null on success (after a reload).
+  // The existing write paths — the same Supabase insert/update/delete the app uses.
   async function writeTask(query) {
     setBusy(true)
     const { error } = await query
@@ -84,13 +88,12 @@ export default function Today() {
     await load()
     return null
   }
-  // The status pill on a row writes through the same task path.
   const onUpdate = (id, fields) =>
     writeTask(supabase.from('tasks').update(fields).eq('id', id))
 
-  // Save from the form (create or edit, task or event). Closes on success.
-  async function handleSave(fields) {
-    const { kind, item, create } = form
+  // Save from the form (create or edit; the form tells us which kind it settled on).
+  async function handleSave(fields, kind) {
+    const { item, create } = form
     let msg
     if (kind === 'task') {
       msg = create
@@ -105,8 +108,6 @@ export default function Today() {
     return msg
   }
 
-  // Delete from the form → remove, then a "Deleted · Undo" toast that re-inserts
-  // the exact row (same id + fields) on Undo.
   async function handleDelete() {
     const { kind, item } = form
     setForm(null)
@@ -142,7 +143,6 @@ export default function Today() {
       ? { text: clock(t.scheduled_start) }
       : null
 
-  // Openers — one tap opens the full form, prefilled.
   const openTask = (id) => {
     const task = (tasks || []).find((t) => t.id === id)
     if (task) setForm({ kind: 'task', item: task, create: false })
@@ -158,6 +158,43 @@ export default function Today() {
       create: true,
     })
 
+  // --- the grid workspace interactions (Today-scoped hook) ------------------
+  const grid = useTodayGrid({
+    scrollRef,
+    laneRef,
+    todayModRef,
+    weekModRef,
+    today,
+    onSelect: (item) => (item.kind === 'event' ? openEvent(item.id) : openTask(item.id)),
+    onCreate: (startIso, endIso) =>
+      setForm({
+        kind: 'event',
+        create: true,
+        toggle: true,
+        item: {
+          start_at: startIso,
+          end_at: endIso,
+          scheduled_start: startIso,
+          scheduled_end: endIso,
+          time_bucket: 'Today',
+          due_date: localDateStr(today),
+        },
+      }),
+    onMove: (item, startIso, endIso) =>
+      item.kind === 'event'
+        ? writeEvent(supabase.from('events').update({ start_at: startIso, end_at: endIso }).eq('id', item.id))
+        : writeTask(supabase.from('tasks').update({ scheduled_start: startIso, scheduled_end: endIso }).eq('id', item.id)),
+    onSchedule: (id, startIso, endIso) =>
+      writeTask(supabase.from('tasks').update({ scheduled_start: startIso, scheduled_end: endIso }).eq('id', id)),
+    onOffTo: (target, item) => {
+      const fields =
+        target === 'today'
+          ? { scheduled_start: null, scheduled_end: null, due_date: localDateStr(today), time_bucket: 'Today' }
+          : { scheduled_start: null, scheduled_end: null, due_date: localDateStr(addDays(today, 7)), time_bucket: 'This Week' }
+      return writeTask(supabase.from('tasks').update(fields).eq('id', item.id))
+    },
+  })
+
   return (
     <div className="today">
       <section className="today-day">
@@ -169,6 +206,12 @@ export default function Today() {
           today={today}
           onOpenEvent={openEvent}
           onOpenTask={openTask}
+          scrollRef={scrollRef}
+          laneRef={laneRef}
+          backgroundBind={grid.backgroundBind}
+          blockBind={grid.blockBind}
+          blockPreview={grid.blockPreview}
+          createDraft={grid.createDraft}
         />
       </section>
 
@@ -177,7 +220,7 @@ export default function Today() {
           <p className="today-loading">Loading…</p>
         ) : (
           <>
-            <section className="today-mod today-mod-today">
+            <section className="today-mod today-mod-today" ref={todayModRef}>
               <ModuleHeader>Tasks today</ModuleHeader>
               <div className="today-mod-list">
                 {tasksToday.length === 0 ? (
@@ -194,6 +237,7 @@ export default function Today() {
                       busy={busy}
                       onSetStatus={(status) => onUpdate(t.id, { status })}
                       onOpen={() => openTask(t.id)}
+                      trayBind={grid.trayBind}
                     />
                   ))
                 )}
@@ -201,7 +245,7 @@ export default function Today() {
               <button className="today-add" onClick={openAdd}>+ add a task</button>
             </section>
 
-            <section className="today-mod today-mod-week">
+            <section className="today-mod today-mod-week" ref={weekModRef}>
               <ModuleHeader>The next 7 days</ModuleHeader>
               <div className="today-mod-list">
                 {next7.length === 0 && undated.length === 0 ? (
@@ -216,6 +260,7 @@ export default function Today() {
                         inboxColor={inboxColor}
                         hideDue
                         onOpen={() => openTask(t.id)}
+                        trayBind={grid.trayBind}
                       />
                     ))}
                     {undated.map((t) => (
@@ -226,6 +271,7 @@ export default function Today() {
                         inboxColor={inboxColor}
                         badge={{ text: 'undated' }}
                         onOpen={() => openTask(t.id)}
+                        trayBind={grid.trayBind}
                       />
                     ))}
                   </>
@@ -241,11 +287,18 @@ export default function Today() {
         {error && <p className="today-error">{error}</p>}
       </div>
 
+      {grid.ghost && (
+        <div className="tk-tray-ghost" style={{ left: grid.ghost.x, top: grid.ghost.y }}>
+          {grid.ghost.title}
+        </div>
+      )}
+
       {form && (
         <TodayForm
           kind={form.kind}
           item={form.item}
           create={form.create}
+          toggle={form.toggle}
           cats={cats}
           inboxColor={inboxColor}
           busy={busy}
@@ -261,15 +314,18 @@ export default function Today() {
   )
 }
 
-// "9:00" local 24-hour.
 function clock(iso) {
   const d = new Date(iso)
   return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0')
 }
-// "YYYY-MM-DD" local (for the "+ add" prefill).
 function localDateStr(d) {
   const p = (n) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+function addDays(d, n) {
+  const x = new Date(d)
+  x.setDate(x.getDate() + n)
+  return x
 }
 
 function friendly(error) {

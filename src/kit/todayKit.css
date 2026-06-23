@@ -232,3 +232,62 @@
   font-size: 0.95rem;
   color: var(--ink-muted);
 }
+
+/* --- T5 interaction visuals ---------------------------------------------- */
+/* The empty lane invites a click/drag to create. */
+.tk-grid-lane {
+  cursor: copy;
+  touch-action: pan-y; /* let touch scroll the column; mouse handles drag */
+}
+.tk-block {
+  user-select: none;
+}
+.tk-block.is-dragging {
+  z-index: 4;
+  cursor: grabbing;
+  box-shadow: 0 1px 0 var(--rule);
+}
+.tk-block.is-removing {
+  opacity: 0.4; /* dragged over a module → about to leave the grid */
+}
+/* The span being drawn while click-dragging on empty grid. */
+.tk-grid-draft {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  background: rgba(200, 100, 61, 0.14); /* a soft accent tint */
+  border: 1px dashed var(--accent);
+  border-radius: 4px;
+  z-index: 2;
+  pointer-events: none;
+}
+/* The grip on a task row used to drag it onto the day. */
+.tk-row-grip {
+  flex: none;
+  cursor: grab;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0 0.2rem;
+  touch-action: none;
+}
+.tk-row-grip:hover {
+  color: var(--ink);
+}
+/* The chip that follows the pointer while dragging a task onto the grid. */
+.tk-tray-ghost {
+  position: fixed;
+  z-index: 40;
+  transform: translate(12px, 12px);
+  pointer-events: none;
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0.25rem 0.55rem;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--ink);
+}

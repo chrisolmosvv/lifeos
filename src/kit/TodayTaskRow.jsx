@@ -22,6 +22,7 @@ export default function TodayTaskRow({
   busy,
   onOpen,
   onSetStatus,
+  trayBind,
 }) {
   const done = task.status === 'done'
   const high = !done && task.priority === 'high'
@@ -64,6 +65,16 @@ export default function TodayTaskRow({
           )}
         </span>
       </button>
+      {trayBind && !done && (
+        <span
+          className="tk-row-grip"
+          title="Drag onto the day to schedule"
+          aria-label="Drag to schedule"
+          {...trayBind(task)}
+        >
+          ⠿
+        </span>
+      )}
     </div>
   )
 }

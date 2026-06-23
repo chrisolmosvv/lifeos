@@ -226,8 +226,15 @@ it rather than dig (see the Piece-1c decision).
   beyond the preserved edit; no shared/Calendar/Settings/header file touched. Save
   point `ec115bf`. Known interim gaps (return in later pieces): done-tick + task-delete
   + add + drag-to-schedule + the Someday drawer. **Owner verifies on Mac + phone.**
-- ⬜ **T5 — Calendar workspace interactions.** Click-create (event default +
-  toggle), drag, resize, 15-min snap, overlap split, drag to/from the modules.
+- ✅ **T5 — Calendar workspace interactions (Today's grid).** Click/drag-to-create
+  (opens the T6 form, event default + task toggle), drag-move, edge-resize, 15-min snap,
+  live overlap re-split, drag a task from a module onto the grid to schedule, drag a task
+  block off onto "tasks today" (→ today, no time) or "next 7 days" (→ +7, no time); events
+  snap back if dragged off. Built as a **Today-scoped hook `useTodayGrid`** (a sealed twin
+  of the shared `useEventDrag`/`useScheduleDrag`, which were NOT touched — Calendar
+  unchanged); reuses the shared `eventLayout` overlap maths read-only. Min block 15 min;
+  tap-vs-drag 4px; done blocks tap-only; mouse-only (touch keeps tapping/scrolling). All
+  writes via existing task/event update+insert paths; no schema. Save point `ffdf62d`.
 - ✅ **T6 — The create/edit form (+ "+ add", delete/undo, the drill-in picker).** A
   new Today-scoped sealed form (`TodayForm`) opens on one tap of a task row or a grid
   block — create + edit, task + event (Title/Category/Status/Day-Time/Priority/Notes/
@@ -278,6 +285,23 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T5 DONE — Today's day grid is now a workspace (highest-risk
+  interaction piece).** You can click an empty slot (→ 1-hr block) or click-drag (→ exact
+  span, 15-min snap) to create — opening the T6 form with an **event/task toggle (default
+  event)**; drag a block to **move**, drag its edge to **resize**; overlaps **re-split live**
+  as a block moves; drag a task from "tasks today"/"next 7 days" **onto the grid to schedule**
+  it; and drag a scheduled block **off onto a module** to re-date it (→ tasks-today = today/
+  no-time; → next-7 = +7 days/no-time; events snap back). Built as a **Today-scoped hook
+  (`useTodayGrid`)** — a deliberate sealed twin of Calendar's shared `useEventDrag`/
+  `useScheduleDrag`, which were **NOT touched**, so Calendar behaves exactly as before; only
+  the pure `eventLayout` overlap maths is reused read-only. Choices: min block 15 min,
+  tap-vs-drag 4px, done blocks tap-only, past events movable, mouse-only (touch still taps/
+  scrolls — mobile Today is its own spec). All writes go through the existing Supabase task/
+  event paths; **no schema, no category writes, no Calendar/Settings change.** Save point
+  `ffdf62d`. ⚠️ Drag is **build- + logic-verified but not visually run** (headless login) —
+  owner to test on Mac; if a drag bug appears, roll back to `ffdf62d` (doom-loop rule).
+  Committed locally only — **not pushed/deployed**. **NEXT: T8 — date arrows / day-flipping,
+  or wire the "All tasks" screen (T11).**
 - **2026-06-23 — Phase 7, T6 DONE — Today's full create/edit form, "+ add", delete/undo,
   and the drill-in category picker.** One tap on a task row or a grid block opens a new
   Today-scoped form (`TodayForm`) — create + edit, task + event — with Title, the drill-in
