@@ -145,6 +145,8 @@ export default function Today() {
                       inboxColor={inboxColor}
                       muted={!!scheduledBadge(t)}
                       badge={scheduledBadge(t)}
+                      busy={busy}
+                      onSetStatus={(status) => onUpdate(t.id, { status })}
                       onOpen={() => setEditTaskId(t.id)}
                     />
                   ))

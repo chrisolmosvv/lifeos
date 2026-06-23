@@ -14,22 +14,33 @@
   margin: 0.35rem 0 0;
 }
 
-/* --- TodayTaskRow: one read-only task line (tap opens the existing editor) - */
+/* --- TodayTaskRow: one task line — an optional status pill, then a clickable
+   title region that opens the existing editor. ------------------------------ */
 .tk-row {
-  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.25rem;
+  border-bottom: 1px solid var(--rule-faint);
+  flex-wrap: wrap;
+}
+.tk-row-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: baseline;
   gap: 0.6rem;
-  padding: 0.4rem 0.25rem;
+  padding: 0.15rem 0;
   text-align: left;
   font: inherit;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--rule-faint);
   cursor: pointer;
 }
-.tk-row:hover {
-  background: rgba(0, 0, 0, 0.02);
+.tk-row-main:hover .tk-row-title {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
 }
 .tk-row-title {
   flex: 1;
@@ -78,6 +89,47 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--ink-muted);
+}
+
+/* --- StatusPill: connected three-segment control (To do · In progress · Done).
+   Calm: a hairline-bordered group; the active segment fills with ink (not the
+   reserved accent). The Done segment greys with the row. --------------------- */
+.tk-pill {
+  flex: none;
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.tk-pseg {
+  font: inherit;
+  font-size: 0.66rem;
+  line-height: 1;
+  padding: 0.28rem 0.5rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  border-left: 1px solid var(--rule);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tk-pseg:first-child {
+  border-left: none;
+}
+.tk-pseg:hover:not(.is-on) {
+  color: var(--ink);
+}
+.tk-pseg.is-on {
+  color: var(--paper);
+  background: var(--ink);
+}
+/* Done, when active, reads as quiet/greyed (it matches the greyed row). */
+.tk-pseg.is-on.is-done {
+  background: var(--ink-muted);
+}
+.tk-pseg:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 /* --- TintedBlock: an Apple-style soft tinted block on the grid ------------- */

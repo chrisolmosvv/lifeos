@@ -47,8 +47,14 @@ export function buildToday(tasks, today) {
   const inWindow = (d) => d && d >= tomorrow && d < weekEnd
 
   // --- tasks today -------------------------------------------------------
+  // Active tasks (to do / in progress) that are due today, in the Today bucket,
+  // or scheduled today — PLUS anything completed today, kept greyed till midnight
+  // (the day's progress), which then rolls off on its own.
+  const completedToday = (t) =>
+    t.completed_at && isSameDay(new Date(t.completed_at), today)
   const tasksToday = topLevel
     .filter((t) => {
+      if (t.status === 'done') return completedToday(t)
       const due = dueLocal(t.due_date)
       const sch = scheduledDay(t)
       const dueToday = due && isSameDay(due, today)
@@ -64,8 +70,9 @@ export function buildToday(tasks, today) {
   const todayIds = new Set(tasksToday.map((t) => t.id))
 
   // --- next 7 days (dated) ------------------------------------------------
+  // Upcoming, not-done tasks (to do or in progress) not already shown today.
   const dated = topLevel
-    .filter((t) => t.status === 'open' && !todayIds.has(t.id))
+    .filter((t) => t.status !== 'done' && !todayIds.has(t.id))
     .map((t) => {
       const due = dueLocal(t.due_date)
       const sch = scheduledDay(t)
@@ -84,7 +91,7 @@ export function buildToday(tasks, today) {
   const undated = topLevel
     .filter(
       (t) =>
-        t.status === 'open' &&
+        t.status !== 'done' &&
         !t.due_date &&
         !t.scheduled_start &&
         t.time_bucket !== 'Someday' &&

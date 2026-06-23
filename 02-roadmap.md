@@ -229,7 +229,14 @@ it rather than dig (see the Piece-1c decision).
   toggle), drag, resize, 15-min snap, overlap split, drag to/from the modules.
 - ⬜ **T6 — The create/edit form.** Task + event fields, one-tap-open everywhere,
   "+ add".
-- ⬜ **T7 — Status pill behaviour.** The three states + done-till-midnight + undo.
+- ✅ **T7 — Status pill behaviour + restore "done".** Additive schema: `tasks.status`
+  widened `('open','done')` → `('open','in_progress','done')` (`db/08_status_in_progress.sql`,
+  applied + verified live on Frankfurt; default `'open'` and existing rows intact; proof
+  rolled back, no test rows). Front-end (Today only): a sealed `StatusPill` kit block on each
+  "tasks today" row — **To do · In progress · Done**, tap a segment to set state via the
+  existing update path; Done greys+strikes and stays till midnight (completed-today), tapping
+  Done again undoes. `todayModel` now treats `in_progress` as active and rolls done off at
+  midnight. No Calendar/Settings/shared-hook change. Save point `310f9db`.
 - ⬜ **T8 — Date navigation.** Whole-page re-anchor, weekday titles, back-to-today.
 - ⬜ **T9 — Delete + undo toast.**
 - ⬜ **T10 — Recurring events** *(large)*. Recurrence + "this one or all?".
@@ -257,6 +264,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T7 DONE — "done" is back on Today, now as a 3-state pill.**
+  Small ADDITIVE schema step first: `tasks.status` widened from `open`/`done` to
+  `open`/`in_progress`/`done` (`db/08_status_in_progress.sql`) — applied + proven live on
+  Frankfurt (default `open` and the 8 existing rows untouched; all 3 values accepted, a 4th
+  rejected, `completed_at` still auto-stamped/cleared, proof rolled back leaving nothing).
+  Then the front-end (Today only): each "tasks today" row gains a connected **To do · In
+  progress · Done** pill — tap a segment to set state straight from the row (no opening the
+  task), through the **existing** update path. Done greys+strikes the row and keeps it till
+  midnight (then it rolls off); tapping Done again undoes. "In progress" is an optional
+  middle state. No Calendar/Settings/shared-hook change. Save point `310f9db`. **NEXT: T5 —
+  calendar workspace interactions on Today's grid (click-create, drag, resize), or T6 form.**
 - **2026-06-23 — Phase 7, Piece D1 (docs only) — category decisions recorded.** Six owner
   decisions written into 03-decisions.md: **no seeded tree** (T3b **dropped** — start is
   just Inbox, build in-app); **no fixed count** at any level (only the depth-3 cap);

@@ -35,6 +35,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T7 — 3-state status pill + restore "done" on Today (additive schema + front-end)
+LIVE STATUS CONSTRAINT — BEFORE (read the proper way, Management API as role postgres):
+`tasks.status` text NOT NULL default `'open'`; constraint `tasks_status_check` =
+`CHECK (status = ANY (ARRAY['open','done']))`; data = 8 rows, all `open`. Matched the docs.
+SCHEMA CHANGE (additive): widened the allowed set to `('open','in_progress','done')` in
+`db/08_status_in_progress.sql`. **Implementation + why:** Postgres can't edit a CHECK in
+place, so I dropped `tasks_status_check` and added the 3-value **superset** — this only ever
+ALLOWS MORE, never invalidates a row. `'open'` (=To do) and `'done'` keep their meaning
+(no rename), the NOT NULL + default `'open'` are unchanged, and no row was edited. The
+existing `tasks_sync_completed_at` trigger already stamps/clears `completed_at`, so
+`in_progress` needs no trigger change.
+PROOF (live, rolled back): new CHECK = `('open','in_progress','done')`; default still
+`'open'`; existing rows still 8/all `open`. In one transaction on a temp row: default=open;
+in_progress accepted; done accepted (completed_at **stamped** by the trigger); undo→open
+(completed_at **cleared**); a 4th junk value **rejected**; transaction rolled back →
+0 probe rows, total still 8.
+FRONT-END (Today body only): a new sealed kit block `StatusPill` (To do · In progress ·
+Done) on each "tasks today" row. Tapping a segment sets that state **through the existing
+`onUpdate` path** (`tasks.update({status})`) — no new data layer. `TodayTaskRow` was
+restructured from a single button into a container (pill + a separate title button) so the
+controls don't nest. Done greys+strikes the row and keeps it till midnight; tapping Done
+again undoes (→ To do). `todayModel` updated: `in_progress` counts as active (shows in
+tasks-today / next-7), and done tasks show only while **completed today** (so they roll off
+at midnight).
+SAVE POINT (Step 1): **`310f9db`** — "Phase 7 T7 save point — before status 3-state."
+FILES TOUCHED: db/08_status_in_progress.sql (new, applied), src/kit/StatusPill.jsx (new),
+src/kit/TodayTaskRow.jsx, src/kit/todayKit.css, src/todayModel.js, src/Today.jsx,
+02-roadmap.md, 04-handoff-log.md. **No Calendar/Settings change; no shared hook/component
+altered** (Today uses its own `onUpdate`; `useWeekData`/`DayColumn`/panels untouched).
+Build passes.
+HOW TO VERIFY (owner — Mac AND phone):
+- On a "tasks today" row, set a task **To do → In progress → Done** straight from the pill
+  (no opening the task).
+- Marking **Done greys + strikes** the row; it **stays till midnight**, then rolls off.
+- Tap **Done again** before midnight → it **undoes** (back to To do).
+- One tap **To do → Done** works (In progress is optional, never forced).
+- Existing tasks are unaffected (all were "to do"); **Calendar + Settings still work**.
+KNOWN GAPS / NOTES:
+- The pill is on **"tasks today"** rows only (per spec); "next 7 days" rows have no pill.
+- Calendar shows an `in_progress` task as a normal (not-struck) block — Calendar has no pill
+  this phase; that's expected (Today-only piece).
+- Other R1-deferred items still pending: task delete + "+ add" (T6), drag-to-schedule (T5).
+NEXT: T5 — calendar workspace interactions on Today's grid, or T6 — the create/edit form.
+FOR THE CHECKER (schema change): confirm additive-only (CHECK widened, no column/row change),
+Frankfurt-targeted, default + existing rows intact, 3 accepted / 4th rejected, no test rows
+left, the live constraint was read the proper (non-probe) way, and status writes go only
+through the existing `onUpdate` path (no shared hook touched).
+
 ### 2026-06-23 — Phase 7, Piece D1 — record the category decisions (DOCS ONLY)
 WHAT CHANGED: recorded six category decisions made in planning but never written down
 (so the docs/next-steps stopped referencing dropped work). No code, no schema, no data.
