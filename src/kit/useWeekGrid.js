@@ -21,6 +21,8 @@ import { HOUR_HEIGHT } from '../dateUtils'
 //  • press a block        → move / resize (15-min snap), re-day across columns
 //  • press an empty column → click = 1-hour block, drag = exact span → onCreate
 //  • drag a task off-grid  → onUnschedule(item)
+//  • drag a tray row       → drop on the grid schedules a 1-hour block (C5);
+//                            click a tray row → onTraySelect (mirrors Today's tray)
 const THRESHOLD = 4
 const SNAP = 15
 const MIN_DUR = 15
@@ -29,10 +31,11 @@ const START_MIN = 0 // the week lane's y=0 is midnight (Today's is 7am)
 const DAY = 24 * 60
 const GUTTER = 52 // px; must match .wk-gutter / .wk-corner width in weekGrid.css
 
-export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnschedule, onSelect }) {
+export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnschedule, onSelect, onSchedule, onTraySelect }) {
   const [blockPreview, setBlockPreview] = useState(null) // {id,item,dayStartMs,startMs,endMs,off}
   const [createDraft, setCreateDraft] = useState(null) // {dayStartMs,startMs,endMs}
   const [dragLabel, setDragLabel] = useState(null) // {x,y,text}
+  const [ghost, setGhost] = useState(null) // {x,y,title} — a tray row dragged to the grid
   const drag = useRef(null)
   const justDragged = useRef(false)
 
@@ -91,6 +94,15 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
     }
     e.currentTarget.setPointerCapture(e.pointerId)
   }
+  // A tray row dragged toward the grid (the same mechanism as Today's module-to-
+  // grid drag, mirrored here). On drop over the grid it schedules a 1-hour block
+  // at the drop's day (x) + time (y).
+  function startTray(e, task) {
+    if (e.pointerType === 'touch' || (e.pointerType === 'mouse' && e.button !== 0)) return
+    e.stopPropagation()
+    drag.current = { type: 'tray', task, downX: e.clientX, downY: e.clientY, moved: false }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
 
   function passedThreshold(d, e) {
     if (d.moved) return true
@@ -128,6 +140,8 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
       if (b - a < MIN_DUR) b = Math.min(a + MIN_DUR, DAY)
       setCreateDraft({ dayStartMs: d.dayStartMs, startMs: d.dayStartMs + a * 60000, endMs: d.dayStartMs + b * 60000 })
       setDragLabel({ x: e.clientX, y: e.clientY, text: `${hhmm(a)}–${hhmm(b)}` })
+    } else if (d.type === 'tray') {
+      setGhost({ x: e.clientX, y: e.clientY, title: d.task.title })
     }
   }
 
@@ -139,6 +153,18 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
     setBlockPreview(null)
     setCreateDraft(null)
     setDragLabel(null)
+    setGhost(null)
+
+    if (d.type === 'tray') {
+      justDragged.current = d.moved
+      if (d.moved && !offGrid(e.clientX, e.clientY)) {
+        const dayStartMs = dayStartMsAt(e.clientX)
+        const min = clamp(snap(minutesAt(e.clientY)), 0, DAY - 60)
+        const iso = (m) => new Date(dayStartMs + m * 60000).toISOString()
+        onSchedule(d.task.id, iso(min), iso(min + 60))
+      }
+      return
+    }
 
     if (d.type === 'block') {
       justDragged.current = d.moved
@@ -176,6 +202,7 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
     setBlockPreview(null)
     setCreateDraft(null)
     setDragLabel(null)
+    setGhost(null)
   }
 
   const moveEnd = { onPointerMove: handleMove, onPointerUp: handleEnd, onPointerCancel: handleCancel }
@@ -189,6 +216,15 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
     },
   })
   const backgroundBind = { onPointerDown: startCreate, ...moveEnd }
+  const trayBind = (task) => ({
+    onPointerDown: (e) => startTray(e, task),
+    ...moveEnd,
+    onClick: (e) => {
+      e.stopPropagation()
+      if (justDragged.current) { justDragged.current = false; return }
+      onTraySelect(task)
+    },
+  })
 
-  return { blockPreview, createDraft, dragLabel, blockBind, backgroundBind }
+  return { blockPreview, createDraft, dragLabel, ghost, blockBind, backgroundBind, trayBind }
 }

@@ -6,9 +6,15 @@ import { activeOnly } from './archive'
 // and the writes that the week view needs (all reload after). Kept apart so
 // WeekCalendar stays about interaction/render. Owner-only RLS applies to every
 // query; writes only touch existing columns (no schema change).
+const localDateStr = (d) => {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
 export function useWeekData(days) {
   const [events, setEvents] = useState([])
   const [scheduled, setScheduled] = useState([])
+  const [tray, setTray] = useState([])
   const [cats, setCats] = useState([])
   const [busy, setBusy] = useState(false)
 
@@ -20,7 +26,7 @@ export function useWeekData(days) {
       q.gte(col, weekStart.toISOString()).lt(col, weekEnd.toISOString())
 
     // Archive A3: active-only — archived rows are hidden (the ONLY change here).
-    const [evRes, taskRes, catRes] = await Promise.all([
+    const [evRes, taskRes, trayRes, catRes] = await Promise.all([
       activeOnly(
         inWeek(
           supabase.from('events').select('id, title, notes, start_at, end_at, location, category_id'),
@@ -35,10 +41,23 @@ export function useWeekData(days) {
           'scheduled_start',
         ),
       ),
+      // C5: the tray — top-level tasks NOT time-blocked (scheduled_start null) that
+      // are either undated or due in the VIEWED week; due-soonest, undated last.
+      activeOnly(
+        supabase
+          .from('tasks')
+          .select('id, title, notes, status, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end, parent_task_id, created_at')
+          .is('scheduled_start', null)
+          .is('parent_task_id', null)
+          .or(`due_date.is.null,and(due_date.gte.${localDateStr(weekStart)},due_date.lt.${localDateStr(weekEnd)})`)
+          .order('due_date', { ascending: true, nullsFirst: false })
+          .order('created_at', { ascending: true }),
+      ),
       activeOnly(supabase.from('categories').select('id, name, color, parent_id, sort_order')),
     ])
     setEvents(evRes.data || [])
     setScheduled(taskRes.data || [])
+    setTray(trayRes.data || [])
     setCats(catRes.data || [])
   }
 
@@ -84,10 +103,16 @@ export function useWeekData(days) {
     )
   const onUpdateTask = (id, fields) =>
     write(supabase.from('tasks').update(fields).eq('id', id))
+  // C5: "+ add" a loose task into the tray — undated + unscheduled. time_bucket is
+  // EXPLICITLY 'Someday' (the column defaults to 'Today'); an undated backlog task
+  // must never land in Today's bucket. No due_date / scheduled_start (loose).
+  const onAddLooseTask = (title) =>
+    write(supabase.from('tasks').insert({ title, time_bucket: 'Someday' }))
 
   return {
     events,
     scheduled,
+    tray,
     cats,
     busy,
     reload: load, // C3: lets the view re-read after an archive (delete) + undo
@@ -96,5 +121,6 @@ export function useWeekData(days) {
     onDeleteEvent,
     onScheduleTask,
     onUpdateTask,
+    onAddLooseTask,
   }
 }

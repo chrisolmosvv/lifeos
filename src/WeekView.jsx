@@ -5,6 +5,7 @@ import { useWeekData } from './useWeekData'
 import { useWeekGrid } from './kit/useWeekGrid'
 import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
 import WeekGrid from './kit/WeekGrid'
+import TrayDrawer from './kit/TrayDrawer'
 import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
 
@@ -14,8 +15,8 @@ import Toast from './kit/Toast'
 // cluster in C4). Delete = ARCHIVE + Undo toast via the existing archive path
 // (matching Today; replaces Calendar's old hard delete). Mounted with a key per
 // week so useWeekData reloads on navigation. No schema; writes via existing paths.
-export default function WeekView({ days, today, requestAdd }) {
-  const { events, scheduled, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask } =
+export default function WeekView({ days, today, requestAdd, trayOpen }) {
+  const { events, scheduled, tray, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask, onAddLooseTask } =
     useWeekData(days)
   const [form, setForm] = useState(null) // {kind,item,create,toggle}
   const [toast, setToast] = useState(null)
@@ -47,6 +48,11 @@ export default function WeekView({ days, today, requestAdd }) {
       item.kind === 'event'
         ? setForm({ kind: 'event', item: events.find((e) => e.id === item.id), create: false })
         : setForm({ kind: 'task', item: scheduled.find((t) => t.id === item.id), create: false }),
+    // Drop a tray row on the grid → schedule a 1-hour block (one reload then drops
+    // it from the tray and shows it as a block — the tray stays open).
+    onSchedule: (id, startIso, endIso) => onScheduleTask(id, startIso, endIso),
+    // Click a tray row → open the shared form to edit that loose task.
+    onTraySelect: (task) => setForm({ kind: 'task', item: task, create: false }),
   })
 
   async function handleSave(fields, kind) {
@@ -78,21 +84,39 @@ export default function WeekView({ days, today, requestAdd }) {
 
   return (
     <>
-      <WeekGrid
-        days={days}
-        today={today}
-        events={events}
-        scheduled={scheduled}
-        cats={cats}
-        selectedId={selectedId}
-        scrollRef={scrollRef}
-        bodyRef={bodyRef}
-        blockBind={grid.blockBind}
-        backgroundBind={grid.backgroundBind}
-        blockPreview={grid.blockPreview}
-        createDraft={grid.createDraft}
-        dragLabel={grid.dragLabel}
-      />
+      <div className="wv-row">
+        <WeekGrid
+          days={days}
+          today={today}
+          events={events}
+          scheduled={scheduled}
+          cats={cats}
+          selectedId={selectedId}
+          scrollRef={scrollRef}
+          bodyRef={bodyRef}
+          blockBind={grid.blockBind}
+          backgroundBind={grid.backgroundBind}
+          blockPreview={grid.blockPreview}
+          createDraft={grid.createDraft}
+          dragLabel={grid.dragLabel}
+        />
+        {trayOpen && (
+          <TrayDrawer
+            tasks={tray}
+            cats={cats}
+            busy={busy}
+            onAdd={onAddLooseTask}
+            onComplete={(id, done) => onUpdateTask(id, { status: done ? 'open' : 'done' })}
+            trayBind={grid.trayBind}
+          />
+        )}
+      </div>
+
+      {grid.ghost && (
+        <div className="tk-tray-ghost" style={{ left: grid.ghost.x, top: grid.ghost.y }}>
+          {grid.ghost.title}
+        </div>
+      )}
 
       {form && (
         <ItemForm

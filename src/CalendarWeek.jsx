@@ -17,6 +17,7 @@ export default function CalendarWeek() {
   const home = isHome(nav)
   const weekKey = days[0].toISOString()
   const requestAdd = useRef(null)
+  const [trayOpen, setTrayOpen] = useState(false)
 
   return (
     <div className="cw">
@@ -42,7 +43,11 @@ export default function CalendarWeek() {
             <span className="cw-toggle-seg is-on">Week</span>
             <span className="cw-toggle-seg is-off" title="Month view — coming soon (C6)">Month</span>
           </div>
-          <button className="cw-tool" disabled title="Unscheduled tray — coming soon (C5)">
+          <button
+            className={'cw-tool cw-tool-live' + (trayOpen ? ' is-on' : '')}
+            aria-pressed={trayOpen}
+            onClick={() => setTrayOpen((o) => !o)}
+          >
             Tray
           </button>
           <button className="cw-tool cw-tool-live" onClick={() => requestAdd.current?.()}>
@@ -51,7 +56,7 @@ export default function CalendarWeek() {
         </div>
       </div>
 
-      <WeekView key={weekKey} days={days} today={today} requestAdd={requestAdd} />
+      <WeekView key={weekKey} days={days} today={today} requestAdd={requestAdd} trayOpen={trayOpen} />
     </div>
   )
 }

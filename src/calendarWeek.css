@@ -122,3 +122,9 @@
 .cw-tool-live:hover {
   border-color: var(--accent);
 }
+/* A live tool that's currently ON (the open tray) reads as filled. */
+.cw-tool-live.is-on {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
