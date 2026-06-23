@@ -9,6 +9,42 @@
 
 ---
 
+## Phase 7 — Today desktop re-skin: masthead, nav, full-width, live weather (DESK-1, 2026-06-23)
+
+- **[Masthead = 3 columns; the big clock becomes a small dateline]** — Left: a live two-line
+  dateline (`HH:MM` 24-hour + weekday / `D Month YYYY`). Centre: the blackletter "LifeOS"
+  wordmark + a `YEAR {age} · DAY {n}` line. Right: city over weather. **Why:** matches the
+  approved `today-mockup.html`; the dateline carries the same info as the old clock in far less
+  ink, and the centre column earns the personal-edition line. Dropped: the "A PERSONAL DAILY"
+  topline, the "All the day that's fit to do" tagline, and the Settings nav subtitle.
+- **[Personal edition = pure date math from birthday 29 March 2002]** — Age = whole years old;
+  Day = day-of-personal-year counting the birthday itself as **Day 1** (so 23 Jun 2026 →
+  YEAR 24 · DAY 87). **Why:** it's a fixed, offline computation — no network, no app data.
+  Lives in `src/personalEdition.js`. **Trade-off:** the birthday is a constant in code (correct
+  for the single owner); not user-configurable (single-user app, never needs to be).
+- **[City + weather are pulled LIVE now — not a placeholder]** — The owner asked to wire real
+  data instead of the mock's hardcoded "Delft / 27°". Uses two **free, no-key, HTTPS** services:
+  **ipapi.co** (approximate city + lat/lon from the connection, no permission prompt) →
+  **Open-Meteo** (current temp + WMO condition code). Sealed in `src/useWeather.js`; refreshes
+  every 30 min; on any failure it renders no weather rather than guessing. **Why free/no-key:**
+  honours the "free tiers only" guardrail. **Trade-off:** IP-based location is silent but only
+  city-accurate (fine for a label); a GPS-accurate opt-in could be a later toggle.
+- **[Weather dot stays on-palette]** — The mockup's ochre condition dot becomes **terracotta
+  (`--accent`) when sunny/clear, muted-grey (`--ink-muted`) otherwise**. **Why:** the build rule
+  is "theme tokens only, no new colours"; the written rule overrides the mock's ochre.
+- **[Nav = centred, small-caps, ruled top+bottom; active item is terracotta]** — Per the mockup,
+  the active destination gets both terracotta text **and** a terracotta underline (the earlier
+  spec said underline only). **Why:** match the mockup; terracotta is already the accent token.
+- **[Today body goes full-width; Calendar + Settings do NOT]** — `.today` lost its `max-width:
+  1100px` centring and gained a 56px side frame. Only `.today` (Today-only CSS) changed; the
+  shared `.cal-wrap` was already full-width, and Settings keeps its own `max-width: 600px`.
+  Today's grid column also widened to `1.35fr` vs the side column's `1fr` (mockup proportion).
+  **Why:** the shared frame stays untouched, so each screen gets its own width pass later.
+- **[Day arrows = one fixed cluster]** — `‹` and `›` are wrapped together in a `.today-stepper`
+  pinned left of the day title, so the arrows never shift when the day name's length changes.
+  Day-flipping stays scoped to the **Today screen only**; the masthead dateline is always the
+  real now. **The shared header re-skin shows app-wide (Calendar + Settings too) — intended.**
+
 ## Phase 7 — sign-in is email + password; magic link retired (AUTH-1/AUTH-2, 2026-06-23)
 
 - **[Login = email + password, single-user, CLOSED]** — Replaced magic-link sign-in with

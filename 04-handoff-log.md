@@ -35,6 +35,51 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, DESK-1 — Today desktop re-skin (shared header + Today screen)
+WHAT CHANGED:
+- Rebuilt the **shared masthead** to match `today-mockup.html`: a small live dateline on the
+  left (`14:35 Tuesday` / `23 June 2026`), the LifeOS wordmark + `YEAR 24 · DAY 87` in the
+  centre, and **live** city-over-weather on the right. Dropped the old big clock, the topline,
+  the tagline, and the Settings nav subtitle. Nav is now centred small-caps, ruled top + bottom,
+  terracotta on the active item.
+- **City + weather are pulled live** (free, no-key: ipapi.co for the city, Open-Meteo for temp +
+  condition) — not the mock's hardcoded values.
+- **Today screen** goes full-width (comfortable 56px side frame); the `‹ ›` day arrows are pinned
+  together as one fixed cluster left of the day title, so they don't move when the day name
+  changes length. Deleted the "newspaper of one life" footer.
+FILES TOUCHED: `EditionHeader.jsx`, `editionHeader.css`, `personalEdition.js` (new),
+`useWeather.js` (new), `Today.jsx`, `today.css`, `LoggedIn.jsx`, `calendar.css`, plus the
+`today-mockup.html` spec. (Build passes; save point `2cf0810`.)
+HOW TO VERIFY: open the app (dev: http://localhost:5174/) on the Today screen and check the 7 changes:
+  1. The header spans the full window and Today's body is full-width with side breathing room.
+  2. Top-left: a two-line dateline — live `HH:MM` + weekday, then `D Month YYYY`. Watch the
+     minute tick over.
+  3. Centre: the blackletter "LifeOS" with `YEAR 24 · DAY 87` under it (no topline/tagline).
+  4. Top-right: your city on top with the temperature + condition under it (it'll pop in a
+     moment after the page loads, once the weather lookup returns).
+  5. Nav (Today / Calendar / Settings) is centred, small-caps, with a hairline above and below
+     and a terracotta underline on the current page.
+  6. The `‹ ›` arrows sit together just left of the day title. Click through several days
+     (e.g. to "Saturday", "Wednesday") — the arrows should NOT move as the name length changes.
+     "Back to today" appears when you're away from today.
+  7. No "LifeOS — the newspaper of one life" line at the bottom anymore.
+  Then click **Calendar** and **Settings** — their headers should look the same (new masthead +
+  nav) with no broken layout; their bodies are unchanged.
+KNOWN GAPS / RISKS:
+- The masthead re-skin is **shared**, so it now shows on Calendar + Settings too (intended).
+- Weather/location is IP-based: silent (no permission prompt) but only city-accurate, and it
+  needs internet — offline or if a lookup fails, the weather slot simply shows nothing.
+- `Topline.jsx` / `Folio.jsx` kit blocks are now unused (left in place, not deleted).
+- `Today.jsx` remains ~470 lines (pre-existing; this piece didn't grow it — splitting it is a
+  separate job, out of scope for a surgical re-skin).
+- Not yet deployed — this is a local save point only.
+NEXT: the live-wiring is done, so the next piece is the owner's call — likely the **Calendar**
+screen re-skin, or the **mobile Today** pass.
+FOR THE CHECKER: **this piece changes the SHARED header app-wide** — verify Calendar + Settings
+headers render with no layout break. Confirm the personal-edition math (YEAR 24 · DAY 87 on
+2026-06-23 from birthday 29 Mar 2002, birthday = Day 1). Confirm no schema / data-layer / drag-hook
+changes crept in (front-end only). Sanity-check the two live endpoints are free + key-less.
+
 ### 2026-06-23 — Phase 7, AUTH-2 — the cutover: magic link removed from the UI, email+password deployed
 ROADMAP MAPPING: **AUTH-2** (the cutover). PRECONDITION CHECK: I found AUTH-1 was **never deployed**
 (origin/main + the live Production deploy were both `fa3bfc2` = the old magic-link-only login), so

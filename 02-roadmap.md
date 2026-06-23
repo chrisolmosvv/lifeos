@@ -305,6 +305,18 @@ it rather than dig (see the Piece-1c decision).
   Settings swapped from the old `Categories`. NO schema change (`color` null=derived works). NO
   Today/All-Tasks/Calendar change. Save point `035bd49`. (Derived colours show in the manager
   only; wiring them into Today/All Tasks/the picker is a deliberate later change.)
+- ✅ **DESK-1 — Today desktop re-skin (front-end only).** Surgical re-skin of the **shared
+  header** + the **Today** screen to match `today-mockup.html`. Masthead → 3 columns: a live
+  `HH:MM Weekday` / `D Month YYYY` dateline (left, replaces the big clock), the LifeOS wordmark +
+  `YEAR {age} · DAY {n}` from birthday 29 Mar 2002 (centre; topline + tagline dropped), and
+  **live** city-over-weather (right). City + weather are pulled for real — free, no-key, HTTPS:
+  **ipapi.co** (city/coords) + **Open-Meteo** (temp + condition), sealed in `src/useWeather.js`;
+  the personal-edition + dateline maths are pure (no network) in `src/personalEdition.js`. Nav →
+  centred small-caps, ruled top+bottom, terracotta on the active item (Settings subtitle dropped).
+  Today body → full-width (56px side frame); the `‹ ›` arrows pinned as **one fixed cluster** left
+  of the day title. Colophon footer deleted. **Shared header changes show on Calendar + Settings
+  too (intended; confirmed no layout break).** No schema / data-layer / drag-hook change. Save
+  point `2cf0810`. (Topline/Folio kit blocks now unused but left in place.)
 
 ### Phase 7 — DEPLOY + VERIFY STATE (updated 2026-06-23)
 ✅ **FULL STACK DEPLOYED (A3b deploy, 2026-06-23):** `origin/main` = `fa3bfc2`; Vercel Production
