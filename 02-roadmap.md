@@ -565,16 +565,20 @@ its own small, owner-verified piece.
   Marty's delete creates a real `archive_batches` row + stamps `archive_batch_id` like the
   app's `archiveTask`/`archiveEvent`, so it **shows in Archive + restores there** AND stays
   Marty-undoable (undo reverts rows + removes the empty batch). One archive system, not two.
-- 🔨 **M4 — multi-turn capture (built + deployed; AWAITING SQL run + checker review).** When
-  a capture is an event missing its time, Marty asks ONCE ("What time?") and saves on the
-  reply ("add lunch Friday" → "What time?" → "1pm" → Friday 1pm event, undoable). At most one
-  follow-up; complete captures save with no question; tasks almost never ask. State in a new
-  tiny table **`marty_pending`** (one row/owner, ~5-min expiry). Only the very next message
-  completes it (and only a time); a new capture/question/undo drops it cleanly. **Not done
-  until `db/12_marty_pending.sql` is run and the checker signs off.**
-- ⬜ M5 — category learning · ⬜ M6 — voice notes · ⬜ M7 — interactive brief ·
-  ⬜ M8 — daytime nudges · ⬜ M9 — hardening + retire test aids.
-  *(Numbering settled at M0–M9 — see `08-marty-upgrade.md`.)*
+- ✅ **M4 — multi-turn capture (done; SQL run + checker-approved).** Event missing its time →
+  Marty asks ONCE and saves on the reply. At most one follow-up; complete captures + plain
+  tasks save with no question. State in `marty_pending` (one row/owner, ~5-min expiry); only
+  the very next message completes it (and only a time); anything else drops it cleanly.
+- ✅ **M5 — multi-item capture (built + deployed; no schema change).** One message → several
+  items: all clear → saved together (undo pulls all); exactly ONE missing a time → **save the
+  clear ones now** and ask about just that one (parked question linked to the batch's action,
+  so the answer completes into the SAME action — undo still pulls the whole batch); 2+ missing
+  a time → save the clear ones and list which still need one (no multiple follow-ups). Reuses
+  M2 batch parsing + M4 pending — no new mechanism.
+- ⬜ M6 — category learning · ⬜ M7 — voice notes · ⬜ M8 — interactive brief ·
+  ⬜ M9 — daytime nudges · ⬜ M10 — hardening + retire test aids.
+  *(M5 = multi-item capture took the M5 slot, shifting the rest down one → track now M0–M10;
+  see `08-marty-upgrade.md`.)*
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -589,6 +593,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Marty track M5 — multi-item capture (built + deployed; no schema change).** One message →
+  several items with clear-save-ask-unclear. Confirmed the batch parsing already existed (M2) — extended it
+  rather than rebuilt. Rule: all clear → save together; exactly ONE missing a time → save the clear ones
+  immediately and ask about only that one; 2+ missing a time → save the clear ones and list which still
+  need a time (no multiple follow-ups — the simplest-safe choice the owner approved). The unclear-item
+  follow-up reuses M4's `marty_pending`; the parked draft now also stores the batch's create-action id, so
+  the answer is APPENDED to that action (via new `appendToAction`) — undo still pulls the whole batch as
+  one. `save.ts` grew `saveItemsTracked`/`appendToAction` (logCreate returns the action id); no second
+  pending mechanism, no schema change. Committed `5890cd6`; deployed both functions to Frankfurt. **NEXT:
+  owner runs the phone checks; then M6 — category learning.** (M5 = multi-item capture shifted the later
+  phases down one → track now M0–M10.)
 - **2026-06-23 — Marty track M4 — multi-turn capture (built + deployed; AWAITING SQL + checker).** First
   time the bot remembers across two messages. When a capture is an event missing its time, Marty asks once
   ("What time?") and completes on the reply. Owner-approved the storage decision up front: a tiny new table

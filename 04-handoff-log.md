@@ -35,6 +35,43 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M5 — multi-item capture (save clear, ask the one unclear). No schema change.
+WHAT CHANGED:
+- One message → several items, with clear-save-ask-unclear. The batch PARSING already existed (built in M2
+  to prove batch-undo); M5 added the routing rule + made it cooperate with M4's single follow-up.
+- All clear → saved together, confirmed in one message; "undo" pulls all, "undo <name>" pulls one.
+- Exactly ONE item missing its time → the clear ones are saved IMMEDIATELY, and Marty asks about only that
+  one (reusing M4's pending). The parked question remembers the batch's create-action id, so the answer is
+  APPENDED to that action → the whole batch (the up-front items + the completed one) still undoes as ONE.
+- 2+ missing a time → save the clear ones and LIST which still need a time (no multiple follow-ups — owner
+  approved this as the simplest safe choice).
+FILES TOUCHED: `telegram/save.ts` (logCreate returns the action id; new `saveItemsTracked` + `appendToAction`),
+`telegram/pending.ts` (parked draft now also stores `batchActionId`; `completePending` appends to the batch
+action or saves on its own), `telegram/route.ts` (the M5 capture-branch split). No `src/`. **No schema** —
+reuses M2's `marty_actions` + M4's `marty_pending`. All files <250. Committed `5890cd6`; deployed both
+functions to Frankfurt (telegram changed; brief redeployed unchanged for parity).
+HOW TO VERIFY (owner, phone + Mac):
+  1. **All-clear batch:** text **"buy milk, call plumber, dentist Thursday 3pm"** → "Saved 3 items: …" →
+     all 3 in the app → **"undo"** → all 3 removed together.
+  2. **Save-clear-ask-unclear:** text **"buy milk, lunch with Sarah Friday"** (lunch is an event with no
+     time) → Marty saves milk and asks only **"What time is 'lunch with Sarah' on Fri …?"** → reply
+     **"1pm"** → lunch saved Friday 1pm. On the Mac both are there. Then **"undo"** → BOTH go together
+     (they're one batch). (Note: whether a given phrase needs a time is the AI's judgement — a clear event
+     like "lunch"/"dinner"/"meeting" reliably asks; "call the dentist" may save as a plain to-do, which is
+     also correct.)
+  3. **No regressions:** **"dentist Friday 3pm"** → saved straight, no question. **"buy milk"** → saved
+     straight, no question. **"add lunch Friday"** (M4 single follow-up) → asks once → "1pm" → saved.
+  4. **"undo <name>" from a batch:** after check 1, re-add the 3, then **"undo dentist"** → only the dentist
+     goes; milk + plumber remain (check on Mac).
+KNOWN GAPS / RISKS:
+- "needs a time" is the AI's call; a borderline phrase ("call the dentist") may save as a to-do rather than
+  ask — by design (don't over-ask on to-dos). Use a clear event to see the follow-up.
+- 2+ unclear items aren't parked — the owner re-sends each with a time. Intentional.
+NEXT: owner runs the 4 checks. Then **M6 — category learning**. (No checker gate — no schema change.)
+FOR THE CHECKER (optional, no schema): confirm a follow-up-completed item lands in the SAME create action
+(undo pulls the whole batch); that "undo <name>" still isolates one item; that single-item capture + M4's
+single follow-up are unchanged.
+
 ### 2026-06-23 — Marty track M4 — multi-turn capture. ⚠️ SCHEMA CHANGE — CHECKER-GATED, not done yet.
 WHAT CHANGED:
 - Marty can now finish a capture over TWO messages when the ONE key detail is missing. The case: an event

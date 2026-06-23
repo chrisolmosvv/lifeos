@@ -91,37 +91,47 @@ verify, and its own decision entry when we actually build it. The order may shif
   the app's restore). No schema change — reuses the existing archive machinery; no second
   parallel "archived" state.
 
-- **M4 — Multi-turn capture.** *(built + deployed — awaiting SQL run + checker review.)*
+- **M4 — Multi-turn capture.** *(done — SQL run, checker-approved.)*
   When a capture is missing the ONE key detail (an event with no time), Marty asks **once**
   ("What time?") and completes on the reply: "add lunch Friday" → "What time?" → "1pm" →
   saved as a Friday 1pm event (Inbox, undoable). The discipline: **at most one** follow-up,
   only when the missing thing genuinely blocks a sensible save (tasks almost never ask);
-  a complete capture saves with no question. State lives in a tiny new table
-  **`marty_pending`** (one row per owner, ~5-min expiry) — **only the very next message**
-  can complete it, and only if it's actually a time; a new capture / question / undo drops
-  the parked question cleanly. First time the bot remembers across messages.
+  a complete capture saves with no question. State lives in a tiny table **`marty_pending`**
+  (one row per owner, ~5-min expiry) — **only the very next message** can complete it, and
+  only if it's actually a time; a new capture / question / undo drops the parked question
+  cleanly. First time the bot remembers across messages.
 
-- **M5 — Category learning.** Instead of everything landing in **Inbox**, Marty
+- **M5 — Multi-item capture.** *(built + deployed; no schema change.)* One message → several
+  items with the clear-save-ask-unclear rule. All clear → save together, confirmed in one
+  message ("buy milk, call plumber, dentist Thursday 3pm" → 3 saved, undo pulls all 3).
+  When exactly ONE item is missing its time → **save the clear ones immediately** and ask
+  about only that one (reusing M4's pending), linking the question to the batch's action so
+  the answer completes into the SAME action (undo still pulls the whole batch). When 2+ are
+  missing a time → save the clear ones and **list which still need a time** (never fire
+  multiple follow-ups). Reuses M2's batch parsing + M4's pending — no new mechanism.
+
+- **M6 — Category learning.** Instead of everything landing in **Inbox**, Marty
   suggests/uses the right category, learning from how you file things.
 
-- **M6 — Voice notes.** A Telegram voice message → transcribed → straight into the
+- **M7 — Voice notes.** A Telegram voice message → transcribed → straight into the
   capture path. (Today non-text messages are silently dropped.)
 
-- **M7 — The interactive brief.** Reply to the 7am brief to act on it — tick a
+- **M8 — The interactive brief.** Reply to the 7am brief to act on it — tick a
   nudge done, reschedule a forgotten task, accept a free-window offer — by chat.
 
-- **M8 — Daytime nudges.** A gentle, reserved midday check-in (the same
+- **M9 — Daytime nudges.** A gentle, reserved midday check-in (the same
   "proactive engagement" idea as the brief, but during the day), built on the same
   safety rails: never spammy, never invents work.
 
-- **M9 — Hardening + retire the test scaffolding.** Remove the temporary aids
+- **M10 — Hardening + retire the test scaffolding.** Remove the temporary aids
   ("brief test" 0-day threshold, the brief's `force` gate, the every-3-min test
   job) once the real features make them unnecessary; tighten and tidy.
 
-> **Numbering note:** M1 merged the original "router" + "questions" sketch into one
-> phase; M2 then became the **undo foundation** (inserted before edit/delete on purpose).
-> Net effect: edit/delete/move moved to **M3**, and the track is back to **M0–M9**. The
-> exact shape past M3 is still open.
+> **Numbering note:** the track has grown as phases were defined session by session.
+> M1 merged "router" + "questions"; M2 became the **undo foundation** (before edit/delete);
+> M3.5 reconciled delete with Archive; **M5 became multi-item capture**, pushing category
+> learning → M6, voice → M7, interactive brief → M8, daytime nudges → M9, hardening → M10.
+> Track now runs **M0–M10**; the exact shape past M6 is still open.
 
 ---
 

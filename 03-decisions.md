@@ -9,7 +9,28 @@
 
 ---
 
-## Marty M4 — multi-turn capture; pending state in a tiny new table, not in-memory (2026-06-23)
+## Marty M5 — multi-item capture: save the clear ones, ask about only the one unclear (2026-06-23)
+
+- **[Don't block a batch on one ambiguous item — save the clear ones immediately, then ask about the one
+  unclear]** — when most items are savable and exactly one is an event missing its time, the clear items
+  are saved at once and Marty asks only about that one. **Why:** the value (capturing several things fast)
+  shouldn't be held hostage to one missing detail. **Trade-off:** none worth noting; matches the M4
+  discipline of at-most-one follow-up.
+- **[2+ unclear → save the clear ones and LIST which need a time; never fire multiple follow-ups]** — owner
+  confirmed this as the simplest safe choice. **Why:** a chain of follow-ups would be an interrogation and
+  needs multi-slot pending state. Listing them lets the owner re-send each with a time. **Trade-off:** the
+  owner re-types the unclear ones rather than answering inline — accepted for simplicity.
+- **[The follow-up completes into the SAME batch action, so undo still pulls the whole batch]** — the clear
+  items are saved as one create action; the parked question stores that action's id; when answered, the
+  completed item is APPENDED to that action (new `appendToAction`) rather than logged as a new one. **Why:**
+  the spec requires "a batch where one item was completed via a follow-up still undoes as one logical
+  action." `undo` / `undo <name>` grammar is unchanged. **Trade-off:** `save.ts` exposes the action id
+  (`saveItemsTracked`) and an append path; if the batch was already undone before the answer, the completed
+  item falls back to its own action so it stays undoable.
+- **[Reused M4's pending — no second mechanism, no schema change]** — the only addition is storing
+  `batchActionId` inside the existing `marty_pending.draft` JSON. Confirmed: reuses M2's action log + M4's
+  pending table; no `db/` change. The batch parsing itself already existed (built in M2 to prove
+  batch-undo) — M5 extended the routing, it did not rebuild parsing.
 
 - **[Pending capture lives in a new table `marty_pending`, NOT in function memory]** — the owner was asked
   to decide up front and chose the table. **Why:** edge functions are short-lived and can restart between
