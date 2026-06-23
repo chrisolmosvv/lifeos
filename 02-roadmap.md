@@ -290,17 +290,17 @@ it rather than dig (see the Piece-1c decision).
   delete behaviour** (re-parent up vs block vs delete subtree). No seeded tree — start is
   just Inbox.
 
-### Phase 7 — DEPLOY STATE (updated by Piece DV1)
-✅ **2026-06-23 (DV1): Phase 7 is now DEPLOYED to production.** `origin/main` = `df65a20`; the
-Vercel Production build succeeded (● Ready) and serves the rebuild (Today + All Tasks). Production
-env confirmed → **Frankfurt** (`cntlptuacsujbdtwvbis`), matching the live T3/T7 schema. Rollback
-target if needed: the prior Production deployment `lifeos-co8d0w5a4-…` (ref `3ff8a68`, Phase-6) —
-"Promote to Production" in Vercel (the DB stays as-is; additive supersets).
-⚠️ **Still pending: owner verification.** Claude Code can't test behind the magic-link login, and
-the `*.vercel.app` URLs are behind Vercel Deployment Protection (so no anonymous smoke-load). **No
-Phase-7 piece is owner-verified on Mac+phone or checker-reviewed yet** (only Phases 4/5/6 are). The
-owner's verification checklist is in the DV1 handoff/report; each confirmed item flips that piece
-UNKNOWN → owner-verified → checker. (Earlier "nothing deployed" note superseded by this.)
+### Phase 7 — DEPLOY + VERIFY STATE (updated 2026-06-23)
+✅ **DEPLOYED (DV1):** `origin/main` = `df65a20`; Vercel Production build succeeded (● Ready),
+serving the rebuild (Today + All Tasks); production env → **Frankfurt** (`cntlptuacsujbdtwvbis`),
+matching the live T3/T7 schema. Rollback if ever needed: promote the prior Production deployment
+`lifeos-co8d0w5a4-…` (ref `3ff8a68`, Phase-6) in Vercel (the DB stays as-is; additive supersets).
+✅ **OWNER-VERIFIED & APPROVED (Mac + phone):** the owner tested the live deploy and approved it —
+**T1, T4, T5, T6, T7, T8, T9, T11 are owner-verified** (drag on Mac mouse; phone = non-drag, by
+design), and **Calendar + Settings confirmed unchanged (no regression).** The Today + All Tasks
+rebuild is **done, live, and accepted.** (Supersedes the earlier "owner verification pending"
+note.) Still OPEN/future (not part of this approval): colour-branch model, parent-delete, masthead
+flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
 
 ### Phase 7 — remaining backlog (after Today + All Tasks; order is a guide, owner sets it)
 - ⬜ **Deploy Phase 7** — push `main` so Today + All Tasks reach the live site / phone, then
@@ -331,6 +331,15 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7 — Today + All Tasks rebuild OWNER-VERIFIED & APPROVED.** The owner tested
+  the live production deploy (`df65a20`, Frankfurt) on **Mac and phone** and approved it. T1 / T4 /
+  T5 / T6 / T7 / T8 / T9 / T11 are now **owner-verified** (drag is Mac-mouse only by design); auth
+  works and **Calendar + Settings have no regression**. The desktop Today rebuild and the All Tasks
+  inventory screen are **done, live, and accepted** — the first Phase-7 work the owner has on the
+  phone. NO code/schema change in this update (docs only). **NEXT: the remaining Phase-7 backlog —
+  the Calendar re-skin-vs-rebuild decision, then Settings, T13 category manager, T10 recurring
+  events, mobile Today, mobile All Tasks, and the T12 trims; plus the open colour-branch /
+  parent-delete / masthead-flip questions when their pieces come up.**
 - **2026-06-23 — Phase 7, Piece D2 (docs only) — brain-doc sync + verification stock-take.** Made
   the docs match reality. **Headline truth: nothing in Phase 7 is pushed/deployed** (local main
   22 ahead of origin; live site still Phase-6 front-end), **but the T3/T7 schema is live on the

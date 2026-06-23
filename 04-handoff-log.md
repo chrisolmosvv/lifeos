@@ -35,6 +35,35 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7 — Today + All Tasks rebuild OWNER-VERIFIED & APPROVED (on Mac + phone)
+The owner tested the live deploy (`df65a20`, production, Frankfurt) and **approved it**. This
+flips the DV1 checklist pieces from UNKNOWN/pending → **owner-verified**. Updated state:
+
+| Piece | Built + deployed | Owner-verified (Mac + phone) | Approved | Schema |
+|---|---|---|---|---|
+| T1 header | ✅ live | ✅ | ✅ | — |
+| T4 Today display (R1) | ✅ live | ✅ | ✅ | — |
+| T3 category depth | ✅ live DB | ✅ (via the screens that use it) | ✅ | ✅ live (Frankfurt) |
+| T7 status pill | ✅ live | ✅ (writes persist on live DB) | ✅ | ✅ live (Frankfurt) |
+| T6 form / picker / delete-undo | ✅ live | ✅ | ✅ | — |
+| T5 grid interactions | ✅ live | ✅ (Mac mouse; phone = non-drag, by design) | ✅ | — |
+| T8 date arrows | ✅ live | ✅ (incl. the day-leak check) | ✅ | — |
+| T11 All Tasks | ✅ live | ✅ | ✅ | — |
+| T9 delete+undo (in T6) | ✅ live | ✅ | ✅ | — |
+ALSO CONFIRMED by the owner: auth/login still works; **Calendar + Settings behave exactly as
+Phase 6** (no regression). So the intentional duplication (TodayForm vs the shared panels;
+useTodayGrid vs the shared drag hooks) is verified to NOT have disturbed Calendar.
+STILL OPEN (unchanged by this approval — they're future work, not part of what was tested):
+the colour-branch model and parent-delete behaviour (→ Settings manager T13), and whether to
+flip the masthead folio to the viewed day (→ a later shared-header piece). Carried-forward gaps
+also stand: subtasks not yet surfaced in the new UI; Calendar/Settings still on the old look
+(their own re-skin-vs-rebuild decisions); the Supabase Frankfurt-token tightening; the T12
+parked items.
+CHECKER: owner approval recorded here; no separate checker entry was logged (the owner is the
+final approver). NO code/schema/data change in this update — docs only.
+NEXT: the remaining Phase-7 backlog — Calendar (re-skin-vs-rebuild decision), Settings, T13
+category manager, T10 recurring events, mobile Today, mobile All Tasks, T12 trims.
+
 ### 2026-06-23 — Phase 7, Piece DV1 — FIRST Phase-7 deploy to production (deploy + smoke-check; no code/schema)
 WHAT HAPPENED: pushed the 23 unpushed Phase-7 commits to `origin/main`; Vercel auto-built and
 deployed **production**. This is the FIRST time any Phase-7 work is live — unlike every prior
