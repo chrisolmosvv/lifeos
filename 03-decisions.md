@@ -9,6 +9,31 @@
 
 ---
 
+## Phase 7 — masthead vs daybar; reaffirmed open questions (owner, LOCKED 2026-06-23, Piece D2)
+
+- **[The shared masthead/folio stays the REAL-today edition; Today's viewed day shows in
+  Today's own daybar — not the masthead]** — On Today, the date arrows (T8) change a
+  *viewed* day. That viewed day is shown in **Today's own daybar** (weekday title + date +
+  "Back to today") and the tasks-module title — **not** in the shared masthead folio, which
+  stays the real-today edition line. **Why:** the masthead/folio is the **shared app header**
+  rendered on Calendar and Settings too; making it reflect Today's viewed day would mean
+  editing the shared header and lifting Today's state into the shell — a scope-and-risk breach
+  of the Phase-7 "don't disturb the other screens / don't restyle the shared header" rule. The
+  newspaper metaphor still holds: the masthead is *today's* edition; you flip to another day's
+  **page** within it, and "Back to today" makes the return obvious. **Trade-off:** the literal
+  locked-spec line "the folio date reflects the viewed day" is not met at the masthead; it's
+  met in Today's own daybar instead.
+- **[STILL OPEN — flipping the masthead itself to the viewed day]** — Whether the masthead
+  folio should *also* flip to the viewed day is **left open** for the owner. If wanted, it is
+  its **own small shared-header piece** (thread a viewed-day prop through the header, defaulted
+  to today so Calendar/Settings are unchanged) — not done silently inside a Today piece.
+- **Reaffirmed still-OPEN (unchanged, see Piece D1 above — recorded here so they aren't lost):**
+  the **colour-branch model** (how a sub-category's colour derives: inherit / shade / own;
+  current behaviour = each category's own stored colour as-is) and the **parent-delete
+  behaviour** (T3 left the FK `ON DELETE CASCADE` + the Phase-2 re-parent-up trigger; intended
+  UX undecided). Both belong to the **Settings category manager (T13)** and must be decided
+  before sub-category colours render or delete is wired.
+
 ## Phase 7 — category decisions (owner, LOCKED 2026-06-23, Piece D1)
 
 > Several category calls were made in planning but never written down, so the docs and

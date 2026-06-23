@@ -35,6 +35,65 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Piece D2 — brain-doc sync + verification-state stock-take (DOCS ONLY)
+WHY: a run of pieces was built faster than the docs captured the *state*. This entry makes the
+honest "built vs verified vs deployed vs checked" picture explicit. No code/schema/deploy.
+
+THE BIG FACT — NOTHING IN PHASE 7 IS PUSHED OR DEPLOYED. Local `main` is **22 commits ahead of
+`origin/main`**. The live Vercel site still runs the **Phase-6 front-end**. ⚠️ BUT the **T3 and
+T7 schema changes were applied directly to the live Frankfurt DB** — so the **database is ahead
+of the deployed front-end**: the live DB already allows `status='in_progress'` and 3-level
+categories, while the deployed (old) front-end only ever writes `open`/`done` and single-level
+filing. No breakage (the schema changes are supersets), but the deployed app does NOT yet have
+any Phase-7 UI. To put Phase 7 on the phone, the branch must be **pushed** (Vercel deploys on
+push) — not done in any piece so far.
+
+VERIFICATION STATE (as of 2026-06-23; "—" = n/a; UNKNOWN = not confirmable from repo/log):
+| Piece | Built + committed | Pushed / Deployed | Owner-verified (Mac) | Owner-verified (phone) | Checker reviewed | Schema |
+|---|---|---|---|---|---|---|
+| T1 header | ✅ `3f0492c` | ❌ no | ✅ per owner (D2) — not in log | ❌ (not deployed) | ❌ no | — |
+| T4 display (R1) | ✅ `53d4a4a` | ❌ no | ✅ per owner (D2) — not in log | ❌ | ❌ no | — |
+| T3 category depth | ✅ `1a1ff75` | ❌ (front-end n/a) | — (schema) | — | ❌ not recorded | ✅ LIVE on Frankfurt; self-verified (proof rolled back) |
+| T7 status pill | ✅ `fcf2f4f` | ❌ no | UNKNOWN | ❌ | ❌ not recorded | ✅ LIVE on Frankfurt; self-verified |
+| T6 form/picker/delete | ✅ `059d740` | ❌ no | UNKNOWN | ❌ | ❌ no | — |
+| T5 grid interactions | ✅ `a317487` | ❌ no | UNKNOWN (build+logic only; drag not run) | ❌ | ❌ no | — |
+| T8 date arrows | ✅ `030273e` | ❌ no | UNKNOWN | ❌ | ❌ no | — |
+| T11 All Tasks | ✅ `556663c` | ❌ no | UNKNOWN | ❌ | ❌ no | — |
+HONEST NOTE: the prior handoff log records owner-verification ONLY for Phases 4/5/6 — there is
+**no logged owner-verification for any Phase-7 piece**, and **no checker-review confirmation
+anywhere** in the log. The owner's D2 instruction states T1/T4 are owner-verified, so they're
+recorded as Mac-verified per the owner; everything else is UNKNOWN/not-yet, and phone-verify is
+impossible until deploy.
+
+CARRIED-FORWARD GAPS (also reflected in the roadmap):
+- **Subtasks** exist in the data (`tasks.parent_task_id`) but are **not surfaced** in the new
+  Today / All Tasks UI (an R1 rebuild gap — the old subtask row/expansion wasn't rebuilt).
+  Surfacing TBD by the owner.
+- **Intentional duplication to converge when Calendar is rebuilt:** Today's `TodayForm` vs
+  Calendar's shared `TaskPanel`/`EventPanel`; and `useTodayGrid` vs Calendar's shared
+  `useEventDrag`/`useScheduleDrag`.
+- **Supabase access:** the management token reaches the OLD **Ireland** project; **Frankfurt**
+  read/write access depended on a **swapped token** (used per-piece for T3/T7). Worth tightening
+  (a stable, correctly-scoped Frankfurt token) — standing item.
+- **Parked audit items for T12:** the temporary "brief test" trigger word (Phase 6) still live;
+  duplicated timezone logic (Phase 6, 6b); any leftover/now-unused verify UIs and old Today
+  files (DayTimeline / TaskBlock / TaskRow / SomedayDrawer / useScheduleDrag).
+
+DISAGREEMENTS SURFACED (docs vs reality — the point of this piece):
+1. **All Tasks spec** — Part 1 asked to add it, but it was **already recorded** in 07-ux-flows.md
+   in T11 ("### All Tasks — the inventory screen (LOCKED…)"), and it already covers every Part-1
+   bullet → **no new section added** (would duplicate).
+2. **Colour-branch + parent-delete OPEN questions** — already recorded in **Piece D1**; D2 only
+   **reaffirms** them (pointer) and adds the genuinely-new **masthead-vs-daybar** decision.
+3. **Deploy/verify** — handoff/roadmap had been saying "committed locally only" per piece; this
+   entry makes the aggregate explicit (22 ahead, 0 deployed) and flags the **DB-ahead-of-
+   front-end** state, which no single piece called out.
+FILES TOUCHED (docs only): 03-decisions.md (D2 masthead decision + reaffirm), 04-handoff-log.md
+(this entry), 02-roadmap.md (true-up + backlog + deploy-state note). 07-ux-flows.md UNCHANGED
+(All Tasks spec already present). No src/, no schema, no data, no deploy.
+READY TO PULL IN AS THE BRAIN: yes — the brain docs now match the repo reality (statuses,
+decisions, gaps, and the not-yet-deployed truth).
+
 ### 2026-06-23 — Phase 7, T11 — the All Tasks inventory screen (by-category drill-in)
 ROADMAP MAPPING: **T11** (All Tasks inventory screen). No overlap with other T-steps.
 REUSED AS-IS (no edits — scope rule A honoured): **`TodayTaskRow`** (the task row), the

@@ -290,6 +290,30 @@ it rather than dig (see the Piece-1c decision).
   delete behaviour** (re-parent up vs block vs delete subtree). No seeded tree — start is
   just Inbox.
 
+### Phase 7 — DEPLOY STATE (true-up, Piece D2)
+⚠️ **As of 2026-06-23, NOTHING in Phase 7 is pushed or deployed** — local `main` is **22
+commits ahead of `origin/main`**; the live site still runs the **Phase-6 front-end**. The **T3
++ T7 schema changes ARE live on the Frankfurt DB** (applied directly), so the **database is
+ahead of the deployed front-end** (harmless — the changes are supersets — but the phone has no
+Phase-7 UI until a **push/deploy**). No Phase-7 piece has a **logged owner-verification** (only
+Phases 4/5/6 do) or a **checker review** yet. Full per-piece table: see the D2 handoff entry.
+
+### Phase 7 — remaining backlog (after Today + All Tasks; order is a guide, owner sets it)
+- ⬜ **Deploy Phase 7** — push `main` so Today + All Tasks reach the live site / phone, then
+  the owner verifies on Mac **and** phone (the first real phone check of the rebuild).
+- ⬜ **Calendar screen** — its own **re-skin-vs-rebuild** decision (pending, owner's call); on
+  rebuild, the intentional duplication converges (`TodayForm` ↔ panels; `useTodayGrid` ↔ shared
+  drag hooks).
+- ⬜ **Settings screen** — bring it up to the broadsheet look (incl. account + the entry to T13).
+- ⬜ **T13 — Settings category manager** (above) — gated by the two OPEN questions.
+- ⬜ **T10 — Recurring events** *(large)* — recurrence + "this one or all?".
+- ⬜ **Mobile Today** — its own spec (desktop Today is what's built).
+- ⬜ **Mobile All Tasks** — its own pass (desktop-first only so far).
+- ⬜ **T12 — Conservative trims** (above) — provably-unused old Today files + parked Phase-6
+  audit items (the "brief test" trigger word; the 6b timezone duplication).
+- ⬜ **Subtasks in the new UI** — `tasks.parent_task_id` exists but isn't surfaced post-rebuild
+  (R1 gap); owner decides how/whether to bring subtasks back.
+
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
 **Done when:** V1 done, foundations quietly logging for the future.
@@ -303,6 +327,19 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Piece D2 (docs only) — brain-doc sync + verification stock-take.** Made
+  the docs match reality. **Headline truth: nothing in Phase 7 is pushed/deployed** (local main
+  22 ahead of origin; live site still Phase-6 front-end), **but the T3/T7 schema is live on the
+  Frankfurt DB** — so the DB is ahead of the deployed front-end (harmless superset). **No Phase-7
+  piece has a logged owner-verification or checker review** (only Phases 4/5/6 do); T1/T4 recorded
+  as Mac-verified per the owner's D2 statement, the rest UNKNOWN/not-yet, phone-verify blocked
+  until deploy. Recorded the **masthead-vs-daybar** decision (+ masthead-flip OPEN) in
+  03-decisions.md; reaffirmed the colour-branch + parent-delete OPEN questions (already in D1).
+  Added a **DEPLOY STATE** note + a **remaining Phase-7 backlog** (deploy → Calendar decision →
+  Settings → T13 → T10 → mobile Today → mobile All Tasks → T12 → subtasks) and the carried-forward
+  gaps. **Did NOT** re-add the All Tasks spec (already in 07-ux-flows.md from T11) or duplicate the
+  D1 open questions. Docs only. **NEXT (owner's call): push/deploy Phase 7 for a real Mac+phone
+  verify, then the Calendar re-skin-vs-rebuild decision; or T10/T13.**
 - **2026-06-23 — Phase 7, T11 DONE — the All Tasks inventory screen.** A new view that browses
   the whole backlog **by category**: top level lists Inbox first then top categories (each with
   a whole-sub-tree active count); drill in (breadcrumb to climb) to see a category's own tasks
