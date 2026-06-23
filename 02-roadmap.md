@@ -559,6 +559,12 @@ its own small, owner-verified piece.
   FIRST, then applies surgically (owner-filtered). **Piece 0:** bare-date fix (a bare
   month-day never resolves to the past — Gemini rule + code guard). Tidied the M2 checker
   nit (owner filter on the log's own deletes).
+- ✅ **M3.5 — Marty's delete reconciled with the app's Archive (no schema change).** M3's
+  delete left `archive_batch_id` NULL, so a text-deleted item never showed in the app's
+  Archive screen (recoverable only by Marty's one-level undo, then lost to both). Now
+  Marty's delete creates a real `archive_batches` row + stamps `archive_batch_id` like the
+  app's `archiveTask`/`archiveEvent`, so it **shows in Archive + restores there** AND stays
+  Marty-undoable (undo reverts rows + removes the empty batch). One archive system, not two.
 - ⬜ M4 — multi-turn capture · ⬜ M5 — category learning · ⬜ M6 — voice notes ·
   ⬜ M7 — interactive brief · ⬜ M8 — daytime nudges · ⬜ M9 — hardening + retire test
   aids. *(Numbering settled at M0–M9 — see `08-marty-upgrade.md`.)*
@@ -576,6 +582,16 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Marty track M3.5 — reconcile Marty's delete with the app's Archive (no schema change).**
+  Closed a data-loss gap: M3's text-delete archived an item (set `archived_at`) but left `archive_batch_id`
+  NULL, so it never appeared in the app's Archive screen — recoverable only by Marty's one-level undo, then
+  lost to BOTH paths once another action moved past it. Read the app's `src/archive.js` to match its pattern
+  exactly: `opDelete` now creates an `archive_batches` row (label = title, source_type) and stamps
+  `archive_batch_id` on the row(s) + subtasks, like `archiveTask`/`archiveEvent`. So a text-deleted item now
+  shows in Archive and restores there, AND Marty's undo still reverts it exactly (now also deleting the
+  empty batch, like the app's restore). No second/parallel archive state. Backend only; no `src/` touched;
+  no schema change. Committed `f2edb88`; deployed both functions to Frankfurt. **NEXT: owner runs the 4
+  recovery checks; then M4 — multi-turn capture.** Don't start M4 until M3.5 verifies.
 - **2026-06-23 — Marty track M3 — edit + delete by chat (built + deployed, no schema change).** Marty can
   now CHANGE existing items, every change riding the M2 undo. Four ops: complete ("done X"), reschedule
   ("move X to Tuesday"), rename ("rename X to Y"), delete ("delete the 3pm"). New `find.ts` locates the

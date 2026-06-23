@@ -80,6 +80,17 @@ verify, and its own decision entry when we actually build it. The order may shif
   by a `bare_date` flag so "yesterday" is untouched). No schema change (M2's table held
   the room). The checker's M2 nit (owner filter on the log's own deletes) is tidied.
 
+- **M3.5 — Reconcile Marty's delete with the app's Archive.** *(built + deployed.)* Closed
+  a data-loss gap: M3's delete set `archived_at` but left `archive_batch_id` **null**, so a
+  text-deleted item never appeared in the app's **Archive screen** — recoverable only by
+  Marty's one-level undo, then lost to both paths. Now Marty's delete creates an
+  `archive_batches` row and stamps `archive_batch_id` on the row(s), **exactly like the
+  app's `archiveTask`/`archiveEvent`** (label = title, source_type, subtasks in the same
+  batch). So a text-deleted item **shows in the Archive screen and restores there**, AND
+  stays undoable via Marty (undo reverts the rows and removes the now-empty batch, matching
+  the app's restore). No schema change — reuses the existing archive machinery; no second
+  parallel "archived" state.
+
 - **M4 — Multi-turn capture.** When a capture is missing something (no date, an
   ambiguous time, no obvious category), Marty asks **one** short follow-up instead
   of guessing — and remembers the half-finished item until you answer. (Builds on the

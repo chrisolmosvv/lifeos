@@ -9,7 +9,28 @@
 
 ---
 
-## Marty M3 — edit/delete by chat; delete = ARCHIVE (not destroy); bare-date fix; act-when-sure/ask-when-not (2026-06-23)
+## Marty M3.5 — Marty's delete uses the app's archive_batches (one archive system, not two) (2026-06-23)
+
+- **[Marty's delete now creates a real archive_batch, exactly like the app — superseding M3's batch-less
+  archive]** — M3 set `archived_at` but left `archive_batch_id` NULL. **The drift:** the app's Archive
+  screen finds deleted items by their `archive_batch_id` (grouped under an `archive_batches` row), so a
+  batch-less Marty-archived row was invisible there — recoverable only by Marty's one-level undo, and once
+  another action moved past that, recoverable by NEITHER Marty nor Archive. A real data-loss gap and a
+  drift from the spine's "delete = archive into a restorable batch" rule. **The fix:** `opDelete` now
+  inserts an `archive_batches` row (label = item title, source_type = 'task'|'event') and stamps
+  `archive_batch_id` on the row(s) + active subtasks — byte-for-byte the shape `src/archive.js`
+  (`archiveTask`/`archiveEvent`) writes. So a text-deleted item shows in the Archive screen and restores
+  there, AND Marty's undo still reverts it exactly. **Why:** one archive system, two recovery paths, no
+  parallel "archived" state. **Trade-off:** none — it removes a special case and matches the app.
+- **[Marty's undo of a delete also removes the now-empty batch, matching the app's restore]** — after
+  reverting the rows (clearing `archived_at` + `archive_batch_id`), undo deletes the `archive_batches`
+  row, but ONLY once every item under that batch has been reverted (full undo, or the last item of a
+  partial `undo <name>`). **Why:** mirrors the app's `unarchiveBatch` (clear rows, drop batch) and avoids
+  leaving an empty batch in the Archive screen; the "only when empty" guard prevents the FK's ON DELETE
+  SET NULL from orphaning a still-archived sibling. **Trade-off:** a partial `undo <name>` of a multi-item
+  delete leaves the batch until its last item is restored — correct, not a bug.
+- **[No schema change]** — reuses `archive_batches` / `archived_at` / `archive_batch_id` and stores the
+  batch id inside the existing `marty_actions.items` JSONB. Confirmed: no `db/` change.
 
 - **[Marty's delete ARCHIVES the row (sets `archived_at`), it does not hard-delete]** — "delete X" sets
   `archived_at` (like the app's own delete) and undo clears it. **Why:** it restores **exactly** (the row

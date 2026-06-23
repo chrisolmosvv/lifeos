@@ -35,6 +35,47 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M3.5 — reconcile Marty's delete with the app's Archive. No schema change.
+THE DRIFT (what M3 did vs the app):
+- The app's delete (`src/archive.js`) creates an `archive_batches` row and stamps each deleted row with
+  that `archive_batch_id`; the Archive screen lists items BY their batch. **M3's Marty-delete set
+  `archived_at` but left `archive_batch_id` NULL** — no batch — so it was invisible in the Archive screen.
+  Recoverable only by Marty's one-level "undo"; once another action moved past it, recoverable by NEITHER
+  Marty nor Archive = a data-loss gap and a drift from the spine.
+WHAT CHANGED (the fix):
+- `opDelete` now creates an `archive_batches` row (label = item title, source_type = 'task'|'event') and
+  stamps `archive_batch_id` on the row(s) + active subtasks — the SAME shape `archiveTask`/`archiveEvent`
+  write. So a text-deleted item now **appears in the app's Archive screen and can be Restored there**.
+- Marty's "undo" of a delete still reverts the rows exactly (clears `archived_at` + `archive_batch_id`) AND
+  now removes the now-empty batch (only when fully reverted), matching the app's restore (`unarchiveBatch`).
+- Both recovery paths now catch a Marty-deleted item: the in-the-moment "undo" AND the Archive screen.
+FILES TOUCHED: `telegram/edit.ts` (opDelete creates+stamps the batch; commit returns ok so a failed delete
+cleans up its batch), `telegram/undo.ts` (removeBatches helper; batch removed on full undo / last partial).
+Read-only into `src/archive.js` to match the pattern (no `src/` edit). **No schema** (reuses
+archive_batches/archived_at/archive_batch_id; batch id stored in the existing marty_actions.items JSONB).
+Committed `f2edb88`; deployed both functions to Frankfurt.
+HOW TO VERIFY (owner — phone + Mac):
+  1. **Shows in Archive + restores there:** text **"delete the dentist"** (have a 'dentist' item) → it
+     disappears from the app → open **Settings → Archive** → it's listed as a batch → **Restore** → it's
+     back in the app.
+  2. **Marty's undo still works:** delete another item via Marty, then text **"undo"** immediately →
+     restored exactly (and it's gone from the Archive screen — the empty batch was cleaned up).
+  3. **THE GAP WE CLOSED — recoverable after moving past undo:** delete an item via Marty → then do ANOTHER
+     Marty action (e.g. add a task) so the one-level undo moves past the delete → open **Archive** → the
+     deleted item is STILL there as a batch → **Restore** brings it back. (Before M3.5 it would be lost.)
+  4. **App delete unchanged:** delete a task in the app itself → it archives + restores from Archive exactly
+     as before (we didn't touch `src/`).
+KNOWN GAPS / RISKS:
+- If you Restore a Marty-deleted item via the Archive screen (not via "undo"), the stale marty_actions
+  'delete' entry lingers; a later "undo" reaching it is a harmless no-op ("Restored…", already active).
+- A partial `undo <name>` of a multi-item delete (a task + subtasks) leaves the batch until its last item
+  is restored — intended.
+NEXT: owner runs the 4 checks (esp. #3, the closed gap). Then **M4 — multi-turn capture**. Don't start M4
+until M3.5 verifies. No checker gate (no schema change).
+FOR THE CHECKER (optional, no schema): confirm Marty's delete writes the same archive_batches/
+archive_batch_id shape as src/archive.js; that undo removes the batch only when fully reverted; that the
+app's own archive path is untouched.
+
 ### 2026-06-23 — Marty track M3 — edit + delete by chat (4 ops, all riding undo). No schema change.
 WHAT CHANGED:
 - Marty can now CHANGE existing items by text, and EVERY change rides the M2 undo. Four ops:
