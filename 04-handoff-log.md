@@ -57,8 +57,10 @@ risky for a lockout step.) So I made **NO config change** — the cutover is don
 it. ⚠️ This means magic link is gone from the app but the provider remains API-reachable (equivalent
 to the reset flow's email exposure for this single-user app). Flagged for the owner: a true
 provider-level magic-link disable isn't available via the Management API without breaking password.
-STEP 3 — DEPLOY: pushed local main → origin/main; Vercel Production built + deployed. (Details — hash,
-build status, URL — appended below after the push.)
+STEP 3 — DEPLOY: pushed local main → `origin/main = 7cd0a82`; Vercel Production build **success /
+Ready** at `lifeos-o03kr05xl-chrisolmosvvs-projects.vercel.app` (deployed commit = local main). This
+is the first deploy carrying AUTH-1 + SUB + AUTH-2 — so subtasks AND email+password login both went
+live with this push. (Env already confirmed → Frankfurt.)
 SAVE POINT (Step 0): **`e3348da`** — "Phase 7 AUTH-2 save point — before magic-link cutover."
 ROLLBACK LEVER (owner; not auto-done) — the email provider is still ON, so recovery is easy:
 - IMMEDIATE: the magic link/OTP provider is STILL enabled, so the Supabase dashboard can send a
