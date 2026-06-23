@@ -547,19 +547,21 @@ its own small, owner-verified piece.
   query path (`query.ts`, imports only `select` — no write code at all) answers three
   question types: **what's on [day]**, **what did I forget** (overdue + due today), **am
   I free [day/part]**. Plain-text answers; capture unchanged.
-- 🔨 **M2 — undo foundation (built + deployed; AWAITING SQL run + checker review).** New
-  table `marty_actions` (additive, owner-only RLS): one row = one logical action, JSONB
-  `items` holds 1+ items with room for prior-state (edit before-values / full deleted
-  row) so M3 needs no further schema change. Today only `kind='create'`. Undo grammar:
-  **"undo"** = whole last action (a multi-item capture is one action), **"undo <name>"**
-  = one item, ambiguous → ask. Capture now parses several items per message (to prove
-  batch undo). Surgical: spine rows deleted by id + owner filter only; hand-made app rows
-  never touched. **Not done until `db/11_marty_actions.sql` is run and the checker signs
-  off.** (Old `telegram_saves` superseded, left in place.)
-- ⬜ M3 — edit/delete/move by chat · ⬜ M4 — multi-turn capture · ⬜ M5 — category
-  learning · ⬜ M6 — voice notes · ⬜ M7 — interactive brief · ⬜ M8 — daytime nudges ·
-  ⬜ M9 — hardening + retire test aids. *(M2 = undo foundation was inserted before
-  edit/delete, which moved to M3 — see `08-marty-upgrade.md`.)*
+- ✅ **M2 — undo foundation (done; SQL run + checker-signed-off).** New table
+  `marty_actions`: one row = one action, JSONB `items` with room for prior-state. Undo
+  grammar: **"undo"** = whole last action, **"undo <name>"** = one item, ambiguous → ask.
+  Surgical + owner-only. (Old `telegram_saves` superseded, left in place.)
+- ✅ **M3 — edit + delete by chat (built + deployed, no schema change).** Four ops, each
+  riding the M2 undo: **complete** ("done X"), **reschedule** ("move X to Tuesday"),
+  **rename** ("rename X to Y"), **delete** ("delete the 3pm" = archive; undo restores
+  exactly). `find.ts` locates the target active-only and **acts on exactly one match,
+  asks when several, says so when none**. Each op logs prior state to `marty_actions`
+  FIRST, then applies surgically (owner-filtered). **Piece 0:** bare-date fix (a bare
+  month-day never resolves to the past — Gemini rule + code guard). Tidied the M2 checker
+  nit (owner filter on the log's own deletes).
+- ⬜ M4 — multi-turn capture · ⬜ M5 — category learning · ⬜ M6 — voice notes ·
+  ⬜ M7 — interactive brief · ⬜ M8 — daytime nudges · ⬜ M9 — hardening + retire test
+  aids. *(Numbering settled at M0–M9 — see `08-marty-upgrade.md`.)*
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -574,6 +576,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Marty track M3 — edit + delete by chat (built + deployed, no schema change).** Marty can
+  now CHANGE existing items, every change riding the M2 undo. Four ops: complete ("done X"), reschedule
+  ("move X to Tuesday"), rename ("rename X to Y"), delete ("delete the 3pm"). New `find.ts` locates the
+  target (active-only) and acts only on EXACTLY one match — asks when several, says so when none. Each op
+  logs prior state to `marty_actions` BEFORE changing (complete/reschedule/rename = `edit` action, undo
+  PATCHes before-values; delete = ARCHIVE, undo clears `archived_at` → restores exactly, cascades
+  subtasks). **Piece 0:** fixed the bare-date bug (a bare month-day never resolves to the past — Gemini
+  rule + a code guard scoped by a `bare_date` flag so "yesterday" is safe). Classifier gained an `edit`
+  kind (one call). Tidied the M2 checker nit (owner filter on the log's own deletes). Uses M2's table —
+  no schema change. Committed `a13613d`; deployed both functions to Frankfurt. **NEXT: owner runs the
+  per-op phone checks; then M4 — multi-turn capture.** Don't start M4 until M3 verifies.
 - **2026-06-23 — Marty track M2 — undo foundation (built + deployed; AWAITING SQL + checker).** Built the
   load-bearing mechanism to reverse anything Marty touches, BEFORE any edit/delete feature exists. New
   table `marty_actions` (`db/11_marty_actions.sql`) is a generalised action log: one row = one action,

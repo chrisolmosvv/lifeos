@@ -35,6 +35,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M3 — edit + delete by chat (4 ops, all riding undo). No schema change.
+WHAT CHANGED:
+- Marty can now CHANGE existing items by text, and EVERY change rides the M2 undo. Four ops:
+  **3a complete** ("done X"), **3b reschedule** ("move X to Tuesday"), **3c rename** ("rename X to Y"),
+  **3d delete** ("delete the 3pm").
+- **Piece 0 — bare-date fix (done first):** a bare month-day (e.g. "Jan 10") never resolves into the
+  past — a Gemini prompt rule (next upcoming occurrence; next year if this year's is past) PLUS a code
+  guard (`rollPastBareDateForward`), scoped by a `bare_date` flag so relative refs like "yesterday" are
+  never rolled forward.
+- **Finding the target** (`find.ts`): reads ACTIVE (archived_at IS NULL) tasks + events, matches by name
+  (exact, then contains) + optional time/date. **Acts only on EXACTLY one match; if several, names them
+  and asks; if none, says so.** Never edits the wrong row.
+- **Every op logs prior state to `marty_actions` BEFORE changing** (the `edit`/`delete` action types M2
+  built room for — no schema change). complete/reschedule/rename = `edit` (undo PATCHes before-values
+  back; the completed_at DB trigger keeps the finish time honest). **delete = ARCHIVE** (sets
+  `archived_at`; undo clears it → restores exactly, nothing destroyed; cascades to active subtasks).
+- Surgical + owner-filtered: every change is by row id + `user_id` filter. Hand-made app rows are never
+  in the log and are never touched (except an explicit undo of a Marty delete).
+- Tidied the **M2 checker nit**: the log's own deletes/updates in `undo.ts` now carry the owner filter too.
+FILES TOUCHED: **new** `telegram/find.ts`, `telegram/edit.ts`; edited `_shared/datetime.ts` (localYMD,
+localHM, addYearsYMD, rollPastBareDateForward), `telegram/intent.ts` (edit kind + fields),
+`understand.ts` (bare_date + guard), `undo.ts` (edit/delete reversal + owner filter), `route.ts` (edit
+dispatch). No `src/`. **No schema** (uses M2's `marty_actions`). All telegram files <250 lines (largest
+query.ts 179). Committed `a13613d`; **deployed both functions to Frankfurt** (telegram changed; brief
+redeployed unchanged for parity).
+HOW TO VERIFY (owner, on your phone; check each in the app on the Mac, then "undo"):
+  • **Bare-date (do first):** text **"taxes Jan 10"** (a date already past this year) → it should save
+    due **next** year's Jan 10, NOT show as overdue. Then **"what did I forget?"** → it must NOT list it.
+  • **3a complete:** add a task ("file report"); text **"done file report"** → marked done (greyed in app).
+    Text **"undo"** → back to not-done.
+  • **3b reschedule:** add an event ("dentist friday 3pm"); text **"move the dentist to Tuesday"** →
+    moved to Tuesday 3pm (check calendar). Text **"undo"** → back to Friday 3pm.
+  • **3c rename:** add ("call mum"); text **"rename call mum to call mum re flights"** → renamed. Text
+    **"undo"** → back to "call mum".
+  • **3d delete:** add ("gym 3pm"); text **"delete the 3pm"** → gone from the app. Text **"undo"** →
+    it's back exactly.
+  • **Ambiguity:** add two tasks both containing "report" ("morning report", "evening report"); text
+    **"delete report"** → Marty NAMES both and asks which — it does NOT delete either. Confirm in the app
+    nothing changed.
+KNOWN GAPS / RISKS:
+- A Marty-deleted item is archived (hidden) and restorable via Marty's "undo", but is NOT wrapped in an
+  app `archive_batch`, so it won't appear in the app's Archive screen (a possible later nicety).
+- "move X to 5pm" on a to-do that isn't time-blocked → Marty asks for a day (tasks carry a clock time
+  only once scheduled on the calendar).
+- Classifier now distinguishes add/ask/change/unclear — watch that a plain capture ("buy milk") still
+  classifies as capture (it should). "unclear" remains the safety net.
+NEXT: owner runs the per-op checks above. Once verified → **M4 — multi-turn capture**. Do NOT start M4
+until M3 verifies. (No checker gate this session — no schema change.)
+FOR THE CHECKER (optional, no schema): confirm find/edit are active-only + owner-filtered by id; that an
+edit/delete logs before-state first; that "delete" archives (never hard-deletes); that capture is
+unaffected.
+
 ### 2026-06-23 — Marty track M2 — undo FOUNDATION (load-bearing). ⚠️ SCHEMA CHANGE — CHECKER-GATED, not done yet
 WHAT CHANGED:
 - Built and proved the mechanism to **reverse anything Marty does**, BEFORE any edit/delete feature

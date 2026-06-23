@@ -9,7 +9,40 @@
 
 ---
 
-## Marty M2 — undo is a generalised action log (`marty_actions`), built before any edit/delete feature (2026-06-23)
+## Marty M3 — edit/delete by chat; delete = ARCHIVE (not destroy); bare-date fix; act-when-sure/ask-when-not (2026-06-23)
+
+- **[Marty's delete ARCHIVES the row (sets `archived_at`), it does not hard-delete]** — "delete X" sets
+  `archived_at` (like the app's own delete) and undo clears it. **Why:** it restores **exactly** (the row
+  is never destroyed, so all FKs/subtasks stay intact) and it honours the spine's "delete = archive, never
+  destroy" principle. A hard delete + re-insert couldn't restore exactly — `parent_task_id`/`category_id`
+  are `ON DELETE SET NULL`, so children would detach. **Trade-off:** this deviates from M2's originally
+  sketched "store the full prior row, restore by re-insert" — we store the prior archive-columns instead
+  and revert them, which is strictly safer. A Marty-deleted item is archived (hidden everywhere
+  active-only is read) and restorable via Marty's "undo"; it is **not** wrapped in an app `archive_batch`
+  (so it won't show in the app's Archive screen) — a deliberate simplification, a possible later nicety.
+  Deleting a task cascades to its active subtasks in the same action (matching the app).
+- **[complete/reschedule/rename are `edit` actions reverted by PATCHing before-values; the DB trigger keeps
+  completed_at honest]** — each op records only the columns it changes. Complete records just `status`
+  because the `tasks_sync_completed_at` trigger sets/clears `completed_at` from status — so reverting
+  status reverts the finish time automatically. **Trade-off:** none; minimal recorded state.
+- **[Prior state is logged BEFORE the change; nothing changes without a logged way back]** — `commit()`
+  inserts the `marty_actions` entry first; if that fails it changes nothing. **Why:** guarantees every
+  change is undoable. **Trade-off:** an apply that fails after logging leaves a log entry whose undo is a
+  harmless no-op — acceptable.
+- **[One item, or ask: act only on an exact single match]** — `find.ts` reads active-only candidates and
+  matches by name (exact, then contains) + optional time/date hints. Zero → "couldn't find"; one → act;
+  many → name them and ask. **Why:** never edit/delete the wrong row. **Trade-off:** the owner sometimes
+  has to disambiguate — correct for destructive ops.
+- **[Edit classification folded into the ONE intent classifier]** — the existing classify() call now also
+  returns `edit` + op + target/new fields, so an edit costs ONE Gemini call (no target row is parsed by a
+  second call). **Trade-off:** a larger classifier prompt; mitigated by temperature 0 + per-op examples,
+  with "unclear" still the safety net.
+- **[Bare-date fix — belt-and-suspenders, scoped so "yesterday" is safe]** — both Gemini prompts say a
+  bare month-day means the next upcoming occurrence (never the past), AND a code guard
+  (`rollPastBareDateForward`) rolls a past bare date forward a year. The guard runs ONLY when the model
+  flags the date `bare_date=true` (an absolute month-day with no year), so legitimate past relative refs
+  ("yesterday", "last Monday") are never rolled. **Why:** M3 lets you reschedule onto dates, so a past
+  bare date had to be impossible. **Trade-off:** one extra boolean field on the parse.
 
 - **[Undo foundation built FIRST, as its own phase, before edit/delete exists]** — M2 builds and proves the
   reversal mechanism on the only existing write (capture) before any edit/delete/move feature is added.
