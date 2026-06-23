@@ -9,6 +9,26 @@
 
 ---
 
+## Phase 7 — sign-in is email + password; magic link retired (AUTH-1/AUTH-2, 2026-06-23)
+
+- **[Login = email + password, single-user, CLOSED]** — Replaced magic-link sign-in with
+  **email + password** + a "Forgot password?" email reset (an in-app reset page sets the new
+  password). **Public sign-up disabled** (`disable_signup=true`) — only the owner's account
+  exists. No "create account" UI, ever. **Why:** a password is faster day-to-day than waiting
+  for a link email, and closed signup keeps it strictly single-user. **Safe two-step rollout:**
+  AUTH-1 added password + reset and **kept magic link** as the proven fallback; AUTH-2 did the
+  cutover only after the owner chose to proceed. Uses Supabase's own methods
+  (`signInWithPassword` / `resetPasswordForEmail` / `updateUser`) — no new auth layer.
+- **[Magic link removed at the UI level; the email provider stays ON as a backstop]** — There
+  is **no Supabase config flag to disable magic-link-only** — magic link/OTP shares the single
+  email provider with password, so disabling it would also break password + reset (**lockout**).
+  So the cutover (AUTH-2) removes magic link from the **app UI** and leaves the email provider
+  enabled. **Trade-off:** magic link is gone from the app but still technically API-reachable
+  (equivalent to the reset flow's email exposure for a single-user app) — and that residual
+  provider is the **recovery backstop** (the Supabase dashboard can re-send a login link or set
+  a password if password sign-in ever fails). A true provider-level magic-link disable would
+  need a Supabase change confirmed safe against password — not done.
+
 ## Phase 7 — the two open category questions, RESOLVED (T13, 2026-06-23)
 
 > These were left OPEN in D1/D2; the Settings category manager (T13) settles them.

@@ -146,6 +146,17 @@ commit (see 03-decisions.md). Styling is built as a small reusable component kit
 on the existing theme tokens.
 **Done when:** the app looks and feels like the personal broadsheet, not a plain
 prototype.
+
+**WHERE PHASE 7 STANDS (2026-06-23).** **Built, deployed & owner-approved:** the **Today**
+rebuild (T1 header/kit, T4 display, T5 grid interactions, T6 form/picker/delete, T7 3-state
+status pill, T8 date arrows) + **All Tasks** (T11). **Built & deployed, awaiting owner verify:**
+the **category manager** (T13, functional; polish later), the whole **Archive** feature
+(A1–A4 + A3b brief filter), **subtasks** (SUB), and **email+password auth** (AUTH-1/2; magic
+link retired). The data layer grew additively (T2 audit, T3 category depth-3 cap, T7 status
+3-state, A1 archive schema). **Still to do (each its own piece):** the **Calendar** screen
+(re-skin-vs-rebuild decision pending), the rest of **Settings** + the manager/Archive polish,
+**mobile Today / All Tasks**, and **T12** conservative trims of now-unused old files. See the
+backlog + per-piece ✅ list and the DEPLOY+VERIFY state below.
 - ✅ **Piece 1 — open the redesign (paperwork, no code).** Clean pre-redesign save
   point committed; `07-ux-flows.md` added as the behaviour reference (open, not
   locked); the opening decisions locked in 03-decisions.md and mirrored into

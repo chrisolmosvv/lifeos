@@ -248,6 +248,18 @@ should read like a short, warm recap of the day ahead.
   Per-screen layouts are still proposed-and-approved with the owner, screen by
   screen; the behaviour reference is `07-ux-flows.md` (open to relitigation).
 
+- **Phase 7 redesign — what's now BUILT & live (update):** the **component kit**
+  (`src/kit/`) is real and in use; **paper is `#F6F5F1`**, the **blackletter masthead
+  + folio** are live (header + login). **Built and deployed** to the broadsheet
+  identity: the **Today** home (the 7am–midnight workspace grid with soft tinted
+  category blocks, the now-line, the status pill, the create/edit form + drill-in
+  picker, date arrows) and **All Tasks**; **functional-but-not-yet-polished**: the
+  **Settings category manager** and the **Archive** screen (polish lands with the
+  Settings re-skin); the **login screen** got its broadsheet design (blackletter
+  masthead, email+password). **Still on the OLD look** (rebuild/re-skin pending): the
+  **Calendar** screen, the rest of **Settings**, and **mobile** layouts. Owner has
+  **verified & approved** Today + All Tasks; the rest awaits its per-screen turn.
+
 - **Type direction (Phase 2, Piece 1) — in use:** the masthead + headlines are set
   in **Fraunces** (a warm high-contrast serif), and all body, UI and numbers in
   **Inter**, two weights each (regular + medium). This supersedes the earlier

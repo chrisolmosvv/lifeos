@@ -74,3 +74,26 @@
   but isn't completed automatically.
 - **Now-line** — the thin terracotta line across today's calendar column showing
   the current time (like Apple Calendar's red line).
+- **Status (3 states)** — a task is **To do → In progress → Done**. The little
+  connected **status pill** on a task row sets it in one tap; "in progress" is an
+  optional middle step. Marking done greys + strikes the row till midnight (undo
+  always there).
+- **Component kit** — the reusable, sealed building blocks the screens are made of
+  (`src/kit/`): the masthead, hairline rules, the day grid, tinted calendar blocks,
+  task rows, the status pill, the form + category picker, toasts. Change a block in
+  one place and it updates everywhere; styles can't leak between screens.
+- **Archive (soft-delete)** — deleting a task, event, or category doesn't destroy
+  it — it's **archived** (hidden from the app but kept). Each delete is one
+  **batch** you can **Restore** as a unit from the **Archive screen** (Settings →
+  Archive). Archiving a category archives its whole branch (its sub-categories +
+  their tasks/events) together.
+- **Delete now** — the only permanent delete: on the Archive screen, wipe one batch
+  for good (behind a confirm that names what it removes). The one irreversible action.
+- **Tasks today / Next 7 days** — the two task modules on the rebuilt Today home:
+  what's due/scheduled/bucketed for the viewed day, then the week ahead.
+- **Drill-in picker** — choosing a category by drilling level-by-level (with a
+  breadcrumb), used in the form; the Settings **category manager** is where you
+  build/rename/recolour/reorder the tree.
+- **Email + password (sign-in)** — the login: your email and a password, with a
+  "Forgot password?" reset by email. The old **magic link** (a login-link email) was
+  the first method and has been retired from the app.
