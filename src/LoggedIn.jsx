@@ -48,11 +48,6 @@ export default function LoggedIn({ email }) {
           <Settings email={email} onOpenArchive={() => setView('archive')} />
         </div>
       )}
-
-      {/* Optional edition flourish — the colophon. Easy to drop. */}
-      <footer className="app-colophon">
-        LifeOS — the newspaper of one life.
-      </footer>
     </div>
   )
 }

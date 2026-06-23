@@ -7,11 +7,9 @@
 .today {
   height: 100%;
   box-sizing: border-box;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.5rem 1.5rem 1rem;
+  padding: 1.6rem 3.5rem 1.9rem; /* full-width, with a comfortable 56px side frame */
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.35fr 1fr; /* the day grid gets a touch more room (per mockup) */
   gap: 2.5rem;
   overflow: hidden; /* the page itself never scrolls */
 }
@@ -22,34 +20,50 @@
   flex: none;
   display: flex;
   align-items: baseline;
-  gap: 0.7rem;
+  gap: 1.1rem;
   margin: 0 0 0.75rem;
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--ink);
 }
 .today-day-title {
   font-family: var(--font-serif);
-  font-weight: 500;
-  font-size: 1.5rem;
+  font-weight: 600;
+  font-size: 1.85rem;
+  line-height: 1;
   margin: 0;
 }
 .today-viewdate {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.14em;
   color: var(--ink-muted);
+}
+/* The day stepper — both arrows pinned together as one cluster, so the ‹ › never
+   shift when the day name's length changes. The title + date sit to their right. */
+.today-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 .today-nav {
   font: inherit;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   line-height: 1;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--ink-muted);
   background: none;
   border: none;
-  padding: 0 0.15rem;
+  padding: 0;
   cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
 .today-nav:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
   color: var(--ink);
 }
 .today-back {
@@ -70,7 +84,7 @@
   flex-direction: column;
   min-height: 0;
   border-right: 1px solid var(--rule);
-  padding-right: 1.5rem;
+  padding-right: 2.5rem;
 }
 
 /* Right: the two stacked modules + the All-tasks box. The column itself does not

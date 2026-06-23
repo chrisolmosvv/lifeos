@@ -1,38 +1,67 @@
-import Topline from './kit/Topline'
+import { useEffect, useState } from 'react'
 import Masthead from './kit/Masthead'
-import Folio from './kit/Folio'
-import HairlineRule from './kit/HairlineRule'
+import { mastTime, mastWeekday, mastDate, personalEdition } from './personalEdition'
+import { useWeather } from './useWeather'
 import './editionHeader.css'
 
 // The edition header — the personal-broadsheet top frame, shared by every
-// logged-in screen (Today / Calendar / Settings). It is composed from the
-// reusable kit blocks: a topline, the blackletter "LifeOS" masthead, a folio
-// line (date · motto · live clock · edition), a hairline rule, then the nav
-// strip. NOTHING here reads or writes app data — it is presentation only.
-//
-// (Was `Masthead.jsx` before Phase 7 T1; renamed so the kit can own the name
-// "Masthead" for the nameplate wordmark itself.)
-//
-// The folio/topline copy below is PLACEHOLDER, not final.
+// logged-in screen (Today / Calendar / Settings). Three columns over a centred,
+// ruled nav band:
+//   left   — a live two-line dateline: "HH:MM Weekday" / "D Month YYYY"
+//   centre — the blackletter "LifeOS" wordmark + "YEAR {age} · DAY {n}"
+//   right  — the current city over its weather (temp + short condition)
+// The dateline + edition line are pure date math (no network); the city + weather
+// come from useWeather (its own sealed fetch). NOTHING here reads/writes app data.
 // `view`/`onNavigate` drive which screen shows — nav behaviour is unchanged.
 
-// The three top-level destinations. Settings carries a small subtitle in the
-// mock ("categories, account") — an optional flourish, easy to drop.
 const NAV = [
   { id: 'today', label: 'Today' },
   { id: 'calendar', label: 'Calendar' },
-  { id: 'settings', label: 'Settings', sub: 'categories, account' },
+  { id: 'settings', label: 'Settings' },
 ]
 
 export default function EditionHeader({ view, onNavigate }) {
+  // Tick once a second so the dateline clock stays live (device clock only).
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const { age, day } = personalEdition(now)
+  const wx = useWeather()
+
   return (
     <header className="masthead">
-      <div className="mast-edition">
-        <Topline>A Personal Daily</Topline>
-        <Masthead />
-        <Folio motto="All the day that's fit to do" edition="Vol. I · No. 142" />
+      <div className="mast-top">
+        <div className="mast-dateline">
+          <div className="mast-dateline-1 tnum">
+            <span className="mast-time">{mastTime(now)}</span>{' '}
+            <span className="mast-weekday">{mastWeekday(now)}</span>
+          </div>
+          <div className="mast-dateline-2">{mastDate(now)}</div>
+        </div>
+
+        <div className="mast-center">
+          <Masthead />
+          <div className="mast-edition">
+            YEAR {age} · DAY {day}
+          </div>
+        </div>
+
+        <div className="mast-weather">
+          {!wx.loading && !wx.error && (
+            <>
+              <div className="mast-city">{wx.city}</div>
+              <div className="mast-temp tnum">{wx.temp}°</div>
+              <div className="mast-cond">
+                <span className={wx.sunny ? 'mast-dot mast-dot--sun' : 'mast-dot'} />
+                {wx.condition}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      <HairlineRule />
 
       <nav className="mast-nav">
         {NAV.map((item) => (
@@ -42,8 +71,7 @@ export default function EditionHeader({ view, onNavigate }) {
             aria-current={item.id === view ? 'page' : undefined}
             onClick={() => onNavigate(item.id)}
           >
-            <span className="mast-navlabel">{item.label}</span>
-            {item.sub && <span className="mast-navsub">{item.sub}</span>}
+            {item.label}
           </button>
         ))}
       </nav>

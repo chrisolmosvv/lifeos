@@ -277,10 +277,12 @@ export default function Today({ onOpenAllTasks }) {
     <div className="today">
       <section className="today-day">
         <div className="today-daybar">
-          <button className="today-nav" onClick={() => setViewed(addDays(viewed, -1))} aria-label="Previous day">‹</button>
+          <span className="today-stepper">
+            <button className="today-nav" onClick={() => setViewed(addDays(viewed, -1))} aria-label="Previous day">‹</button>
+            <button className="today-nav" onClick={() => setViewed(addDays(viewed, 1))} aria-label="Next day">›</button>
+          </span>
           <h2 className="today-day-title">{isToday ? 'The Day' : dayNameFull(viewed)}</h2>
           <span className="today-viewdate">{formatMastheadDate(viewed)}</span>
-          <button className="today-nav" onClick={() => setViewed(addDays(viewed, 1))} aria-label="Next day">›</button>
           {!isToday && (
             <button className="today-back" onClick={() => setViewed(startOfDay(new Date()))}>
               Back to today
