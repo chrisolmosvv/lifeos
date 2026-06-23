@@ -35,6 +35,45 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M0 — prep + one Gemini config seam (backend only, NO behaviour change)
+WHAT CHANGED:
+- Opened the **backend Marty track (M0–M9)** to make the Telegram bot conversational. Added the plan
+  doc `08-marty-upgrade.md` (the track's rollback anchor), marked **Phase 7 ⏸ PAUSED** in the roadmap,
+  and recorded the "M0–M9 numbering, separate from Phase 7" decision. (That was its own commit `7afca2e`
+  — the clean rollback point for the whole M-track.)
+- Routed **both** Gemini callers through **one** new shared module `_shared/gemini.ts`, which now owns
+  the API key, the model name (`gemini-3.1-flash-lite`), the endpoint, and the fetch + 3-retry + 429
+  loop. `telegram/understand.ts` (capture) and `brief/write.ts` (the brief) call its one `callGemini()`
+  helper. **`GEMINI_API_KEY` is now read in exactly one place.** Each caller KEEPS its own parsing +
+  its own fallback: understand.ts still returns its typed "rate limited" outcome; write.ts still falls
+  back to the plain checklist. **Pure refactor — nothing user-visible changes.**
+- The module carries a plain-English "go paid later" note: point a NEW billing-enabled Google Cloud
+  project's key into the `GEMINI_API_KEY` secret — no code change. (Enabling billing on the existing
+  project would delete its free tier, so a new project is the clean path.)
+FILES TOUCHED: added `supabase/functions/_shared/gemini.ts`; edited `telegram/understand.ts` +
+`brief/write.ts` (point at it; removed their duplicated key/model/url/loop). Docs: `08-marty-upgrade.md`
+(new), `02-roadmap.md`, `03-decisions.md`, this log. **No `src/` change. No schema. No secret change.**
+HOW TO VERIFY (the owner — needs a deploy of the two functions first; see NEXT):
+  1. Text Marty **"call mum tomorrow"** → saved as a TASK in Inbox, same confirmation wording as before.
+  2. Text **"dentist Friday 3pm"** → saved as an EVENT (clock time), Inbox, 1-hour block — as before.
+  3. Text **"brief test"** → a brief arrives in the same quiet voice (or the plain checklist if Gemini
+     is unavailable — the fallback is unchanged).
+  4. Nothing anywhere should look or read one bit different. If it does, roll back (anchor `7afca2e`).
+KNOWN GAPS / RISKS:
+- ONE intentional internal difference (NOT user-visible): in capture, a malformed-JSON reply from
+  Gemini is now parsed once instead of being retried up to 3× (the parse used to sit inside the retry
+  loop). Under temperature 0 + the JSON responseSchema this is deterministic, so the outcome (error
+  reply, nothing saved) is identical; only wasted retries are gone. The important transient-503 retry
+  still happens (it's inside `callGemini`).
+- The telegram function's OWN copy of the date/time helpers is deliberately untouched — unifying those
+  with `_shared/datetime.ts` is a separate later cleanup, NOT part of M0.
+- Not yet deployed: the live bot still runs the pre-M0 code until the two functions are deployed.
+NEXT: owner deploys the two functions and runs the 3 checks above, then **M1 — the router** (the seam
+that lets new message types — questions, edit/delete — slot in cleanly). Do NOT start M1 until M0 verifies.
+FOR THE CHECKER: confirm the two callers' user-visible behaviour is byte-for-byte the same — especially
+(a) capture's rate-limit vs error replies still differ correctly, and (b) the brief still falls back to
+the plain checklist on any Gemini failure (missing key / 429 / junk / empty).
+
 ### 2026-06-23 — Phase 7, C4 Part 2 — merge the twin grid hooks into one (⚠️ touches Today)
 WHAT CHANGED:
 - The two near-identical drag hooks (`kit/useTodayGrid` for Today, `kit/useWeekGrid` for Calendar)

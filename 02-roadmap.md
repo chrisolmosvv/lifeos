@@ -556,6 +556,15 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Marty track M0 — prep + one Gemini config seam (backend only, no behaviour change).**
+  Opened the backend Marty track (M0–M9) to make the bot conversational, kept entirely separate from
+  the paused Phase 7 front-end redesign (different folder: `supabase/functions/` vs `src/`). Two commits:
+  (1) docs rollback anchor `7afca2e` — added `08-marty-upgrade.md`, paused Phase 7, recorded the M0–M9
+  numbering decision; (2) the Gemini seam — one shared `_shared/gemini.ts` (key + model + endpoint +
+  retry/429 in one place), both callers (`telegram/understand.ts`, `brief/write.ts`) point at it and
+  keep their own parsing + fallback. Pure refactor; `GEMINI_API_KEY` now read in ONE place; "go paid"
+  is a one-secret swap. **NEXT: owner deploys the two functions + verifies capture/event/brief unchanged,
+  then M1 — the router.** Don't start M1 until M0 verifies.
 - **2026-06-23 — Phase 7, AUTH-2 — the cutover: magic link removed from the UI; email+password
   deployed (first deploy carrying AUTH-1 + SUB + AUTH-2).** Found AUTH-1 had never been deployed
   (prod = `fa3bfc2`, magic-link-only), so password login wasn't verified in production — I STOPPED and

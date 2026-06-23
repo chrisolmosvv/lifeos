@@ -4,9 +4,11 @@
 // It SAVES NOTHING — no database, no tasks, no events. That is Piece 5d.
 //
 // GEMINI_API_KEY lives in Supabase's secret store, never in this file or the repo.
+// The key/model/endpoint + the call-and-retry loop now live in ONE shared module
+// (../_shared/gemini.ts — M0); this file keeps its OWN prompt, schema, and parsing.
 
-const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
-const GEMINI_MODEL = "gemini-3.1-flash-lite"; // free tier: 500 req/day, 15/min — highest free daily limit
+import { callGemini } from "../_shared/gemini.ts";
+
 export const TZ = "Europe/Amsterdam"; // all date/time reasoning is in the owner's local time
 
 export interface Understood {
@@ -65,49 +67,33 @@ export type ReadResult =
   | { kind: "error" };
 
 // Ask Gemini to read the message. Never throws — always returns a ReadResult.
+// The network + retry + 429 handling is the shared module's job (M0); this function
+// owns the prompt, the JSON schema, and turning Gemini's reply into a typed outcome.
 export async function understand(text: string): Promise<ReadResult> {
-  if (!GEMINI_KEY) return { kind: "error" };
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
-  const body = {
-    systemInstruction: { parts: [{ text: SYSTEM }] },
-    contents: [{
-      role: "user",
-      parts: [{ text: `Current local date and time (Europe/Amsterdam): ${nowLocal()}\nMessage: ${text}` }],
-    }],
+  const result = await callGemini({
+    system: SYSTEM,
+    user: `Current local date and time (Europe/Amsterdam): ${nowLocal()}\nMessage: ${text}`,
     generationConfig: {
       temperature: 0,
       responseMimeType: "application/json",
       responseSchema: RESPONSE_SCHEMA,
     },
-  };
+  });
 
-  // Up to 3 attempts. A transient "high demand" (503) usually clears on a quick
-  // retry. A 429 means we're over the free-tier limit — retrying in seconds won't
-  // help, so report that distinctly and stop (don't waste the quota or stall).
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.status === 429) return { kind: "rate_limit" };
-      if (!res.ok) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-        continue;
-      }
-      const data = await res.json();
-      const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (typeof raw !== "string") return { kind: "error" };
-      const parsed = JSON.parse(raw);
-      // Basic shape check — if Gemini wandered off the schema, treat as unreadable.
-      if (typeof parsed?.type !== "string" || typeof parsed?.title !== "string") return { kind: "error" };
-      return { kind: "ok", value: parsed as Understood };
-    } catch (_err) {
-      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-    }
+  // Over the free-tier limit (429) vs. any other failure — kept distinct so the
+  // caller still gives the right reply (unchanged behaviour from before).
+  if (!result.ok) {
+    return result.reason === "rate_limit" ? { kind: "rate_limit" } : { kind: "error" };
   }
-  return { kind: "error" };
+
+  try {
+    const parsed = JSON.parse(result.text);
+    // Basic shape check — if Gemini wandered off the schema, treat as unreadable.
+    if (typeof parsed?.type !== "string" || typeof parsed?.title !== "string") return { kind: "error" };
+    return { kind: "ok", value: parsed as Understood };
+  } catch (_err) {
+    return { kind: "error" };
+  }
 }
 
 // "2026-06-25" -> "Thu 25 Jun" (in Europe/Amsterdam). Noon-UTC avoids any

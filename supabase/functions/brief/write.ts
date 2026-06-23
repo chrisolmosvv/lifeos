@@ -9,11 +9,11 @@
 // or hits its free-tier limit (429), we return the plain 6b checklist instead, so
 // the owner ALWAYS gets their day. A silent brief is the worst outcome. Never throws.
 //
-// Reuses the existing Gemini setup: the GEMINI_API_KEY secret and the same model
-// string as telegram/understand.ts (kept in sync by hand — see GEMINI_MODEL).
+// The Gemini key/model/endpoint + the call-and-retry loop now live in ONE shared
+// module (../_shared/gemini.ts — M0), so the model is no longer "kept in sync by
+// hand." This file keeps its OWN voice prompt and its OWN fallback (the checklist).
 
-const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
-const GEMINI_MODEL = "gemini-3.1-flash-lite"; // mirrors telegram/understand.ts (free tier)
+import { callGemini } from "../_shared/gemini.ts";
 
 // The voice (06-design.md "Voice & words"): warm but restrained, a columnist not a
 // cheerleader. The hard constraints keep it truthful to the supplied facts.
@@ -35,46 +35,24 @@ Strict rules:
 
 Output ONLY the message text — no labels, no bullet list, no markdown.`;
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 // Trim and strip any stray exclamation mark (the voice forbids them) — a light
 // safety net behind the prompt; the facts themselves are never altered here.
 function sanitize(s: string): string {
   return s.trim().replace(/!+/g, ".");
 }
 
-// Ask Gemini to write the brief from `facts`. On ANY failure returns `fallback`
-// (the plain checklist). Never throws, never returns empty.
+// Ask Gemini to write the brief from `facts`. On ANY failure (missing key, rate
+// limit, error, or empty/junk output) returns `fallback` (the plain checklist) — the
+// "never go silent" rule. Never throws, never returns empty.
 export async function writeBrief(facts: string, fallback: string): Promise<string> {
-  if (!GEMINI_KEY) return fallback;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
-  const body = {
-    systemInstruction: { parts: [{ text: SYSTEM }] },
-    contents: [{ role: "user", parts: [{ text: facts }] }],
+  const result = await callGemini({
+    system: SYSTEM,
+    user: facts,
     generationConfig: { temperature: 0 },
-  };
-
-  // Up to 3 attempts. A 503 ("high demand") usually clears on a quick retry; a 429
-  // means we're over the free limit — retrying won't help, so fall back immediately.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.status === 429) return fallback;
-      if (!res.ok) {
-        await sleep(1000 * (attempt + 1));
-        continue;
-      }
-      const data = await res.json();
-      const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (typeof raw !== "string" || !raw.trim()) return fallback;
-      return sanitize(raw);
-    } catch (_err) {
-      await sleep(1000 * (attempt + 1));
-    }
-  }
-  return fallback;
+  });
+  // Rate-limited or any other failure → the plain checklist (unchanged behaviour).
+  if (!result.ok) return fallback;
+  // Empty/whitespace output → also fall back, so the owner always gets their day.
+  if (!result.text.trim()) return fallback;
+  return sanitize(result.text);
 }
