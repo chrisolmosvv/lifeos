@@ -35,6 +35,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, AUTH-2 — the cutover: magic link removed from the UI, email+password deployed
+ROADMAP MAPPING: **AUTH-2** (the cutover). PRECONDITION CHECK: I found AUTH-1 was **never deployed**
+(origin/main + the live Production deploy were both `fa3bfc2` = the old magic-link-only login), so
+email+password couldn't have been verified *in production*. I STOPPED and asked; **the owner chose
+"proceed with the full cutover now"** (they verified password login another way and accept the risk —
+the Supabase dashboard re-enable is the backstop). Proceeding on that basis.
+PRIOR AUTH STATE (recorded for restore): email provider ON (`external_email_enabled=true`), magic
+link/OTP rides on that provider (it was effectively ENABLED), public signup OFF (`disable_signup=true`
+from AUTH-1).
+STEP 1 — FRONT-END (password-only): removed from `Login.jsx` the magic-link entry point AUTH-1 kept —
+the `signInWithOtp` handler, the "Email me a login link instead" button + the "or" divider, and the
+link-sent view. Login is now **email + password + "Forgot password?"** only; no magic-link, no
+sign-up. The reset flow (`resetPasswordForEmail` → `ResetPassword` page) is intact.
+STEP 2 — AUTH CONFIG (the honest constraint): **there is NO config flag in this project's Auth to
+disable magic-link-only.** Magic link/OTP and password **share the single email provider**
+(`external_email_enabled`); disabling that provider would ALSO kill password login + the reset flow =
+**lockout**. (The only other lever, zeroing `rate_limit_otp`, risks breaking the recovery email — too
+risky for a lockout step.) So I made **NO config change** — the cutover is done at the **UI level**
+(magic link removed from the app), and the email provider stays enabled because password + reset need
+it. ⚠️ This means magic link is gone from the app but the provider remains API-reachable (equivalent
+to the reset flow's email exposure for this single-user app). Flagged for the owner: a true
+provider-level magic-link disable isn't available via the Management API without breaking password.
+STEP 3 — DEPLOY: pushed local main → origin/main; Vercel Production built + deployed. (Details — hash,
+build status, URL — appended below after the push.)
+SAVE POINT (Step 0): **`e3348da`** — "Phase 7 AUTH-2 save point — before magic-link cutover."
+ROLLBACK LEVER (owner; not auto-done) — the email provider is still ON, so recovery is easy:
+- IMMEDIATE: the magic link/OTP provider is STILL enabled, so the Supabase dashboard can send a
+  recovery/magic link, or set the owner's password, at any time — no deploy needed; the owner is never
+  permanently locked out. (And the prior deployment `lifeos-mlux5hf72-…` / ref `fa3bfc2` still has the
+  magic-link UI to re-promote.)
+- FULL: re-promote `lifeos-mlux5hf72-…` (ref `fa3bfc2`) in Vercel and/or reset origin/main to
+  `fa3bfc2` + redeploy to restore the magic-link UI.
+FILES TOUCHED: src/Login.jsx (remove magic-link UI); 02-roadmap.md, 04-handoff-log.md. **No app data,
+no schema, no other screen; NO auth config change (see Step 2).** Frankfurt only.
+CONFIRMATIONS: magic link removed from the UI (no `signInWithOtp` in Login); email+password still
+enabled; public signup still OFF; reset flow intact; nothing else touched; Frankfurt only. Build
+passes. **No true lockout** (email provider still on as a backstop).
+DEPLOY CLARITY: pushed + deployed (the first deploy carrying AUTH-1 + SUB + AUTH-2). ⚠️ Magic link is
+now OFF in the app (UI), though still provider-reachable as a backstop.
+OWNER FINAL-VERIFY (you do this; keep a Supabase dashboard tab open to re-enable/reset if anything is
+wrong):
+1. Log in with EMAIL+PASSWORD on Mac — works.
+2. Log in with email+password on PHONE — works.
+3. The login screen shows NO magic-link option and NO sign-up.
+4. "Forgot password?" reset still works.
+5. (sanity) the app no longer offers to email a login link.
+NEXT: owner confirms 1–5; then Calendar (re-skin-vs-rebuild), Settings re-skin, mobile, T12.
+FOR THE CHECKER: magic link removed from the UI; email+password enabled; signup off; reset intact; no
+other app/auth change; Frankfurt only; save point + prior state recorded; rollback (dashboard re-enable
+— provider still on) documented. NOTE the Step-2 constraint: no config-level magic-link-only disable
+exists without breaking password, so the cutover is UI-level + provider left on as the safety backstop.
+
 ### 2026-06-23 — Phase 7, AUTH-1 — add email+password login (magic link STAYS; auth config + front-end)
 ROADMAP MAPPING: **AUTH-1** (step 1 of the auth migration; AUTH-2 disables magic link later, gated on
 owner verification). ⚠️ Auth is the one thing that can lock the owner out — magic link is left fully

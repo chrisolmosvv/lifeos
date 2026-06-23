@@ -320,15 +320,23 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
 - ⬜ **Settings screen** — bring it up to the broadsheet look (incl. account + the entry to T13).
 - ⬜ **T13 — Settings category manager** (above) — gated by the two OPEN questions.
 - ⬜ **T10 — Recurring events** *(large)* — recurrence + "this one or all?".
-- 🔨 **Auth — email + password** (replace magic link; closed single-user; forgot-password reset).
+- ✅ **Auth — email + password** (replaced magic link; closed single-user; forgot-password reset).
+  AUTH-1 (add) + AUTH-2 (cutover) done + deployed; magic link removed from the UI (provider left on
+  as the recovery backstop — see AUTH-2 note). Owner to final-verify password login on Mac + phone.
   - ✅ **AUTH-1 — add email+password (magic link KEPT).** Frankfurt Auth: **public signup disabled**
     (`disable_signup=true`); email provider already on (so password works); magic link **left ON**.
     New broadsheet login (email+password + "Forgot password?" + a kept "email me a login link"),
     a reset page (`updateUser` on PASSWORD_RECOVERY), no "create account". No app-data/schema change.
     Save point `20f68c8`. **AUTH-2 is GATED on the owner verifying email+password + reset + that
     magic link still works (Mac + phone) — do NOT disable magic link before then.**
-  - ⬜ **AUTH-2 — disable magic link** (email+password becomes the sole sign-in) — ONLY after the
-    owner confirms AUTH-1 works.
+  - ✅ **AUTH-2 — the cutover (magic link removed from the UI; deployed).** Login is now
+    email+password + "Forgot password?" only (magic-link UI + handler removed). ⚠️ **Constraint:**
+    this project's Auth has NO flag to disable magic-link-only — it shares the email provider with
+    password, so disabling it would break password+reset (lockout). So the cutover is **UI-level**;
+    the email provider stays ON (needed for password + reset) and is thus the **recovery backstop**
+    (dashboard can still send a magic link / set a password). Owner chose to proceed despite AUTH-1
+    not having been separately deployed/verified-in-prod. Save point `e3348da`. Deployed with
+    AUTH-1 + SUB.
 - ⬜ **Mobile Today** — its own spec (desktop Today is what's built).
 - ⬜ **Mobile All Tasks** — its own pass (desktop-first only so far).
 - ⬜ **T12 — Conservative trims** (above) — provably-unused old Today files + parked Phase-6
@@ -389,6 +397,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, AUTH-2 — the cutover: magic link removed from the UI; email+password
+  deployed (first deploy carrying AUTH-1 + SUB + AUTH-2).** Found AUTH-1 had never been deployed
+  (prod = `fa3bfc2`, magic-link-only), so password login wasn't verified in production — I STOPPED and
+  asked; the owner chose to **proceed with the full cutover**. Removed the magic-link UI from the
+  login (email+password + "Forgot password?" only; no sign-up). **Auth-config constraint:** there's no
+  flag to disable magic-link-only (it shares the email provider with password — disabling it would
+  lockout), so I made **no config change**; the cutover is UI-level and the email provider stays ON as
+  the **recovery backstop** (dashboard can re-send a magic link / set a password). Pushed + deployed.
+  Save point `e3348da`. ⚠️ Owner must final-verify password login on Mac + phone (keep a Supabase
+  dashboard tab open to re-enable if needed). **NEXT: owner verifies; then Calendar (re-skin-vs-
+  rebuild), Settings re-skin, mobile, T12.**
 - **2026-06-23 — Phase 7, AUTH-1 DONE — email + password login added (magic link STAYS as the safety
   net).** Frankfurt Auth: **public sign-up disabled** (`disable_signup=true`, closed single-user);
   the email provider was already on so password sign-in is additive; **magic link left ENABLED**.

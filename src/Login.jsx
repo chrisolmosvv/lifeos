@@ -3,15 +3,14 @@ import { supabase } from './supabaseClient'
 import Masthead from './kit/Masthead'
 import './login.css'
 
-// The sign-in screen (Phase 7, AUTH-1). Email + password is the primary way in;
-// "Forgot password?" sends a reset email (handled by ResetPassword on return).
-// A magic-link option is KEPT reachable as the proven fallback until AUTH-2
-// retires it. Single-user + closed: there is NO "create account" option. Uses the
-// existing Supabase auth methods — no new auth layer.
+// The sign-in screen (Phase 7, AUTH-2). Email + password ONLY — the magic-link
+// option was retired at the cutover (AUTH-2). "Forgot password?" sends a reset
+// email (handled by ResetPassword on return). Single-user + closed: there is NO
+// "create account" option. Uses the existing Supabase auth methods — no new layer.
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [view, setView] = useState('login') // login | linkSent | resetSent
+  const [view, setView] = useState('login') // login | resetSent
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -37,27 +36,12 @@ export default function Login() {
     else setView('resetSent')
   }
 
-  async function handleMagicLink() {
-    if (!email) return setError('Enter your email first to get a login link.')
-    setBusy(true)
-    setError('')
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: REDIRECT },
-    })
-    setBusy(false)
-    if (error) setError(friendly(error))
-    else setView('linkSent')
-  }
-
-  if (view === 'linkSent' || view === 'resetSent') {
+  if (view === 'resetSent') {
     return (
       <div className="login">
         <Masthead />
         <p className="login-sent">
-          {view === 'linkSent'
-            ? 'Check your email — we sent a login link to'
-            : 'Check your email — we sent a reset link to'}
+          Check your email — we sent a reset link to
           <br />
           <strong>{email}</strong>.
         </p>
@@ -105,11 +89,6 @@ export default function Login() {
       </button>
 
       {error && <p className="login-error">{error}</p>}
-
-      <div className="login-or">or</div>
-      <button type="button" className="login-magic" onClick={handleMagicLink} disabled={busy}>
-        Email me a login link instead
-      </button>
     </form>
   )
 }
