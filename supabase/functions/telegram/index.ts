@@ -1,36 +1,27 @@
-// LifeOS — Telegram bot.
-// Telegram calls this whenever someone texts the bot.
+// LifeOS — Telegram bot. Telegram calls this whenever someone texts the bot.
+// This file is the THIN FRONT DOOR only: security → owner gate → text check → hand the
+// message to the router (./route.ts), then send whatever reply it returns. All the
+// "what does this message mean / what do we do with it" logic lives in route.ts (M1).
 //
-// Piece 5e (security): reject any request whose Telegram secret-token header
-// doesn't match our stored secret — the FIRST thing we do — so the public URL
-// can't be abused by a forged request even if someone guessed the chat id.
+// Piece 5e (security): reject any request whose Telegram secret-token header doesn't
+//   match our stored secret — the FIRST thing we do — so the public URL can't be abused.
 // Piece 5b (the gate): behind that, still only the owner's chat id gets a reply.
-// Piece 5c (understanding) → 5d (saving): a confident read is written as a real
-// task/event owned by the owner; an unsure read saves nothing.
-// Piece 5e (undo): texting "undo" removes the single most recent item Marty saved.
-// Piece 6a (brief): texting "brief" fires the separate, private `brief` function
-//   (which texts the owner the morning brief). "brief" is a reserved trigger word.
-// Piece 6d (brief test): "brief test" fires the same brief with the forgotten-task
-//   threshold at 0 days — a TEMPORARY verification aid, may be removed later.
+// M1: route.ts decides capture vs. a command (undo/brief) vs. a read-only QUESTION.
 //
 // Secrets live in Supabase's secret store, never in this file or the repo:
 //   TELEGRAM_BOT_TOKEN       — the bot's key
 //   TELEGRAM_WEBHOOK_SECRET  — must match the X-Telegram-Bot-Api-Secret-Token header
 //   OWNER_CHAT_ID            — the only chat allowed a reply
-//   GEMINI_API_KEY           — the AI key (./understand.ts)
+//   GEMINI_API_KEY           — the AI key (../_shared/gemini.ts, via route.ts)
 //   OWNER_USER_ID            — the owner's auth id, set on every saved row (./db.ts)
-// (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are auto-injected by the platform.)
+// (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are auto-injected by the platform; the
+//  router uses them to call the PRIVATE `brief` function.)
 
-import { understand, isUnsure, unsureReply } from "./understand.ts";
-import { saveAndConfirm } from "./save.ts";
-import { undoLast } from "./undo.ts";
+import { route } from "./route.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const OWNER_CHAT_ID = Deno.env.get("OWNER_CHAT_ID");
 const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
-// Auto-injected by the platform; used to call the PRIVATE `brief` function.
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 async function sendMessage(chatId: number | string, text: string) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -38,24 +29,6 @@ async function sendMessage(chatId: number | string, text: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, text }),
   });
-}
-
-// Fire the separate `brief` function (it texts the owner itself). It's deployed
-// PRIVATE (jwt verification on), so we authenticate with the service-role key this
-// function already runs with. `test` (the "brief test" aid) drops the forgotten-task
-// threshold to 0 days. Returns true if the brief accepted the call.
-async function fireBrief(test: boolean): Promise<boolean> {
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/brief`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ test }),
-    });
-    return res.ok;
-  } catch (_err) {
-    return false;
-  }
 }
 
 Deno.serve(async (req) => {
@@ -81,39 +54,10 @@ Deno.serve(async (req) => {
 
     const text = message?.text;
     if (typeof text !== "string") return ack(); // e.g. a sticker — just ack.
-    const lower = text.trim().toLowerCase();
 
-    // --- BRIEF (6a): "brief" fires the separate brief function and stops here. ---
-    // "brief test" (6d) is a TEMPORARY aid: same brief, but the forgotten-task
-    // threshold is 0 days so the nudge fires immediately. The brief texts the owner
-    // itself, so we only speak up if firing it failed. No capture/understand/save runs.
-    if (lower === "brief" || lower === "brief test") {
-      const ok = await fireBrief(lower === "brief test");
-      if (!ok) {
-        await sendMessage(chatId, "I couldn't fetch your brief just now — try again in a moment.");
-      }
-      return ack();
-    }
-
-    let reply: string;
-    if (lower === "undo") {
-      // --- UNDO (5e): remove the single most recent item Marty saved. ---
-      reply = await undoLast();
-    } else {
-      // --- Read the message, then save and confirm (or save nothing). ---
-      const result = await understand(text);
-      if (result.kind === "rate_limit") {
-        reply = "I've hit my AI limit for the moment — give it a minute and send it again. (Nothing saved.)";
-      } else if (result.kind === "error") {
-        reply = "I couldn't read that one just now — mind trying again? (Nothing saved.)";
-      } else if (isUnsure(result.value)) {
-        reply = unsureReply(result.value); // not a task/event → save nothing
-      } else {
-        reply = await saveAndConfirm(result.value); // confident read → write the row
-      }
-    }
-
-    await sendMessage(chatId, reply);
+    // --- The router decides what this is and what to do; "" means send nothing. ---
+    const reply = await route(text);
+    if (reply) await sendMessage(chatId, reply);
     return ack();
   } catch (_err) {
     // Bad/empty body or any hiccup: still ack so Telegram moves on.
