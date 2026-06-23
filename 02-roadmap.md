@@ -337,7 +337,18 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
     ish: on any partial failure the batch is compensated (fully un-archived + removed). **No read
     filter (A3), no Archive screen (A4), no schema, no shared read hook.** ⚠️ HALF-STATE: archived
     items STILL SHOW until A3. Save point `99b0f12`.
-  - ⬜ **A3 — active-only read filter** (`archived_at IS NULL`) on every screen's reads.
+  - ✅ **A3 — active-only read filter.** A single shared `activeOnly(query)` helper
+    (`= q.is('archived_at', null)`, in `src/archive.js`) applied to EVERY rendered read of
+    tasks/events/categories: Today's 3 reads, All Tasks' 2 (so the subtree counts + "All
+    tasks · N" box exclude archived), CategoryManager's categories read, and **Calendar's
+    shared `useWeekData`** (events + tasks + categories — the first sanctioned edit to that
+    hook, filter-only). Archived items now disappear; Undo (toast) brings them back. No
+    write/schema/behaviour change beyond hiding archived. Save point `7dfffb6`. **A2+A3 are
+    the deploy-ready pair.**
+  - ⬜ **A3b — backend brief filter (FOLLOW-UP).** The 7am brief edge function
+    (`supabase/functions/brief/day.ts`, `gap.ts`) reads OPEN tasks + events WITHOUT an
+    archived filter → an archived item could still surface in the brief. Add
+    `&archived_at=is.null` to those PostgREST queries (backend; separate deploy surface).
   - ⬜ **Archive screen** — grouped by delete action, with Restore and Delete-now.
 
 ## ⬜ Phase 8 — Signals & polish
@@ -353,6 +364,21 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Archive A3 DONE — active-only read filter (the disappear behaviour;
+  A2+A3 are now deploy-ready together).** Added a single shared `activeOnly(query)` helper
+  (`q.is('archived_at', null)`, in `src/archive.js`) to EVERY rendered read of tasks/events/
+  categories: Today (3 reads), All Tasks (2 → its subtree counts + the "All tasks · N" box now
+  exclude archived), the Settings category manager (categories), and **Calendar's shared
+  `useWeekData`** (events/tasks/categories — the first sanctioned edit to that protected hook,
+  filter-ONLY; Calendar otherwise identical). So archive now works end-to-end: delete → vanishes
+  → Undo (toast) → returns; a category delete hides its whole branch everywhere; counts drop;
+  archived categories leave the picker + manager. No write/schema/behaviour change beyond hiding
+  archived. **Flagged A3b:** the 7am brief edge function still reads tasks/events archived-unaware
+  (backend, separate deploy) — needs `&archived_at=is.null`; NOT touched here. Dead/unrendered
+  reads (old `Categories.jsx`, DayTimeline/TaskBlock/TaskRow/SomedayDrawer) left for T12; DayAgenda
+  has no DB read. Save point `7dfffb6`. Committed locally — not deployed. **NEXT: A4 — the Archive
+  screen (browse by batch, Restore, Delete-now); and A3b (brief filter). With A2+A3 done, the
+  archive loop is ready to deploy when you want.**
 - **2026-06-23 — Phase 7, Archive A2 DONE — deletes now ARCHIVE (write path). DELIBERATE
   HALF-STATE.** Every delete is now a soft-delete: a sealed `src/archive.js` helper stamps
   `archived_at` + a shared `archive_batch_id` (one batch per delete action) via the existing

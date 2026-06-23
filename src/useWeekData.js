@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
+import { activeOnly } from './archive'
 
 // The week's data layer: load this week's events + scheduled tasks + categories,
 // and the writes that the week view needs (all reload after). Kept apart so
@@ -18,18 +19,23 @@ export function useWeekData(days) {
     const inWeek = (q, col) =>
       q.gte(col, weekStart.toISOString()).lt(col, weekEnd.toISOString())
 
+    // Archive A3: active-only — archived rows are hidden (the ONLY change here).
     const [evRes, taskRes, catRes] = await Promise.all([
-      inWeek(
-        supabase.from('events').select('id, title, notes, start_at, end_at, location, category_id'),
-        'start_at',
+      activeOnly(
+        inWeek(
+          supabase.from('events').select('id, title, notes, start_at, end_at, location, category_id'),
+          'start_at',
+        ),
       ).order('start_at', { ascending: true }),
-      inWeek(
-        supabase
-          .from('tasks')
-          .select('id, title, notes, status, category_id, priority, due_date, scheduled_start, scheduled_end'),
-        'scheduled_start',
+      activeOnly(
+        inWeek(
+          supabase
+            .from('tasks')
+            .select('id, title, notes, status, category_id, priority, due_date, scheduled_start, scheduled_end'),
+          'scheduled_start',
+        ),
       ),
-      supabase.from('categories').select('id, name, color, parent_id, sort_order'),
+      activeOnly(supabase.from('categories').select('id, name, color, parent_id, sort_order')),
     ])
     setEvents(evRes.data || [])
     setScheduled(taskRes.data || [])

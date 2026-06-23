@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { resolveColor, isDerived } from './colorModel'
-import { gatherCategoryBranch, archiveCategoryBranch } from './archive'
+import { gatherCategoryBranch, archiveCategoryBranch, activeOnly } from './archive'
 import CategoryManagerRow from './kit/CategoryManagerRow'
 import './kit/categoryManager.css'
 
@@ -25,11 +25,13 @@ export default function CategoryManager() {
   const [confirmDel, setConfirmDel] = useState(null) // { cat, branch } | null
 
   async function load() {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('id, name, parent_id, color, sort_order, created_at')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true })
+    const { data, error } = await activeOnly(
+      supabase
+        .from('categories')
+        .select('id, name, parent_id, color, sort_order, created_at')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true }),
+    )
     if (error) {
       setError(friendly(error))
       setCats([])

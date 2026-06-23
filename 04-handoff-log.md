@@ -35,6 +35,56 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Archive A3 — active-only READ filter (completes the archive loop; reads only)
+ROADMAP MAPPING: **Archive A3**. Reads only; no schema, no write change.
+STEP 0 — EVERY READ found (and what got the filter):
+- **Filtered (rendered):** Today's `load()` (tasks, categories, events); All Tasks `load()` (tasks,
+  categories — which feed the subtree counts AND the "All tasks · N" box, so those exclude archived
+  too); CategoryManager `load()` (categories); **`useWeekData`** (events, tasks, categories).
+- **No DB read / covered:** `CategoryPicker` (gets `cats` as a prop — covered by Today/All-Tasks/
+  manager loads); the All-Tasks counts + Today box (derive from the filtered loads).
+- **Dead / unrendered (no filter; T12 trim):** `Categories.jsx` (old manager, not imported),
+  `DayTimeline`/`TaskBlock`/`TaskRow`/`SomedayDrawer` (unrendered). `DayAgenda` is rendered but
+  reads no data (static placeholder). `archive.js` gather reads already filter active.
+SHARED APPROACH: one helper — **`activeOnly(query) = query.is('archived_at', null)`** in
+`src/archive.js` — applied to every read, so "active only" is expressed identically everywhere
+(no per-screen drift). Verified counts: Today 3 reads, All Tasks 2, CategoryManager 1,
+useWeekData 3 — all wrapped.
+THE SANCTIONED SHARED-HOOK EDIT: `useWeekData` (Calendar's read hook) now wraps its 3 reads in
+`activeOnly` — **the ONLY change**; ordering/shape/writes/interactions untouched, so Calendar
+behaves exactly as before except archived items don't appear.
+SAVE POINT (Step 1): **`7dfffb6`** — "Phase 7 Archive A3 save point — before active-only read filter."
+FILES TOUCHED: src/archive.js (added `activeOnly`), src/Today.jsx, src/AllTasks.jsx,
+src/CategoryManager.jsx, src/useWeekData.js, 02-roadmap.md, 04-handoff-log.md. **No db/, no schema,
+no write-path change, no backend.**
+🔴 BACKEND FINDING → **A3b (tracked, NOT fixed here):** the 7am brief edge function
+(`supabase/functions/brief/day.ts`, `gap.ts`) reads OPEN tasks + events via PostgREST with **no**
+archived filter, so an archived (still status='open') task/event could appear in the morning brief.
+Fix = add `&archived_at=is.null` to those queries. Backend = separate deploy surface, out of A3
+scope — flagged in the roadmap as A3b, not silently skipped. (The Telegram function does writes/
+undo, not display reads, so it's not an A3 concern.)
+CONFIRMATIONS: every rendered read of tasks/events/categories now filters active-only; `useWeekData`
+edited ONLY to add the filter (Calendar otherwise identical); counts exclude archived; archived
+categories leave the picker + manager; **no write path, no behaviour, no schema changed**; Frankfurt
+only. Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed/deployed.** **A2 + A3 together are now the
+deploy-ready pair** (delete → vanishes → Undo returns); deploying A2 without A3 would have made
+deletes look like no-ops.
+RE-TEST (owner, Mac — the disappear behaviour is now real):
+- Delete a task → it VANISHES from Today/All Tasks immediately; Undo (toast) → returns.
+- Delete an event → vanishes from Today AND Calendar; Undo → returns.
+- Delete a category (Settings) → it + its branch + their tasks/events vanish everywhere (Today, All
+  Tasks, Calendar, the picker, the manager); counts drop.
+- The "All tasks · N" box and subtree counts EXCLUDE archived.
+- Archived categories don't appear in the picker or the manager.
+- Calendar otherwise behaves EXACTLY as before (drag/resize/edit an active event).
+- Nothing active is accidentally hidden (active items all still show).
+NEXT: A4 — the Archive screen (browse by batch, Restore, Delete-now); A3b — the brief filter.
+FOR THE CHECKER: cross-check EVERY read against the Step-0 list above (a missed read leaks archived
+items back); `useWeekData` edited only to add the filter with Calendar otherwise identical; counts
+exclude archived; no write/schema change; A3b (brief) flagged not skipped; Frankfurt only; save
+point `7dfffb6`.
+
 ### 2026-06-23 — Phase 7, Archive A2 — delete→archive WRITE path (front-end; existing paths; no schema)
 ROADMAP MAPPING: **Archive A2**. No schema (A1 added the columns/table).
 ⚠️ DELIBERATE HALF-STATE: A2 changes the WRITE side only. There is **NO read filter** yet (A3), so

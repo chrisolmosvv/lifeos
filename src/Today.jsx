@@ -5,7 +5,7 @@ import { INBOX_COLOR } from './palette'
 import { isSameDay, dayNameFull, formatMastheadDate } from './dateUtils'
 import { buildToday } from './todayModel'
 import { activeTotal } from './allTasksModel'
-import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
+import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive'
 import { useTodayGrid } from './kit/useTodayGrid'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
@@ -42,23 +42,29 @@ export default function Today({ onOpenAllTasks }) {
     const dayEnd = addDays(dayStart, 1)
 
     const [taskRes, catRes, evRes] = await Promise.all([
-      supabase
-        .from('tasks')
-        .select(
-          'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, parent_task_id, scheduled_start, scheduled_end, created_at',
-        )
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('categories')
-        .select('id, name, parent_id, color, sort_order, created_at')
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('events')
-        .select('id, title, notes, start_at, end_at, location, category_id')
-        .gte('start_at', dayStart.toISOString())
-        .lt('start_at', dayEnd.toISOString())
-        .order('start_at', { ascending: true }),
+      activeOnly(
+        supabase
+          .from('tasks')
+          .select(
+            'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, parent_task_id, scheduled_start, scheduled_end, created_at',
+          )
+          .order('created_at', { ascending: true }),
+      ),
+      activeOnly(
+        supabase
+          .from('categories')
+          .select('id, name, parent_id, color, sort_order, created_at')
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true }),
+      ),
+      activeOnly(
+        supabase
+          .from('events')
+          .select('id, title, notes, start_at, end_at, location, category_id')
+          .gte('start_at', dayStart.toISOString())
+          .lt('start_at', dayEnd.toISOString())
+          .order('start_at', { ascending: true }),
+      ),
     ])
     if (taskRes.error) {
       setError(friendly(taskRes.error))
