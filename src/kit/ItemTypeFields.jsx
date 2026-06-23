@@ -65,22 +65,37 @@ export default function ItemTypeFields({ k, isSubtask, create, busy, task, event
     )
   }
 
-  const { startAt, setStartAt, endAt, setEndAt, location, setLocation } = event
+  const {
+    allDay, setAllDay, startAt, setStartAt, endAt, setEndAt,
+    startDate, setStartDate, endDate, setEndDate, location, setLocation,
+  } = event
   return (
     <>
-      {/* All-day — DISABLED placeholder; real all-day needs the C6 schema flag. */}
-      <label className="tk-form-field tk-form-soonrow">
-        <span className="tk-form-fieldlabel">All-day</span>
-        <input type="checkbox" disabled aria-disabled="true" />
-        <span className="tk-form-soon">coming with all-day</span>
-      </label>
+      {/* All-day (C7) — live. On: the item moves to the band; date-only fields. */}
       <div className="tk-form-field">
-        <span className="tk-form-fieldlabel">Start / End</span>
-        <div className="tk-form-times">
-          <input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} aria-label="Start" />
-          <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} aria-label="End" />
-        </div>
+        <span className="tk-form-fieldlabel">All-day</span>
+        <label className="tk-form-allday">
+          <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
+          <span>{allDay ? 'All-day event' : 'Timed event'}</span>
+        </label>
       </div>
+      {allDay ? (
+        <div className="tk-form-field">
+          <span className="tk-form-fieldlabel">Dates (start / end)</span>
+          <div className="tk-form-times">
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} aria-label="Start date" />
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} aria-label="End date" />
+          </div>
+        </div>
+      ) : (
+        <div className="tk-form-field">
+          <span className="tk-form-fieldlabel">Start / End</span>
+          <div className="tk-form-times">
+            <input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} aria-label="Start" />
+            <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} aria-label="End" />
+          </div>
+        </div>
+      )}
       <label className="tk-form-field">
         <span className="tk-form-fieldlabel">Location</span>
         <input className="tk-form-input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Optional" />

@@ -30,16 +30,18 @@ export function monthLayout(monthAnchor, events, tasks) {
     return itemsByDay.get(k)
   }
 
-  const multi = [] // { event, startIdx, endIdx } — spans >1 calendar day
+  // Strips = all-day items (always, even single-day, per C7) + timed events that
+  // span >1 calendar day. Single-day timed events go in their cell.
+  const multi = [] // { event, startIdx, endIdx }
   for (const ev of events) {
     const startIdx = idxOf(new Date(ev.start_at))
     const lastIdx = idxOf(new Date(new Date(ev.end_at).getTime() - 1)) // end-exclusive
-    if (lastIdx <= startIdx) {
-      if (startIdx >= 0 && startIdx < 42) ensure(dayKey(days[startIdx])).events.push(ev)
-    } else {
+    if (ev.all_day || lastIdx > startIdx) {
       const a = Math.max(0, startIdx)
       const b = Math.min(41, lastIdx)
-      if (b >= 0 && a < 42) multi.push({ event: ev, startIdx: a, endIdx: b })
+      if (b >= 0 && a < 42 && b >= a) multi.push({ event: ev, startIdx: a, endIdx: b })
+    } else if (startIdx >= 0 && startIdx < 42) {
+      ensure(dayKey(days[startIdx])).events.push(ev)
     }
   }
 

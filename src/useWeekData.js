@@ -29,7 +29,7 @@ export function useWeekData(days) {
     const [evRes, taskRes, trayRes, catRes] = await Promise.all([
       activeOnly(
         inWeek(
-          supabase.from('events').select('id, title, notes, start_at, end_at, location, category_id'),
+          supabase.from('events').select('id, title, notes, start_at, end_at, location, category_id, all_day'),
           'start_at',
         ),
       ).order('start_at', { ascending: true }),

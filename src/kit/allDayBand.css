@@ -1,0 +1,77 @@
+/* The all-day band (Phase 7, C7). `adb-`-prefixed, theme tokens only. Sits above
+   the timed grid inside the sticky header block, aligned to the gutter + 7 cols.
+   Auto-height: the cols area is sized to the lane count; the band renders nothing
+   when empty (collapses). The height eases; reduced-motion opts out. */
+
+.adb {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+.adb-gutter {
+  width: 52px;
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 3px;
+  justify-content: flex-end;
+  padding-right: 6px;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+.adb-cols {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  cursor: copy;
+  touch-action: pan-y;
+  transition: height 0.18s ease;
+  padding: 2px 0;
+}
+
+.adb-bar {
+  position: absolute;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  padding: 0 0.4rem;
+  border-radius: 3px;
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
+  user-select: none;
+}
+.adb-bar.is-past {
+  opacity: 0.5;
+}
+.adb-bar.is-dragging {
+  z-index: 3;
+  outline: 1px solid var(--ink);
+}
+.adb-bar-title {
+  font-size: 0.7rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The span being drawn while click-dragging on the empty band. */
+.adb-preview {
+  position: absolute;
+  height: 20px;
+  border: 1px dashed var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adb-cols {
+    transition: none;
+  }
+}

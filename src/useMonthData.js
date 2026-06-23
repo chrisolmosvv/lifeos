@@ -38,7 +38,7 @@ export function useMonthData(monthAnchor) {
         activeOnly(
           supabase
             .from('events')
-            .select('id, title, start_at, end_at, category_id')
+            .select('id, title, start_at, end_at, category_id, all_day')
             .lt('start_at', eIso)
             .gte('end_at', sIso)
             .order('start_at', { ascending: true }),

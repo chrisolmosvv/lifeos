@@ -3,6 +3,7 @@ import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { useWeekData } from './useWeekData'
 import { useWeekGrid } from './kit/useWeekGrid'
+import { useBandDrag } from './kit/useBandDrag'
 import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
 import WeekGrid from './kit/WeekGrid'
 import TrayDrawer from './kit/TrayDrawer'
@@ -22,6 +23,12 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
   const [toast, setToast] = useState(null)
   const scrollRef = useRef(null)
   const bodyRef = useRef(null)
+  const bandRef = useRef(null)
+
+  // All-day events go to the band; only timed events render on the hour grid (so
+  // an all-day item never disturbs the timed even-split/overlap below). (C7)
+  const timedEvents = events.filter((e) => !e.all_day)
+  const allDayEvents = events.filter((e) => e.all_day)
 
   const inboxColor = cats.find((c) => isInbox(c))?.color || INBOX_COLOR
 
@@ -53,6 +60,17 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
     onSchedule: (id, startIso, endIso) => onScheduleTask(id, startIso, endIso),
     // Click a tray row → open the shared form to edit that loose task.
     onTraySelect: (task) => setForm({ kind: 'task', item: task, create: false }),
+  })
+
+  // The all-day band (C7) — day-grained create / move / span. Create opens the
+  // shared form preset all-day; move/span write through the existing event path.
+  const band = useBandDrag({
+    bandRef,
+    days,
+    onCreate: (startIso, endIso) =>
+      setForm({ kind: 'event', create: true, toggle: true, item: { all_day: true, start_at: startIso, end_at: endIso } }),
+    onMove: (event, startIso, endIso) => onSaveEvent(event.id, { start_at: startIso, end_at: endIso }),
+    onSelect: (event) => setForm({ kind: 'event', item: event, create: false }),
   })
 
   async function handleSave(fields, kind) {
@@ -90,7 +108,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
         <WeekGrid
           days={days}
           today={today}
-          events={events}
+          events={timedEvents}
           scheduled={scheduled}
           cats={cats}
           selectedId={selectedId}
@@ -103,6 +121,11 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
           dragLabel={grid.dragLabel}
           focusMs={focus?.ms}
           focusDay={focus?.day}
+          allDayEvents={allDayEvents}
+          bandRef={bandRef}
+          bandCreateBind={band.createBind}
+          bandBarBind={band.barBind}
+          bandPreview={band.preview}
         />
         {trayOpen && (
           <TrayDrawer

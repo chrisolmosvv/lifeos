@@ -17,11 +17,16 @@
   overflow-x: hidden;
 }
 
-/* The sticky day-header row: a corner spacer over the gutter, then 7 day heads. */
-.wk-head {
+/* The fixed top block — the day-header row + the all-day band — stays put as one
+   sticky unit while the timed grid scrolls beneath it (C7). */
+.wk-sticky {
   position: sticky;
   top: 0;
   z-index: 6;
+  background: var(--paper);
+}
+/* The day-header row: a corner spacer over the gutter, then 7 day heads. */
+.wk-head {
   display: flex;
   background: var(--paper);
   border-bottom: 1px solid var(--rule);

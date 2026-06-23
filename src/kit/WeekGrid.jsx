@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { HOUR_HEIGHT, isSameDay, dayName } from '../dateUtils'
 import WeekColumn from './WeekColumn'
+import AllDayBand from './AllDayBand'
 import './weekGrid.css'
 
 // WeekGrid — the Calendar's week sheet (Phase 7, C1 display; C2 makes it
@@ -28,6 +29,11 @@ export default function WeekGrid({
   dragLabel,
   focusMs,
   focusDay,
+  allDayEvents,
+  bandRef,
+  bandCreateBind,
+  bandBarBind,
+  bandPreview,
 }) {
   const [now, setNow] = useState(() => new Date())
 
@@ -59,21 +65,34 @@ export default function WeekGrid({
   return (
     <div className="wk">
       <div className="wk-scroll kit-scroll" ref={scrollRef}>
-        <div className="wk-head">
-          <div className="wk-corner" />
-          {days.map((d) => (
-            <div
-              key={d.toISOString()}
-              className={
-                'wk-dayhead' +
-                (isSameDay(d, today) ? ' is-today' : '') +
-                (focusDay && isSameDay(d, focusDay) ? ' is-focus' : '')
-              }
-            >
-              <span className="wk-dh-name">{dayName(d)}</span>
-              <span className="wk-dh-num">{d.getDate()}</span>
-            </div>
-          ))}
+        <div className="wk-sticky">
+          <div className="wk-head">
+            <div className="wk-corner" />
+            {days.map((d) => (
+              <div
+                key={d.toISOString()}
+                className={
+                  'wk-dayhead' +
+                  (isSameDay(d, today) ? ' is-today' : '') +
+                  (focusDay && isSameDay(d, focusDay) ? ' is-focus' : '')
+                }
+              >
+                <span className="wk-dh-name">{dayName(d)}</span>
+                <span className="wk-dh-num">{d.getDate()}</span>
+              </div>
+            ))}
+          </div>
+
+          <AllDayBand
+            days={days}
+            today={today}
+            allDayEvents={allDayEvents || []}
+            byId={byId}
+            bandRef={bandRef}
+            createBind={bandCreateBind}
+            barBind={bandBarBind}
+            preview={bandPreview}
+          />
         </div>
 
         <div className="wk-body" ref={bodyRef}>
