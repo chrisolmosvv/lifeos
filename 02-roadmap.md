@@ -363,12 +363,18 @@ separately-verified pieces; old Calendar code retired conservatively in C4, not 
   **retired (no longer imported) but NOT deleted** — they go with the old cluster in C4. Save point
   `d0388df`. *(CHECKER: Today form unchanged bar the 2 disabled rows; Calendar delete = archive+undo;
   the one new write is the archive-delete.)*
-- ⬜ **C4 — Drag-logic convergence. Collapse `useTodayGrid` + `useWeekGrid` into ONE grid hook**
-  (the documented debt from C2 — both are deliberately close twins to diff against), and merge the
-  old `useEventDrag`/`useScheduleDrag` in; then retire the now-dead old Calendar cluster as one unit
-  (provably unused, separate commits): `WeekCalendar.jsx` + `DayColumn`/`EventBlock`/`WeekDragPreview`
-  + the drag hooks + **`EventPanel`/`TaskPanel`/`TaskEditForm`** (retired in C3, files left until here
-  so the dead `WeekCalendar` keeps no broken import) + `eventPanel.css`.
+- 🔨 **C4 — Drag-logic convergence (in two parts).**
+  - ✅ **Part 1 — remove the dead old-Calendar cluster** (pure deletion, zero behaviour change).
+    Proven a closed dead set (roots `WeekCalendar.jsx` + `DayTimeline.jsx` had 0 importers; live
+    bundle hashes unchanged after removal = never shipped). **Deleted (11):** `WeekCalendar`,
+    `DayTimeline`, `DayColumn`, `EventBlock`, `WeekDragPreview`, `EventPanel`, `TaskPanel`,
+    `useEventDrag`, `useScheduleDrag`, `eventPanel.css`, `dayTimeline.css`. **Kept (live):** `NowLine`
+    (DayAgenda), `eventLayout` (new engine), `calendar.css` + `DayAgenda` (LoggedIn). **Left
+    (still referenced):** `TaskEditForm` — used by `TaskRow` (a separate old task-list cluster:
+    `TaskRow ← TaskBlock ← SomedayDrawer`), so out of scope here. Save point `6e2a81f`.
+  - ⬜ **Part 2 — collapse `useTodayGrid` + `useWeekGrid` into ONE grid hook** (the documented C2
+    debt; the close twins exist to diff against). **This one DOES touch Today** — its own piece, with
+    Today regression front-and-centre in verification.
 - ✅ **C5 — The unscheduled tray** (right-side **push** drawer). The tasks unscheduled in C2 finally
   get an on-Calendar home. Reuses Today's module-to-grid drag by **mirroring its tray gesture into
   `useWeekGrid`** (the documented twin) with the week's own x→day + y→time drop geometry —

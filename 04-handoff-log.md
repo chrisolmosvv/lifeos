@@ -35,6 +35,38 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C4 Part 1 — remove the dead old-Calendar cluster (deletion only)
+WHAT CHANGED:
+- Deleted the old Calendar code that was left in place as a fallback while C1–C7 built the new engine
+  beside it. **Nothing live changed** — only files that were already imported by no live code.
+- **Deleted 11 files:** `WeekCalendar.jsx`, `DayTimeline.jsx`, `DayColumn.jsx`, `EventBlock.jsx`,
+  `WeekDragPreview.jsx`, `EventPanel.jsx`, `TaskPanel.jsx`, `useEventDrag.js`, `useScheduleDrag.js`,
+  `eventPanel.css`, `dayTimeline.css`.
+HOW I PROVED IT (before deleting): searched the whole `src` tree for every importer of each file —
+the two roots (`WeekCalendar`, `DayTimeline`) had **zero** importers, and every other file was
+imported only by others inside that dead set. After deleting, the live **bundle hashes are identical**
+to the C7 build (`index-BiXJXuc1.css` / `index-DdEe6CxK.js`) — i.e. this code was never in the shipped
+app, so removing it can't change anything.
+FILES TOUCHED: deletions only (the 11 above). No live file edited. Build passes; save `6e2a81f`.
+HOW TO VERIFY (dev: http://localhost:5174/):
+  1. The app **builds and runs** with no errors.
+  2. **Calendar** — week + month + tray + all-day band — behaves **exactly** as before.
+  3. **Today** and **All Tasks** — exactly as before.
+  Nothing should look or behave one bit different; only dead code was removed.
+KNOWN GAPS / RISKS:
+- **Kept on purpose (still live):** `NowLine` (phone `DayAgenda`), `eventLayout` (the new engine),
+  `calendar.css` + `DayAgenda` (the app frame). `TaskEditForm` was **left** — it's still used by
+  `TaskRow` (a separate old task-list cluster, `TaskRow ← TaskBlock ← SomedayDrawer`), so it's out of
+  scope for this Calendar-cluster deletion.
+- 4 live files still mention old names **in comments only** (no imports) — harmless, a future doc tidy.
+- **Part 2 is still to come:** collapsing `useTodayGrid` + `useWeekGrid` into one grid hook — that one
+  touches Today and is its own piece.
+- Not deployed — local save point only.
+NEXT: **C4 Part 2** — the twin-hook collapse (touches Today; verify Today carefully).
+FOR THE CHECKER: **pure deletion, no live code touched.** Worth confirming the 11 deleted files were
+genuinely unreferenced (the bundle hashes are unchanged vs C7 — strong evidence) and the build is
+clean. Today / All Tasks / the whole new Calendar are unchanged because only dead code was removed.
+
 ### 2026-06-23 — Phase 7, C7 — all-day / multi-day band (⚠️ SCHEMA CHANGE — verified applied)
 ⚠️ **THIS PIECE CHANGED THE DATABASE** — the only schema change in the whole Calendar rebuild.
 `db/10_events_all_day.sql` adds one column: `events.all_day boolean not null default false`
