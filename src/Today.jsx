@@ -5,6 +5,7 @@ import { INBOX_COLOR } from './palette'
 import { isSameDay, dayNameFull, formatMastheadDate } from './dateUtils'
 import { buildToday } from './todayModel'
 import { activeTotal } from './allTasksModel'
+import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
 import { useTodayGrid } from './kit/useTodayGrid'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
@@ -113,23 +114,28 @@ export default function Today({ onOpenAllTasks }) {
     return msg
   }
 
+  // Delete = ARCHIVE (soft-delete): stamp the row(s) with archived_at + a batch.
+  // A task archives its subtasks in the same batch. Undo reverses the batch.
+  // (No read filter yet — archived items still SHOW until A3, by design.)
   async function handleDelete() {
     const { kind, item } = form
     setForm(null)
-    const table = kind === 'task' ? 'tasks' : 'events'
     setBusy(true)
-    const { error } = await supabase.from(table).delete().eq('id', item.id)
+    const res =
+      kind === 'task'
+        ? await archiveTask(item.id, item.title)
+        : await archiveEvent(item.id, item.title)
     setBusy(false)
-    if (error) return setError(friendly(error))
+    if (res.error) return setError(friendly(res.error))
     await load()
     setToast({
-      text: 'Deleted',
+      text: 'Archived',
       onUndo: async () => {
         setToast(null)
         setBusy(true)
-        const { error } = await supabase.from(table).insert(item)
+        const r = await unarchiveBatch(res.batchId)
         setBusy(false)
-        if (error) setError(friendly(error))
+        if (r?.error) setError(friendly(r.error))
         else await load()
       },
     })

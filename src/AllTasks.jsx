@@ -9,6 +9,7 @@ import {
   orderTasks,
   childrenOf,
 } from './allTasksModel'
+import { archiveTask, unarchiveBatch } from './archive'
 import TodayTaskRow from './kit/TodayTaskRow'
 import TodayForm from './kit/TodayForm'
 import CategoryDrillRow from './kit/CategoryDrillRow'
@@ -78,22 +79,23 @@ export default function AllTasks({ onBack }) {
     if (!msg) setForm(null)
     return msg
   }
+  // Delete = ARCHIVE (a task + its subtasks as one batch); undo reverses the batch.
   async function handleDelete() {
     const { item } = form
     setForm(null)
     setBusy(true)
-    const { error } = await supabase.from('tasks').delete().eq('id', item.id)
+    const res = await archiveTask(item.id, item.title)
     setBusy(false)
-    if (error) return setError(friendly(error))
+    if (res.error) return setError(friendly(res.error))
     await load()
     setToast({
-      text: 'Deleted',
+      text: 'Archived',
       onUndo: async () => {
         setToast(null)
         setBusy(true)
-        const { error } = await supabase.from('tasks').insert(item)
+        const r = await unarchiveBatch(res.batchId)
         setBusy(false)
-        if (error) setError(friendly(error))
+        if (r?.error) setError(friendly(r.error))
         else await load()
       },
     })

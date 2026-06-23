@@ -10,7 +10,7 @@ import './categoryManager.css'
 // is why delete is refused, computed by the manager (tasks/children present).
 export default function CategoryManagerRow({
   cat, depth, isInbox, resolvedHex, derived, hasChildren, canAddChild, expanded,
-  busy, blockedReason, isDropTarget,
+  busy, isDropTarget,
   onToggle, onRename, onRecolor, onAddChild, onDelete,
   onDragStart, onDragEnd, onDragOverRow, onDropRow,
 }) {
@@ -19,7 +19,6 @@ export default function CategoryManagerRow({
   const [pop, setPop] = useState(false)
   const [adding, setAdding] = useState(false)
   const [childVal, setChildVal] = useState('')
-  const [confirming, setConfirming] = useState(false)
 
   function saveName() {
     const n = nameVal.trim()
@@ -102,7 +101,7 @@ export default function CategoryManagerRow({
           <button className="cm-act" onClick={() => setAdding(true)}>+ child</button>
         )}
         {!isInbox && (
-          <button className="cm-act cm-del" onClick={() => setConfirming(true)} disabled={busy}>
+          <button className="cm-act cm-del" onClick={() => onDelete(cat)} disabled={busy}>
             Delete
           </button>
         )}
@@ -120,23 +119,6 @@ export default function CategoryManagerRow({
           />
           <button type="submit" disabled={busy}>Add</button>
         </form>
-      )}
-
-      {confirming && (
-        <div className="cm-confirm" style={{ paddingLeft: depth * 1.2 + 'rem' }}>
-          {blockedReason ? (
-            <>
-              <span>{blockedReason}</span>
-              <button className="cm-confirm-no" onClick={() => setConfirming(false)}>OK</button>
-            </>
-          ) : (
-            <>
-              <span>Delete <b>{cat.name}</b>?</span>
-              <button className="cm-confirm-yes" onClick={() => { setConfirming(false); onDelete(cat.id) }} disabled={busy}>Delete</button>
-              <button className="cm-confirm-no" onClick={() => setConfirming(false)}>Cancel</button>
-            </>
-          )}
-        </div>
       )}
     </li>
   )

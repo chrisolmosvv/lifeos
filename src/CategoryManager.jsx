@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { resolveColor, isDerived } from './colorModel'
+import { gatherCategoryBranch, archiveCategoryBranch } from './archive'
 import CategoryManagerRow from './kit/CategoryManagerRow'
 import './kit/categoryManager.css'
 
@@ -14,7 +15,6 @@ import './kit/categoryManager.css'
 // Calendar or their read hooks.
 export default function CategoryManager() {
   const [cats, setCats] = useState(null)
-  const [taskCatIds, setTaskCatIds] = useState(new Set())
   const [expanded, setExpanded] = useState(new Set())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -22,24 +22,21 @@ export default function CategoryManager() {
   const [topVal, setTopVal] = useState('')
   const [drag, setDrag] = useState(null) // {id, parentId}
   const [dropId, setDropId] = useState(null)
+  const [confirmDel, setConfirmDel] = useState(null) // { cat, branch } | null
 
   async function load() {
-    const [catRes, taskRes] = await Promise.all([
-      supabase
-        .from('categories')
-        .select('id, name, parent_id, color, sort_order, created_at')
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true }),
-      supabase.from('tasks').select('category_id'),
-    ])
-    if (catRes.error) {
-      setError(friendly(catRes.error))
+    const { data, error } = await supabase
+      .from('categories')
+      .select('id, name, parent_id, color, sort_order, created_at')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+    if (error) {
+      setError(friendly(error))
       setCats([])
       return
     }
     setError('')
-    setCats(catRes.data)
-    setTaskCatIds(new Set((taskRes.data || []).map((t) => t.category_id).filter(Boolean)))
+    setCats(data)
   }
 
   useEffect(() => {
@@ -65,8 +62,27 @@ export default function CategoryManager() {
     run(supabase.from('categories').update({ color }).eq('id', id)) // null = derived
   const onAddChild = (parentId, name) =>
     run(supabase.from('categories').insert({ name, parent_id: parentId }))
-  const onDelete = (id) =>
-    run(supabase.from('categories').delete().eq('id', id))
+
+  // Delete a category = ARCHIVE its WHOLE branch as one batch (A2 replaces T13's
+  // interim block). Clicking Delete gathers the branch and opens a confirm that
+  // states what it will take; confirm archives it. (No undo toast — it's an
+  // explicit confirm. Archived items still SHOW until the A3 read filter.)
+  async function requestDelete(cat) {
+    setBusy(true)
+    const branch = await gatherCategoryBranch(cat.id)
+    setBusy(false)
+    if (branch.error) return setError(friendly(branch.error))
+    setConfirmDel({ cat, branch })
+  }
+  async function confirmDelete() {
+    const { cat, branch } = confirmDel
+    setConfirmDel(null)
+    setBusy(true)
+    const res = await archiveCategoryBranch(cat.id, cat.name, branch)
+    setBusy(false)
+    if (res.error) return setError(friendly(res.error))
+    await load()
+  }
   async function onAddTop(e) {
     e.preventDefault()
     const n = topVal.trim()
@@ -87,11 +103,6 @@ export default function CategoryManager() {
         return a.sort_order - b.sort_order || a.name.localeCompare(b.name)
       })
   const hasChildren = (id) => list.some((c) => c.parent_id === id)
-  const blockedReason = (cat) => {
-    if (hasChildren(cat.id)) return 'It has sub-categories — move or remove them first.'
-    if (taskCatIds.has(cat.id)) return 'It has tasks — move them first.'
-    return null
-  }
 
   // Reorder within the same parent (drag a sibling onto a sibling); persists sort_order.
   function onDragStart(cat) {
@@ -144,7 +155,6 @@ export default function CategoryManager() {
           canAddChild={depth < 2} /* depth 0=top,1=sub can add; 2=sub-sub cannot (cap 3) */
           expanded={expanded.has(cat.id)}
           busy={busy}
-          blockedReason={blockedReason(cat)}
           isDropTarget={dropId === cat.id}
           onToggle={() =>
             setExpanded((s) => {
@@ -156,7 +166,7 @@ export default function CategoryManager() {
           onRename={onRename}
           onRecolor={onRecolor}
           onAddChild={onAddChild}
-          onDelete={onDelete}
+          onDelete={requestDelete}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
           onDragOverRow={onDragOverRow}
@@ -199,9 +209,30 @@ export default function CategoryManager() {
         <ul className="cm-list">{renderTree(null, 0)}</ul>
       )}
 
+      {confirmDel && (
+        <div className="cm-confirm">
+          <span>
+            Archive <b>{confirmDel.cat.name}</b> and its branch?{' '}
+            {branchSummary(confirmDel.branch)}
+          </span>
+          <button className="cm-confirm-yes" onClick={confirmDelete} disabled={busy}>Archive</button>
+          <button className="cm-confirm-no" onClick={() => setConfirmDel(null)}>Cancel</button>
+        </div>
+      )}
+
       {error && <p className="cm-error">{error}</p>}
     </div>
   )
+}
+
+// "This takes 2 sub-categories, 5 tasks and 1 event." (omits zero parts).
+function branchSummary(b) {
+  const subs = Math.max(0, (b.categoryIds?.length || 0) - 1)
+  const parts = []
+  if (subs) parts.push(`${subs} sub-categor${subs === 1 ? 'y' : 'ies'}`)
+  parts.push(`${b.taskIds?.length || 0} task${b.taskIds?.length === 1 ? '' : 's'}`)
+  parts.push(`${b.eventIds?.length || 0} event${b.eventIds?.length === 1 ? '' : 's'}`)
+  return 'This archives ' + parts.join(', ') + '.'
 }
 
 function friendly(error) {

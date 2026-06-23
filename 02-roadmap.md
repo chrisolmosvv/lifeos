@@ -329,8 +329,14 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
     (owner-only RLS) + nullable `archived_at` + `archive_batch_id` (FK→batches ON DELETE SET NULL)
     on tasks/events/categories (`db/09_archive.sql`). No behaviour change; every row active. Proven
     live (cols/table/RLS present, depth trigger still fires, rolled back). Save point `b3a84c1`.
-  - ⬜ **A2 — delete→archive write path** (set `archived_at` + a batch; category delete archives
-    its whole branch as one batch; lifts the T13 block).
+  - ✅ **A2 — delete→archive write path.** All deletes now ARCHIVE (set `archived_at` + a batch)
+    via a sealed `src/archive.js` helper: task (+ its subtasks in one batch) and event delete →
+    "Archived · Undo" toast (undo reverses the batch); **category delete → a confirm stating the
+    branch counts, then archives the whole branch (category + descendants + their tasks/events)
+    as ONE batch** — this **replaces T13's interim block**; Inbox still never archivable. Atomic-
+    ish: on any partial failure the batch is compensated (fully un-archived + removed). **No read
+    filter (A3), no Archive screen (A4), no schema, no shared read hook.** ⚠️ HALF-STATE: archived
+    items STILL SHOW until A3. Save point `99b0f12`.
   - ⬜ **A3 — active-only read filter** (`archived_at IS NULL`) on every screen's reads.
   - ⬜ **Archive screen** — grouped by delete action, with Restore and Delete-now.
 
@@ -347,6 +353,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Archive A2 DONE — deletes now ARCHIVE (write path). DELIBERATE
+  HALF-STATE.** Every delete is now a soft-delete: a sealed `src/archive.js` helper stamps
+  `archived_at` + a shared `archive_batch_id` (one batch per delete action) via the existing
+  Supabase write paths. Task delete archives the task **+ its subtasks** in one batch; event
+  delete likewise; both show **"Archived · Undo"** (undo reverses the whole batch + deletes the
+  batch row). **Category delete now archives the WHOLE branch** (category + descendants + their
+  tasks/events) as one batch behind a confirm that states the counts — **this replaces T13's
+  interim "blocked" delete**; Inbox stays unarchivable. Atomic-ish: any partial failure
+  compensates (un-archives + removes the batch), so no half-written batch is left. **⚠️ By
+  design, archived items STILL SHOW on Today/All-Tasks/Calendar/Settings — A3 (the active-only
+  read filter) is required next before this feels right.** NO read filter, NO Archive screen, NO
+  schema, NO shared read hook touched. Save point `99b0f12`. Committed locally — not deployed.
+  **NEXT: A3 — add `archived_at IS NULL` to every screen's reads (the disappear behaviour), then
+  the Archive screen (restore / delete-now).**
 - **2026-06-23 — Phase 7, Archive A1 DONE — soft-delete + batch SCHEMA foundation (DB only).** Added
   (additive, live on Frankfurt) a new `archive_batches` table (owner-only RLS matching the spine
   pattern) and nullable `archived_at` + `archive_batch_id` (FK→batches ON DELETE SET NULL) on

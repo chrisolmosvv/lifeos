@@ -35,6 +35,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Archive A2 — delete→archive WRITE path (front-end; existing paths; no schema)
+ROADMAP MAPPING: **Archive A2**. No schema (A1 added the columns/table).
+⚠️ DELIBERATE HALF-STATE: A2 changes the WRITE side only. There is **NO read filter** yet (A3), so
+archived items **STILL SHOW** on Today/All-Tasks/Calendar/Settings — flagged archived in the data
+but unfiltered. This is expected; the disappear behaviour is verified after A3.
+THE SEALED HELPER (`src/archive.js`):
+- `archiveTask(id,label)` — archives the task **+ its active subtasks** (`parent_task_id = id`) in
+  ONE batch (subtasks never orphan).
+- `archiveEvent(id,label)` — archives the event.
+- `gatherCategoryBranch(rootId)` — read-only walk of the active `parent_id` tree → `{categoryIds,
+  taskIds, eventIds}` (the subtree + every active task/event whose `category_id` is anywhere in
+  it). Already-archived rows excluded (only active `archived_at IS NULL` is gathered).
+- `archiveCategoryBranch(rootId,label,gathered)` — archives that whole branch as ONE batch.
+- `unarchiveBatch(batchId)` — clears `archived_at` + `archive_batch_id` for every row in the batch
+  (all three tables) and deletes the batch row. Used by Undo AND as failure compensation.
+ATOMIC-ISH + FAILURE HANDLING: the browser client can't wrap multiple statements in one
+transaction, so the helper (1) inserts the `archive_batches` row, then (2) stamps each table's
+rows with `.update({archived_at, archive_batch_id}).in('id', ids)` (1 statement per table). **If
+any stamp fails, it runs `unarchiveBatch` to fully revert + delete the batch**, then returns the
+error to the UI — never a silently half-archived batch. (Single-table archives — task/event — have
+no partial state.)
+WIRED INTO THE EXISTING DELETE ACTIONS (writes via the existing Supabase client paths):
+- **Today** (`handleDelete`): task → `archiveTask`, event → `archiveEvent`; toast **"Archived ·
+  Undo"** (was "Deleted"); Undo = `unarchiveBatch`.
+- **All Tasks** (`handleDelete`): task → `archiveTask`; same toast/undo.
+- **Settings category manager** (`CategoryManager`): Delete now **gathers the branch → a confirm
+  ("Archive <name> and its branch? This archives N sub-categories, T tasks, E events.")** →
+  `archiveCategoryBranch` (one batch, source_type 'category', label = name). **No undo toast**
+  (explicit confirm). **T13's interim "blocked if it has tasks/children" guard is removed** (and
+  the unused tasks-count read dropped). `CategoryManagerRow` lost its local confirm/blockedReason
+  (the manager owns the confirm). **Inbox** still never offers Delete.
+SAVE POINT (Step 0): **`99b0f12`** — "Phase 7 Archive A2 save point — before delete→archive writes."
+FILES TOUCHED: ADDED src/archive.js; EDITED src/Today.jsx, src/AllTasks.jsx, src/CategoryManager.jsx,
+src/kit/CategoryManagerRow.jsx, 02-roadmap.md, 04-handoff-log.md. **No db/, no schema.**
+CONFIRMATIONS: deletes now ARCHIVE (no hard delete anywhere — rows persist, flagged); batches
+written correctly (subtree for categories, subtasks for tasks); undo fully reverses (clears the
+stamps + deletes the batch); **Inbox unarchivable**; **NO read filter added**; **no shared read
+hook touched** (Today/All-Tasks `load()` and `useWeekData` unchanged; CategoryManager's category
+read is unchanged — it still shows all rows); no schema; writes via existing paths; Frankfurt only.
+Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed/deployed.** (And A2 alone shouldn't ship to
+the owner without A3 — it would make deletes look like they do nothing.)
+RE-TEST (owner, Mac — REMEMBER the half-state: archived items still SHOW until A3):
+- Delete a task → "Archived · Undo"; in the data the row gets `archived_at` + a batch (still
+  visible — expected); Undo clears it fully.
+- A task with subtasks → all archived in one batch (check the data).
+- Delete an event → same archive behaviour.
+- Delete a category → confirm shows the branch counts; on confirm the category + subtree + their
+  tasks/events all get `archived_at` + the SAME `archive_batch_id`; Inbox offers no Delete.
+- Nothing is HARD-deleted (rows still exist, just flagged).
+- Calendar + the rest of Settings otherwise behave as before.
+NEXT: **A3 — add `archived_at IS NULL` to every screen's reads** (Today/All-Tasks/Calendar/the
+category manager), so archived items finally disappear; then the Archive screen (restore/delete-now).
+FOR THE CHECKER: deletes now archive (no hard deletes); batches correct (category subtree, task
+subtasks); undo fully reverses; Inbox unarchivable; NO read filter added; no shared read hook
+touched; no schema; writes via existing paths; Frankfurt only; save point `99b0f12`.
+
 ### 2026-06-23 — Phase 7, Archive A1 — soft-delete + batch schema foundation (SCHEMA ONLY; additive)
 ROADMAP MAPPING: **Archive A1** — first piece of the Archive sub-feature (A1 schema → A2
 delete→archive write → A3 active-only read filter → the Archive screen). Will later lift T13's
