@@ -38,7 +38,7 @@ export default function WeekGrid({ days, today, events, scheduled, cats, onOpenE
 
   return (
     <div className="wk">
-      <div className="wk-scroll" ref={scrollRef}>
+      <div className="wk-scroll kit-scroll" ref={scrollRef}>
         <div className="wk-head">
           <div className="wk-corner" />
           {days.map((d) => (

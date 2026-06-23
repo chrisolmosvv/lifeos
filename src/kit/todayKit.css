@@ -3,6 +3,32 @@
    class is prefixed `tk-` and used ONLY by these kit components, so a tweak here
    can't leak to any other screen. Colour/type come from the theme (theme.css). */
 
+/* --- kit-scroll: the SHARED grid scrollbar theme (Phase 7, C1.1) ------------
+   A quiet paper/ink-toned scrollbar so the grid's scroll bar sits in the design
+   instead of the default OS bar. Applied to BOTH grid scroll containers (Today's
+   .tk-grid-scroll and Calendar's .wk-scroll) so the look matches on both screens.
+   Still fully scrollable + grabbable — just themed. Theme tokens only.
+   (C4 debt: when DayGrid + WeekGrid converge into one grid, these two scroll
+   containers + the duplicated gutter become a single shared element.) */
+.kit-scroll {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--rule) transparent; /* thumb · track */
+}
+.kit-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.kit-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.kit-scroll::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 5px;
+  border: 3px solid var(--paper); /* inset against paper → reads as a slim quiet thumb */
+}
+.kit-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-muted);
+}
+
 /* --- ModuleHeader: a quiet kicker over a hairline ------------------------- */
 .tk-modhead {
   flex: none;
@@ -212,10 +238,15 @@
   height: 48px; /* must equal HOUR_HEIGHT in dateUtils.js */
   position: relative;
 }
+/* The hour number sits ON its grid-line: anchor to the cell top (= the line) and
+   centre the label on it. line-height:1 + translateY(-50%) makes this exact at
+   every hour, instead of the old -0.5em drifting into the row. (C1.1) */
 .tk-grid-time span {
   position: absolute;
-  top: -0.5em;
+  top: 0;
   right: 6px;
+  transform: translateY(-50%);
+  line-height: 1;
   font-size: 0.62rem;
   color: var(--ink-muted);
 }

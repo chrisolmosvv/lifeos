@@ -67,7 +67,7 @@ export default function DayGrid({
 
   return (
     <div className="tk-grid">
-      <div className="tk-grid-scroll" ref={scrollRef}>
+      <div className="tk-grid-scroll kit-scroll" ref={scrollRef}>
         <div className="tk-grid-inner">
           <div className="tk-grid-times">
             {HOURS.map((h) => (

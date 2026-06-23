@@ -79,18 +79,26 @@
   height: 48px; /* must equal HOUR_HEIGHT in dateUtils.js */
   position: relative;
 }
+/* The hour number sits ON its grid-line (cell top), centred on the line — exact
+   at every hour via line-height:1 + translateY(-50%) (was -0.5em, which drifted
+   into the row). Matches Today's gutter fix. (C1.1) */
 .wk-gutter-cell span {
   position: absolute;
-  top: -0.5em;
+  top: 0;
   right: 6px;
+  transform: translateY(-50%);
+  line-height: 1;
   font-size: 0.62rem;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
+/* The trailing "00" labels the bottom 24:00 line — centred on it the same way. */
 .wk-gutter-end {
   position: absolute;
   right: 6px;
-  bottom: -0.5em;
+  bottom: 0;
+  transform: translateY(50%);
+  line-height: 1;
   font-size: 0.62rem;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
