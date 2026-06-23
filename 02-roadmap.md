@@ -290,13 +290,17 @@ it rather than dig (see the Piece-1c decision).
   delete behaviour** (re-parent up vs block vs delete subtree). No seeded tree — start is
   just Inbox.
 
-### Phase 7 — DEPLOY STATE (true-up, Piece D2)
-⚠️ **As of 2026-06-23, NOTHING in Phase 7 is pushed or deployed** — local `main` is **22
-commits ahead of `origin/main`**; the live site still runs the **Phase-6 front-end**. The **T3
-+ T7 schema changes ARE live on the Frankfurt DB** (applied directly), so the **database is
-ahead of the deployed front-end** (harmless — the changes are supersets — but the phone has no
-Phase-7 UI until a **push/deploy**). No Phase-7 piece has a **logged owner-verification** (only
-Phases 4/5/6 do) or a **checker review** yet. Full per-piece table: see the D2 handoff entry.
+### Phase 7 — DEPLOY STATE (updated by Piece DV1)
+✅ **2026-06-23 (DV1): Phase 7 is now DEPLOYED to production.** `origin/main` = `df65a20`; the
+Vercel Production build succeeded (● Ready) and serves the rebuild (Today + All Tasks). Production
+env confirmed → **Frankfurt** (`cntlptuacsujbdtwvbis`), matching the live T3/T7 schema. Rollback
+target if needed: the prior Production deployment `lifeos-co8d0w5a4-…` (ref `3ff8a68`, Phase-6) —
+"Promote to Production" in Vercel (the DB stays as-is; additive supersets).
+⚠️ **Still pending: owner verification.** Claude Code can't test behind the magic-link login, and
+the `*.vercel.app` URLs are behind Vercel Deployment Protection (so no anonymous smoke-load). **No
+Phase-7 piece is owner-verified on Mac+phone or checker-reviewed yet** (only Phases 4/5/6 are). The
+owner's verification checklist is in the DV1 handoff/report; each confirmed item flips that piece
+UNKNOWN → owner-verified → checker. (Earlier "nothing deployed" note superseded by this.)
 
 ### Phase 7 — remaining backlog (after Today + All Tasks; order is a guide, owner sets it)
 - ⬜ **Deploy Phase 7** — push `main` so Today + All Tasks reach the live site / phone, then

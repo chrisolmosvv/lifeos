@@ -35,6 +35,44 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Piece DV1 — FIRST Phase-7 deploy to production (deploy + smoke-check; no code/schema)
+WHAT HAPPENED: pushed the 23 unpushed Phase-7 commits to `origin/main`; Vercel auto-built and
+deployed **production**. This is the FIRST time any Phase-7 work is live — unlike every prior
+piece (which were committed-locally-only).
+PRE-FLIGHT (all gates passed before push): working tree clean; **rollback target = origin/main
+`3ff8a68`** (the Phase-6 front-end) and the **live deployment then = `lifeos-co8d0w5a4-…vercel.app`**
+(Vercel deployment id 5156353743); the pushed range was exactly the Phase-7 Today + All-Tasks
+rebuild + brain docs (nothing unexpected); **deploy mechanism = push-to-main → Vercel Production
+auto-deploy** (confirmed from the GitHub Deployments history — every prior main commit has a
+matching Production deployment); **production env confirmed → FRANKFURT** (`VITE_SUPABASE_URL`
+in Vercel production = `cntlptuacsujbdtwvbis.supabase.co`, read directly from the project's prod
+env) — matches where the T3/T7 schema lives, so the new front-end's `in_progress` status + 3-level
+categories work against the live DB.
+DEPLOY RESULT (what Claude Code CAN confirm): push succeeded → **origin/main = `df65a20`**; the
+new **Production** deployment for ref `df65a20` is **state success / ● Ready** (6s build) at
+`lifeos-dezpmsxje-chrisolmosvvs-projects.vercel.app`; **deployed commit = local main** (`df65a20`).
+SMOKE-CHECK CEILING (honest): the project's `*.vercel.app` URLs are behind **Vercel Deployment
+Protection** (401 to an anonymous fetch — UNCHANGED from Phase 6, so the owner's existing access
+still works), so Claude Code could NOT anonymously load the page or assets. Everything behind the
+Supabase magic-link login (Today, All Tasks, Calendar, Settings, every interaction + all data)
+**cannot be verified by Claude Code — it is the owner's job.** No claim is made that any of it works.
+DEPLOY CLARITY: ✅ **This IS now pushed + deployed to production** (the first Phase-7 deploy).
+ROLLBACK LEVER (owner; not auto-done): in the Vercel dashboard → lifeos → Deployments, find the
+previous Production deployment **`lifeos-co8d0w5a4-…` (ref `3ff8a68`, the Phase-6 build)** and use
+**"Promote to Production"** (instant revert, no rebuild). Optionally also `git revert`/reset
+`origin/main` back to `3ff8a68` and push so the repo matches. **The live DB stays as-is** — the
+T3/T7 changes are additive supersets, so old front-end + new DB is safe; rolling back the
+front-end does NOT touch the database.
+OWNER VERIFICATION CHECKLIST: handed to the owner in the session report (grouped FIRST / MAC /
+PHONE, mapped to T4/T7/T6/T5/T8/T11). Each item, once the owner confirms it, flips that piece from
+UNKNOWN → owner-verified, then it goes to the checker. NB drag (T5) is **mouse-only by design** —
+not expected on the phone.
+FILES TOUCHED: none in src/ or db/. Docs only: this entry + the roadmap deploy-state true-up. No
+code, no schema, no data. (The `vercel link` side-effects — a `.vercel/` dir + a `.gitignore`
+line — were reverted so the tree stays pristine.)
+NEXT: owner verifies on Mac + phone (first real phone check of the rebuild); then the checker
+reviews; then the Calendar re-skin-vs-rebuild decision, or T10/T13.
+
 ### 2026-06-23 — Phase 7, Piece D2 — brain-doc sync + verification-state stock-take (DOCS ONLY)
 WHY: a run of pieces was built faster than the docs captured the *state*. This entry makes the
 honest "built vs verified vs deployed vs checked" picture explicit. No code/schema/deploy.
