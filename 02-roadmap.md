@@ -334,12 +334,27 @@ separately-verified pieces; old Calendar code retired conservatively in C4, not 
   desktop Calendar at `CalendarWeek`; the old `WeekCalendar` engine + drag hooks left in place.
   **No schema/SQL/data-layer change. The shared masthead is unchanged.** Interim gap (returns C2):
   no click-to-create / drag-resize on the new grid yet. Save point `7e62078`.
-- ⬜ **C2 — Grid interactions.** Click/drag create, move, resize, re-day, 15-min snap, ghost +
-  live time label, paper-true lift.
+- ✅ **C2 — Grid interactions.** The C1 week grid made interactive on a NEW kit hook,
+  `kit/useWeekGrid.js` — the **deliberate, documented sibling** of Today's `useTodayGrid` (mirrors
+  its snap/threshold/`blockPreview`/`createDraft` shapes + bind pattern) so C4's merge is cheap.
+  `useTodayGrid` left **byte-for-byte unchanged**; the old `useEventDrag`/`useScheduleDrag` engine
+  **not** revived. Adds: click-to-create (1h) / drag-to-draw-span; move; edge-resize; cross-column
+  **re-day** (horizontal = day only, vertical = time, diagonal = both — a pure sideways drag never
+  nudges the clock); all 15-min snap; live ghost preview + a `14:15–15:15` time label; paper-true
+  lift (scale + hairline, no shadow) via week-scoped CSS (`TintedBlock` untouched); even-split
+  re-splits **live** during a drag via the shared `eventLayout`. Drag a **task** off-grid →
+  unschedule (clears `scheduled_start/end` via existing `onUpdateTask`; it leaves the week, survives
+  in Today's lists until the C5 tray); an **event** off-grid snaps back (no write). Split
+  `kit/WeekColumn.jsx` out to stay <250. **Weekend tint** (faint terracotta on Sat/Sun). Create +
+  edit still use the current `EventPanel`/`TaskPanel` (shared form = C3). **No schema; writes via
+  existing `useWeekData`.** Save point `0815323`. *(CHECKER: the off-grid unschedule write; that
+  Today is unchanged; that sideways re-day keeps the time.)*
 - ⬜ **C3 — The shared form.** Converge the old panels → Today's one form; one-click edit; selected
   outline; delete → archive toast.
-- ⬜ **C4 — Drag-logic convergence.** Merge the duplicated hooks; retire the now-dead old Calendar
-  code (provably unused, separate commits).
+- ⬜ **C4 — Drag-logic convergence. Collapse `useTodayGrid` + `useWeekGrid` into ONE grid hook**
+  (the documented debt from C2 — both are deliberately close twins to diff against), and merge the
+  old `useEventDrag`/`useScheduleDrag` in; then retire the now-dead old Calendar code (provably
+  unused, separate commits).
 - ⬜ **C5 — The tray.** Button, push-to-squeeze, working mini-list (+ add, complete, drag-to-schedule,
   drag-off-to-unschedule); tray stays open after a drop.
 - ⬜ **C6 — All-day band + Month.** Auto-height interactive band + multi-day spans; standard Month

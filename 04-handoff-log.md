@@ -35,6 +35,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C2 — Calendar week-grid interactions + weekend tint
+WHAT CHANGED:
+- The Calendar week grid is now **interactive**: click an empty slot to create a 1-hour block, or
+  click-drag to draw an exact span (both snap to 15 min); drag a block to move it; drag its top/
+  bottom edge to resize; drag it into another day's column to move it to that day. A faint ghost +
+  a live `14:15–15:15` time label show where it'll land, and the grabbed block lifts (a slight
+  scale + crisp hairline, no shadow). Overlapping blocks keep splitting evenly during the drag.
+- **Re-day keeps the time:** dragging sideways changes only the day; up/down changes the time.
+- **Drag a task off the grid** → it unschedules (leaves the week; it still shows in Today's lists,
+  and returns in the C5 tray). **An event dragged off snaps back** (events must keep a time).
+- **Weekend tint:** Saturday + Sunday columns get a faint terracotta wash so weekends read at a glance.
+- Built on a **new** week interaction hook that is a deliberate twin of Today's — **Today's own grid
+  is untouched** (verified byte-for-byte).
+FILES TOUCHED: added `kit/useWeekGrid.js` + `kit/WeekColumn.jsx`; edited `kit/WeekGrid.jsx`,
+`kit/weekGrid.css`, `WeekView.jsx`. `useTodayGrid`/`DayGrid`/`Today` unchanged; old Calendar engine
+left in place. Build passes; save point `0815323`.
+HOW TO VERIFY (dev: http://localhost:5174/ → Calendar):
+  1. **Create:** click an empty slot → a 1-hour block, the event panel opens; save it. Then
+     click-and-drag on empty grid → it draws the exact span (watch the dashed draft + time label),
+     release → panel opens for that span.
+  2. **Move/resize:** drag a block up/down to move it; drag its top or bottom edge to resize. Watch
+     the ghost + the `14:15–15:15` label update on the 15-min snap, and the lift on the grabbed block.
+  3. **Re-day keeps time (look here):** grab a block and drag it **straight sideways** into another
+     day — it should land on the SAME time, just a different day. Diagonal changes both.
+  4. **Overlaps:** drag a block so it overlaps another — they should split the column width evenly,
+     live, during the drag and after.
+  5. **Off-grid:** drag a **task** block off the grid (past the edge) and release → it disappears
+     from the week (it's now unscheduled; you'll still see it on Today). Drag an **event** off and
+     release → it **snaps back** unchanged.
+  6. **Weekend tint:** Sat + Sun columns carry a faint warm wash; today still has its stronger tint +
+     circle + now-line.
+  7. **Today is unchanged (look here):** open Today — create/drag/resize/move on "The Day" must
+     behave exactly as before. And Calendar **tap-to-edit** (single click a block) still opens the
+     editor.
+KNOWN GAPS / RISKS:
+- Create + edit still use the **current** event/task panels — the converged shared form (with the
+  task/event toggle) is **C3**. New items default to event.
+- No tray yet (**C5**): an unscheduled task has no on-Calendar home until then (it lives on Today).
+- Two grid hooks exist on purpose (`useTodayGrid` + `useWeekGrid`); they **collapse into one in C4**
+  (named in the roadmap). Old `useEventDrag`/`useScheduleDrag` still present, retired in C4.
+- Not deployed — local save point only.
+NEXT: **C3 — the shared form** (converge the panels into Today's one form; one-click edit; selected
+outline; delete → archive toast).
+FOR THE CHECKER: lean on two things — (a) **Today is byte-for-byte unchanged in behaviour** (its hook
+wasn't touched), and (b) **sideways re-day never nudges the time**. Also: the one new write is the
+**off-grid task unschedule** (`onUpdateTask` setting `scheduled_start/end` to null) — confirm it's a
+write to existing columns, **no schema change**, and that an event off-grid does NOT write.
+
 ### 2026-06-23 — Phase 7, C1.1 — shared-kit polish: themed scrollbar + on-line gutter labels
 WHAT CHANGED:
 - **Scrollbar:** the grid's right-hand scrollbar is now a quiet paper/ink-toned bar instead of the

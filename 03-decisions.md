@@ -9,6 +9,35 @@
 
 ---
 
+## Phase 7 — Calendar C2: a documented SIBLING hook, not a generalised useTodayGrid (2026-06-23)
+
+- **[Week interactions = a new kit sibling `useWeekGrid`, NOT generalising `useTodayGrid` in place]**
+  — The purest-DRY path would edit the **verified, shipped** hook Today depends on (its create path,
+  end-handler, the 7am offset, the preview shape) to make one screen work — risking the screen that's
+  already approved. We don't take that trade mid-build. Instead we accept a **deliberate, documented
+  second hook** now and **collapse the two in C4**, when merging is the whole point of the piece and
+  both behaviours are pinned by working code to diff against. (Same reasoning as rebuild-over-reskin:
+  pay convergence cost once, deliberately, not by quietly mutating something that works.) **Condition
+  to keep it honest debt:** `useWeekGrid` mirrors `useTodayGrid`'s shapes/conventions as closely as
+  the week allows (same `SNAP`/`THRESHOLD`/`EDGE`/`MIN_DUR`, the `blockPreview`/`createDraft` shapes,
+  the bind pattern), the divergences are listed in its header, and the **roadmap C4 entry explicitly
+  names "collapse `useTodayGrid` + `useWeekGrid` into one grid hook."** The old
+  `useEventDrag`/`useScheduleDrag` is **not** revived (C4 deletes it) — wiring onto it would pull away
+  from C4. **Trade-off:** two grid hooks until C4; accepted, and named.
+- **[Re-day keeps the time; sideways never nudges the clock]** — A MOVE re-days via the column under
+  pointer-X; the new start-minute derives from pointer-Y only. So a pure horizontal drag changes the
+  day and leaves the time exactly (vertical = time, diagonal = both). Resize never changes day.
+- **[Off-grid unschedule needs no tray, no C5 reorder]** — A task dragged off-grid clears
+  `scheduled_start/end` through the **existing** `onUpdateTask` and leaves the week; it still lives in
+  Today's lists and returns in the C5 tray. An event off-grid **snaps back** (events must keep a
+  time) — no write. **Trade-off:** until C5 the unscheduled task has no on-Calendar home; accepted and
+  sanctioned. (Flagged for the checker as the one new write.)
+- **[Paper-true lift is week-scoped CSS, TintedBlock untouched]** — The grabbed block gets scale + a
+  hairline outline (no shadow) via `.wk-col .tk-block.is-dragging`, scoped under the week so Today's
+  identical block is never affected. **[Weekend tint]** — Sat/Sun get a faint `--accent` wash
+  (fainter than, and overridden by, today's tint + circle), so weekends read at a glance with no new
+  colour.
+
 ## Phase 7 — Calendar = rebuild-and-converge; C1 week-grid display (2026-06-23)
 
 - **[Calendar is a REBUILD-and-converge, not a re-skin]** — Calendar is rebuilt on Today's
