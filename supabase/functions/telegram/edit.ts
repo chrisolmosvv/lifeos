@@ -10,7 +10,7 @@
 //   3. applies the change surgically, by row id + owner filter.
 // No new schema — these are the 'edit'/'delete' action types M2's table was built to hold.
 
-import { dbConfigured, insert, OWNER_USER_ID, update } from "./db.ts";
+import { dbConfigured, del, insert, OWNER_USER_ID, update } from "./db.ts";
 import { humanDate, localHM, localToUtc, localYMD, rollPastBareDateForward, todayYMD } from "../_shared/datetime.ts";
 import type { Classified } from "./intent.ts";
 import { type Candidate, loadCandidates, matchCandidates } from "./find.ts";
@@ -22,29 +22,42 @@ function word(table: string): string {
   return table === "events" ? "event" : "task";
 }
 
-// One row to change: its prior values (for undo) and the new values to write.
+// One row to change: its prior values (for undo) and the new values to write. For a
+// delete, batch_id is the archive_batches row this archive belongs to (so undo can
+// remove the empty batch afterwards, exactly like the app's restore).
 interface Change {
   table: "tasks" | "events";
   id: string;
   title: string;
   before: Record<string, unknown>;
   after: Record<string, unknown>;
+  batch_id?: string;
 }
+
+interface CommitResult { ok: boolean; reply: string }
 
 // Log prior state FIRST, then apply — so we never change anything without a logged way
 // back. (If the log write fails we change nothing; if an apply fails, the log is at worst
 // a harmless no-op on undo.)
-async function commit(kind: "edit" | "delete", changes: Change[], confirm: string): Promise<string> {
-  const items = changes.map((c) => ({ table: c.table, id: c.id, title: c.title, before: c.before }));
+async function commit(kind: "edit" | "delete", changes: Change[], confirm: string): Promise<CommitResult> {
+  const items = changes.map((c) => ({
+    table: c.table, id: c.id, title: c.title, before: c.before,
+    ...(c.batch_id ? { batch_id: c.batch_id } : {}),
+  }));
   const label = changes.length === 1 ? changes[0].title : `${changes.length} items`;
   const logged = await insert("marty_actions", { user_id: OWNER_USER_ID, kind, label, items });
-  if (!logged) return "I couldn't set up an undo for that, so I left it unchanged. Try again?";
+  if (!logged) return { ok: false, reply: "I couldn't set up an undo for that, so I left it unchanged. Try again?" };
 
   for (const c of changes) {
     const ok = await update(`${c.table}?id=eq.${c.id}&user_id=eq.${OWNER_USER_ID}&select=id`, c.after);
-    if (ok === null) return "I hit a snag applying that — text \"undo\", then try again.";
+    if (ok === null) return { ok: false, reply: "I hit a snag applying that — text \"undo\", then try again." };
   }
-  return confirm;
+  return { ok: true, reply: confirm };
+}
+
+// Convenience for the ops that don't need to compensate on failure (everything but delete).
+async function commitReply(kind: "edit" | "delete", changes: Change[], confirm: string): Promise<string> {
+  return (await commit(kind, changes, confirm)).reply;
 }
 
 // Turn a candidate list into either the single match, or a reply (ask / not-found).
@@ -64,7 +77,7 @@ async function opComplete(all: Candidate[], c: Classified, desc: string): Promis
   if (typeof r === "string") return r;
   if (r.status === "done") return `'${r.title}' is already done. (Nothing changed.)`;
   const change: Change = { table: "tasks", id: r.id, title: r.title, before: { status: r.status }, after: { status: "done" } };
-  return await commit("edit", [change], `Marked '${r.title}' done. (Text "undo" to reopen it.)`);
+  return await commitReply("edit", [change], `Marked '${r.title}' done. (Text "undo" to reopen it.)`);
 }
 
 // 3c — RENAME (task or event).
@@ -74,7 +87,7 @@ async function opRename(all: Candidate[], c: Classified, desc: string): Promise<
   const r = pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc);
   if (typeof r === "string") return r;
   const change: Change = { table: r.table, id: r.id, title: r.title, before: { title: r.title }, after: { title: newTitle } };
-  return await commit("edit", [change], `Renamed '${r.title}' to '${newTitle}'. (Text "undo" to change it back.)`);
+  return await commitReply("edit", [change], `Renamed '${r.title}' to '${newTitle}'. (Text "undo" to change it back.)`);
 }
 
 // 3b — RESCHEDULE (event, scheduled task, or due-only task). Missing day keeps the item's
@@ -95,7 +108,7 @@ async function opReschedule(all: Candidate[], c: Classified, desc: string): Prom
     const ns = localToUtc(date, time);
     const ne = new Date(ns.getTime() + (new Date(end).getTime() - new Date(start).getTime()));
     const change: Change = { table: "events", id: r.id, title: r.title, before: { start_at: start, end_at: end }, after: { start_at: ns.toISOString(), end_at: ne.toISOString() } };
-    return await commit("edit", [change], `Moved '${r.title}' to ${humanDate(date)} ${time}. (Text "undo" to put it back.)`);
+    return await commitReply("edit", [change], `Moved '${r.title}' to ${humanDate(date)} ${time}. (Text "undo" to put it back.)`);
   }
 
   // TASK that's time-blocked on the calendar — move the block, keep duration.
@@ -110,7 +123,7 @@ async function opReschedule(all: Candidate[], c: Classified, desc: string): Prom
       before: { scheduled_start: start, scheduled_end: r.row.scheduled_end ?? null },
       after: { scheduled_start: ns.toISOString(), scheduled_end: ne.toISOString() },
     };
-    return await commit("edit", [change], `Moved '${r.title}' to ${humanDate(date)} ${time}. (Text "undo" to put it back.)`);
+    return await commitReply("edit", [change], `Moved '${r.title}' to ${humanDate(date)} ${time}. (Text "undo" to put it back.)`);
   }
 
   // TASK with only a due date (no clock time) — move the due date, keep the bucket honest.
@@ -121,31 +134,44 @@ async function opReschedule(all: Candidate[], c: Classified, desc: string): Prom
     before: { due_date: r.row.due_date ?? null, time_bucket: r.row.time_bucket ?? "Today" },
     after: { due_date: newDate, time_bucket: bucket },
   };
-  return await commit("edit", [change], `Moved '${r.title}' to be due ${humanDate(newDate)}. (Text "undo" to put it back.)`);
+  return await commitReply("edit", [change], `Moved '${r.title}' to be due ${humanDate(newDate)}. (Text "undo" to put it back.)`);
 }
 
-// 3d — DELETE = archive (set archived_at), so undo restores it exactly. For a task we
-// archive its active subtasks too (same action), matching the app's cascade.
+// 3d — DELETE = archive, using the SAME machinery the app uses (M3.5): create an
+// archive_batches row and stamp the rows with its id, so a text-deleted item SHOWS UP in
+// the app's Archive screen and can be restored there too — AND stays undoable via Marty's
+// "undo" (which reverts the rows and removes the now-empty batch). For a task we archive
+// its active subtasks into the same batch, matching the app's cascade. Nothing destroyed.
 async function opDelete(all: Candidate[], c: Classified, desc: string): Promise<string> {
   const r = pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc);
   if (typeof r === "string") return r;
 
+  // 1) The archive batch first — same shape the app writes (label = title, source_type).
+  const batch = await insert("archive_batches", { user_id: OWNER_USER_ID, label: r.title, source_type: word(r.table) });
+  if (!batch) return "I couldn't set that up just now — nothing was deleted. Try again?";
+  const batchId = String(batch.id);
+
+  // 2) Stamp the row(s) with archived_at + this batch id (active → archived).
   const nowIso = new Date().toISOString();
   const archive = (cand: Candidate): Change => ({
     table: cand.table, id: cand.id, title: cand.title,
     before: { archived_at: cand.row.archived_at ?? null, archive_batch_id: cand.row.archive_batch_id ?? null },
-    after: { archived_at: nowIso, archive_batch_id: null },
+    after: { archived_at: nowIso, archive_batch_id: batchId },
+    batch_id: batchId,
   });
-
   const changes = [archive(r)];
   if (r.table === "tasks") {
     for (const s of all) {
       if (s.table === "tasks" && String(s.row.parent_task_id ?? "") === r.id) changes.push(archive(s));
     }
   }
+
   const extra = changes.length - 1;
   const note = extra ? ` (and its ${extra} subtask${extra === 1 ? "" : "s"})` : "";
-  return await commit("delete", changes, `Deleted the ${word(r.table)} '${r.title}'${note}. (Text "undo" to bring it back.)`);
+  const res = await commit("delete", changes, `Deleted the ${word(r.table)} '${r.title}'${note}. (Text "undo" to bring it back.)`);
+  // Compensate on failure — never leave an empty batch behind (matches the app's path).
+  if (!res.ok) await del(`archive_batches?id=eq.${batchId}&user_id=eq.${OWNER_USER_ID}`);
+  return res.reply;
 }
 
 // Dispatch a classified EDIT to the right op. (Caller guarantees c.kind === "edit".)

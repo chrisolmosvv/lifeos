@@ -18,7 +18,7 @@
 
 import { dbConfigured, del, OWNER_USER_ID, select, update } from "./db.ts";
 
-interface ActionItem { table: string; id: string; title?: string; before?: Record<string, unknown> }
+interface ActionItem { table: string; id: string; title?: string; before?: Record<string, unknown>; batch_id?: string }
 interface Action { id: string; kind: string; label?: string; items: ActionItem[] }
 
 const NO_DB = "I can't undo right now — saving isn't set up. (Nothing changed.)";
@@ -61,6 +61,15 @@ function itemsOf(a: Action): ActionItem[] {
   return Array.isArray(a.items) ? a.items : [];
 }
 
+// Delete the archive_batches row(s) referenced by these (now fully reverted) delete
+// items, so no empty batch lingers in the app's Archive screen. Owner-filtered. Only
+// call this once every item carrying a given batch has been reverted (its rows' batch_id
+// is back to null), so deleting the batch can't orphan a still-archived sibling.
+async function removeBatches(items: ActionItem[]) {
+  const ids = [...new Set(items.map((it) => it.batch_id).filter((b): b is string => !!b))];
+  for (const id of ids) await del(`archive_batches?id=eq.${id}&user_id=eq.${OWNER_USER_ID}`);
+}
+
 // "undo" — reverse the most recent action as a unit.
 export async function undoLast(): Promise<string> {
   if (!dbConfigured) return NO_DB;
@@ -88,6 +97,9 @@ export async function undoLast(): Promise<string> {
   // action is done with: clear it (owner-filtered) so we don't point at it again.
   if (failed) return "I couldn't fully undo that just now — nothing's lost. Try again in a moment.";
   await del(`marty_actions?id=eq.${action.id}&user_id=eq.${OWNER_USER_ID}`);
+  // A whole delete-action reversed → its rows are active again, so remove the now-empty
+  // archive batch(es) too (M3.5: matches the app's restore, leaves no empty batch behind).
+  if (action.kind === "delete") await removeBatches(items);
 
   const verb = pastVerb(action.kind);
   if (done.length === 0) return "There was nothing left to undo — it was already gone. (Nothing changed.)";
@@ -134,8 +146,13 @@ export async function undoNamed(name: string): Promise<string> {
   // Drop this item from its action; if that empties the action, clear the whole row.
   // Both writes are owner-filtered (consistency with the real-row reversals above).
   const remaining = itemsOf(m.action).filter((_, i) => i !== m.idx);
-  if (remaining.length === 0) await del(`marty_actions?id=eq.${m.action.id}&user_id=eq.${OWNER_USER_ID}`);
-  else await update(`marty_actions?id=eq.${m.action.id}&user_id=eq.${OWNER_USER_ID}`, { items: remaining });
+  if (remaining.length === 0) {
+    await del(`marty_actions?id=eq.${m.action.id}&user_id=eq.${OWNER_USER_ID}`);
+    // Last item of a delete reversed → the batch is empty now, so remove it too.
+    if (m.action.kind === "delete") await removeBatches([m.item]);
+  } else {
+    await update(`marty_actions?id=eq.${m.action.id}&user_id=eq.${OWNER_USER_ID}`, { items: remaining });
+  }
 
   const word = kindWord(m.item.table);
   if (r === "gone") return `The ${word} '${m.item.title ?? ""}' is no longer there. (Nothing changed.)`;
