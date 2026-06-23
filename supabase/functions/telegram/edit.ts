@@ -10,10 +10,11 @@
 //   3. applies the change surgically, by row id + owner filter.
 // No new schema — these are the 'edit'/'delete' action types M2's table was built to hold.
 
-import { dbConfigured, del, insert, OWNER_USER_ID, update } from "./db.ts";
+import { dbConfigured, del, insert, OWNER_USER_ID, select, update } from "./db.ts";
 import { humanDate, localHM, localToUtc, localYMD, rollPastBareDateForward, todayYMD } from "../_shared/datetime.ts";
 import type { Classified } from "./intent.ts";
 import { type Candidate, loadCandidates, matchCandidates } from "./find.ts";
+import { logCorrection, resolveCategory } from "./categorize.ts";
 
 const READ_FAILED = "I couldn't reach your items just now — nothing was changed. Try again?";
 const HOUR_MS = 3_600_000;
@@ -174,6 +175,44 @@ async function opDelete(all: Candidate[], c: Classified, desc: string): Promise<
   return res.reply;
 }
 
+// The single item the owner most recently captured (for a bare "that's X" correction):
+// the most recent CREATE action's item, if there's exactly one. Otherwise ask which.
+async function lastCreatedCandidate(all: Candidate[]): Promise<Candidate | string> {
+  const rows = await select(
+    `marty_actions?user_id=eq.${OWNER_USER_ID}&kind=eq.create&select=items&order=created_at.desc&limit=1`,
+  );
+  if (!rows || rows.length === 0) return "I'm not sure which item you mean — tell me its name (e.g. \"call plumber is Work\"). (Nothing changed.)";
+  const items = Array.isArray(rows[0].items) ? (rows[0].items as { id: string; title?: string }[]) : [];
+  if (items.length !== 1) {
+    const names = items.slice(0, 5).map((it) => `'${it.title ?? ""}'`).join(", ");
+    return `Which one — ${names}? Name it, e.g. "${items[0]?.title ?? "X"} is Work". (Nothing changed.)`;
+  }
+  const target = all.find((cand) => cand.id === String(items[0].id));
+  return target ?? "That item isn't around anymore. (Nothing changed.)";
+}
+
+// 3e — CATEGORIZE / refile under a category (M6). Reuses the edit commit path (so it's
+// undoable), and logs the correction so Marty can learn the owner's filing over time.
+async function opCategorize(all: Candidate[], c: Classified, desc: string): Promise<string> {
+  const cat = await resolveCategory(c.new_category);
+  if (!cat) return `I don't have a category called '${c.new_category.trim()}'. (Nothing changed.)`;
+
+  const named = !!(c.target_title || c.target_time || c.target_date);
+  const r = named
+    ? pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc)
+    : await lastCreatedCandidate(all);
+  if (typeof r === "string") return r;
+
+  const before = r.row.category_id ? String(r.row.category_id) : null;
+  if (before === cat.id) return `'${r.title}' is already under ${cat.name}. (Nothing changed.)`;
+
+  const change: Change = { table: r.table, id: r.id, title: r.title, before: { category_id: before }, after: { category_id: cat.id } };
+  const res = await commit("edit", [change], `Filed '${r.title}' under ${cat.name}. (Text "undo" to change it back.)`);
+  // Record the correction for learning — only when the change actually went through.
+  if (res.ok) await logCorrection(r.title, before, cat.id);
+  return res.reply;
+}
+
 // Dispatch a classified EDIT to the right op. (Caller guarantees c.kind === "edit".)
 export async function handleEdit(c: Classified): Promise<string> {
   if (!dbConfigured) return "I can't change things right now — give it a moment and try again.";
@@ -186,7 +225,8 @@ export async function handleEdit(c: Classified): Promise<string> {
     case "reschedule": return await opReschedule(all, c, desc);
     case "rename": return await opRename(all, c, desc);
     case "delete": return await opDelete(all, c, desc);
+    case "categorize": return await opCategorize(all, c, desc);
     default:
-      return "I wasn't sure what change you meant. Try \"move X to Friday\", \"rename X to Y\", \"done X\", or \"delete X\".";
+      return "I wasn't sure what change you meant. Try \"move X to Friday\", \"rename X to Y\", \"done X\", \"delete X\", or \"that's Admin\".";
   }
 }

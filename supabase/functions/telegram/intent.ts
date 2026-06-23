@@ -15,7 +15,7 @@ import { callGemini } from "../_shared/gemini.ts";
 import { TZ } from "./understand.ts"; // reuse the one timezone constant
 
 export type QueryType = "agenda" | "forgot" | "free";
-export type EditOp = "complete" | "reschedule" | "rename" | "delete";
+export type EditOp = "complete" | "reschedule" | "rename" | "delete" | "categorize";
 
 // What the classifier decided. For a question, the query_* fields are filled; for an
 // edit, the op + target_* (which item) + new_* (the change) fields are filled. Unused
@@ -35,6 +35,7 @@ export interface Classified {
   new_date: string; // reschedule → the new day (YYYY-MM-DD); else ""
   new_time: string; // reschedule → the new clock time (HH:MM); else ""
   new_date_bare: boolean; // true if new_date came from a bare month-day with no year
+  new_category: string; // categorize → the category name to file under
 }
 
 export type ClassifyResult =
@@ -52,6 +53,7 @@ const SYSTEM = `You are the message router for the owner's personal task and cal
     - reschedule: "move X to friday", "reschedule X to 3pm", "push X to next week".
     - rename: "rename X to Y", "change X's name to Y", "call X 'Y' instead".
     - delete: "delete X", "remove X", "cancel X", "drop X".
+    - categorize: file/refile an item under a CATEGORY. "that's Admin", "no, Errands", "file call plumber under Work", "call plumber is Errands". Put the category name in "new_category". If the item isn't named (e.g. just "that's Admin" — correcting the thing just added), leave "target_title" "". NOTE: "move X to <a category>" is categorize, but "move X to <a day or time>" is reschedule — a category is a named bucket, not a date/time.
 - "unclear" — you genuinely cannot tell whether they want to add, ask, or change. If in doubt, choose "unclear" — do NOT guess; a wrong guess could write or change the wrong thing.
 
 Date/time rules (Europe/Amsterdam, resolve against the current local date you are given):
@@ -60,7 +62,7 @@ Date/time rules (Europe/Amsterdam, resolve against the current local date you ar
 
 Fill these (use "" / false when not applicable):
 - question: "query_type" = "agenda" | "forgot" | "free"; "date" = the day asked about (YYYY-MM-DD); "day_part" = "morning"|"afternoon"|"evening"|"day" for a "free" question.
-- edit: "op" = complete|reschedule|rename|delete. "target_title" = the words naming the existing item (e.g. "the dentist" → "dentist"). "target_time" = HH:MM if the item is identified by a clock time ("the 3pm" → "15:00"). "target_date" = YYYY-MM-DD if identified by a day. "new_title" = the new name (rename). "new_date" = the new day YYYY-MM-DD (reschedule). "new_time" = the new clock time HH:MM (reschedule). "new_date_bare" = true if new_date came from a bare month-day with no year.
+- edit: "op" = complete|reschedule|rename|delete|categorize. "target_title" = the words naming the existing item (e.g. "the dentist" → "dentist"); leave "" for a bare "that's X" correction. "target_time" = HH:MM if the item is identified by a clock time ("the 3pm" → "15:00"). "target_date" = YYYY-MM-DD if identified by a day. "new_title" = the new name (rename). "new_date" = the new day YYYY-MM-DD (reschedule). "new_time" = the new clock time HH:MM (reschedule). "new_date_bare" = true if new_date came from a bare month-day with no year. "new_category" = the category name (categorize).
 
 Output ONLY the JSON object. No prose, no markdown.`;
 
@@ -79,10 +81,11 @@ const SCHEMA = {
     new_date: { type: "string" },
     new_time: { type: "string" },
     new_date_bare: { type: "boolean" },
+    new_category: { type: "string" },
   },
   required: [
     "kind", "query_type", "date", "day_part", "op", "target_title",
-    "target_time", "target_date", "new_title", "new_date", "new_time", "new_date_bare",
+    "target_time", "target_date", "new_title", "new_date", "new_time", "new_date_bare", "new_category",
   ],
 };
 
@@ -97,7 +100,7 @@ function nowLocal(): string {
 
 const QUERY_TYPES: QueryType[] = ["agenda", "forgot", "free"];
 const DAY_PARTS = ["morning", "afternoon", "evening", "day"];
-const EDIT_OPS: EditOp[] = ["complete", "reschedule", "rename", "delete"];
+const EDIT_OPS: EditOp[] = ["complete", "reschedule", "rename", "delete", "categorize"];
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 
 // Classify one message. Never throws — always returns a ClassifyResult.
@@ -130,6 +133,7 @@ export async function classify(text: string): Promise<ClassifyResult> {
         new_date: str(p?.new_date),
         new_time: str(p?.new_time),
         new_date_bare: p?.new_date_bare === true,
+        new_category: str(p?.new_category),
       },
     };
   } catch (_err) {

@@ -14,6 +14,7 @@
 
 import { humanDate, todayYMD, TZ, type Understood } from "./understand.ts";
 import { dbConfigured, insert, OWNER_USER_ID, select, update } from "./db.ts";
+import { type Guess, guessCategories } from "./categorize.ts";
 
 const SAVE_FAILED = "I understood it, but couldn't save it just now — nothing was saved. Mind sending it again?";
 
@@ -62,13 +63,14 @@ function plusOneHourClock(time: string): string {
   return `${String(hh).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-// Save ONE understood item; return its pointer + confirmation text, or null on failure.
-// Caller guarantees the item is NOT unsure (unsure items save nothing, never reach here).
-async function saveOne(u: Understood): Promise<Saved | null> {
+// Save ONE understood item under the guessed category `cat` (M6); return its pointer +
+// confirmation text, or null on failure. The guessed category is SHOWN in the confirmation
+// (never silent) and is easily corrected in words. Caller guarantees the item is NOT unsure.
+async function saveOne(u: Understood, cat: Guess): Promise<Saved | null> {
   const title = u.title.trim();
 
   // EVENT — needs a clock time. Default the date to today if none was stated.
-  // 1-hour default duration (matches the app's tap-to-create). category null = Inbox.
+  // 1-hour default duration (matches the app's tap-to-create).
   if (u.type === "event" && u.time) {
     const date = u.date || todayYMD();
     const start = localToUtc(date, u.time);
@@ -76,7 +78,7 @@ async function saveOne(u: Understood): Promise<Saved | null> {
     const saved = await insert("events", {
       user_id: OWNER_USER_ID,
       title,
-      category_id: null,
+      category_id: cat.id,
       start_at: start.toISOString(),
       end_at: end.toISOString(),
     });
@@ -84,21 +86,21 @@ async function saveOne(u: Understood): Promise<Saved | null> {
     const span = `${humanDate(date)} ${u.time}–${plusOneHourClock(u.time)}`;
     return {
       ptr: { table: "events", id: saved.id, title },
-      full: `Saved an EVENT: '${title}', ${span}, Inbox.\nOpen the app to see it on your calendar.`,
-      line: `EVENT '${title}' — ${span}, Inbox`,
+      full: `Saved an EVENT: '${title}', ${span}, ${cat.name}.\nOpen the app to see it on your calendar.`,
+      line: `EVENT '${title}' — ${span}, ${cat.name}`,
     };
   }
 
   // TASK — incl. any event-shaped read that somehow lacked a time. A stated date
   // becomes the DUE DATE (a deadline, not a calendar block). Bucket: no date or
-  // today -> 'Today'; any other date -> 'This Week'. category null = Inbox.
+  // today -> 'Today'; any other date -> 'This Week'.
   const today = todayYMD();
   const hasDate = !!u.date;
   const bucket = !hasDate ? "Today" : (u.date === today ? "Today" : "This Week");
   const saved = await insert("tasks", {
     user_id: OWNER_USER_ID,
     title,
-    category_id: null,
+    category_id: cat.id,
     status: "open",
     time_bucket: bucket,
     due_date: hasDate ? u.date : null,
@@ -108,8 +110,8 @@ async function saveOne(u: Understood): Promise<Saved | null> {
   const dueStr = hasDate ? `due ${humanDate(u.date)}` : "no due date";
   return {
     ptr: { table: "tasks", id: saved.id, title },
-    full: `Saved a TASK: '${title}', ${dueStr}, ${bucket}, Inbox.`,
-    line: `TASK '${title}' — ${dueStr}, ${bucket}`,
+    full: `Saved a TASK: '${title}', ${dueStr}, ${bucket}, ${cat.name}.`,
+    line: `TASK '${title}' — ${dueStr}, ${bucket}, ${cat.name}`,
   };
 }
 
@@ -121,11 +123,15 @@ function confirmFor(saved: Saved[]): string {
   return `Saved ${saved.length} items:\n${lines}\n(Text "undo" to remove all ${saved.length}, or "undo <name>" for just one.)`;
 }
 
-// Save each item and log them as ONE create action (so undo treats them as a unit).
+const FALLBACK_CAT: Guess = { id: null, name: "Inbox" };
+
+// Save each item under its guessed category (M6) and log them as ONE create action (so
+// undo treats them as a unit). The categories are guessed in a single call up front.
 async function saveBatch(items: Understood[]): Promise<{ saved: Saved[]; actionId: string | null }> {
+  const cats = await guessCategories(items.map((i) => i.title.trim()));
   const saved: Saved[] = [];
-  for (const u of items) {
-    const s = await saveOne(u);
+  for (let i = 0; i < items.length; i++) {
+    const s = await saveOne(items[i], cats[i] ?? FALLBACK_CAT);
     if (s) saved.push(s);
   }
   if (saved.length === 0) return { saved, actionId: null };
@@ -154,7 +160,8 @@ export async function saveItemsTracked(items: Understood[]): Promise<{ reply: st
 // action is gone (e.g. already undone), the item is logged as its own action instead.
 export async function appendToAction(actionId: string, item: Understood): Promise<string> {
   if (!dbConfigured) return SAVE_FAILED;
-  const s = await saveOne(item);
+  const [cat] = await guessCategories([item.title.trim()]);
+  const s = await saveOne(item, cat ?? FALLBACK_CAT);
   if (!s) return SAVE_FAILED;
 
   const rows = await select(`marty_actions?id=eq.${actionId}&user_id=eq.${OWNER_USER_ID}&select=items&limit=1`);

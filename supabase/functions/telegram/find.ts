@@ -22,10 +22,10 @@ const scope = () => `user_id=eq.${OWNER_USER_ID}&archived_at=is.null`;
 
 // Load every active task + event as a match candidate. Returns null if a read failed.
 export async function loadCandidates(): Promise<Candidate[] | null> {
-  const events = await select(`events?${scope()}&select=id,title,start_at,end_at,archived_at,archive_batch_id`);
+  const events = await select(`events?${scope()}&select=id,title,start_at,end_at,category_id,archived_at,archive_batch_id`);
   if (events === null) return null;
   const tasks = await select(
-    `tasks?${scope()}&select=id,title,status,due_date,scheduled_start,scheduled_end,time_bucket,parent_task_id,archived_at,archive_batch_id`,
+    `tasks?${scope()}&select=id,title,status,due_date,scheduled_start,scheduled_end,time_bucket,category_id,parent_task_id,archived_at,archive_batch_id`,
   );
   if (tasks === null) return null;
 
