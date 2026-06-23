@@ -149,7 +149,11 @@
   background: none;
   border: 1px solid var(--rule);
   border-radius: 6px;
-  cursor: default;
+  cursor: pointer;
+}
+.today-alltasks:hover {
+  color: var(--ink);
+  border-color: var(--ink);
 }
 .today-alltasks-arrow {
   margin-left: auto;

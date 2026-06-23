@@ -198,6 +198,25 @@ Everything stays movable (see below). Nothing dragged onto the calendar is stuck
 and the calendar's now-line; the brief's gap-fill still uses the same logic so they
 stay consistent.)*
 
+### All Tasks — the inventory screen (LOCKED, Phase 7 T11, desktop-first)
+The full backlog, browsed **by category**. Opened from Today's quiet **"All tasks · N"**
+box (N = total **active**, i.e. not-done, top-level tasks); a clear **back** returns to
+Today. It is an **inventory** — it never creates/renames/nests/deletes categories (that's
+the Settings manager).
+- **Drill-in by category.** Top level lists **Inbox first** (always; permanent), then each
+  top-level category, as rows. Tap a category to **drill in** (breadcrumb + back to climb
+  out). Inside a category: **its own tasks first**, then its **sub-categories** as
+  drill-deeper rows. Inbox has no children — just its task list (the uncategorised tasks).
+- **Counts.** Each drillable category/sub-category row shows the **whole-sub-tree** active
+  count (itself + all descendants). Counts always **exclude done**.
+- **Task rows** are the same as Today's (dot+tag, the 3-state **status pill**, tap opens the
+  same edit form). Ordered **by due date soonest-first**; **undated** tasks sit at the
+  **bottom** with the quiet grey "undated" tag.
+- **Done** tasks are **hidden by default**; a screen-wide **"show done"** toggle reveals
+  them (greyed) within their category.
+- **+ add** drops a task into the **currently-viewed category** (Inbox at the top level).
+- **Empty** category → one warm Fraunces-italic line. **No search** on this screen.
+
 ---
 
 ## 4. Completing & interactions — how tasks/events change state and move

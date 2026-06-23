@@ -5,6 +5,7 @@ import DayAgenda from './DayAgenda'
 import EditionHeader from './EditionHeader'
 import Today from './Today'
 import Settings from './Settings'
+import AllTasks from './AllTasks'
 import './calendar.css'
 
 // The logged-in app frame: the masthead (nameplate + Today/Calendar/Settings
@@ -22,7 +23,11 @@ export default function LoggedIn({ email }) {
 
       {view === 'today' ? (
         <div className="cal-wrap">
-          <Today />
+          <Today onOpenAllTasks={() => setView('alltasks')} />
+        </div>
+      ) : view === 'alltasks' ? (
+        <div className="cal-wrap">
+          <AllTasks onBack={() => setView('today')} />
         </div>
       ) : view === 'calendar' ? (
         <>

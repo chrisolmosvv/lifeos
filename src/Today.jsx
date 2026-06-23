@@ -4,6 +4,7 @@ import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { isSameDay, dayNameFull, formatMastheadDate } from './dateUtils'
 import { buildToday } from './todayModel'
+import { activeTotal } from './allTasksModel'
 import { useTodayGrid } from './kit/useTodayGrid'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
@@ -17,7 +18,7 @@ import './today.css'
 // grid, both modules, the now-line (today only), and every day-dependent write. All
 // reads/writes go through Today's OWN parameterised path; Calendar's shared read
 // hook (useWeekData) is untouched. No schema.
-export default function Today() {
+export default function Today({ onOpenAllTasks }) {
   const realToday = new Date()
   const [viewed, setViewed] = useState(() => startOfDay(new Date()))
   const isToday = isSameDay(viewed, realToday)
@@ -138,7 +139,7 @@ export default function Today() {
   const catById = new Map(cats.map((c) => [c.id, c]))
   const catFor = (t) => (t.category_id ? catById.get(t.category_id) : null)
 
-  const { tasksToday, next7, undated, total } = buildToday(tasks, viewed, isToday)
+  const { tasksToday, next7, undated } = buildToday(tasks, viewed, isToday)
   const scheduledTasks = (tasks || []).filter(
     (t) => t.scheduled_start && isSameDay(new Date(t.scheduled_start), viewed),
   )
@@ -296,8 +297,8 @@ export default function Today() {
               </div>
             </section>
 
-            <button className="today-alltasks" disabled aria-disabled="true">
-              All tasks · {total} <span className="today-alltasks-arrow">→</span>
+            <button className="today-alltasks" onClick={onOpenAllTasks}>
+              All tasks · {activeTotal(tasks)} <span className="today-alltasks-arrow">→</span>
             </button>
           </>
         )}

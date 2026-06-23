@@ -271,7 +271,15 @@ it rather than dig (see the Piece-1c decision).
   task/event → "Deleted · Undo" → Undo re-inserts the exact row). The repeating-event
   "this one or all?" branch stays with the recurrence piece.
 - ⬜ **T10 — Recurring events** *(large)*. Recurrence + "this one or all?".
-- ⬜ **T11 — All Tasks inventory screen** — its own spec first.
+- ✅ **T11 — All Tasks inventory screen (desktop-first).** A new view: the backlog browsed
+  by-category drill-in (Inbox first, then top categories; tap to drill, breadcrumb to climb;
+  inside = own tasks then sub-categories). Whole-sub-tree active counts; due-soonest order
+  with undated at the bottom; **"show done"** toggle (counts exclude done); **"+ add"** into
+  the viewed category (Inbox at top). **Reuses Today's `TodayTaskRow` + status pill + `TodayForm`
+  + `Toast` AS-IS** (no edits to them); new sealed `CategoryDrillRow` + `allTasksModel`. Wired
+  additively: Today's "All tasks · N" box (N = active top-level tasks) opens it, back returns
+  to Today; `LoggedIn` gained an `alltasks` view. Writes via existing task paths; no schema, no
+  category-table writes; spec recorded in 07-ux-flows.md. Save point `ed0362a`.
 - ⬜ **T12 — Conservative trims** of any now-unused Phase 6 Today code (separate
   commits, provably unused, verified).
 - ⬜ **T13 — Category management (Settings)** *(its own piece; placeholder)*. A dedicated
@@ -295,6 +303,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T11 DONE — the All Tasks inventory screen.** A new view that browses
+  the whole backlog **by category**: top level lists Inbox first then top categories (each with
+  a whole-sub-tree active count); drill in (breadcrumb to climb) to see a category's own tasks
+  then its sub-categories. Task rows are **Today's row + 3-state pill** reused as-is (tap opens
+  the **reused TodayForm**); ordered due-soonest with undated at the bottom; a **"show done"**
+  toggle reveals done (greyed; counts always exclude done); **"+ add"** files into the viewed
+  category (Inbox at the top). Wired **additively**: Today's "All tasks · N" box (N = active
+  top-level tasks) now opens it, with back to Today; `LoggedIn` gained an `alltasks` view. NEW
+  sealed `CategoryDrillRow` + pure `allTasksModel` (subtree counts via a read-only parent_id
+  walk). **Reused AS-IS without edits:** `TodayTaskRow`, `StatusPill` (via the row), `TodayForm`,
+  `Toast`. No Calendar/Settings/header/shared-hook change; no schema; no category-table writes;
+  all task writes via existing paths. Spec recorded in 07-ux-flows.md. Save point `ed0362a`.
+  Committed locally only — not pushed/deployed. **NEXT: T10 — recurring events (large), T13 —
+  Settings category manager, or T12 — conservative trims of now-unused old Today code.**
 - **2026-06-23 — Phase 7, T8 DONE — Today's date arrows / day-flipping (Today's behaviour is
   now complete).** A `viewed` day (defaults to the real today) drives the whole page; the
   prev/next arrows step it and a quiet "Back to today" appears when away. Flipping re-anchors

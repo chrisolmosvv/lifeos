@@ -35,6 +35,69 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T11 — the All Tasks inventory screen (by-category drill-in)
+ROADMAP MAPPING: **T11** (All Tasks inventory screen). No overlap with other T-steps.
+REUSED AS-IS (no edits — scope rule A honoured): **`TodayTaskRow`** (the task row), the
+**3-state `StatusPill`** (rendered by that row), **`TodayForm`** (open-to-edit + create), and
+**`Toast`** (delete/undo). The build-time guard confirms none of those files changed.
+NEW (sealed): **`CategoryDrillRow`** (kit) + `kit/allTasksKit.css`; **`AllTasks.jsx`** (the
+screen); **`allTasksModel.js`** (pure helpers).
+SCREEN BEHAVIOUR:
+- **Top level:** Inbox first (always), then each top-level category, as drill rows. Tap to
+  drill in; breadcrumb (All › … ) climbs out.
+- **Inside a category:** its OWN top-level tasks first, then its sub-categories as drill rows.
+  Inbox has no children → just its task list (tasks with `category_id` null).
+- **Task rows:** ordered **due-soonest first, undated at the bottom** (with the grey "undated"
+  tag); the status pill sets state via the existing update path; tap opens the reused form.
+- **Show done** toggle: hidden by default; reveals done greyed within their category. **Counts
+  always exclude done.**
+- **"+ add":** files into the currently-viewed category (Inbox at the top level).
+- **Empty** category → one Fraunces-italic line. No search.
+COUNTS (how computed, read-only):
+- Box **N** on Today = `activeTotal` = count of **active (not-done) top-level** tasks.
+- Drill-row count = **whole-sub-tree** active count: `subtreeCount` walks `descendantIds`
+  (existing `categoryTree` helper) for {cat + all descendants} and counts active top-level
+  tasks whose `category_id` is in that set. Inbox count = active top-level tasks with
+  `category_id` null. (Top-level = `parent_task_id` null, matching what the screen lists.)
+ROUTING (additive — scope rule B): `LoggedIn` gained an **`alltasks`** view; `Today` now takes
+`onOpenAllTasks` and its "All tasks · N" box (previously a disabled placeholder) calls it;
+`AllTasks` takes `onBack` → back to Today. The nav header is unchanged (All Tasks isn't a nav
+destination). Calendar/Settings branches untouched.
+WRITES: all via the EXISTING Supabase task paths (`tasks` insert/update/delete) — the screen
+has its own thin `writeTask` wrapper calling the same client paths (not a new data layer, not a
+parallel writer). **No category-table writes** (it never creates/renames/nests/deletes
+categories — that's T13).
+SAVE POINT (Step 0): **`ed0362a`** — "Phase 7 T11 save point — before All Tasks screen."
+FILES TOUCHED: ADDED src/AllTasks.jsx, src/allTasksModel.js, src/kit/CategoryDrillRow.jsx,
+src/kit/allTasksKit.css; EDITED src/LoggedIn.jsx (additive route), src/Today.jsx (enable the
+box + active count), src/today.css (box now clickable), 07-ux-flows.md (spec). **No db/, no
+schema, no category writes.**
+CONFIRMATIONS: Today's row/pill/form **reused without edits**; **no Calendar/Settings/shared-
+hook/header-kit change**; additive routing only (existing views behave identically); all task
+writes via existing paths; no schema; no category-table writes. Frankfurt only context (no DB
+op). Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed, NOT deployed.** On the Mac (run locally);
+not on the phone yet.
+PICKER/TREE NOTE: the live tree is shallow (Inbox + "TU Delft" → "Q1"), so the top level shows
+Inbox + TU Delft; drilling TU Delft shows Q1. Sparse until the Settings manager (T13) lets you
+build branches — expected.
+HOW TO VERIFY (owner — Mac):
+- Today's "All tasks · N" box opens the screen; "‹ Back to Today" returns.
+- Top level: Inbox first, then top categories, each with a sub-tree count.
+- Drill into a category → its own tasks first, then sub-categories; breadcrumb/back work.
+- A task row opens the form on tap; the status pill sets state; due-date order with undated
+  at the bottom.
+- "Show done" reveals/hides done; the counts don't change (exclude done).
+- "+ add" inside a category adds there; at the top level adds to Inbox.
+- Today, Calendar, Settings all behave exactly as before; header unchanged.
+KNOWN GAPS: subtasks aren't listed (the screen shows top-level tasks; the subtask UI wasn't
+rebuilt in Phase 7 — a known R1 gap, not this piece). Desktop-first; narrow widths stack but
+aren't polished (mobile is its own pass).
+NEXT: T10 — recurring events (large), or T13 — Settings category manager, or T12 — trims.
+FOR THE CHECKER: confirm Today's row/pill/form reused WITHOUT edits, no Calendar/Settings/
+shared-hook/header change, additive routing only, all writes via existing paths, no schema, no
+category-table writes, save point exists, and the subtree counts walk the tree correctly.
+
 ### 2026-06-23 — Phase 7, T8 — Today date arrows / day-flipping (finishes Today's behaviour)
 ROADMAP MAPPING: **T8** (date navigation). No overlap with other T-steps.
 HOW TODAY READS THE VIEWED DAY: Today's OWN `load()` is **parameterised by a `viewed` day** —
