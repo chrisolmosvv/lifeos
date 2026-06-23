@@ -35,6 +35,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Archive A3b + FULL DEPLOY — brief archive filter, then publish the whole stack
+ROADMAP MAPPING: **Archive A3b** (backend brief filter) + the **first FULL Phase-7 production deploy**
+(front-end + backend).
+A3b FIX (backend only): every brief read appends `owner()`, and the brief reads only tasks/events
+(both carry `archived_at`), so I added the active-only filter **centrally in `owner()`**
+(`supabase/functions/brief/sb.ts`): `user_id=eq.<id>&archived_at=is.null`. This covers ALL brief
+reads — 6 in `day.ts` (events, blocked, todayTasks, dueToday, overdue, + pickForgotten's This-Week
+read) and 5 in `gap.ts` (busyToday events + tasks, pickGapTask over/due/high) — and any future read,
+with none missed. No other brief read exists (index.ts/write.ts have none). Front-end/schema
+untouched. A3b save point `315498a`; A3b commit `fa3bfc2`.
+DEPLOY — PRE-FLIGHT (recorded before deploying):
+- Tree clean. Front-end **rollback target = `origin/main` `df65a20`** (the CURRENT live deploy = the
+  owner-APPROVED Today+All-Tasks rebuild — NOT Phase-6) + its live Vercel deployment
+  `lifeos-dezpmsxje-…` (id 5164803532, re-promotable). Backend **rollback reference = brief function
+  v6** (pre-A3b).
+- Range pushed = 14 commits (T13 + Archive A1–A4 + A3b + the DV1/approval docs), nothing unexpected.
+- Mechanisms: push `origin/main` → Vercel Production (confirmed); `supabase functions deploy brief
+  --project-ref cntlptuacsujbdtwvbis` for the backend (CLI works with the Frankfurt token).
+- **Prod env confirmed → FRANKFURT** (`VITE_SUPABASE_URL = cntlptuacsujbdtwvbis.supabase.co`).
+DEPLOY — RESULT:
+- **FRONT-END:** pushed → `origin/main = fa3bfc2`; Vercel Production build **success / Ready** at
+  `lifeos-mlux5hf72-chrisolmosvvs-projects.vercel.app` (deployment id 5165534858); deployed commit =
+  local main (`fa3bfc2`). (Held the backend until this succeeded — no half-publish.)
+- **BACKEND:** `brief` edge function deployed to Frankfurt → now **version 7, ACTIVE** (was v6).
+SMOKE CHECKS (what Claude Code CAN confirm): FE build succeeded + Ready, deployed hash correct; BE
+function deployed + ACTIVE v7. CEILING: the `*.vercel.app` URLs are behind Vercel Deployment
+Protection (401 anonymous), so no anonymous page/bundle load; and the brief is private (jwt-verified)
+— it's tested via the Telegram **"brief test"** trigger, which I did NOT invoke (no spamming real
+briefs). **Everything behind the magic-link login (Today, All Tasks, Calendar, Settings, Archive,
+every interaction/write) CANNOT be verified by Claude Code — it's the owner's job; no claim is made.**
+DEPLOY CLARITY: ✅ **This IS now pushed + deployed to PRODUCTION on BOTH surfaces — the first full
+Phase-7 deploy.** Live now: T13 category manager + the whole Archive feature (A1–A4) + the A3b brief
+filter, on top of the already-approved Today/All-Tasks rebuild.
+ROLLBACK LEVER (owner; not auto-done) — BOTH surfaces, DB stays as-is (all changes additive):
+- FRONT-END: Vercel → lifeos → Deployments → re-**Promote** the previous Production deployment
+  `lifeos-dezpmsxje-…` (ref `df65a20`); optionally reset `origin/main` to `df65a20` and push.
+- BACKEND: redeploy the brief function from the pre-A3b commit (`git checkout 315498a~1 --
+  supabase/functions/brief/sb.ts` then `supabase functions deploy brief --project-ref
+  cntlptuacsujbdtwvbis`) → a v8 with the pre-A3b reads. (Front-end rollback alone is safe against
+  the migrated DB; the brief filter is independent.)
+FILES TOUCHED THIS PIECE: supabase/functions/brief/sb.ts (A3b); + this handoff entry & roadmap
+(docs). No front-end code change, no schema.
+OWNER VERIFICATION CHECKLIST: handed to the owner in the session report (FIRST/auth+regression →
+the rebuild T4–T8/T11/T13 → the Archive loop + screen → A3b brief → PHONE). Each confirmed item flips
+that piece UNKNOWN → owner-verified → checker (Archive delete-now scope is the top checker priority).
+NEXT: owner verifies the full live stack (Mac + phone); then checker; then Calendar (re-skin-vs-
+rebuild decision) / Settings re-skin / mobile / T12.
+
 ### 2026-06-23 — Phase 7, Archive A4 — the Archive screen (browse by batch · Restore · Delete-now)
 ROADMAP MAPPING: **Archive A4** — completes the front-end Archive feature (A3b backend remains). No
 schema.

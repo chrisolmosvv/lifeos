@@ -296,10 +296,14 @@ it rather than dig (see the Piece-1c decision).
   only; wiring them into Today/All Tasks/the picker is a deliberate later change.)
 
 ### Phase 7 — DEPLOY + VERIFY STATE (updated 2026-06-23)
-✅ **DEPLOYED (DV1):** `origin/main` = `df65a20`; Vercel Production build succeeded (● Ready),
-serving the rebuild (Today + All Tasks); production env → **Frankfurt** (`cntlptuacsujbdtwvbis`),
-matching the live T3/T7 schema. Rollback if ever needed: promote the prior Production deployment
-`lifeos-co8d0w5a4-…` (ref `3ff8a68`, Phase-6) in Vercel (the DB stays as-is; additive supersets).
+✅ **FULL STACK DEPLOYED (A3b deploy, 2026-06-23):** `origin/main` = `fa3bfc2`; Vercel Production
+● Ready at `lifeos-mlux5hf72-…`; the **brief edge function is v7** (with the A3b filter). Now live:
+the Today/All-Tasks rebuild **plus** T13 category manager + the whole Archive feature (A1–A4) + the
+A3b brief filter. Prod env → **Frankfurt**. **Rollback:** FE = re-promote `lifeos-dezpmsxje-…`
+(ref `df65a20`); BE = redeploy brief from the pre-A3b `sb.ts` (→ v8). DB stays as-is (all additive).
+The earlier owner-approved deploy `df65a20` (Today + All Tasks) is the FE rollback target.
+✅ **DEPLOYED (DV1):** `origin/main` was `df65a20`; Vercel Production ● Ready, serving the rebuild
+(Today + All Tasks); production env → **Frankfurt**. (Superseded by the A3b full-stack deploy above.)
 ✅ **OWNER-VERIFIED & APPROVED (Mac + phone):** the owner tested the live deploy and approved it —
 **T1, T4, T5, T6, T7, T8, T9, T11 are owner-verified** (drag on Mac mouse; phone = non-drag, by
 design), and **Calendar + Settings confirmed unchanged (no regression).** The Today + All Tasks
@@ -345,10 +349,9 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
     hook, filter-only). Archived items now disappear; Undo (toast) brings them back. No
     write/schema/behaviour change beyond hiding archived. Save point `7dfffb6`. **A2+A3 are
     the deploy-ready pair.**
-  - ⬜ **A3b — backend brief filter (FOLLOW-UP).** The 7am brief edge function
-    (`supabase/functions/brief/day.ts`, `gap.ts`) reads OPEN tasks + events WITHOUT an
-    archived filter → an archived item could still surface in the brief. Add
-    `&archived_at=is.null` to those PostgREST queries (backend; separate deploy surface).
+  - ✅ **A3b — backend brief filter.** Added `&archived_at=is.null` centrally in the brief's
+    `owner()` helper (`supabase/functions/brief/sb.ts`), covering all 11 reads (day.ts + gap.ts);
+    archived items can't surface in the 7am brief or its gap-fill. Deployed (brief function v7).
   - ✅ **A4 — the Archive screen.** New view reached from Settings ("Archive →"; back returns):
     lists every batch newest-first (label · type · per-table count · when), **Restore** (reuses
     `unarchiveBatch`; a hard-deleted category leaves restored items as Inbox automatically via the
@@ -370,6 +373,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Archive A3b + FULL DEPLOY — the brief archive filter, then the FIRST full
+  Phase-7 production deploy (both surfaces).** A3b: added `&archived_at=is.null` centrally in the
+  brief's `owner()` helper (`brief/sb.ts`), so archived items can't appear in the 7am brief/gap-fill
+  (all 11 reads covered). Then published the accumulated stack: **front-end pushed** (`origin/main =
+  fa3bfc2`, Vercel Production ● Ready at `lifeos-mlux5hf72-…`) and the **brief edge function deployed
+  to Frankfurt (now v7)** — held the backend until the FE build succeeded (no half-publish). Now LIVE
+  on top of the already-approved Today/All-Tasks rebuild: **T13 category manager + the entire Archive
+  feature (A1–A4) + the A3b brief filter.** Prod env confirmed → Frankfurt. Rollback levers recorded
+  (FE re-promote `df65a20`; BE redeploy pre-A3b brief). Claude Code can't verify behind login — the
+  owner's full-stack checklist is in the A3b handoff entry. **NEXT: owner verifies the live stack on
+  Mac + phone (Archive delete-now scope = top checker priority), then Calendar (re-skin-vs-rebuild),
+  Settings re-skin, mobile, T12.**
 - **2026-06-23 — Phase 7, Archive A4 DONE — the Archive screen (front-end Archive feature now
   COMPLETE).** A new screen reached from **Settings → "Archive →"** (back returns): archived items
   grouped by delete action (batch), newest first, each showing the label · source type · per-table
