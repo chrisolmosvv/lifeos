@@ -35,6 +35,53 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Piece 1c — record the Today rebuild decision (owner's explicit call)
+WHAT CHANGED: (paperwork only — NO app code, NO schema change)
+- Recorded in `03-decisions.md` the owner's **explicit, eyes-open decision**: Today
+  (desktop) is a **clean front-end rebuild of that one screen** — an **escalation
+  from Phase 7's default "re-skin, don't rewrite" stance**, made deliberately
+  because Today gained substantial new behaviour (workspace calendar, status pill,
+  drag-to-schedule, whole-page date-flip, the 3-level category tree). It is
+  **explicitly NOT a whole-app rewrite**. Four hard guardrails are written in:
+  (1) **front-end only — the data layer (reads, writes, existing tables) is
+  preserved and reused untouched**; schema changes happen only via the
+  separately-flagged additive pieces (category hierarchy, recurrence, the T2 field
+  check), never silently inside a look/build commit; (2) **the save point before T1
+  is sacred** — if the rebuild goes wrong we roll back to the working plain Phase 6
+  Today, we do **not** dig (the CLAUDE.md doom-loop rule applies hard); (3) the
+  rebuild **stays scoped to Today** and is not licence to rebuild other screens —
+  each later screen gets its own re-skin-vs-rebuild call when reached; (4) **every
+  T-piece keeps its own save point and its own owner verification on Mac and phone**
+  before the next starts.
+- Reflected it in `02-roadmap.md`: a Piece-1c line under Phase 7, a note tying the
+  pre-T1 save point to the "sacred rollback" guardrail, and a session note.
+FILES TOUCHED: 03-decisions.md, 02-roadmap.md, 04-handoff-log.md. (No src/, no db/,
+no schema. 07-ux-flows.md and 06-design.md unchanged — the spec/look they hold from
+Pieces 1/1b still stand.)
+HOW TO VERIFY (owner):
+- Top of `03-decisions.md` → a block **"Phase 7 — Today is a clean front-end rebuild
+  (owner's explicit call, LOCKED 2026-06-23, Piece 1c)"** with the four numbered
+  guardrails.
+- `02-roadmap.md` → Phase 7 shows **Piece 1c ✅**, and the build-sequence intro now
+  calls the pre-T1 save point the **sacred rollback point**.
+- `git log --oneline -1` shows this docs commit; nothing under `src/` or `db/`
+  changed (the app still looks exactly like Phase 6).
+KNOWN GAPS / RISKS:
+- This piece only **formalises the decision** — still nothing built. The clean
+  rebuild begins at **T1**, the first piece to touch `src/`.
+- The guardrails are now binding for the whole T1–T12 run: if anything in the
+  rebuild starts a doom-loop, the correct move is **roll back to the pre-T1 save
+  point**, not patch onward.
+NEXT (unchanged): T1 — the paper token + reusable component kit (header, hairline,
+small-caps label, tinted calendar block, task row, status pill, motion timings) and
+apply the header + `#F6F5F1` paper. First piece that touches `src/`; **commit its
+save point before starting — that commit is the sacred rollback to Phase 6 Today.**
+FOR THE CHECKER: confirm (1) no src/ or db/ file changed and no schema changed;
+(2) the recorded decision matches the owner's wording — a clean front-end rebuild of
+Today only, an explicit escalation, not a whole-app rewrite, with the four guardrails
+intact (data layer untouched, sacred save point / no digging, Today-scoped, per-piece
+save points + Mac-and-phone verification).
+
 ### 2026-06-23 — Phase 7, Piece 1b — lock the Today (desktop) spec + the rebuild plan
 WHAT CHANGED: (paperwork only — NO app code, NO schema change)
 - Replaced the **Today** section of `07-ux-flows.md` with the **locked desktop

@@ -161,12 +161,23 @@ prototype.
   front-end **rebuild** that preserves and reuses the data spine; additive-only
   schema, checker-flagged; conservative deletion) are in 03-decisions.md. NO src/
   or schema change.
+- ✅ **Piece 1c — record the Today rebuild decision (paperwork, no code).** The
+  owner's **explicit, eyes-open call**: Today is a **clean front-end rebuild of that
+  one screen** (an escalation from the phase's default "re-skin, don't rewrite",
+  taken because Today gained substantial new behaviour) — **not** a whole-app
+  rewrite. Hard guardrails in 03-decisions.md: front-end only / data layer untouched;
+  the **save point before T1 is sacred** (roll back, never dig — doom-loop rule
+  applies hard); scoped to Today only (every later screen gets its own re-skin-vs-
+  rebuild call); each T-piece keeps its own save point + owner verification on Mac
+  and phone. NO src/ or schema change.
 
 ### Phase 7 — proposed Today build sequence (each its own small piece)
 Each piece is **its own small commit**, with a **save point committed before it**,
 and is **verified by the owner on Mac and phone before the next** starts. **Schema
 pieces are flagged for the checker.** (This is the plan; pieces get their own
-✅/🔨/⬜ as we go.)
+✅/🔨/⬜ as we go.) **The save point committed before T1 is the sacred rollback
+point** — the working plain Phase 6 Today; if the rebuild goes wrong we roll back to
+it rather than dig (see the Piece-1c decision).
 - ⬜ **T1 — Foundation: paper token + the reusable component kit.** Build the kit
   (header, hairline, small-caps label, tinted calendar block, task row, status
   pill, motion timings) and apply the **header + `#F6F5F1` paper**. First piece that
@@ -205,6 +216,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Piece 1c (paperwork only, no app code). The Today rebuild
+  is now the owner's explicit, recorded decision.** Today (desktop) is a **clean
+  front-end rebuild of that one screen** — an eyes-open escalation from the phase's
+  default "re-skin, don't rewrite", taken because Today gained substantial new
+  behaviour (workspace calendar, status pill, drag-to-schedule, date-flip, category
+  tree) — and explicitly **not** a whole-app rewrite. Recorded in 03-decisions.md
+  with hard guardrails: **front-end only, data layer untouched** (schema only via the
+  separately-flagged additive pieces, never inside a build/look commit); **the save
+  point before T1 is sacred** (roll back to the working Phase 6 Today, never dig —
+  doom-loop rule applies hard); **scoped to Today only** (each later screen gets its
+  own re-skin-vs-rebuild call); **each T-piece keeps its own save point + owner
+  verification on Mac and phone**. NO src/ or schema change this piece. **NEXT
+  unchanged: T1 — paper token + reusable component kit, apply header + `#F6F5F1`
+  paper (first piece that touches `src/`; its save point is the sacred rollback).**
 - **2026-06-23 — Phase 7, Piece 1b (paperwork only, no app code). The Today
   desktop spec is LOCKED + the rebuild plan is written down.** `07-ux-flows.md` §3
   now holds the settled desktop Today screen (a **workspace calendar** you can

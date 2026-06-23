@@ -9,6 +9,43 @@
 
 ---
 
+## Phase 7 — Today is a clean front-end rebuild (owner's explicit call, LOCKED 2026-06-23, Piece 1c)
+
+- **[Today (desktop) is a clean front-end rebuild of that ONE screen — the owner's
+  explicit, eyes-open call]** — The owner has decided: rebuild Today's front end
+  from a clean base rather than re-skin the interim verify UI. This is an
+  **explicit escalation from Phase 7's default stance** ("re-skin, don't rewrite")
+  — made deliberately, with eyes open, **because Today gained substantial NEW
+  behaviour** the old screen wasn't built for: the **workspace calendar**
+  (click-create / drag / resize / snap), the **status pill**, **drag-to-schedule**
+  (and drag-off to unschedule), the **whole-page date-flip**, and the **3-level
+  category tree** with any-level filing. Re-skinning around all that would fight the
+  old shape; a clean rebuild is the honest path. (This supersedes/strengthens the
+  Piece-1b note **[Today is a front-end REBUILD, not a re-skin]** below — same
+  direction, now the owner's stated decision with the guardrails spelled out.)
+  **It is NOT a whole-app rewrite.** It carries these **hard guardrails**:
+  1. **Front-end only — the data layer is untouched.** The rebuild touches *only*
+     Today's front-end. The **reads, the writes, and the existing tables are
+     preserved and reused as-is.** Any schema change happens **only** through the
+     separately-flagged **additive** pieces — the category hierarchy (T3), event
+     recurrence (T10), and the T2 field check — **never silently inside a look/build
+     commit.**
+  2. **The save point before T1 is sacred.** If the rebuild goes wrong we **roll
+     back to the working plain Phase 6 Today** — we do **not** dig. **The doom-loop
+     rule (CLAUDE.md) applies hard here:** a fix that breaks the next thing means
+     stop and restart from the save point with a clearer plan, not keep patching.
+  3. **The rebuild stays scoped to Today.** It is **not** licence to rebuild other
+     screens. **Each later screen gets its own scope decision (re-skin vs rebuild)
+     when we reach it** — the rebuild call is made per screen, never assumed.
+  4. **Every T-piece keeps its own save point and its own owner verification.** Each
+     T-piece commits a **save point before it**, and the owner **verifies it on Mac
+     and phone before the next piece starts.**
+  **Why (owner-facing, plain):** Today is the home screen and the calmest, most-seen
+  page; it's worth building right, and it changed enough that a clean base is
+  cheaper and safer than wrestling the old one. **Trade-off:** more work on this one
+  screen than a paint job — accepted, because the backend stays safe and the
+  guardrails (sacred save point, no digging, scope fence) keep the risk boxed in.
+
 ## Phase 7 — the Today desktop spec + rebuild approach (LOCKED 2026-06-23, Piece 1b)
 
 > Locks the desktop **Today** screen as a build target and sets how we rebuild it.
