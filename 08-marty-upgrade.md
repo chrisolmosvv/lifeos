@@ -119,8 +119,13 @@ verify, and its own decision entry when we actually build it. The order may shif
   the SAME kind of correction has happened **2** times (LEARN_THRESHOLD) — then the next
   similar capture auto-files there. A single odd correction never retrains him.
 
-- **M7 — Voice notes.** A Telegram voice message → transcribed → straight into the
-  capture path. (Today non-text messages are silently dropped.)
+- **M7 — Voice notes.** *(built + deployed; no schema change.)* Speak instead of typing: a
+  Telegram voice note is transcribed (Gemini audio, through the M0 seam, free tier) and the
+  transcript runs through the EXACT SAME `route()` a typed message uses — so capture,
+  multi-item split, category guessing, and the M4/M5 follow-up all apply automatically.
+  Every reply is prefixed with **`Heard: "…"`** so a mis-hear is obvious and undoable.
+  **Owner's call: full parity** — voice can do everything typing can (incl. undo/edit/
+  delete); the echo + undo are the safety net. (Fixes the old "non-text silently dropped".)
 
 - **M8 — The interactive brief.** Reply to the 7am brief to act on it — tick a
   nudge done, reschedule a forgotten task, accept a free-window offer — by chat.

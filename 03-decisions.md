@@ -9,7 +9,28 @@
 
 ---
 
-## Marty M6 — category guessing that learns; guess shown + correctable, learning by pattern not one-off (2026-06-23)
+## Marty M7 — voice notes route through the exact same pipeline; full parity, echo + undo as the safety net (2026-06-23)
+
+- **[A voice note is transcribed, then fed into the SAME `route()` as a typed message — nothing is
+  re-implemented]** — the transcript flows through capture / multi-item / category guessing / the follow-up
+  automatically. **Why:** the goal was "feed it in as if I'd typed it." **Trade-off:** none; it's the least
+  code and stays consistent with every existing behaviour.
+- **[Full parity — voice can do everything typing can, incl. undo/edit/delete — OWNER's call]** — surfaced
+  the risk first (a mis-heard destructive command acts immediately) and the owner chose full parity over
+  scoping voice to capture+questions. **Why:** matches "feed as if typed" and the project's act-when-sure +
+  undo philosophy; delete = archive (restorable) and every reply ECHOES the transcript, so a mis-hear is
+  visible and reversible. **Trade-off:** voice is the least-reliable input, so a mis-heard destructive action
+  does happen — mitigated by the echo + undo, accepted deliberately.
+- **[Always echo "Heard: …" joined to the normal confirmation]** — the transcript is prefixed to whatever
+  the router replies. **Why:** a mis-hear must be obvious at a glance and reversible. The typed path is
+  unchanged (the echo prefix is empty for text), so M1–M6 don't regress.
+- **[Transcription goes through the M0 seam; a new `transcribeAudio` helper, free tier]** — `_shared/gemini.ts`
+  factored its fetch/retry into a shared `post()` and added an audio helper (inline audio part, SAME
+  key/model/endpoint). No key/model/endpoint in `voice.ts`. **Why:** the M0 decision — one place owns Gemini
+  access; a spoken "buy milk" isn't sensitive, so the free tier is fine. **Trade-off / watch:** the shared
+  model (`gemini-3.1-flash-lite`) is assumed to accept audio; if it doesn't, the audio call gets a different
+  model in the seam (a one-line change) — no other code moves.
+- **[No schema change]** — voice is purely an input adapter in front of the existing pipeline.
 
 - **[Capture GUESSES a category from the owner's REAL categories and SHOWS it; never invents, never silent]**
   — `guessCategories` reads the actual categories table; the AI picks from that exact list or returns Inbox

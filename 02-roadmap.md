@@ -583,8 +583,14 @@ its own small, owner-verified piece.
   then similar captures auto-file there — a one-off never retrains. **Not done until
   `db/13_marty_category_learning.sql` is run and the checker signs off.** (Guessing is live
   on deploy; learning activates once the SQL is run.)
-- ⬜ M7 — voice notes · ⬜ M8 — interactive brief · ⬜ M9 — daytime nudges ·
-  ⬜ M10 — hardening + retire test aids. *(see `08-marty-upgrade.md`.)*
+- ✅ **M7 — voice notes (built + deployed; no schema change).** A Telegram voice note is
+  transcribed (Gemini audio via the M0 seam, free tier) and the transcript runs through the
+  SAME `route()` as a typed message — capture / multi-item / category guess / follow-up all
+  apply. Every reply is prefixed **`Heard: "…"`** so a mis-hear is obvious + undoable.
+  Owner's call: FULL PARITY (voice can do everything typed can; echo + undo are the net).
+  Fixes the old "non-text silently dropped". Typed path unchanged.
+- ⬜ M8 — interactive brief · ⬜ M9 — daytime nudges · ⬜ M10 — hardening + retire test
+  aids. *(see `08-marty-upgrade.md`.)*
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -599,6 +605,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Marty track M7 — voice notes (built + deployed; no schema change).** Speak to Marty. A
+  voice note is transcribed and the transcript runs through the EXACT SAME pipeline as typed — nothing
+  re-implemented. Surfaced the one decision first (owner chose FULL PARITY: voice can do everything typed
+  can, with the echo + undo as the safety net). Built: `_shared/gemini.ts` factored a shared `post()` core
+  and added `transcribeAudio` (inline audio part, same key/model/endpoint/retry, free tier per M0);
+  `voice.ts` (getFile → download the OGG → base64 → transcribe via the seam); `index.ts` now detects
+  `message.voice` where non-text was silently dropped, transcribes, feeds the transcript to `route()`, and
+  prefixes the reply with `Heard: "…"`. Typed path byte-for-byte unchanged (echo empty). No `src/`, no
+  schema. Committed `0bf9f17`; deployed both functions to Frankfurt. **NEXT: owner runs the voice phone
+  checks; then M8 — interactive brief.** (Watch: if voice transcription consistently errors, the model
+  may not accept audio — the fix is to point the audio call at a fuller Gemini model in the seam.)
 - **2026-06-23 — Marty track M6 — category guessing that learns (built + deployed; AWAITING SQL + checker).**
   Capture stops dumping everything in Inbox. New `categorize.ts`: `guessCategories` reads the owner's REAL
   categories (excludes the literal "Inbox" → null) + the learned corrections; a met learned preference wins

@@ -35,6 +35,41 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M7 — voice notes (transcribe → same pipeline). No schema change.
+WHAT CHANGED:
+- You can SPEAK to Marty. A Telegram voice note is transcribed and the transcript runs through the EXACT
+  SAME `route()` a typed message uses — so capture, multi-item split, category guessing, and the M4/M5
+  follow-up all just work. Nothing in the pipeline was re-implemented.
+- Every reply to a voice note is prefixed with **`Heard: "…"`** (the transcript), joined to the normal
+  confirmation — so a mis-hear is obvious and reversible. Everything stays undoable via M2/M3.
+- DECISION (surfaced first, owner chose): **full parity** — voice can do everything typing can (incl.
+  undo / edit / delete), relying on the echo + undo as the safety net (delete = archive, restorable).
+- Fixes the old gap where non-text messages were silently dropped in `index.ts`.
+FILES TOUCHED: `_shared/gemini.ts` (factored a shared `post()` core; added `transcribeAudio` — inline audio
+part, same key/model/endpoint/retry), **new** `telegram/voice.ts` (getFile → download the OGG → base64 →
+transcribe via the seam), `telegram/index.ts` (detect `message.voice` → transcribe → route → echo prefix).
+No `src/`. **No schema.** Typed path byte-for-byte unchanged (echo is empty for text). All files <250.
+Committed `0bf9f17`; **deployed both functions to Frankfurt** (telegram changed; brief redeployed unchanged).
+HOW TO VERIFY (owner, on your phone — use the mic / hold-to-record in the Telegram chat):
+  1. **Single-item voice:** say **"dentist Thursday 3pm"** → reply starts `Heard: "dentist Thursday 3pm"`
+     then "Saved an EVENT …". Check the calendar on the Mac. Then **"undo"** (typed or spoken) → removed.
+  2. **Rambling multi-item voice:** say **"buy milk, call the plumber, and lunch with Sarah Friday"** →
+     `Heard: "…"` matches; the clear ones saved and the unclear one (lunch) asked about (M5). Reply "1pm"
+     (typed or voice) → lunch saved. **"undo"** → pulls the batch.
+  3. **Mis-hear is catchable:** if a word comes out wrong, the `Heard: "…"` line shows it and **"undo"**
+     reverses the save.
+  4. **Typed unaffected:** type anything → it behaves exactly as before (no `Heard:` prefix, no change).
+KNOWN GAPS / RISKS:
+- **If voice transcription consistently fails** ("I couldn't make out that voice note"), the shared model
+  (`gemini-3.1-flash-lite`) may not accept audio — the fix is a one-line change in `_shared/gemini.ts` to
+  point the AUDIO call at a fuller Gemini model (everything else stays). Flag it and I'll switch the model.
+- Full parity means a mis-heard destructive command (delete) acts immediately — the `Heard:` echo shows it
+  and undo reverses it (delete = archive). This was the owner's deliberate choice.
+- Very long voice notes mean a larger upload + transcription; fine for normal use.
+NEXT: owner runs the 4 voice checks. Then **M8 — interactive brief**. (No checker gate — no schema change.)
+FOR THE CHECKER (optional, no schema): confirm voice only ADDS an input adapter (transcribe → existing
+route); that the typed path is unchanged; that transcription uses the M0 seam (no hard-coded key/model).
+
 ### 2026-06-23 — Marty track M6 — category guessing that learns. ⚠️ SCHEMA CHANGE — CHECKER-GATED, not done yet.
 WHAT CHANGED:
 - Capture no longer dumps everything in Inbox. Marty GUESSES a category from your REAL categories and SHOWS
