@@ -12,7 +12,7 @@
 // classify step is added IN FRONT; the capture path itself is untouched.
 
 import { isUnsure, understand, unsureReply } from "./understand.ts";
-import { saveItems } from "./save.ts";
+import { saveItems, saveItemsTracked } from "./save.ts";
 import { undoLast, undoNamed } from "./undo.ts";
 import { classify } from "./intent.ts";
 import { answerQuery } from "./query.ts";
@@ -68,8 +68,8 @@ export async function route(text: string): Promise<string> {
   if (pending) {
     const isCommand = lower === "undo" || lower.startsWith("undo ") || lower === "brief" || lower === "brief test";
     if (!isCommand) {
-      const ans = await parseTimeAnswer(text, pending.draft);
-      if (ans.kind === "time") return await completePending(pending.draft, ans.time); // clears + saves
+      const ans = await parseTimeAnswer(text, pending.item);
+      if (ans.kind === "time") return await completePending(pending, ans.time); // clears + saves
       if (ans.kind === "rate_limit") return AI_LIMIT; // keep the pending so the owner can answer again
       // not_time / error → fall through: drop the question, handle this message normally.
     }
@@ -106,11 +106,33 @@ export async function route(text: string): Promise<string> {
     return result.value.length === 1 ? unsureReply(result.value[0]) : NONE_USABLE;
   }
 
-  // M4: ONE event-shaped item with no time → ask once and park it; the next message
-  // completes it. (Only single-item captures; a clear capture saves with no follow-up.)
-  if (good.length === 1 && good[0].needs_time && !good[0].time) {
-    if (await setPending(good[0], timeQuestion(good[0]))) return timeQuestion(good[0]);
-    // Couldn't park it (e.g. table not set up yet) → just save it normally, no broken question.
+  // Split into what's savable now vs what's an event missing its time.
+  const ready = good.filter((u) => !(u.needs_time && !u.time));
+  const unclear = good.filter((u) => u.needs_time && !u.time);
+
+  // All clear → save together (single item or whole batch). Unchanged behaviour.
+  if (unclear.length === 0) return await saveItems(good);
+
+  // Exactly ONE needs a time → ask once (M4/M5). With nothing else, it's a lone follow-up;
+  // with ready items, save those first and link the question to that batch's action so the
+  // answer completes into the SAME action (undo still pulls the whole batch).
+  if (unclear.length === 1) {
+    const q = timeQuestion(unclear[0]);
+    if (ready.length === 0) {
+      if (await setPending(unclear[0], q)) return q;
+      return await saveItems(good); // couldn't park → save normally, no broken question
+    }
+    const res = await saveItemsTracked(ready);
+    if (res.actionId && await setPending(unclear[0], q, res.actionId)) return `Saved ${res.count}. ${q}`;
+    // Couldn't park (table missing / no action) → don't lose the unclear one; save it too.
+    return `${res.reply}\n${await saveItems([unclear[0]])}`;
   }
-  return await saveItems(good);
+
+  // TWO OR MORE need a time → never fire multiple follow-ups. Save the clear ones and tell
+  // the owner which still need a time (they can re-send each with one).
+  const names = unclear.map((u) => `'${u.title}'`).join(", ");
+  const eg = `e.g. "${unclear[0].title} 3pm"`;
+  if (ready.length === 0) return `Those need a time before I can add them — send each with one (${eg}): ${names}.`;
+  const res = await saveItemsTracked(ready);
+  return `${res.reply}\nThese still need a time — send each with one (${eg}): ${names}.`;
 }

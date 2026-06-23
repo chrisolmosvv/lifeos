@@ -13,7 +13,7 @@
 // events(start_at/end_at with end >= start). No new columns, no schema change.
 
 import { humanDate, todayYMD, TZ, type Understood } from "./understand.ts";
-import { dbConfigured, insert, OWNER_USER_ID } from "./db.ts";
+import { dbConfigured, insert, OWNER_USER_ID, select, update } from "./db.ts";
 
 const SAVE_FAILED = "I understood it, but couldn't save it just now — nothing was saved. Mind sending it again?";
 
@@ -25,12 +25,13 @@ interface Saved {
 }
 
 // Record ONE 'create' action covering every item just saved, so "undo" can reverse the
-// whole batch and "undo <name>" can reverse one of them (M2). Best-effort: if logging
-// fails the items are still saved; undo just won't see them.
-async function logCreate(saved: Saved[]) {
+// whole batch and "undo <name>" can reverse one of them (M2). Returns the action's id (so
+// a later follow-up item can be appended to the SAME action — M5), or null on failure.
+async function logCreate(saved: Saved[]): Promise<string | null> {
   const items = saved.map((s) => ({ table: s.ptr.table, id: s.ptr.id, title: s.ptr.title }));
   const label = saved.length === 1 ? saved[0].ptr.title : `${saved.length} items`;
-  await insert("marty_actions", { user_id: OWNER_USER_ID, kind: "create", label, items });
+  const row = await insert("marty_actions", { user_id: OWNER_USER_ID, kind: "create", label, items });
+  return row ? String(row.id) : null;
 }
 
 // How far ahead of UTC the timezone is (in minutes) at a given instant.
@@ -112,22 +113,57 @@ async function saveOne(u: Understood): Promise<Saved | null> {
   };
 }
 
-// Save one OR MORE understood items as a single capture action, then return the
-// confirmation. One item reads exactly as it did before M2; several read as a list with
-// a hint about undo. The whole batch is logged as ONE action so undo treats it as a unit.
-export async function saveItems(items: Understood[]): Promise<string> {
-  if (!dbConfigured) return SAVE_FAILED;
+// The confirmation text for a set of saved items: one reads exactly as before M2;
+// several read as a list with a hint about undo.
+function confirmFor(saved: Saved[]): string {
+  if (saved.length === 1) return saved[0].full;
+  const lines = saved.map((s) => `• ${s.line}`).join("\n");
+  return `Saved ${saved.length} items:\n${lines}\n(Text "undo" to remove all ${saved.length}, or "undo <name>" for just one.)`;
+}
 
+// Save each item and log them as ONE create action (so undo treats them as a unit).
+async function saveBatch(items: Understood[]): Promise<{ saved: Saved[]; actionId: string | null }> {
   const saved: Saved[] = [];
   for (const u of items) {
     const s = await saveOne(u);
     if (s) saved.push(s);
   }
-  if (saved.length === 0) return SAVE_FAILED;
+  if (saved.length === 0) return { saved, actionId: null };
+  const actionId = await logCreate(saved);
+  return { saved, actionId };
+}
 
-  await logCreate(saved);
+// Save one OR MORE understood items as a single capture action; return the confirmation.
+export async function saveItems(items: Understood[]): Promise<string> {
+  if (!dbConfigured) return SAVE_FAILED;
+  const { saved } = await saveBatch(items);
+  return saved.length ? confirmFor(saved) : SAVE_FAILED;
+}
 
-  if (saved.length === 1) return saved[0].full;
-  const lines = saved.map((s) => `• ${s.line}`).join("\n");
-  return `Saved ${saved.length} items:\n${lines}\n(Text "undo" to remove all ${saved.length}, or "undo <name>" for just one.)`;
+// Like saveItems, but also returns the action id + count — so the caller can park a
+// follow-up question that completes into the SAME batch action (M5).
+export async function saveItemsTracked(items: Understood[]): Promise<{ reply: string; actionId: string | null; count: number }> {
+  if (!dbConfigured) return { reply: SAVE_FAILED, actionId: null, count: 0 };
+  const { saved, actionId } = await saveBatch(items);
+  if (!saved.length) return { reply: SAVE_FAILED, actionId: null, count: 0 };
+  return { reply: confirmFor(saved), actionId, count: saved.length };
+}
+
+// Save one follow-up item and APPEND it to an existing create action, so the whole batch
+// (the items saved up front + this one) still undoes as ONE logical action (M5). If that
+// action is gone (e.g. already undone), the item is logged as its own action instead.
+export async function appendToAction(actionId: string, item: Understood): Promise<string> {
+  if (!dbConfigured) return SAVE_FAILED;
+  const s = await saveOne(item);
+  if (!s) return SAVE_FAILED;
+
+  const rows = await select(`marty_actions?id=eq.${actionId}&user_id=eq.${OWNER_USER_ID}&select=items&limit=1`);
+  if (rows && rows.length) {
+    const existing = Array.isArray(rows[0].items) ? (rows[0].items as unknown[]) : [];
+    existing.push({ table: s.ptr.table, id: s.ptr.id, title: s.ptr.title });
+    await update(`marty_actions?id=eq.${actionId}&user_id=eq.${OWNER_USER_ID}`, { items: existing });
+  } else {
+    await logCreate([s]); // the batch is gone → keep this item undoable on its own
+  }
+  return s.full;
 }

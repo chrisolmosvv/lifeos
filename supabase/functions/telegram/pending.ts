@@ -12,11 +12,15 @@
 import { callGemini } from "../_shared/gemini.ts";
 import { dbConfigured, del, insert, OWNER_USER_ID, select } from "./db.ts";
 import { humanDate, type Understood } from "./understand.ts";
-import { saveItems } from "./save.ts";
+import { appendToAction, saveItems } from "./save.ts";
 
 const PENDING_TTL_MS = 5 * 60 * 1000; // a parked capture older than this is stale → dropped
 
-export interface Pending { draft: Understood; question: string }
+// A parked capture: the half-finished item, and — if it's the unclear member of a batch
+// whose clear items were already saved (M5) — the id of that batch's create action, so the
+// answer completes into the SAME action (undo still pulls the whole batch). null = a lone
+// follow-up (M4).
+export interface Pending { item: Understood; batchActionId: string | null; question: string }
 
 // The current pending capture, or null if there's none / it has expired (expired rows are
 // cleared as a side effect, so a stale question can never be answered).
@@ -30,16 +34,18 @@ export async function getPending(): Promise<Pending | null> {
     await clearPending();
     return null;
   }
-  return { draft: row.draft as Understood, question: String(row.question ?? "") };
+  const draft = (row.draft ?? {}) as { item: Understood; batchActionId?: string | null };
+  return { item: draft.item, batchActionId: draft.batchActionId ?? null, question: String(row.question ?? "") };
 }
 
-// Park a half-finished capture (replacing any previous one — PK is user_id). Returns
+// Park a half-finished capture (replacing any previous one — PK is user_id). batchActionId
+// links it to an already-saved batch (M5), or is null for a lone follow-up (M4). Returns
 // false if it couldn't be saved (e.g. the table isn't set up yet) so the caller can fall
 // back to just saving the item rather than asking a question it can't follow up on.
-export async function setPending(draft: Understood, question: string): Promise<boolean> {
+export async function setPending(item: Understood, question: string, batchActionId: string | null = null): Promise<boolean> {
   if (!dbConfigured) return false;
   await del(`marty_pending?user_id=eq.${OWNER_USER_ID}`);
-  const row = await insert("marty_pending", { user_id: OWNER_USER_ID, draft, question });
+  const row = await insert("marty_pending", { user_id: OWNER_USER_ID, draft: { item, batchActionId }, question });
   return !!row;
 }
 
@@ -87,11 +93,15 @@ export async function parseTimeAnswer(text: string, draft: Understood): Promise<
 }
 
 // Finish a parked capture with the answered time and save it (now a timed event), through
-// the normal capture path — so it lands in Inbox, is undoable, and reads like any save.
-export async function completePending(draft: Understood, time: string): Promise<string> {
+// the normal capture path — so it lands in Inbox, is undoable, and reads like any save. If
+// it belongs to a batch (M5), it's appended to that batch's action so the whole thing still
+// undoes as one; otherwise it's saved on its own (M4).
+export async function completePending(pending: Pending, time: string): Promise<string> {
   await clearPending();
-  const item: Understood = { ...draft, type: "event", time, needs_time: false };
-  return await saveItems([item]);
+  const item: Understood = { ...pending.item, type: "event", time, needs_time: false };
+  return pending.batchActionId
+    ? await appendToAction(pending.batchActionId, item)
+    : await saveItems([item]);
 }
 
 // The follow-up question Marty asks for an event-shaped item that's missing its time.
