@@ -13,8 +13,12 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const OWNER_USER_ID = Deno.env.get("OWNER_USER_ID");
 export const dayConfigured = !!(SB_URL && SERVICE_KEY && OWNER_USER_ID);
 
-// The owner filter every read carries.
-export const owner = () => `user_id=eq.${OWNER_USER_ID}`;
+// The filter every brief read carries: owner-scoped AND active-only (Archive A3b —
+// archived items must never surface in the morning brief or its gap-fill). Every
+// brief read is of tasks or events (both carry archived_at), and every read appends
+// owner(), so bundling the archive filter here covers them all — current and future —
+// with no read missed.
+export const owner = () => `user_id=eq.${OWNER_USER_ID}&archived_at=is.null`;
 
 // One read-only PostgREST query. Returns the rows, or null on any failure (so the
 // caller can tell "empty" apart from "couldn't read").
