@@ -9,6 +9,37 @@
 
 ---
 
+## Phase 7 — Calendar C3: ONE shared form (promote TodayForm), type-locked on edit (2026-06-23)
+
+- **[The form converges by PROMOTING `TodayForm` → canonical `ItemForm`, both screens point at it]**
+  — `TodayForm` was already the converged form (task+event, create+edit, toggle, graceful when the
+  subtask props are absent); Calendar just wasn't using it. So we **renamed it `kit/ItemForm.jsx`**
+  and pointed Today, All Tasks **and** Calendar at the one component — not a third form, not a
+  copy-on-Calendar-migrate-Today-later split (path b), which would keep two near-duplicate forms
+  alive (the thing we're converging away from). Per-type fields split into `kit/ItemTypeFields.jsx`
+  to honour the <250 guardrail. **Today-risk accepted & bounded:** the only Today-visible changes are
+  additive — the event form shows **All-day + Repeat as clearly-disabled placeholders**, and the
+  **selected-block outline** comes to Today's grid too; no change to Today's writes/flow (its file
+  diff is import+tag+selectedId).
+- **[Type toggle on create only; type LOCKED on edit]** — New items default to event; the task/event
+  toggle shows only while creating. Editing shows the item's type with **no event↔task conversion**
+  (this was already Today's behaviour — toggle only passed on create). Same on both screens now.
+- **[All-day + Repeat are disabled placeholders, not wired]** — `events` has **no `all_day` column**
+  (it has `location` ✓ and an unused `repeat_rule`). So All-day renders disabled ("coming with
+  all-day") and is completed in **C6** with the flagged additive schema; Repeat renders disabled
+  ("coming soon") — recurrence is **T10**. **No schema change in C3.** The disabled controls are
+  unmistakably off (muted, not tappable, a caption) so they read as "not yet", not "broken".
+- **[Calendar delete = archive + Undo, replacing the old hard delete]** — Calendar's old
+  `onDeleteEvent` hard-deleted (the odd one out, no undo). C3 routes delete through the existing
+  `archive.js` path with an Undo toast, **matching Today** and the Archive feature. Needed a small
+  `reload` exposed from `useWeekData` + an `onSaveTask`; the task select now also fetches
+  `time_bucket` so a Calendar task edit can't clobber the bucket. **This is the one data-write
+  behaviour change — flagged for the checker.** All existing columns; no schema.
+- **[Old panels retired now, deleted in C4]** — `EventPanel`/`TaskPanel`/`TaskEditForm` are no longer
+  imported (tree-shaken out) but their **files stay until C4**, because the dead `WeekCalendar.jsx`
+  still imports them; the whole old cluster is removed as one surgical unit in C4 (avoids a partial
+  teardown / broken import mid-rebuild).
+
 ## Phase 7 — Calendar C2: a documented SIBLING hook, not a generalised useTodayGrid (2026-06-23)
 
 - **[Week interactions = a new kit sibling `useWeekGrid`, NOT generalising `useTodayGrid` in place]**

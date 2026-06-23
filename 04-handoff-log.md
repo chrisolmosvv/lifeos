@@ -35,6 +35,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C3 — one shared create/edit form (Today + Calendar)
+WHAT CHANGED:
+- There is now **ONE form** for creating and editing, used by **both Today and Calendar** (and All
+  Tasks). It's Today's existing form, promoted to be the shared one (`TodayForm` → `ItemForm`).
+- On **Calendar**, tapping a block or "+ Add event" now opens this shared form (the old Calendar
+  edit panels are retired). The **task/event toggle** appears only when creating; once saved, the
+  type is fixed. New items default to **event**.
+- The event form now shows **All-day** and **Repeat** as clearly **disabled** "coming soon" controls
+  (so the form shows its real final shape) — these light up later (All-day in C6, Repeat in T10).
+- **Calendar delete now archives with an Undo toast** (same as Today), instead of deleting for good.
+- While a block's form is open, that block shows a **quiet outline** (both screens).
+FILES TOUCHED: renamed `kit/TodayForm.jsx` → `kit/ItemForm.jsx`, added `kit/ItemTypeFields.jsx`;
+edited `Today.jsx`, `AllTasks.jsx` (point at ItemForm), `WeekView.jsx` (shared form + archive-delete
++ toast + selected), `CalendarWeek.jsx` (+ live "+ Add event"), `kit/DayGrid.jsx`,
+`kit/WeekGrid.jsx`, `kit/WeekColumn.jsx`, `kit/TintedBlock.jsx` (selected outline), `useWeekData.js`
+(onSaveTask + reload + fetch time_bucket), `kit/todayForm.css`, `kit/todayKit.css`,
+`calendarWeek.css`. **EventPanel + TaskPanel + TaskEditForm now unused — retire with the old cluster
+in C4** (left in place so dead WeekCalendar.jsx keeps no broken import). Build passes; save `d0388df`.
+HOW TO VERIFY (dev: http://localhost:5174/):
+  1. **TODAY UNCHANGED (look here):** open Today → "+ add a task" creates as before; tap a task to
+     edit; tap a grid block to edit an event; Delete still archives with Undo. The ONLY new thing on
+     Today's **event** form is two clearly-greyed rows (All-day, Repeat) — not tappable.
+  2. **Calendar create:** click an empty slot or drag a span → the shared form opens (event); set a
+     title, save → the block appears. "+ Add event" (top-right, now coloured not greyed) → a blank
+     event form, nothing prefilled.
+  3. **Calendar edit + delete:** click a block → the shared form opens on it; edit a field, save →
+     it updates. Click Delete → it disappears and a **"Archived · Undo"** toast appears; click
+     **Undo** → the item **comes back on the week** correctly.
+  4. **Type toggle (both screens):** while CREATING, the Event/Task toggle shows and swaps the
+     fields; open an EXISTING item to edit → the toggle is **gone** (type locked).
+  5. **Selected outline:** with a block's form open, that block has a quiet outline; close → it clears.
+  6. **Repeat disabled:** on an event form, the Repeat control is visibly disabled.
+  7. **All Tasks + navigation unchanged.**
+KNOWN GAPS / RISKS:
+- All-day + Repeat are **disabled placeholders** (All-day = C6 + a flagged additive schema; Repeat =
+  T10). `events` has `location` but **no `all_day` column** — confirmed; no schema touched here.
+- Tray still greyed (**C5**); Month still greyed (**C6**).
+- Old panels (`EventPanel`/`TaskPanel`/`TaskEditForm`) are unused but their **files remain** until
+  C4 deletes the whole dead cluster as one unit.
+- Not deployed — local save point only.
+NEXT: **C5 — the tray** (right drawer, push, working mini-list; drag-to-schedule / drag-off-to-
+unschedule; the unscheduled task from C2 finally gets its on-Calendar home).
+FOR THE CHECKER: the load-bearing checks — (a) **Today's form create/edit/delete is unchanged** apart
+from the two disabled rows; (b) **Calendar delete now archives and offers Undo, and the undone item
+returns correctly on the week**; (c) the **type toggle shows on create, is gone on edit** on both
+screens. The one **data-write change** is Calendar delete → archive (existing `archive.js`/columns,
+**no schema**); also note `useWeekData` now fetches `time_bucket` so a Calendar task edit can't
+clobber the task's bucket. The form serves BOTH screens now (convergence).
+
 ### 2026-06-23 — Phase 7, C2 — Calendar week-grid interactions + weekend tint
 WHAT CHANGED:
 - The Calendar week grid is now **interactive**: click an empty slot to create a 1-hour block, or

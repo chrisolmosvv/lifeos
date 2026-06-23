@@ -349,12 +349,26 @@ separately-verified pieces; old Calendar code retired conservatively in C4, not 
   edit still use the current `EventPanel`/`TaskPanel` (shared form = C3). **No schema; writes via
   existing `useWeekData`.** Save point `0815323`. *(CHECKER: the off-grid unschedule write; that
   Today is unchanged; that sideways re-day keeps the time.)*
-- ⬜ **C3 — The shared form.** Converge the old panels → Today's one form; one-click edit; selected
-  outline; delete → archive toast.
+- ✅ **C3 — The shared form.** Promoted Today's `TodayForm` → the canonical **`kit/ItemForm.jsx`**
+  (per-type fields split into `kit/ItemTypeFields.jsx` to stay <250); **both Today and Calendar now
+  open the one shared form** for create + edit. Type toggle shows **only on create**; type is
+  **locked on edit** (no event↔task conversion); new items default to event. Event form gains
+  **All-day + Repeat as clearly-DISABLED placeholders** (all-day = C6 schema; repeat = T10).
+  Calendar's `+ Add event` wired **live** (blank event form, via a `requestAdd` ref bridge);
+  Tray/Month stay greyed. **Selected-block outline** on both screens (`TintedBlock` gains `selected`;
+  DayGrid + WeekColumn thread `selectedId`). **Calendar delete now archives + Undo toast** (existing
+  `archive.js`, matching Today — replaces the old hard delete). `useWeekData` gained `onSaveTask` +
+  `reload`, and its task select now fetches `time_bucket` (so a Calendar task edit can't clobber the
+  bucket). **No schema; writes via existing paths.** Old `EventPanel`/`TaskPanel`/`TaskEditForm` are
+  **retired (no longer imported) but NOT deleted** — they go with the old cluster in C4. Save point
+  `d0388df`. *(CHECKER: Today form unchanged bar the 2 disabled rows; Calendar delete = archive+undo;
+  the one new write is the archive-delete.)*
 - ⬜ **C4 — Drag-logic convergence. Collapse `useTodayGrid` + `useWeekGrid` into ONE grid hook**
   (the documented debt from C2 — both are deliberately close twins to diff against), and merge the
-  old `useEventDrag`/`useScheduleDrag` in; then retire the now-dead old Calendar code (provably
-  unused, separate commits).
+  old `useEventDrag`/`useScheduleDrag` in; then retire the now-dead old Calendar cluster as one unit
+  (provably unused, separate commits): `WeekCalendar.jsx` + `DayColumn`/`EventBlock`/`WeekDragPreview`
+  + the drag hooks + **`EventPanel`/`TaskPanel`/`TaskEditForm`** (retired in C3, files left until here
+  so the dead `WeekCalendar` keeps no broken import) + `eventPanel.css`.
 - ⬜ **C5 — The tray.** Button, push-to-squeeze, working mini-list (+ add, complete, drag-to-schedule,
   drag-off-to-unschedule); tray stays open after a drop.
 - ⬜ **C6 — All-day band + Month.** Auto-height interactive band + multi-day spans; standard Month
