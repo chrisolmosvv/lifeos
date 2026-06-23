@@ -16,6 +16,7 @@ import { saveItems } from "./save.ts";
 import { undoLast, undoNamed } from "./undo.ts";
 import { classify } from "./intent.ts";
 import { answerQuery } from "./query.ts";
+import { handleEdit } from "./edit.ts";
 
 // Used only to fire the separate PRIVATE brief function (it texts the owner itself).
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -73,6 +74,7 @@ export async function route(text: string): Promise<string> {
 
   const c = intent.value;
   if (c.kind === "question") return await answerQuery(c); // READ-ONLY path, saves nothing
+  if (c.kind === "edit") return await handleEdit(c); // change an existing item, riding undo
   if (c.kind === "unclear") return UNCLEAR; // ask, save nothing
 
   // 3. Capture — read it into one or more items, then save and confirm. Unsure items

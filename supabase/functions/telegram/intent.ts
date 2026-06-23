@@ -1,32 +1,42 @@
-// LifeOS — Telegram bot, M1: decide what ONE message IS before we act on it.
+// LifeOS — Telegram bot: decide what ONE message IS before we act on it.
 //
-// The owner either wants to ADD something (a task/appointment) or is ASKING about
-// what's already in their schedule. This module classifies which — it NEVER saves or
-// changes anything; it only labels the message so route.ts can send it the right way.
+// The owner can: ADD something (capture), ASK about their schedule (question), CHANGE
+// an existing item (edit: complete / reschedule / rename / delete), or be ambiguous.
+// This module classifies which — it NEVER saves or changes anything; it only labels the
+// message + extracts the fields the right handler needs.
 //
 // It goes through the M0 shared Gemini seam (../_shared/gemini.ts) — no key, model, or
 // endpoint here. Temperature 0, structured JSON out.
 //
-// SAFETY BIAS: a wrong "capture" guess would WRITE something the owner didn't want, so
-// when it genuinely can't tell capture from question we return "unclear" and the router
-// ASKS — we never default to capture on a coin-flip.
+// SAFETY BIAS: a wrong guess could WRITE or CHANGE data the owner didn't intend, so when
+// it genuinely can't tell add/ask/change apart we return "unclear" and the router ASKS.
 
 import { callGemini } from "../_shared/gemini.ts";
-import { TZ } from "./understand.ts"; // reuse the one timezone constant (save.ts does too)
+import { TZ } from "./understand.ts"; // reuse the one timezone constant
 
 export type QueryType = "agenda" | "forgot" | "free";
+export type EditOp = "complete" | "reschedule" | "rename" | "delete";
 
-// What the classifier decided. For a question, the extra fields say which kind and
-// (for agenda/free) which day / part of day — already resolved against local "now".
+// What the classifier decided. For a question, the query_* fields are filled; for an
+// edit, the op + target_* (which item) + new_* (the change) fields are filled. Unused
+// fields are "" / false.
 export interface Classified {
-  kind: "question" | "capture" | "unclear";
+  kind: "question" | "capture" | "edit" | "unclear";
+  // question:
   query_type: QueryType | "";
-  date: string; // resolved YYYY-MM-DD, or "" if none/none-needed
+  date: string;
   day_part: "morning" | "afternoon" | "evening" | "day" | "";
+  // edit:
+  op: EditOp | "";
+  target_title: string; // a name fragment identifying the existing item
+  target_time: string; // HH:MM, to identify by time ("the 3pm"); else ""
+  target_date: string; // YYYY-MM-DD, to identify by day; else ""
+  new_title: string; // rename → the new name
+  new_date: string; // reschedule → the new day (YYYY-MM-DD); else ""
+  new_time: string; // reschedule → the new clock time (HH:MM); else ""
+  new_date_bare: boolean; // true if new_date came from a bare month-day with no year
 }
 
-// Same 3-outcome shape understand.ts uses, so the router handles AI limits/errors the
-// same way whether it's classifying or capturing.
 export type ClassifyResult =
   | { kind: "ok"; value: Classified }
   | { kind: "rate_limit" }
@@ -34,31 +44,49 @@ export type ClassifyResult =
 
 const SYSTEM = `You are the message router for the owner's personal task and calendar app. Decide what ONE incoming message is. You only classify — you never save, change, or answer anything.
 
-Return JSON:
-- "kind":
-  - "capture" — the message states something to ADD or remember (e.g. "call mum tomorrow", "dentist friday 3pm", "buy milk", "gym at 6", "pay rent on the 1st"). A new to-do or appointment. A message listing SEVERAL things to add (e.g. "buy milk, call the dentist and book the car in") is still "capture".
-  - "question" — the message ASKS about the existing schedule or tasks (e.g. "what's on thursday?", "what did I forget?", "what's overdue?", "am I free friday afternoon?", "do I have anything tomorrow?", "when's the dentist?").
-  - "unclear" — you genuinely cannot tell whether they want to add something or are asking. If you are in doubt between "capture" and "question", choose "unclear". Do NOT guess "capture": a wrong guess would save something the owner did not ask for.
-- "query_type" (for a question only): "agenda" (what's on / do I have on a day), "forgot" (what's overdue / slipping / did I forget), or "free" (am I free / do I have time). Use "" for capture or unclear.
-- "date" (for a question that names a day): that day resolved to YYYY-MM-DD in the Europe/Amsterdam timezone, against the current local date you are given. A vague day name means the NEXT upcoming occurrence (today if it IS today). Use "" if no specific day is mentioned or it is not needed.
-- "day_part" (for a "free" question): "morning", "afternoon", "evening", or "day" (a whole day). Use "" otherwise.
+"kind" is one of:
+- "capture" — states something NEW to add/remember (e.g. "call mum tomorrow", "dentist friday 3pm", "buy milk, call the dentist and book the car in"). A new to-do or appointment.
+- "question" — ASKS about the existing schedule/tasks (e.g. "what's on thursday?", "what did I forget?", "am I free friday afternoon?").
+- "edit" — wants to CHANGE an item that already exists. One of:
+    - complete: "done X", "mark X done", "finished X", "X is done".
+    - reschedule: "move X to friday", "reschedule X to 3pm", "push X to next week".
+    - rename: "rename X to Y", "change X's name to Y", "call X 'Y' instead".
+    - delete: "delete X", "remove X", "cancel X", "drop X".
+- "unclear" — you genuinely cannot tell whether they want to add, ask, or change. If in doubt, choose "unclear" — do NOT guess; a wrong guess could write or change the wrong thing.
+
+Date/time rules (Europe/Amsterdam, resolve against the current local date you are given):
+- A vague day name means the NEXT upcoming occurrence (today if it IS today).
+- A bare month-day with NO year (e.g. "Jan 10") means the next upcoming occurrence: if this year's is past, use next year. NEVER resolve a bare date into the past.
+
+Fill these (use "" / false when not applicable):
+- question: "query_type" = "agenda" | "forgot" | "free"; "date" = the day asked about (YYYY-MM-DD); "day_part" = "morning"|"afternoon"|"evening"|"day" for a "free" question.
+- edit: "op" = complete|reschedule|rename|delete. "target_title" = the words naming the existing item (e.g. "the dentist" → "dentist"). "target_time" = HH:MM if the item is identified by a clock time ("the 3pm" → "15:00"). "target_date" = YYYY-MM-DD if identified by a day. "new_title" = the new name (rename). "new_date" = the new day YYYY-MM-DD (reschedule). "new_time" = the new clock time HH:MM (reschedule). "new_date_bare" = true if new_date came from a bare month-day with no year.
 
 Output ONLY the JSON object. No prose, no markdown.`;
 
 const SCHEMA = {
   type: "object",
   properties: {
-    kind: { type: "string", enum: ["question", "capture", "unclear"] },
+    kind: { type: "string", enum: ["question", "capture", "edit", "unclear"] },
     query_type: { type: "string" },
     date: { type: "string" },
     day_part: { type: "string" },
+    op: { type: "string" },
+    target_title: { type: "string" },
+    target_time: { type: "string" },
+    target_date: { type: "string" },
+    new_title: { type: "string" },
+    new_date: { type: "string" },
+    new_time: { type: "string" },
+    new_date_bare: { type: "boolean" },
   },
-  required: ["kind", "query_type", "date", "day_part"],
+  required: [
+    "kind", "query_type", "date", "day_part", "op", "target_title",
+    "target_time", "target_date", "new_title", "new_date", "new_time", "new_date_bare",
+  ],
 };
 
-// Current local date/time, so the classifier can resolve "Thursday" the same way
-// capture does. (Kept tiny and local — understand.ts has its own copy; unifying the
-// telegram date helpers is a separate later cleanup, see 08-marty-upgrade.md.)
+// Current local date/time, so the classifier can resolve "Thursday"/"Jan 10" correctly.
 function nowLocal(): string {
   const now = new Date();
   const date = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
@@ -69,6 +97,8 @@ function nowLocal(): string {
 
 const QUERY_TYPES: QueryType[] = ["agenda", "forgot", "free"];
 const DAY_PARTS = ["morning", "afternoon", "evening", "day"];
+const EDIT_OPS: EditOp[] = ["complete", "reschedule", "rename", "delete"];
+const str = (v: unknown) => (typeof v === "string" ? v : "");
 
 // Classify one message. Never throws — always returns a ClassifyResult.
 export async function classify(text: string): Promise<ClassifyResult> {
@@ -84,17 +114,22 @@ export async function classify(text: string): Promise<ClassifyResult> {
 
   try {
     const p = JSON.parse(result.text);
-    if (p?.kind !== "question" && p?.kind !== "capture" && p?.kind !== "unclear") return { kind: "error" };
-    // Coerce the free-text fields to the values we expect; anything else becomes "".
-    const query_type = QUERY_TYPES.includes(p?.query_type) ? p.query_type : "";
-    const day_part = DAY_PARTS.includes(p?.day_part) ? p.day_part : "";
+    if (!["question", "capture", "edit", "unclear"].includes(p?.kind)) return { kind: "error" };
     return {
       kind: "ok",
       value: {
         kind: p.kind,
-        query_type: query_type as QueryType | "",
-        date: typeof p?.date === "string" ? p.date : "",
-        day_part: day_part as Classified["day_part"],
+        query_type: (QUERY_TYPES.includes(p?.query_type) ? p.query_type : "") as QueryType | "",
+        date: str(p?.date),
+        day_part: (DAY_PARTS.includes(p?.day_part) ? p.day_part : "") as Classified["day_part"],
+        op: (EDIT_OPS.includes(p?.op) ? p.op : "") as EditOp | "",
+        target_title: str(p?.target_title),
+        target_time: str(p?.target_time),
+        target_date: str(p?.target_date),
+        new_title: str(p?.new_title),
+        new_date: str(p?.new_date),
+        new_time: str(p?.new_time),
+        new_date_bare: p?.new_date_bare === true,
       },
     };
   } catch (_err) {

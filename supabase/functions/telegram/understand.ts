@@ -8,6 +8,7 @@
 // (../_shared/gemini.ts — M0); this file keeps its OWN prompt, schema, and parsing.
 
 import { callGemini } from "../_shared/gemini.ts";
+import { rollPastBareDateForward } from "../_shared/datetime.ts";
 
 export const TZ = "Europe/Amsterdam"; // all date/time reasoning is in the owner's local time
 
@@ -16,6 +17,7 @@ export interface Understood {
   title: string;
   date: string; // resolved YYYY-MM-DD, or "" if none
   time: string; // HH:MM 24-hour, or "" if none
+  bare_date: boolean; // true only for an absolute month-day with NO year (e.g. "Jan 10")
   needs_clarification: boolean;
   note: string; // short reason when unsure (may be "")
 }
@@ -28,6 +30,7 @@ const SYSTEM = `You read ONE message from the owner of a personal task/calendar 
 Rules:
 - All dates and times are in the Europe/Amsterdam timezone. You are given the current local date and time; resolve every relative reference ("today", "tomorrow", "Thursday", "next week") against it.
 - A vague day name means the NEXT upcoming occurrence of that day. If the named day IS today, use today (do not skip a week).
+- A bare month-and-day with NO year (e.g. "Jan 10", "10 January", "10/01") means the NEXT upcoming occurrence: if that date THIS year is already past, use NEXT year. NEVER resolve a bare date into the past.
 - A message USUALLY describes ONE item. Only when it clearly lists SEVERAL distinct things to add (separated by commas, "and", or line breaks) return one object per item, in the order given. When in doubt, prefer a single item. Do NOT split one thing into several.
 - For EACH item:
   - Classify "type":
@@ -37,6 +40,7 @@ Rules:
   - "title": a short, clean name for the thing itself (e.g. "dentist", "call the plumber"). Do NOT put the date or time words in the title.
   - "date": the resolved calendar date as YYYY-MM-DD, or "" if none is implied.
   - "time": the clock time as HH:MM 24-hour, or "" if none.
+  - "bare_date": true ONLY when "date" came from an absolute month-and-day with NO year (e.g. "Jan 10"). For relative words ("today", "tomorrow", "Friday", "next week", "yesterday") or when a year was given, set it false.
   - If that item is unclear, gibberish, or you cannot confidently extract a task or event, set "needs_clarification" to true (and "type" to "unknown" if it is neither). Never invent details you were not given.
   - "note": one short clause explaining any uncertainty, else "".
 Output ONLY a JSON array of item objects. No prose, no markdown.`;
@@ -48,10 +52,11 @@ const ITEM_SCHEMA = {
     title: { type: "string" },
     date: { type: "string" },
     time: { type: "string" },
+    bare_date: { type: "boolean" },
     needs_clarification: { type: "boolean" },
     note: { type: "string" },
   },
-  required: ["type", "title", "date", "time", "needs_clarification", "note"],
+  required: ["type", "title", "date", "time", "bare_date", "needs_clarification", "note"],
 };
 
 // The reply is an ARRAY of items (one element for a single-item message).
@@ -101,6 +106,11 @@ export async function understand(text: string): Promise<ReadResult> {
     const items = parsed.filter(
       (p) => typeof p?.type === "string" && typeof p?.title === "string",
     ) as Understood[];
+    // Belt-and-suspenders: a bare month-day must never land in the past, even if the
+    // model slips. (Scoped by bare_date so relative refs like "yesterday" are untouched.)
+    for (const it of items) {
+      if (it.bare_date && it.date) it.date = rollPastBareDateForward(it.date);
+    }
     return { kind: "ok", value: items };
   } catch (_err) {
     return { kind: "error" };

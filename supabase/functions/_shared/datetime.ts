@@ -80,3 +80,41 @@ export function clockLabel(iso: string): string {
   const ap = (parts.find((p) => p.type === "dayPeriod")?.value ?? "").toLowerCase();
   return `${hour}:${minute}${ap}`;
 }
+
+// A UTC instant -> the local calendar date (YYYY-MM-DD) in the owner's timezone.
+export function localYMD(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
+// A UTC instant -> the local clock time as HH:MM 24-hour in the owner's timezone.
+export function localHM(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const hm = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  return hm === "24:00" ? "00:00" : hm;
+}
+
+// The same calendar date `n` years later (YYYY-MM-DD). Noon-UTC avoids any DST shift;
+// Feb 29 in a non-leap target year rolls to Mar 1 (a rare, acceptable edge).
+export function addYearsYMD(ymd: string, n: number): string {
+  const d = new Date(`${ymd}T12:00:00Z`);
+  d.setUTCFullYear(d.getUTCFullYear() + n);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "UTC", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
+// Belt-and-suspenders guard for a BARE month-day (no year stated): if it landed before
+// today, roll it forward a year (repeat for safety) so a bare date never means the past.
+// Only call this for dates the model flagged as bare — never for relative refs like
+// "yesterday", which are legitimately in the past.
+export function rollPastBareDateForward(ymd: string): string {
+  let d = ymd;
+  const today = todayYMD(); // YYYY-MM-DD strings compare chronologically
+  let guard = 0;
+  while (d && d < today && guard < 5) {
+    d = addYearsYMD(d, 1);
+    guard++;
+  }
+  return d;
+}
