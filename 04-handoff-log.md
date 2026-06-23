@@ -35,6 +35,70 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T4 / Rebuild R1 — Today's body rebuilt to the B layout, real data (read-only render)
+ROADMAP MAPPING: this "Piece R1" IS roadmap **T4** ("Today display build — read-only
+first"). Exact match, no overlap/conflict with other T-steps; marked T4 ✅.
+WHAT CHANGED (front-end only, Today's body only):
+- Rebuilt Today to the approved **B layout**, populated from the real tables (read-only):
+  - **Left — "The Day":** a new `DayGrid` (kit) showing a **7am–midnight** sheet that
+    **scrolls inside its own column** (the page does not scroll). Today's events + scheduled
+    tasks render as **soft category-tinted blocks** (low-opacity fill + coloured left bar,
+    Apple style), positioned by real start/end, **overlaps split side-by-side** (reusing the
+    shared layout maths), with the **now-line**. Each block's tint = its category's stored
+    `color` as-is (no inheritance/shading invented).
+  - **Right — two modules + a box:** **"tasks today"** (a task if due today OR in the Today
+    bucket OR scheduled today; scheduled-today ones muted with their time; priority order;
+    ~5 visible then the list scrolls) over **"the next 7 days"** (open tasks due/scheduled
+    tomorrow→+7 in date order, no date labels; **undated** tasks tagged at the bottom —
+    Someday deliberately excluded so the backlog isn't dumped). Low in the column, a quiet
+    **disabled "All tasks · N →"** placeholder for the future inventory screen.
+  - Empty zones each show one warm **Fraunces-italic** line.
+- **New sealed kit blocks** (each `tk-`/kit-prefixed, can't leak): `DayGrid`, `TintedBlock`,
+  `TodayTaskRow`, `ModuleHeader` (+ `src/kit/todayKit.css`). Plus a pure `src/todayModel.js`
+  (the tasks-today / next-7 / undated rules) and rewritten `src/Today.jsx` + `src/today.css`.
+- **Editing preserved (no regression to edit):** tapping a task row or a task block opens
+  the existing **`TaskPanel`**; tapping an event block opens the existing **`EventPanel`**
+  (edit + delete). These are the only writes this piece keeps.
+SAVE POINT (Step 0, rollback target): **`ec115bf`** — "Today rebuild R1 save point — before
+layout shell."
+FILES TOUCHED: src/Today.jsx, src/today.css (rewritten); ADDED src/todayModel.js,
+src/kit/{DayGrid,TintedBlock,TodayTaskRow,ModuleHeader}.jsx, src/kit/todayKit.css. NO db/,
+NO schema, NO data writes beyond the preserved edit. **No shared/Calendar/Settings/header-kit
+file changed** (verified by diff: DayColumn, eventLayout, EventPanel, TaskPanel, useWeekData,
+useEventDrag, NowLine, calendar.css, WeekCalendar, DayAgenda, Settings, theme.css, the header
+kit — all untouched; the shared pieces are imported, not modified). Build passes (118 modules).
+KNOWN GAPS / RISKS (all expected per the rebuild plan — each returns in its own piece):
+- **Marking a task done is temporarily unavailable from Today** (the done-tick is gone with
+  the old row). It returns with the **3-state status pill (T7)**, which needs the schema
+  change. ⚠️ This is the most user-visible interim gap — if you want a stop-gap done-tick
+  before T7, say so and I'll add a minimal one.
+- **Task delete and "+ add"** are not on Today this piece (return with the new form, **T6**).
+- **Drag-to-schedule / unschedule** is not wired (returns **T5**); scheduling still works on
+  the **Calendar** screen, which is unchanged.
+- **The Someday drawer left the home screen** by the content-model decision (Someday stays
+  in the data, just not on Today).
+- Couldn't self-verify visually (magic-link login isn't possible headlessly) — build + code
+  verified; the on-screen check is yours.
+- Old now-unused files (DayTimeline, TaskBlock, TaskRow, SomedayDrawer, useScheduleDrag) are
+  left in place for the **T12** conservative trim, not deleted now.
+HOW TO VERIFY (owner — Mac AND phone):
+- The page **fits with no whole-page scroll**; only the day column scrolls (and the module
+  lists if long).
+- Your **real events + scheduled tasks** appear on the grid at the right times, **tinted**,
+  with **overlaps split** and the **now-line** present.
+- **"tasks today"** shows the right tasks in priority order (max ~5, then it scrolls).
+- **"the next 7 days"** shows upcoming tasks in date order, with **undated** ones tagged at
+  the bottom.
+- **Empty** zones show their one-line message.
+- You can still **edit a task** (tap a row → panel) and **edit/delete an event** (tap a
+  block → panel); **Calendar + Settings still work** exactly as before.
+NEXT: T5 — calendar workspace interactions on Today's grid (click-create with event/task
+toggle, drag, resize, 15-min snap, overlap split, drag to/from modules); or T3b (seed the
+real category tree).
+FOR THE CHECKER: confirm — zero data writes beyond the preserved edit; Today-body-only scope;
+no shared hook/component that Calendar/Settings depend on was altered; the new kit CSS is
+sealed (`tk-`-prefixed, used only by the kit); and existing edit + nav still work.
+
 ### 2026-06-23 — Phase 7, T3 — category hierarchy schema: a 3-level depth cap (FIRST live write; additive)
 WHAT CHANGED (additive only, schema not data): added a **max-depth-3 cap** to the
 `categories` tree on the live Frankfurt DB (`cntlptuacsujbdtwvbis`). It's a new trigger

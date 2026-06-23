@@ -1,0 +1,182 @@
+/* Sealed kit blocks for the Today rebuild (Phase 7, T4 / R1): the module header,
+   the read-only task row, the tinted calendar block, and the day grid. Every
+   class is prefixed `tk-` and used ONLY by these kit components, so a tweak here
+   can't leak to any other screen. Colour/type come from the theme (theme.css). */
+
+/* --- ModuleHeader: a quiet kicker over a hairline ------------------------- */
+.tk-modhead {
+  flex: none;
+  margin-bottom: 0.5rem;
+}
+.tk-modhead-rule {
+  border: none;
+  border-top: 1px solid var(--ink);
+  margin: 0.35rem 0 0;
+}
+
+/* --- TodayTaskRow: one read-only task line (tap opens the existing editor) - */
+.tk-row {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.4rem 0.25rem;
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule-faint);
+  cursor: pointer;
+}
+.tk-row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+.tk-row-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tk-row.is-high .tk-row-title {
+  font-weight: 500;
+}
+.tk-row.is-muted .tk-row-title {
+  color: var(--ink-muted);
+}
+.tk-row.is-done .tk-row-title {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+.tk-row-meta {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+.tk-pri {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+}
+.tk-pri.is-high {
+  color: var(--ink);
+}
+.tk-when {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.tk-when.is-overdue {
+  color: var(--overdue);
+}
+.tk-tag {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+}
+
+/* --- TintedBlock: an Apple-style soft tinted block on the grid ------------- */
+.tk-block {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 4px;
+  padding: 2px 6px 2px 8px;
+  overflow: hidden;
+  cursor: pointer;
+  /* the tinted fill + coloured left bar are set inline (per category colour) */
+}
+.tk-block.is-done {
+  opacity: 0.6;
+}
+.tk-block.is-done .tk-block-title {
+  text-decoration: line-through;
+}
+.tk-block-time {
+  font-size: 0.6rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.tk-block-title {
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- DayGrid: the 7am–midnight day sheet, scrolling inside its column ------ */
+.tk-grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tk-grid-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.tk-grid-inner {
+  position: relative;
+  display: flex;
+}
+/* the hour-label gutter */
+.tk-grid-times {
+  flex: none;
+  width: 52px;
+}
+.tk-grid-time {
+  height: 48px; /* must equal HOUR_HEIGHT in dateUtils.js */
+  position: relative;
+}
+.tk-grid-time span {
+  position: absolute;
+  top: -0.5em;
+  right: 6px;
+  font-size: 0.62rem;
+  color: var(--ink-muted);
+}
+/* the blocks area, with hour lines drawn across it */
+.tk-grid-lane {
+  position: relative;
+  flex: 1;
+  border-left: 1px solid var(--rule);
+}
+.tk-grid-hour {
+  height: 48px; /* must equal HOUR_HEIGHT */
+  border-top: 1px solid var(--rule-faint);
+}
+.tk-grid-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px solid var(--accent);
+  z-index: 3;
+}
+.tk-grid-now::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.tk-grid-empty {
+  position: absolute;
+  top: 1.5rem;
+  left: 1rem;
+  right: 1rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+}

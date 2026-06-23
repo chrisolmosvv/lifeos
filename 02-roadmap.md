@@ -210,9 +210,17 @@ it rather than dig (see the Piece-1c decision).
     first; no categories seeded yet).
   - ⬜ Colour-branch model + drill-in picker + Settings management (re-parent/delete) —
     front-end, later pieces.
-- ⬜ **T4 — Today display build (read-only first).** Render the calendar (tinted
-  blocks, now-line, 7am–midnight internal scroll) + both modules with the new
-  content model — display only, no interactions yet.
+- ✅ **T4 — Today display build (read-only first) — "Rebuild R1".** Rebuilt Today's
+  body to the B layout with REAL data, read-only: left "The Day" = a 7am–midnight
+  `DayGrid` (today's events + scheduled tasks as soft **tinted blocks**, overlaps
+  split, now-line, scrolls internally); right = "tasks today" over "the next 7 days"
+  (new content model in `todayModel.js`) + a disabled "All tasks · N" box. New sealed
+  kit blocks: `DayGrid`, `TintedBlock`, `TodayTaskRow`, `ModuleHeader` (+ `todayKit.css`).
+  Edit preserved by reusing the existing `TaskPanel`/`EventPanel` on tap. NO create/
+  drag/+add/status-pill/day-flip (later pieces). Front-end only, no schema, no writes
+  beyond the preserved edit; no shared/Calendar/Settings/header file touched. Save
+  point `ec115bf`. Known interim gaps (return in later pieces): done-tick + task-delete
+  + add + drag-to-schedule + the Someday drawer. **Owner verifies on Mac + phone.**
 - ⬜ **T5 — Calendar workspace interactions.** Click-create (event default +
   toggle), drag, resize, 15-min snap, overlap split, drag to/from the modules.
 - ⬜ **T6 — The create/edit form.** Task + event fields, one-tap-open everywhere,
@@ -238,6 +246,23 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T4 / Rebuild R1 DONE — Today's body is rebuilt to the B layout
+  with real data (read-only render).** Left "The Day" is a 7am–midnight grid of today's
+  events + scheduled tasks as soft Apple-style **tinted blocks** (overlaps split, now-line,
+  scrolls inside its column — the page doesn't scroll). Right is two stacked modules —
+  **"tasks today"** (due today / Today bucket / scheduled today, priority order, max ~5
+  then scrolls) over **"the next 7 days"** (tomorrow→+7 in date order, undated tasks tagged
+  at the bottom; Someday deliberately excluded) — plus a disabled **"All tasks · N"** box.
+  Built from new sealed kit blocks (DayGrid, TintedBlock, TodayTaskRow, ModuleHeader) and a
+  pure `todayModel.js`; Today.jsx + today.css rewritten. **Editing is preserved** (tap a
+  task/event → the existing Phase-6 panel). Front-end only — no schema, no writes beyond
+  edit, and NO shared/Calendar/Settings/header change (verified). Save point `ec115bf`.
+  **Interim gaps to expect (each returns in its own later piece):** the quick done-tick
+  (T7 status pill, needs the schema change), task delete + "+ add" (T6 form), drag-to-
+  schedule (T5), and the Someday drawer (now off the home screen by the content-model
+  decision; still in the data). Old now-unused files (DayTimeline/TaskBlock/TaskRow/
+  SomedayDrawer/useScheduleDrag) are left for the T12 trim. **NEXT: T5 — the calendar
+  workspace interactions on Today's grid (click-create, drag, resize), or T3b.**
 - **2026-06-23 — Phase 7, T3 (schema) DONE — the category tree can now be 3 levels deep.
   FIRST live write to the database.** Additive only: a new `categories_enforce_depth`
   trigger caps the tree at 3 levels (`db/07_categories_depth.sql`), applied + verified on

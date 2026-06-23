@@ -1,34 +1,33 @@
-/* The Today home — the front page. Two columns that fit the screen without the
-   page scrolling: "The Day" (a Phase-4 placeholder) on the left, the task
-   blocks on the right. Only the right column scrolls, and only if it's long.
-   Reuses the shared paper/ink/fonts and the row styles in tasks.css. */
+/* The Today home — the rebuilt front page (Phase 7, T4 / R1). Two columns that
+   fit a 13" screen with NO whole-page scroll: "The Day" grid on the left (scrolls
+   inside its own column), and the two stacked task modules on the right. Only the
+   day grid and the module lists scroll; the page does not. Today-only styles —
+   the reusable blocks live in the kit (kit/todayKit.css). */
 
 .today {
   height: 100%;
   box-sizing: border-box;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1.5rem 1rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2.5rem;
-  overflow: hidden; /* the page itself never scrolls (desktop zero-scroll) */
+  overflow: hidden; /* the page itself never scrolls */
 }
 
-/* Shared section headline — Fraunces over a full-strength ink hairline, the way
-   a paper heads a section. */
-.today-day-title,
-.tb-title {
+/* Section headline — Fraunces over a full-strength ink hairline. */
+.today-day-title {
+  flex: none;
   font-family: var(--font-serif);
   font-weight: 500;
   font-size: 1.5rem;
-  margin: 0 0 0.9rem;
+  margin: 0 0 0.75rem;
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--ink);
 }
 
-/* Left: The Day — the two-column shape, now holding the read-only day timeline
-   (the grid + event blocks live in DayTimeline / dayTimeline.css). */
+/* Left: "The Day" — title + the day grid, which fills and scrolls internally. */
 .today-day {
   display: flex;
   flex-direction: column;
@@ -37,136 +36,81 @@
   padding-right: 1.5rem;
 }
 
-/* Right: the task blocks, stacked. This column scrolls if the two blocks
-   together run long; the page does not. */
+/* Right: the two stacked modules + the All-tasks box. The column itself does not
+   scroll — each module's list does. */
 .today-right {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  gap: 1.75rem;
-  overflow-y: auto;
-  padding-right: 0.25rem;
+  gap: 1.5rem;
 }
 
-.tb {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Someday — a quiet drawer below This Week, not a third headline. Collapsed it's
-   a single muted line; open it reveals the rows in their own scroll region so the
-   page never grows taller (desktop zero-scroll holds). */
-.someday {
-  flex: none;
+.today-mod {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-.someday-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.55rem 0.25rem;
-  font: inherit;
-  text-align: left;
-  color: var(--ink-muted);
-  background: none;
-  border: none;
-  border-top: 1px solid var(--rule);
-  cursor: pointer;
+/* "tasks today": caps at ~5 rows, then the list scrolls inside the module. */
+.today-mod-today .today-mod-list {
+  max-height: 13.5rem;
 }
-.someday-head:hover {
-  color: var(--ink);
+/* "the next 7 days": takes the remaining height; its list scrolls. */
+.today-mod-week {
+  flex: 1;
 }
-.someday-caret {
-  font-size: 0.7rem;
-}
-.someday-label {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-}
-.someday-count {
-  font-size: 0.72rem;
-  color: var(--ink-muted);
-}
-.someday-body {
+.today-mod-list {
   min-height: 0;
-  max-height: 38vh;
   overflow-y: auto;
-  padding-top: 0.25rem;
 }
-.tb-empty {
+
+/* Empty zones — one warm Fraunces-italic line each. */
+.today-empty {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+  padding: 0.5rem 0.25rem;
+}
+.today-loading {
   color: var(--ink-muted);
   font-size: 0.9rem;
   padding: 0.6rem 0.25rem;
 }
-
-/* "+ Add a task" — the add action earns the accent (per the design doc). Click
-   it to reveal a quiet input; Esc closes it. */
-.tb-add {
-  padding-top: 0.5rem;
-}
-.tb-addlink {
-  font: inherit;
-  font-size: 0.85rem;
-  color: var(--accent);
-  background: none;
-  border: none;
-  padding: 0.3rem 0.25rem;
-  cursor: pointer;
-}
-.tb-addform {
-  display: flex;
-  gap: 0.5rem;
-}
-.tb-addbtn {
-  padding: 0.5rem 1rem;
-  font: inherit;
-  font-weight: 500;
-  color: var(--paper);
-  background: var(--ink);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.tb-addbtn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .today-error {
   color: var(--accent);
   font-size: 0.85rem;
 }
 
-/* The ghost chip that follows the pointer while dragging a task onto the grid.
-   Fixed to the viewport, offset from the cursor, never intercepts pointer. */
-.sched-ghost {
-  position: fixed;
-  z-index: 20;
-  transform: translate(12px, 12px);
-  pointer-events: none;
-  max-width: 220px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  padding: 0.25rem 0.55rem;
-  background: var(--paper);
-  border: 1px solid var(--ink);
+/* The quiet "All tasks · N →" box — a visible, disabled placeholder for the
+   future inventory screen (wired in a later piece). */
+.today-alltasks {
+  flex: none;
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  background: none;
+  border: 1px solid var(--rule);
   border-radius: 6px;
-  font-size: 0.8rem;
-  color: var(--ink);
+  cursor: default;
+}
+.today-alltasks-arrow {
+  margin-left: auto;
 }
 
-/* Phone: stack to one column and let it scroll; the timeline placeholder sits
-   on top with a hairline beneath instead of beside. */
+/* Phone: stack to one column and let the page scroll; give the grid a real
+   height so it doesn't collapse. (The dedicated mobile Today is a later spec.) */
 @media (max-width: 768px) {
   .today {
     grid-template-columns: 1fr;
     gap: 1.5rem;
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
     overflow-y: auto;
   }
   .today-day {
@@ -175,13 +119,15 @@
     padding-right: 0;
     padding-bottom: 1.25rem;
   }
-  /* Give the timeline a real height on phone so it doesn't collapse inside the
-     stacked, page-scrolling layout. */
-  .dt {
+  .today-day .tk-grid {
     flex: none;
-    height: 65vh;
+    height: 60vh;
+  }
+  .today-mod-today .today-mod-list,
+  .today-mod-week {
+    max-height: none;
   }
   .today-right {
-    overflow: visible;
+    gap: 1.75rem;
   }
 }
