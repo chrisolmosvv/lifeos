@@ -35,6 +35,59 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M4 — multi-turn capture. ⚠️ SCHEMA CHANGE — CHECKER-GATED, not done yet.
+WHAT CHANGED:
+- Marty can now finish a capture over TWO messages when the ONE key detail is missing. The case: an event
+  with no time. **"add lunch Friday" → "What time is 'lunch' on Fri 26 Jun?" → "1pm" → saved** as a Friday
+  1pm event (Inbox, undoable). The discipline: **at most ONE** follow-up, only when the missing thing
+  genuinely blocks a sensible save. A complete capture saves with NO question; a plain task ("buy milk")
+  saves with NO question.
+- **New tiny table `marty_pending`** holds the half-finished capture between the two messages (the first
+  time the bot remembers across messages). The owner approved this storage choice up front over flaky
+  in-memory.
+- Only the **very next** message can complete a parked capture, and only if it's essentially just a time.
+  A new capture, a question, or "undo" **drops the parked question cleanly** and is handled normally — never
+  force-fit as the answer (even "move dentist to 3pm", which mentions a time, is treated as the edit it is).
+FILES TOUCHED: **new** `db/12_marty_pending.sql`, `telegram/pending.ts`; edited `telegram/understand.ts`
+(adds `needs_time`), `telegram/route.ts` (pending-answer check at the top + one-time follow-up in capture).
+No `src/`. All files <250 lines. Committed `367dce2`; **deployed both functions to Frankfurt** (telegram
+changed; brief redeployed unchanged for parity). The code is safe before the SQL is run: `setPending`
+fails → Marty just saves the item normally (no broken half-state), so multi-turn simply lights up once the
+table exists.
+
+⚠️ FOR THE CHECKER — THIS IS A SCHEMA CHANGE; please confirm (all four hold):
+  1. **Additive + owner-only RLS** — `marty_pending` is a brand-new table with the same owner-only policies
+     as `telegram_saves`/`marty_actions`; no existing table/column/policy is changed.
+  2. **No foreign key into tasks/events/categories** — it references only `auth.users(id)`. It can never
+     block or cascade a spine delete; it only holds a JSON draft of an UNSAVED item.
+  3. **Transient only** — one row per owner (PK = user_id), holding a half-finished capture; a real
+     task/event is written only on completion, through the normal capture path (Inbox, source, undoable).
+  4. **Always cleared** — on completion, on abandonment (any non-time / command), and after the ~5-minute
+     expiry (`getPending` drops stale rows). Nothing stale lingers; a new question overwrites the old.
+
+OWNER — RUN THIS SQL FIRST (before the phone checks), in the Supabase SQL editor:
+  • Open Supabase → SQL Editor → New query → paste the WHOLE of `db/12_marty_pending.sql` → Run.
+  • Expect "Success. No rows returned." (Until this is run, "add lunch Friday" just saves as a task — the
+    follow-up only kicks in once the table exists.)
+
+HOW TO VERIFY (owner, on your phone — AFTER running the SQL):
+  1. **The follow-up:** text **"add lunch Friday"** → Marty asks **"What time…?"** → reply **"1pm"** →
+     "Saved an EVENT: 'lunch', Fri … 13:00–14:00, Inbox." Check the calendar on the Mac. Text **"undo"** →
+     it's removed.
+  2. **No follow-up when complete:** **"dentist Friday 3pm"** → saved straight away, no question.
+  3. **No follow-up for a plain task:** **"buy milk"** → saved straight away, no question.
+  4. **Abandon cleanly:** **"add lunch Friday"** → Marty asks → instead of a time, send **"what did I
+     forget?"** → Marty ANSWERS the question and does NOT save a broken lunch (the parked question is
+     dropped). Confirm on the Mac that no stray "lunch" appeared.
+KNOWN GAPS / RISKS:
+- A reply that is JUST a bare time ("1pm") while a question is pending is taken as the answer — by design.
+- If the table isn't set up, Marty saves "add lunch Friday" as a task (graceful fallback), so test #1 needs
+  the SQL run first.
+- Every incoming message now does one extra small read (check for a pending) — negligible for one user.
+NEXT: owner runs SQL → 4 phone checks → **checker sign-off**. Only then is M4 done. Then **M5 — category
+learning**. Do NOT start M5 until the checker approves M4.
+FOR THE CHECKER: see the ⚠️ block above (the four confirmations).
+
 ### 2026-06-23 — Marty track M3.5 — reconcile Marty's delete with the app's Archive. No schema change.
 THE DRIFT (what M3 did vs the app):
 - The app's delete (`src/archive.js`) creates an `archive_batches` row and stamps each deleted row with

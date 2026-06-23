@@ -91,10 +91,15 @@ verify, and its own decision entry when we actually build it. The order may shif
   the app's restore). No schema change — reuses the existing archive machinery; no second
   parallel "archived" state.
 
-- **M4 — Multi-turn capture.** When a capture is missing something (no date, an
-  ambiguous time, no obvious category), Marty asks **one** short follow-up instead
-  of guessing — and remembers the half-finished item until you answer. (Builds on the
-  M1 "unclear → ask" pattern, which is stateless today.)
+- **M4 — Multi-turn capture.** *(built + deployed — awaiting SQL run + checker review.)*
+  When a capture is missing the ONE key detail (an event with no time), Marty asks **once**
+  ("What time?") and completes on the reply: "add lunch Friday" → "What time?" → "1pm" →
+  saved as a Friday 1pm event (Inbox, undoable). The discipline: **at most one** follow-up,
+  only when the missing thing genuinely blocks a sensible save (tasks almost never ask);
+  a complete capture saves with no question. State lives in a tiny new table
+  **`marty_pending`** (one row per owner, ~5-min expiry) — **only the very next message**
+  can complete it, and only if it's actually a time; a new capture / question / undo drops
+  the parked question cleanly. First time the bot remembers across messages.
 
 - **M5 — Category learning.** Instead of everything landing in **Inbox**, Marty
   suggests/uses the right category, learning from how you file things.

@@ -565,9 +565,16 @@ its own small, owner-verified piece.
   Marty's delete creates a real `archive_batches` row + stamps `archive_batch_id` like the
   app's `archiveTask`/`archiveEvent`, so it **shows in Archive + restores there** AND stays
   Marty-undoable (undo reverts rows + removes the empty batch). One archive system, not two.
-- ⬜ M4 — multi-turn capture · ⬜ M5 — category learning · ⬜ M6 — voice notes ·
-  ⬜ M7 — interactive brief · ⬜ M8 — daytime nudges · ⬜ M9 — hardening + retire test
-  aids. *(Numbering settled at M0–M9 — see `08-marty-upgrade.md`.)*
+- 🔨 **M4 — multi-turn capture (built + deployed; AWAITING SQL run + checker review).** When
+  a capture is an event missing its time, Marty asks ONCE ("What time?") and saves on the
+  reply ("add lunch Friday" → "What time?" → "1pm" → Friday 1pm event, undoable). At most one
+  follow-up; complete captures save with no question; tasks almost never ask. State in a new
+  tiny table **`marty_pending`** (one row/owner, ~5-min expiry). Only the very next message
+  completes it (and only a time); a new capture/question/undo drops it cleanly. **Not done
+  until `db/12_marty_pending.sql` is run and the checker signs off.**
+- ⬜ M5 — category learning · ⬜ M6 — voice notes · ⬜ M7 — interactive brief ·
+  ⬜ M8 — daytime nudges · ⬜ M9 — hardening + retire test aids.
+  *(Numbering settled at M0–M9 — see `08-marty-upgrade.md`.)*
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -582,6 +589,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Marty track M4 — multi-turn capture (built + deployed; AWAITING SQL + checker).** First
+  time the bot remembers across two messages. When a capture is an event missing its time, Marty asks once
+  ("What time?") and completes on the reply. Owner-approved the storage decision up front: a tiny new table
+  `marty_pending` (one row/owner, PK user_id, ~5-min code expiry) over flaky in-memory. Built: `needs_time`
+  on the parser (`understand.ts`); `pending.ts` (get/set/clear + parseTimeAnswer that only accepts a reply
+  that's essentially just a time, so a command/question/new-capture is never mis-attached; completePending
+  saves via the normal path → Inbox, undoable); `route.ts` pending-answer check at the top + a one-time
+  follow-up in the capture branch. Discipline held: at most one follow-up; complete captures save with no
+  question; a non-answer drops the parked question cleanly. ⚠️ **SCHEMA CHANGE — checker-gated like M2: not
+  done until `db/12_marty_pending.sql` is run AND the checker reviews.** Code deploys safely before the SQL
+  (setPending fails → falls back to a normal save). Committed `367dce2`; deployed both functions to
+  Frankfurt. **NEXT: owner runs the SQL → phone checks → checker sign-off; then M5 — category learning.**
 - **2026-06-23 — Marty track M3.5 — reconcile Marty's delete with the app's Archive (no schema change).**
   Closed a data-loss gap: M3's text-delete archived an item (set `archived_at`) but left `archive_batch_id`
   NULL, so it never appeared in the app's Archive screen — recoverable only by Marty's one-level undo, then

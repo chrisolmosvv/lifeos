@@ -9,7 +9,36 @@
 
 ---
 
-## Marty M3.5 — Marty's delete uses the app's archive_batches (one archive system, not two) (2026-06-23)
+## Marty M4 — multi-turn capture; pending state in a tiny new table, not in-memory (2026-06-23)
+
+- **[Pending capture lives in a new table `marty_pending`, NOT in function memory]** — the owner was asked
+  to decide up front and chose the table. **Why:** edge functions are short-lived and can restart between
+  the two messages, so an in-memory draft could be silently forgotten — unacceptable for a feature you rely
+  on. The table is reliable, owner-scoped, and survives a restart. **Trade-off:** it's a schema change
+  (checker-gated, owner runs the SQL) rather than zero-schema — accepted for reliability.
+- **[One row per owner via PK = user_id; ~5-minute expiry enforced in code]** — a new question simply
+  overwrites the old (no pile-up), and `getPending` ignores+clears anything older than 5 minutes. **Why:**
+  structurally guarantees "only the latest, recent question is live" so a stray later message can't attach
+  to a stale one. Cleared on completion, on abandonment, and on expiry. **Trade-off:** none worth noting.
+- **[Ask at most ONE follow-up, only for an event missing its time]** — a new `needs_time` flag on the
+  parser marks an appointment/event that wants a clock time but got none (lunch/dinner/meeting), distinct
+  from ordinary to-dos. Only a SINGLE-item capture that's `needs_time` with no time triggers the question;
+  everything else saves straight away. **Why:** the discipline is "don't interrogate" — a task saves on a
+  title alone, a complete capture saves with no question. **Trade-off:** a multi-item message never asks
+  (saves all per existing rules) — intentional, keeps it minimal.
+- **[Only the very next message completes it, and only if it's essentially just a time]** — `parseTimeAnswer`
+  returns a time ONLY when the whole reply is a time-of-day answer (validated to HH:MM); a command,
+  question, or new capture — even one that mentions a time, like "move dentist to 3pm" — is treated as
+  not-an-answer, which drops the parked question and routes the message normally. Reserved commands
+  (undo/brief) short-circuit (no AI call) and always abandon the pending. **Why:** never force-fit an
+  unrelated message as the answer; never lose a real command/question to a stale capture. **Trade-off:** a
+  rare genuine bare-time meant as something else could be read as the answer — acceptable.
+- **[Completion saves through the EXISTING capture path]** — the finished draft becomes a timed event and
+  is saved via `saveItems`, so it lands in Inbox, stamps source, and is undoable via M2/M3 exactly like any
+  capture. No second save path. **[No-schema-yet fallback]:** if `marty_pending` isn't set up, `setPending`
+  fails and the item just saves normally (no broken half-state) — so the code deploys safely before the SQL.
+- **[Schema change → checker-gated]** — `db/12_marty_pending.sql` must be run by the owner and reviewed by
+  the checker before M4 counts as done.
 
 - **[Marty's delete now creates a real archive_batch, exactly like the app — superseding M3's batch-less
   archive]** — M3 set `archived_at` but left `archive_batch_id` NULL. **The drift:** the app's Archive
