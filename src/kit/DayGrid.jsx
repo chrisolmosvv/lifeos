@@ -22,6 +22,7 @@ export default function DayGrid({
   cats,
   today,
   isToday = true,
+  selectedId,
   onOpenEvent,
   onOpenTask,
   scrollRef,
@@ -108,6 +109,7 @@ export default function DayGrid({
                   bind={bind}
                   dragging={blockPreview?.id === ev.id}
                   removing={blockPreview?.id === ev.id && !!blockPreview.off}
+                  selected={ev.id === selectedId}
                 />
               )
             })}

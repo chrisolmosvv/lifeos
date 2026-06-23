@@ -18,6 +18,7 @@ export default function WeekGrid({
   events,
   scheduled,
   cats,
+  selectedId,
   scrollRef,
   bodyRef,
   blockBind,
@@ -84,6 +85,7 @@ export default function WeekGrid({
                 scheduled={scheduled.filter((t) => isSameDay(new Date(t.scheduled_start), d))}
                 byId={byId}
                 nowH={nowH}
+                selectedId={selectedId}
                 blockPreview={blockPreview}
                 createDraft={createDraft}
                 blockBind={blockBind}

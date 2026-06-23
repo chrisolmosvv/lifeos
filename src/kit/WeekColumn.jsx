@@ -20,6 +20,7 @@ export default function WeekColumn({
   scheduled,
   byId,
   nowH,
+  selectedId,
   blockPreview,
   createDraft,
   blockBind,
@@ -70,6 +71,7 @@ export default function WeekColumn({
             bind={blockBind(ev, dayStart)}
             dragging={blockPreview?.id === ev.id}
             removing={blockPreview?.id === ev.id && !!blockPreview.off}
+            selected={ev.id === selectedId}
           />
         )
       })}

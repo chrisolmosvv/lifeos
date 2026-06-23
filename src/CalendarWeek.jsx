@@ -1,22 +1,22 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { formatRange } from './dateUtils'
 import { navDays, navNext, navPrev, isHome, HOME } from './weekNav'
 import WeekView from './WeekView'
 import './calendarWeek.css'
 
-// The Calendar (desktop) C1 container: the today-anchored rolling home + the
-// Monday-week navigation (weekNav), the toolbar shell, and the week grid below.
-// DISPLAY ONLY this piece — only the arrows + "Back to this week" are live. The
-// Week/Month toggle, the tray button and "+ Add event" are inert placeholders,
-// clearly marked non-functional (their behaviour lands in C6 / C5 / C2). The grid
-// + the preserved edit panels live in WeekView, remounted per week (keyed) so
-// each week's data reloads.
+// The Calendar (desktop) container: the today-anchored rolling home + the
+// Monday-week navigation (weekNav), the toolbar, and the week grid below. Arrows,
+// "Back to this week" and (C3) "+ Add event" are live. The Week/Month toggle and
+// the tray button stay inert placeholders (C6 / C5). The grid + the shared form
+// live in WeekView, remounted per week (keyed) so each week's data reloads;
+// "+ Add event" reaches into the current WeekView through the requestAdd ref.
 export default function CalendarWeek() {
   const today = new Date()
   const [nav, setNav] = useState(HOME)
   const days = navDays(nav, today)
   const home = isHome(nav)
   const weekKey = days[0].toISOString()
+  const requestAdd = useRef(null)
 
   return (
     <div className="cw">
@@ -45,13 +45,13 @@ export default function CalendarWeek() {
           <button className="cw-tool" disabled title="Unscheduled tray — coming soon (C5)">
             Tray
           </button>
-          <button className="cw-tool" disabled title="Create — coming soon (C2)">
+          <button className="cw-tool cw-tool-live" onClick={() => requestAdd.current?.()}>
             + Add event
           </button>
         </div>
       </div>
 
-      <WeekView key={weekKey} days={days} today={today} />
+      <WeekView key={weekKey} days={days} today={today} requestAdd={requestAdd} />
     </div>
   )
 }

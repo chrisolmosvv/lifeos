@@ -116,6 +116,29 @@
   min-width: 0;
 }
 
+/* "Coming soon" rows (event All-day + Repeat): the form's true final shape, but
+   the control is unmistakably DISABLED — muted, not tappable, with a little
+   caption — so it reads as "not yet", never as a live control that's broken. */
+.tk-form-soonrow {
+  opacity: 0.75;
+}
+.tk-form-soonrow input:disabled,
+.tk-form-soonrow select:disabled {
+  cursor: not-allowed;
+  color: var(--ink-muted);
+  background: color-mix(in srgb, var(--rule) 22%, transparent);
+}
+.tk-form-soonrow input[type='checkbox']:disabled {
+  align-self: flex-start;
+  width: 1rem;
+  height: 1rem;
+}
+.tk-form-soon {
+  font-size: 0.66rem;
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
 /* The category button: shows the current pick, opens the drill-in picker. */
 .tk-form-catbtn {
   display: flex;

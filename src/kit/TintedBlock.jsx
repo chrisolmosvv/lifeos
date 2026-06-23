@@ -7,8 +7,9 @@ import './todayKit.css'
 // pointer/click handlers spread onto the root). `dragging`/`removing` are just
 // visual states during a drag.
 //
-// Props: title, time, hex, done, top, height, col, cols, bind, dragging, removing.
-export default function TintedBlock({ title, time, hex, done, top, height, col, cols, bind, dragging, removing }) {
+// Props: title, time, hex, done, top, height, col, cols, bind, dragging, removing,
+//        selected (a quiet outline while this block's form is open).
+export default function TintedBlock({ title, time, hex, done, top, height, col, cols, bind, dragging, removing, selected }) {
   const width = `calc(${100 / cols}% - 4px)`
   const left = `calc(${(col * 100) / cols}% + 2px)`
   const style = {
@@ -25,7 +26,8 @@ export default function TintedBlock({ title, time, hex, done, top, height, col, 
         'tk-block' +
         (done ? ' is-done' : '') +
         (dragging ? ' is-dragging' : '') +
-        (removing ? ' is-removing' : '')
+        (removing ? ' is-removing' : '') +
+        (selected ? ' is-selected' : '')
       }
       style={style}
       {...bind}

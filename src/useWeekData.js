@@ -31,7 +31,7 @@ export function useWeekData(days) {
         inWeek(
           supabase
             .from('tasks')
-            .select('id, title, notes, status, category_id, priority, due_date, scheduled_start, scheduled_end'),
+            .select('id, title, notes, status, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end'),
           'scheduled_start',
         ),
       ),
@@ -66,6 +66,14 @@ export function useWeekData(days) {
         ? supabase.from('events').update(fields).eq('id', id)
         : supabase.from('events').insert(fields),
     )
+  // Task create/edit from the shared form (C3) — same insert/update shape as
+  // events, existing columns only (no schema change).
+  const onSaveTask = (id, fields) =>
+    write(
+      id
+        ? supabase.from('tasks').update(fields).eq('id', id)
+        : supabase.from('tasks').insert(fields),
+    )
   const onDeleteEvent = (id) => write(supabase.from('events').delete().eq('id', id))
   const onScheduleTask = (id, startIso, endIso) =>
     write(
@@ -82,7 +90,9 @@ export function useWeekData(days) {
     scheduled,
     cats,
     busy,
+    reload: load, // C3: lets the view re-read after an archive (delete) + undo
     onSaveEvent,
+    onSaveTask,
     onDeleteEvent,
     onScheduleTask,
     onUpdateTask,

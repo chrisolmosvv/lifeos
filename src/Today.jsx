@@ -11,7 +11,7 @@ import { useTodayGrid } from './kit/useTodayGrid'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
 import TodayTaskRow from './kit/TodayTaskRow'
-import TodayForm from './kit/TodayForm'
+import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
 import './today.css'
 
@@ -295,6 +295,7 @@ export default function Today({ onOpenAllTasks }) {
           cats={cats}
           today={viewed}
           isToday={isToday}
+          selectedId={form && !form.create ? form.item?.id : null}
           onOpenEvent={openEvent}
           onOpenTask={openTask}
           scrollRef={scrollRef}
@@ -425,7 +426,7 @@ export default function Today({ onOpenAllTasks }) {
       )}
 
       {form && (
-        <TodayForm
+        <ItemForm
           kind={form.kind}
           item={form.item}
           create={form.create}

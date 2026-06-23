@@ -196,6 +196,11 @@
 .tk-block.is-done {
   opacity: 0.6;
 }
+/* Selected — a quiet ink outline while this block's form is open (both screens). */
+.tk-block.is-selected {
+  outline: 1.5px solid var(--ink);
+  outline-offset: -1px;
+}
 .tk-block.is-done .tk-block-title {
   text-decoration: line-through;
 }

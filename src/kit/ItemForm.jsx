@@ -1,26 +1,21 @@
 import { useState } from 'react'
 import CategoryTag from '../CategoryTag'
-import StatusPill from './StatusPill'
 import CategoryPicker from './CategoryPicker'
-import SubtaskList from './SubtaskList'
+import ItemTypeFields from './ItemTypeFields'
 import './todayForm.css'
 
-// TodayForm — the Today-scoped create/edit form (a sealed kit block). Same form,
-// prefilled, for both create and edit, for tasks and events. It is SEPARATE from
-// the shared TaskPanel/EventPanel (which Calendar still uses) — by design, so
-// changing Today never touches Calendar. Writes go out through onSave/onDelete,
-// which the parent wires to the EXISTING task/event write paths.
+// ItemForm — the ONE shared create/edit form (Phase 7, C3), used by BOTH Today and
+// Calendar. Promoted from the old Today-only TodayForm: same presentation, same
+// writes (onSave(fields, kind) / onDelete), now canonical for both screens so the
+// two never drift. The task/event toggle shows only while CREATING (`toggle`); on
+// edit the type is locked (no event↔task conversion). New items default to event.
+// Type-specific fields live in ItemTypeFields (incl. the disabled all-day + repeat
+// placeholders). The parent wires onSave/onDelete to the existing write paths.
 //
-// Props: kind ('task'|'event'), item (row or prefill), create (bool), cats,
-//        inboxColor, busy, onSave(fields)=>msg|null, onDelete()=>void, onClose().
-const PRIORITIES = [
-  { id: null, label: 'None' },
-  { id: 'low', label: 'Low' },
-  { id: 'med', label: 'Med' },
-  { id: 'high', label: 'High' },
-]
-
-export default function TodayForm({ kind, item, create, toggle, cats, inboxColor, busy, onSave, onDelete, onClose, subtasks, onSubtask, parentLabel }) {
+// Props: kind, item, create, toggle, cats, inboxColor, busy,
+//        onSave(fields,kind)=>msg|null, onDelete()=>void, onClose(),
+//        subtasks?, onSubtask?, parentLabel?  (Today-only subtask wiring; optional).
+export default function ItemForm({ kind, item, create, toggle, cats, inboxColor, busy, onSave, onDelete, onClose, subtasks, onSubtask, parentLabel }) {
   const t = item || {}
   // A subtask's own form: no category (it inherits the parent's), no priority, and
   // no nested-subtasks section. One level — enforced here and in the DB.
@@ -96,9 +91,7 @@ export default function TodayForm({ kind, item, create, toggle, cats, inboxColor
 
         {showPick ? (
           <div className="tk-form-body">
-            <button className="tk-form-back" onClick={() => setShowPick(false)}>
-              ‹ Back
-            </button>
+            <button className="tk-form-back" onClick={() => setShowPick(false)}>‹ Back</button>
             <CategoryPicker
               cats={cats}
               value={categoryId}
@@ -113,25 +106,11 @@ export default function TodayForm({ kind, item, create, toggle, cats, inboxColor
           <div className="tk-form-body">
             {toggle && (
               <div className="tk-form-toggle">
-                <button
-                  type="button"
-                  className={'tk-form-tog' + (k === 'event' ? ' is-on' : '')}
-                  onClick={() => setK('event')}
-                >
-                  Event
-                </button>
-                <button
-                  type="button"
-                  className={'tk-form-tog' + (k === 'task' ? ' is-on' : '')}
-                  onClick={() => setK('task')}
-                >
-                  Task
-                </button>
+                <button type="button" className={'tk-form-tog' + (k === 'event' ? ' is-on' : '')} onClick={() => setK('event')}>Event</button>
+                <button type="button" className={'tk-form-tog' + (k === 'task' ? ' is-on' : '')} onClick={() => setK('task')}>Task</button>
               </div>
             )}
-            {isSubtask && (
-              <div className="tk-form-parent">↳ under {parentLabel || 'a task'}</div>
-            )}
+            {isSubtask && <div className="tk-form-parent">↳ under {parentLabel || 'a task'}</div>}
 
             <input
               className="tk-form-input"
@@ -150,66 +129,15 @@ export default function TodayForm({ kind, item, create, toggle, cats, inboxColor
               </button>
             )}
 
-            {k === 'task' ? (
-              <>
-                <div className="tk-form-field">
-                  <span className="tk-form-fieldlabel">Status</span>
-                  <StatusPill status={status} onSet={setStatus} />
-                </div>
-                {!isSubtask && (
-                  <div className="tk-form-field">
-                    <span className="tk-form-fieldlabel">Priority</span>
-                    <div className="tk-form-prios">
-                      {PRIORITIES.map((p) => (
-                        <button
-                          key={p.label}
-                          type="button"
-                          className={'tk-form-prio' + ((priority ?? null) === p.id ? ' is-on' : '')}
-                          onClick={() => setPriority(p.id)}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <label className="tk-form-field">
-                  <span className="tk-form-fieldlabel">Due date</span>
-                  <input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
-                </label>
-                <div className="tk-form-field">
-                  <span className="tk-form-fieldlabel">Schedule (optional)</span>
-                  <div className="tk-form-times">
-                    <input type="datetime-local" value={schStart} onChange={(e) => setSchStart(e.target.value)} aria-label="Scheduled start" />
-                    <input type="datetime-local" value={schEnd} onChange={(e) => setSchEnd(e.target.value)} aria-label="Scheduled end" />
-                  </div>
-                </div>
-                {!isSubtask && !create && onSubtask && (
-                  <SubtaskList
-                    subtasks={subtasks || []}
-                    busy={busy}
-                    onAdd={onSubtask.add}
-                    onUpdate={onSubtask.update}
-                    onSetStatus={onSubtask.setStatus}
-                    onRemove={onSubtask.remove}
-                  />
-                )}
-              </>
-            ) : (
-              <>
-                <div className="tk-form-field">
-                  <span className="tk-form-fieldlabel">Start / End</span>
-                  <div className="tk-form-times">
-                    <input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} aria-label="Start" />
-                    <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} aria-label="End" />
-                  </div>
-                </div>
-                <label className="tk-form-field">
-                  <span className="tk-form-fieldlabel">Location</span>
-                  <input className="tk-form-input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Optional" />
-                </label>
-              </>
-            )}
+            <ItemTypeFields
+              k={k}
+              isSubtask={isSubtask}
+              create={create}
+              busy={busy}
+              task={{ status, setStatus, priority, setPriority, due, setDue, schStart, setSchStart, schEnd, setSchEnd }}
+              event={{ startAt, setStartAt, endAt, setEndAt, location, setLocation }}
+              subtask={{ subtasks, onSubtask }}
+            />
 
             <textarea
               className="tk-form-notes"
@@ -230,9 +158,7 @@ export default function TodayForm({ kind, item, create, toggle, cats, inboxColor
               )}
               <div className="tk-form-actions-right">
                 <button className="tk-form-cancel" onClick={onClose}>Cancel</button>
-                <button className="tk-form-save" onClick={save} disabled={busy}>
-                  {busy ? 'Saving…' : 'Save'}
-                </button>
+                <button className="tk-form-save" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
               </div>
             </div>
           </div>

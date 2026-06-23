@@ -12,14 +12,14 @@ import {
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, unarchiveBatch, activeOnly } from './archive'
 import TodayTaskRow from './kit/TodayTaskRow'
-import TodayForm from './kit/TodayForm'
+import ItemForm from './kit/ItemForm'
 import CategoryDrillRow from './kit/CategoryDrillRow'
 import Toast from './kit/Toast'
 import './kit/allTasksKit.css'
 
 // All Tasks — the inventory screen (Phase 7, T11). A by-category drill-in over the
 // whole task list. Reuses Today's task row (+ its 3-state status pill) and the
-// TodayForm AS-IS; writes go only through the existing Supabase task paths. It does
+// ItemForm AS-IS; writes go only through the existing Supabase task paths. It does
 // NOT create/rename/nest/delete categories (that's the Settings manager, T13).
 const INBOX_NODE = { id: '__inbox__', name: 'Inbox' }
 
@@ -267,7 +267,7 @@ export default function AllTasks({ onBack }) {
       {tasks !== null && <button className="at-add" onClick={openAdd}>+ add a task</button>}
 
       {form && (
-        <TodayForm
+        <ItemForm
           kind="task"
           item={form.item}
           create={form.create}
