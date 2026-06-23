@@ -35,6 +35,37 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C1.1 — shared-kit polish: themed scrollbar + on-line gutter labels
+WHAT CHANGED:
+- **Scrollbar:** the grid's right-hand scrollbar is now a quiet paper/ink-toned bar instead of the
+  default OS one — a shared `.kit-scroll` style applied to **both** grid scroll containers, so Today
+  and Calendar match. Still fully scrollable + grabbable.
+- **Gutter alignment:** the hour numbers in the left gutter now sit **on** their grid-line at every
+  hour (anchored to the line + centred), instead of drifting down into the row.
+FILES TOUCHED: `kit/todayKit.css` (new shared `.kit-scroll`; fixed `.tk-grid-time span`),
+`kit/weekGrid.css` (fixed `.wk-gutter-cell span` + the trailing `.wk-gutter-end`), `kit/DayGrid.jsx`
++ `kit/WeekGrid.jsx` (added the `kit-scroll` class — one word each). Build passes; save point `c2fe0a5`.
+HOW TO VERIFY (dev: http://localhost:5174/):
+  1. **Today** → look at "The Day" grid; **Calendar** → the week grid. The scrollbar should read as a
+     subtle paper-toned bar (not the stock grey OS bar), and still scroll normally when you drag it
+     or use the wheel/trackpad.
+  2. On **both** screens, every hour number in the left gutter should line up exactly with its
+     horizontal grid-line — check 07:00 at the top, then **scroll up** to the small hours (00–06) and
+     confirm they're still on their lines.
+  3. Confirm nothing else moved: blocks, today's tint + now-line, navigation, and the modules are
+     unchanged.
+KNOWN GAPS / RISKS:
+- The very topmost label when scrolled fully to the content top (00:00) centres on the edge line, so
+  its upper half can sit at the viewport edge — cosmetic only, same as most calendar apps.
+- **C4 debt (noted in the CSS):** Today and Calendar still have **two parallel** grid scroll
+  containers + a duplicated gutter; this polish was applied to both. They collapse into one shared
+  element when `DayGrid` + `WeekGrid` converge in C4.
+- Not deployed — local save point only.
+NEXT: **C2 — grid interactions** (click/drag create, move, resize, re-day, 15-min snap).
+FOR THE CHECKER: front-end **display polish only — no data/schema/SQL, no navigation or block-render
+change**. Confirm both fixes show on **both** Today and Calendar (shared kit), and that scrolling
+still works.
+
 ### 2026-06-23 — Phase 7, C1 — Calendar rebuild: week-grid display (read-only)
 WHAT CHANGED:
 - First piece of the Calendar rebuild (full contract: `calendar-uiux-spec.md`). Rebuilt the
