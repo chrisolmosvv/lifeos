@@ -82,23 +82,26 @@
   overflow: hidden;
 }
 .cw-toggle-seg {
+  font: inherit;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.3rem 0.7rem;
   color: var(--ink-muted);
+  background: none;
+  border: none;
   border-left: 1px solid var(--rule);
+  cursor: pointer;
 }
 .cw-toggle-seg:first-child {
   border-left: none;
 }
+.cw-toggle-seg:hover:not(.is-on) {
+  color: var(--ink);
+}
 .cw-toggle-seg.is-on {
   color: var(--paper);
   background: var(--ink);
-}
-.cw-toggle-seg.is-off {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 /* Tray + "+ Add event" — INERT placeholders, clearly non-functional. */
@@ -127,4 +130,12 @@
   color: var(--paper);
   background: var(--ink);
   border-color: var(--ink);
+}
+/* A Week tool greyed in Month view (it only applies to the week). */
+.cw-tool-live:disabled {
+  color: var(--ink-muted);
+  background: none;
+  border-color: var(--rule);
+  cursor: not-allowed;
+  opacity: 0.55;
 }

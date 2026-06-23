@@ -26,6 +26,8 @@ export default function WeekGrid({
   blockPreview,
   createDraft,
   dragLabel,
+  focusMs,
+  focusDay,
 }) {
   const [now, setNow] = useState(() => new Date())
 
@@ -35,11 +37,20 @@ export default function WeekGrid({
     return () => clearInterval(id)
   }, [])
 
-  // Open with 07:00 at the top; the small hours are a scroll up.
+  // Open with 07:00 at the top; the small hours are a scroll up. When arriving
+  // from a Month item-click (focusMs), centre that item's time instead. (C6;
+  // focusMs is undefined in all normal Week use → 07:00 exactly as before.)
   useEffect(() => {
     const el = scrollRef.current
-    if (el) el.scrollTop = 7 * HOUR_HEIGHT
-  }, [scrollRef])
+    if (!el) return
+    if (focusMs) {
+      const d = new Date(focusMs)
+      const h = d.getHours() + d.getMinutes() / 60
+      el.scrollTop = Math.max(0, h * HOUR_HEIGHT - el.clientHeight / 2)
+    } else {
+      el.scrollTop = 7 * HOUR_HEIGHT
+    }
+  }, [scrollRef, focusMs])
 
   const byId = new Map(cats.map((c) => [c.id, c]))
   const nowH = now.getHours() + now.getMinutes() / 60
@@ -53,7 +64,11 @@ export default function WeekGrid({
           {days.map((d) => (
             <div
               key={d.toISOString()}
-              className={'wk-dayhead' + (isSameDay(d, today) ? ' is-today' : '')}
+              className={
+                'wk-dayhead' +
+                (isSameDay(d, today) ? ' is-today' : '') +
+                (focusDay && isSameDay(d, focusDay) ? ' is-focus' : '')
+              }
             >
               <span className="wk-dh-name">{dayName(d)}</span>
               <span className="wk-dh-num">{d.getDate()}</span>

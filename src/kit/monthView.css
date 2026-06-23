@@ -1,0 +1,176 @@
+/* MonthView (Phase 7, C6) — the fixed 6×7 month grid. `mv-`-prefixed, theme
+   tokens only. The whole month fits one screen; nothing here scrolls. Colours of
+   items reuse resolveColor (set inline). Motion: a soft zoom-in on mount (the
+   keyed remount per month retriggers it for the month-to-month step). */
+
+.mv {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 3.5rem 1.2rem;
+  box-sizing: border-box;
+  animation: mv-in 0.22s ease both;
+}
+@keyframes mv-in {
+  from { opacity: 0; transform: scale(0.992); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Weekday header row, aligned to the 7 columns. */
+.mv-head {
+  flex: none;
+  display: flex;
+  border-bottom: 1px solid var(--rule);
+}
+.mv-head-cell {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+
+/* The 6 rows fill the remaining height equally; the page never scrolls. */
+.mv-grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mv-row {
+  flex: 1;
+  position: relative;
+  display: flex;
+  min-height: 0;
+}
+
+.mv-cell {
+  flex: 1;
+  min-width: 0;
+  border-left: 1px solid var(--rule-faint);
+  border-bottom: 1px solid var(--rule-faint);
+  padding: 0.2rem 0.3rem;
+  overflow: hidden;
+  cursor: pointer;
+}
+.mv-cell:first-child {
+  border-left: none;
+}
+.mv-cell:hover {
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+.mv-cell.is-out .mv-daynum {
+  color: var(--ink-muted);
+  opacity: 0.55;
+}
+/* The day clicked through from a Month item gets a quiet focus ring. */
+.mv-cell.is-focus {
+  outline: 1.5px solid var(--ink);
+  outline-offset: -1.5px;
+}
+
+.mv-daynum {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  margin-bottom: 0.15rem;
+}
+.mv-daynum.is-today {
+  min-width: 1.3rem;
+  height: 1.3rem;
+  line-height: 1.3rem;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--paper);
+}
+
+.mv-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* One item line — a dot + title. Event dot is filled; task dot is a ring. */
+.mv-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.05rem 0.15rem;
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.mv-item:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.mv-item.is-done .mv-item-title {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+.mv-item-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+}
+.mv-item.is-task .mv-item-dot {
+  border: 1.5px solid var(--ink-muted);
+  background: transparent;
+}
+.mv-item-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.7rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mv-more {
+  font: inherit;
+  font-size: 0.62rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0.05rem 0.15rem;
+  text-align: left;
+  cursor: pointer;
+}
+.mv-more:hover {
+  color: var(--ink);
+}
+
+/* Multi-day events: full-width strips across the days they cover (display only). */
+.mv-strip {
+  position: absolute;
+  height: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 0 0.3rem;
+  border-radius: 3px;
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+}
+.mv-strip-title {
+  font-size: 0.62rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv {
+    animation: none;
+  }
+}

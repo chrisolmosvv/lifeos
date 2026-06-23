@@ -43,3 +43,13 @@ export function navPrev(nav, today) {
   const monday = nav.mode === 'home' ? startOfWeek(today) : addDays(nav.monday, -7)
   return { mode: 'week', monday }
 }
+
+// Jump to the week containing `day` (used by Month's day-clicks) — per the same
+// rules: if the day is inside the rolling-home window (today..+6) show HOME, else
+// the standard Monday–Sunday week containing it.
+export function navToDay(day, today) {
+  const win = sevenFrom(today)
+  const d = midnight(day).getTime()
+  const inHome = d >= win[0].getTime() && d <= win[6].getTime()
+  return inHome ? HOME : { mode: 'week', monday: startOfWeek(day) }
+}
