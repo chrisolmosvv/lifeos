@@ -35,6 +35,71 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T8 — Today date arrows / day-flipping (finishes Today's behaviour)
+ROADMAP MAPPING: **T8** (date navigation). No overlap with other T-steps.
+HOW TODAY READS THE VIEWED DAY: Today's OWN `load()` is **parameterised by a `viewed` day** —
+the events query bounds use the viewed day, and it re-loads on a `[viewed]` effect. **No
+shared hook was edited** — Calendar's `useWeekData` is untouched (Today never used it).
+WHAT CHANGED:
+- **`viewed` day state** on Today (defaults to the real today). Prev/next arrows step it by a
+  day; a quiet **"Back to today"** shows only when `viewed != today`. The whole page re-anchors:
+  the grid loads the viewed day's events + scheduled tasks; "tasks today" and "next 7 days"
+  re-anchor; the **tasks module title shows the weekday** (e.g. "Tuesday") away from today; the
+  **now-line shows only on the real today** (`DayGrid` gained an `isToday` prop).
+- **Content rule** (`todayModel` now takes `(tasks, viewed, isToday)`): viewed == today →
+  unchanged (due today / Today bucket / scheduled today, + completed-today greyed); viewed !=
+  today → **due on OR scheduled on the viewed day** (the Today-bucket is today-only and does not
+  apply). next-7 = viewed+1..viewed+7.
+EVERY "today" → "viewed day" CHANGE (the write paths — the classic-bug surface):
+1. events read bounds: today → viewed.
+2. `buildToday`: anchored on viewed (+ isToday).
+3. grid `scheduledTasks` filter + `scheduledBadge`: today → viewed.
+4. `useTodayGrid({ today: viewed })` — slot/schedule times computed on the viewed day.
+5. click/drag **create** prefill: `due_date = viewed`, `time_bucket = bucketFor(viewed)`.
+6. **"+ add"** prefill: `due_date = viewed`, `time_bucket = bucketFor(viewed)`.
+7. drag-off → **tasks-today** module: `{ scheduled_start:null, scheduled_end:null,
+   due_date: viewed, time_bucket: bucketFor(viewed) }`.
+8. drag-off → **next-7** module: `{ scheduled_start:null, scheduled_end:null,
+   due_date: viewed+7, time_bucket: 'This Week' }`.
+   `bucketFor(d) = isSameDay(d, realToday) ? 'Today' : 'This Week'` — so the bucket is 'Today'
+   ONLY when the viewed day is the real today; otherwise 'This Week'. This is what stops a
+   future-day write from showing up in *today's* "tasks today".
+SCHEDULE / MOVE fields (unchanged shape, viewed-day times): schedule + move-scheduled-task →
+`tasks.update({ scheduled_start, scheduled_end })`; move event → `events.update({ start_at,
+end_at })`.
+FOLIO NOTE (deliberate scope-safe deviation): the locked spec says "the folio date reflects the
+viewed day", but the folio is the **shared masthead** (also on Calendar/Settings). Changing it,
+or lifting Today's viewed-day state up into the shared header, would breach "no Calendar/Settings
+change / no shared component". So the **shared masthead is left as the real-today edition**, and
+the viewed day is shown in **Today's own daybar** (weekday title + date + Back-to-today) and the
+module title. If the owner wants the masthead itself to flip, that's a small shared-header piece
+later.
+SAVE POINT (Step 0): **`b9a5810`** — "Phase 7 T8 save point — before Today date arrows."
+FILES TOUCHED: src/Today.jsx, src/todayModel.js, src/kit/DayGrid.jsx, src/today.css. **No db/,
+no schema, no category writes.**
+CONFIRMATIONS: **No Calendar-shared hook (`useWeekData`/drag/layout) or panel edited; Calendar +
+Settings identical** (diff: only Today-body files). All reads + writes via Today's existing
+parameterised paths, keyed to the viewed day. **now-line only on today.** Frankfurt only context
+(no DB op this piece). Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed, NOT deployed.** On the Mac (run locally);
+not on the phone yet.
+HOW TO VERIFY (owner — Mac):
+- Arrow forward a day → grid, tasks module, and next-7 all shift; the tasks title shows the
+  weekday (not "today"); the now-line is gone; "Back to today" appears.
+- Arrow back / click "Back to today" → now-line returns, titles back to today.
+- On a future day: "+ add" and click-create land on THAT day; drag-off re-dates relative to THAT
+  day; a scheduled task created there shows only on that day (NOT in today's "tasks today").
+- Arrow several days forward/back — stays correct, never writes "today" by mistake.
+- Calendar + Settings completely unchanged.
+KNOWN GAPS: shared masthead folio stays as real-today (see FOLIO NOTE). Mobile Today is its own
+spec. Today's core behaviour (T4–T8 + T6/T7/T9) is now complete; remaining Phase-7 pieces: T10
+recurrence, T11 All Tasks, T12 trims, T13 category manager.
+NEXT: T11 — the All Tasks inventory screen, or T13 — the Settings category manager.
+FOR THE CHECKER: confirm no Calendar-shared hook/panel edited, Calendar/Settings identical, all
+reads/writes via existing paths keyed to the viewed day, no schema, no category writes, save
+point exists, and the non-today write dates are correct (the off-grid + create + add dates use
+viewed, and bucket is 'Today' only when viewed == today).
+
 ### 2026-06-23 — Phase 7, T5 — Today's grid workspace interactions (create / move / resize / drag to & from modules)
 ROADMAP MAPPING: **T5** (calendar workspace interactions). No overlap — it reuses the T6 form
 as the create/edit target and excludes date-arrows (T8).

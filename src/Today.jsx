@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
-import { isSameDay } from './dateUtils'
+import { isSameDay, dayNameFull, formatMastheadDate } from './dateUtils'
 import { buildToday } from './todayModel'
 import { useTodayGrid } from './kit/useTodayGrid'
 import DayGrid from './kit/DayGrid'
@@ -12,19 +12,22 @@ import TodayForm from './kit/TodayForm'
 import Toast from './kit/Toast'
 import './today.css'
 
-// The Today home (Phase 7). T5 turns the day grid into a workspace: click/drag to
-// create, drag to move/resize, drag a task from a module onto the grid to schedule,
-// and drag a block off onto a module to re-date it. All writes go through the
-// EXISTING Supabase task/event paths; no schema. The interaction logic is a
-// Today-scoped hook (useTodayGrid) — it does NOT touch Calendar's shared drag code.
+// The Today home (Phase 7). T8 adds date arrows: a `viewed` day (defaulting to the
+// real today) that the prev/next arrows step. The WHOLE page re-anchors to it — the
+// grid, both modules, the now-line (today only), and every day-dependent write. All
+// reads/writes go through Today's OWN parameterised path; Calendar's shared read
+// hook (useWeekData) is untouched. No schema.
 export default function Today() {
-  const today = new Date()
+  const realToday = new Date()
+  const [viewed, setViewed] = useState(() => startOfDay(new Date()))
+  const isToday = isSameDay(viewed, realToday)
+
   const [tasks, setTasks] = useState(null)
   const [cats, setCats] = useState([])
-  const [events, setEvents] = useState([])
+  const [events, setEvents] = useState([]) // the viewed day's events
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState(null) // null | { kind, item, create, toggle }
+  const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
 
   const scrollRef = useRef(null)
@@ -33,9 +36,8 @@ export default function Today() {
   const weekModRef = useRef(null)
 
   async function load() {
-    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const dayEnd = new Date(dayStart)
-    dayEnd.setDate(dayEnd.getDate() + 1)
+    const dayStart = startOfDay(viewed)
+    const dayEnd = addDays(dayStart, 1)
 
     const [taskRes, catRes, evRes] = await Promise.all([
       supabase
@@ -67,11 +69,14 @@ export default function Today() {
     setEvents(evRes.data || [])
   }
 
+  // Re-load whenever the viewed day changes (and on mount).
   useEffect(() => {
     load()
-  }, [])
+  }, [viewed]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // The existing write paths — the same Supabase insert/update/delete the app uses.
+  // The bucket a date belongs to: only the real today is the "Today" bucket.
+  const bucketFor = (d) => (isSameDay(d, realToday) ? 'Today' : 'This Week')
+
   async function writeTask(query) {
     setBusy(true)
     const { error } = await query
@@ -91,7 +96,6 @@ export default function Today() {
   const onUpdate = (id, fields) =>
     writeTask(supabase.from('tasks').update(fields).eq('id', id))
 
-  // Save from the form (create or edit; the form tells us which kind it settled on).
   async function handleSave(fields, kind) {
     const { item, create } = form
     let msg
@@ -134,12 +138,12 @@ export default function Today() {
   const catById = new Map(cats.map((c) => [c.id, c]))
   const catFor = (t) => (t.category_id ? catById.get(t.category_id) : null)
 
-  const { tasksToday, next7, undated, total } = buildToday(tasks, today)
+  const { tasksToday, next7, undated, total } = buildToday(tasks, viewed, isToday)
   const scheduledTasks = (tasks || []).filter(
-    (t) => t.scheduled_start && isSameDay(new Date(t.scheduled_start), today),
+    (t) => t.scheduled_start && isSameDay(new Date(t.scheduled_start), viewed),
   )
   const scheduledBadge = (t) =>
-    t.scheduled_start && isSameDay(new Date(t.scheduled_start), today)
+    t.scheduled_start && isSameDay(new Date(t.scheduled_start), viewed)
       ? { text: clock(t.scheduled_start) }
       : null
 
@@ -154,17 +158,17 @@ export default function Today() {
   const openAdd = () =>
     setForm({
       kind: 'task',
-      item: { time_bucket: 'Today', due_date: localDateStr(today) },
+      item: { time_bucket: bucketFor(viewed), due_date: localDateStr(viewed) },
       create: true,
     })
 
-  // --- the grid workspace interactions (Today-scoped hook) ------------------
+  // The grid workspace interactions — keyed to the VIEWED day.
   const grid = useTodayGrid({
     scrollRef,
     laneRef,
     todayModRef,
     weekModRef,
-    today,
+    today: viewed, // the hook's "day" is whatever is on screen
     onSelect: (item) => (item.kind === 'event' ? openEvent(item.id) : openTask(item.id)),
     onCreate: (startIso, endIso) =>
       setForm({
@@ -176,8 +180,8 @@ export default function Today() {
           end_at: endIso,
           scheduled_start: startIso,
           scheduled_end: endIso,
-          time_bucket: 'Today',
-          due_date: localDateStr(today),
+          time_bucket: bucketFor(viewed),
+          due_date: localDateStr(viewed),
         },
       }),
     onMove: (item, startIso, endIso) =>
@@ -189,8 +193,8 @@ export default function Today() {
     onOffTo: (target, item) => {
       const fields =
         target === 'today'
-          ? { scheduled_start: null, scheduled_end: null, due_date: localDateStr(today), time_bucket: 'Today' }
-          : { scheduled_start: null, scheduled_end: null, due_date: localDateStr(addDays(today, 7)), time_bucket: 'This Week' }
+          ? { scheduled_start: null, scheduled_end: null, due_date: localDateStr(viewed), time_bucket: bucketFor(viewed) }
+          : { scheduled_start: null, scheduled_end: null, due_date: localDateStr(addDays(viewed, 7)), time_bucket: 'This Week' }
       return writeTask(supabase.from('tasks').update(fields).eq('id', item.id))
     },
   })
@@ -198,12 +202,23 @@ export default function Today() {
   return (
     <div className="today">
       <section className="today-day">
-        <h2 className="today-day-title">The Day</h2>
+        <div className="today-daybar">
+          <button className="today-nav" onClick={() => setViewed(addDays(viewed, -1))} aria-label="Previous day">‹</button>
+          <h2 className="today-day-title">{isToday ? 'The Day' : dayNameFull(viewed)}</h2>
+          <span className="today-viewdate">{formatMastheadDate(viewed)}</span>
+          <button className="today-nav" onClick={() => setViewed(addDays(viewed, 1))} aria-label="Next day">›</button>
+          {!isToday && (
+            <button className="today-back" onClick={() => setViewed(startOfDay(new Date()))}>
+              Back to today
+            </button>
+          )}
+        </div>
         <DayGrid
           events={events}
           scheduledTasks={scheduledTasks}
           cats={cats}
-          today={today}
+          today={viewed}
+          isToday={isToday}
           onOpenEvent={openEvent}
           onOpenTask={openTask}
           scrollRef={scrollRef}
@@ -221,10 +236,12 @@ export default function Today() {
         ) : (
           <>
             <section className="today-mod today-mod-today" ref={todayModRef}>
-              <ModuleHeader>Tasks today</ModuleHeader>
+              <ModuleHeader>{isToday ? 'Tasks today' : dayNameFull(viewed)}</ModuleHeader>
               <div className="today-mod-list">
                 {tasksToday.length === 0 ? (
-                  <p className="today-empty">Nothing due today — a calm one.</p>
+                  <p className="today-empty">
+                    {isToday ? 'Nothing due today — a calm one.' : 'Nothing on this day.'}
+                  </p>
                 ) : (
                   tasksToday.map((t) => (
                     <TodayTaskRow
@@ -318,14 +335,17 @@ function clock(iso) {
   const d = new Date(iso)
   return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0')
 }
-function localDateStr(d) {
-  const p = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+function startOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
 }
 function addDays(d, n) {
   const x = new Date(d)
   x.setDate(x.getDate() + n)
   return x
+}
+function localDateStr(d) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 
 function friendly(error) {

@@ -256,7 +256,17 @@ it rather than dig (see the Piece-1c decision).
   existing update path; Done greys+strikes and stays till midnight (completed-today), tapping
   Done again undoes. `todayModel` now treats `in_progress` as active and rolls done off at
   midnight. No Calendar/Settings/shared-hook change. Save point `310f9db`.
-- ⬜ **T8 — Date navigation.** Whole-page re-anchor, weekday titles, back-to-today.
+- ✅ **T8 — Date navigation (day-flipping).** A `viewed` day (defaults to today); prev/next
+  arrows re-anchor the WHOLE page — the grid + both modules load the viewed day, the tasks
+  module title shows the weekday (not "today") away from today, the now-line shows only on
+  the real today, and a quiet "Back to today" appears when away. Content rule away from today
+  = due/scheduled on the viewed day (the Today-bucket is today-only). ALL day-dependent writes
+  (create, schedule, drag-off-to-module, "+ add") are re-keyed from today → the viewed day
+  (bucket = 'Today' only when viewed IS today, else 'This Week'), fixing the classic "writes
+  today's date while viewing another day" bug. Today's OWN read is parameterised by the viewed
+  day; Calendar's `useWeekData` is untouched. The shared masthead folio is intentionally left
+  as the real-today edition (it's shared) — the viewed day shows in Today's own daybar. No
+  schema. Save point `b9a5810`. *(Today's core behaviour T4–T8 + T6/T7/T9 is now complete.)*
 - ✅ **T9 — Delete + undo toast** — *done as part of T6* (the `Toast` kit block: delete a
   task/event → "Deleted · Undo" → Undo re-inserts the exact row). The repeating-event
   "this one or all?" branch stays with the recurrence piece.
@@ -285,6 +295,21 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T8 DONE — Today's date arrows / day-flipping (Today's behaviour is
+  now complete).** A `viewed` day (defaults to the real today) drives the whole page; the
+  prev/next arrows step it and a quiet "Back to today" appears when away. Flipping re-anchors
+  the grid, "tasks today" (titled by weekday off-today), and "next 7 days" (viewed+1..+7); the
+  now-line shows only on the real today. Away from today, the tasks rule = due/scheduled on the
+  viewed day (the Today-bucket is a today-only notion). Crucially, every day-dependent WRITE was
+  re-keyed today → viewed (create, schedule, drag-off-to-modules, "+ add"), with bucket 'Today'
+  only when the viewed day IS today (else 'This Week') — so it never writes today's date while
+  viewing another day. Today reads via its OWN parameterised load (Calendar's `useWeekData`
+  untouched). The shared masthead folio was left as the real-today edition (it's shared across
+  screens — changing it would break the scope rule); the viewed day shows in Today's own daybar
+  instead (flag for the owner: if you want the masthead itself to flip, that's a small shared-
+  header piece later). No schema, no category writes, no Calendar/Settings change. Save point
+  `b9a5810`. Committed locally only — not pushed/deployed. **NEXT: T11 — the All Tasks inventory
+  screen (its own spec first), or T13 — the Settings category manager.**
 - **2026-06-23 — Phase 7, T5 DONE — Today's day grid is now a workspace (highest-risk
   interaction piece).** You can click an empty slot (→ 1-hr block) or click-drag (→ exact
   span, 15-min snap) to create — opening the T6 form with an **event/task toggle (default

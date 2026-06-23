@@ -16,15 +16,52 @@
   overflow: hidden; /* the page itself never scrolls */
 }
 
-/* Section headline — Fraunces over a full-strength ink hairline. */
-.today-day-title {
+/* The day bar — prev/next arrows, the viewed-day headline + date, and (only when
+   away from today) a quiet "Back to today". Over a full-strength ink hairline. */
+.today-daybar {
   flex: none;
-  font-family: var(--font-serif);
-  font-weight: 500;
-  font-size: 1.5rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
   margin: 0 0 0.75rem;
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--ink);
+}
+.today-day-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.5rem;
+  margin: 0;
+}
+.today-viewdate {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+}
+.today-nav {
+  font: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0 0.15rem;
+  cursor: pointer;
+}
+.today-nav:hover {
+  color: var(--ink);
+}
+.today-back {
+  margin-left: auto;
+  align-self: center;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
 }
 
 /* Left: "The Day" — title + the day grid, which fills and scrolls internally. */

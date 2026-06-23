@@ -21,6 +21,7 @@ export default function DayGrid({
   scheduledTasks,
   cats,
   today,
+  isToday = true,
   onOpenEvent,
   onOpenTask,
   scrollRef,
@@ -60,7 +61,7 @@ export default function DayGrid({
   const laidOut = layoutEvents(items, dayStart).filter((it) => it.top + it.height > OFFSET)
 
   const nowH = now.getHours() + now.getMinutes() / 60
-  const showNow = nowH >= START && nowH < END
+  const showNow = isToday && nowH >= START && nowH < END // now-line only on the real today
   const empty = laidOut.length === 0
   const laneTop = (ms) => ((ms - dayStart) / 3600000) * HOUR_HEIGHT - OFFSET
 

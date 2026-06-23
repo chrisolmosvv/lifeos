@@ -26,40 +26,46 @@ function midnight(d) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate())
 }
 
-// Build both modules from all tasks, anchored on `today` (a Date).
-// Returns { tasksToday, next7, undated, total }.
-//  - tasksToday: top-level tasks due today OR in the Today bucket OR scheduled
-//    today (open + done-today, so the day's progress shows). Priority order.
-//  - next7: top-level OPEN tasks due/scheduled tomorrow..+7 (and not already in
-//    tasksToday), in date order.
-//  - undated: top-level OPEN tasks with no date, NOT in Someday (Someday stays
-//    out of view), shown at the bottom of next-7 with an "undated" tag.
-export function buildToday(tasks, today) {
+// Build both modules from all tasks, anchored on `viewed` (the day on screen).
+// `isToday` says whether the viewed day IS the real current day. Returns
+// { tasksToday, next7, undated, total }.
+//  - tasksToday / "viewed-day tasks":
+//    • viewed == today: tasks due today OR in the Today bucket OR scheduled today
+//      (open + completed-today, so the day's progress shows). Priority order.
+//    • viewed != today: tasks DUE on the viewed day OR SCHEDULED on it (any
+//      status). The "Today bucket" is a today-only notion — it does NOT apply to
+//      other days.
+//  - next7: top-level not-done tasks due/scheduled viewed+1..viewed+7, in date
+//    order; undated not-done tasks (not Someday) sit at the bottom.
+export function buildToday(tasks, viewed, isToday) {
   const all = tasks || []
   const topLevel = all.filter((t) => !t.parent_task_id)
 
-  const todayMid = midnight(today)
-  const tomorrow = new Date(todayMid)
+  const viewedMid = midnight(viewed)
+  const tomorrow = new Date(viewedMid)
   tomorrow.setDate(tomorrow.getDate() + 1)
-  const weekEnd = new Date(todayMid)
-  weekEnd.setDate(weekEnd.getDate() + 8) // tomorrow..+7 inclusive (exclusive end)
+  const weekEnd = new Date(viewedMid)
+  weekEnd.setDate(weekEnd.getDate() + 8) // viewed+1..viewed+7 (exclusive end)
 
   const inWindow = (d) => d && d >= tomorrow && d < weekEnd
+  const dueOnViewed = (t) => {
+    const d = dueLocal(t.due_date)
+    return d && isSameDay(d, viewed)
+  }
+  const schOnViewed = (t) => {
+    const d = scheduledDay(t)
+    return d && isSameDay(d, viewed)
+  }
 
-  // --- tasks today -------------------------------------------------------
-  // Active tasks (to do / in progress) that are due today, in the Today bucket,
-  // or scheduled today — PLUS anything completed today, kept greyed till midnight
-  // (the day's progress), which then rolls off on its own.
+  // --- tasks for the viewed day ------------------------------------------
+  // "completed today" is a real-clock notion, so it only ever applies on today.
   const completedToday = (t) =>
-    t.completed_at && isSameDay(new Date(t.completed_at), today)
+    t.completed_at && isSameDay(new Date(t.completed_at), new Date())
   const tasksToday = topLevel
     .filter((t) => {
+      if (!isToday) return dueOnViewed(t) || schOnViewed(t) // other day: any status
       if (t.status === 'done') return completedToday(t)
-      const due = dueLocal(t.due_date)
-      const sch = scheduledDay(t)
-      const dueToday = due && isSameDay(due, today)
-      const schToday = sch && isSameDay(sch, today)
-      return dueToday || schToday || t.time_bucket === 'Today'
+      return dueOnViewed(t) || schOnViewed(t) || t.time_bucket === 'Today'
     })
     .sort((a, b) => {
       const ad = a.status === 'done' ? 1 : 0
