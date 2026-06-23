@@ -1,0 +1,312 @@
+/* Sealed styles for the Today create/edit form, the drill-in category picker,
+   and the undo toast (Phase 7, T6). All classes are `tk-form-` / `tk-pick-` /
+   `tk-toast-` prefixed and used ONLY by these kit components, so nothing leaks to
+   another screen. Colour/type come from the theme. This is the Today-scoped twin
+   of the shared event/task panels (which Calendar still uses) — kept separate on
+   purpose so changing Today never touches Calendar. */
+
+/* --- The modal shell ------------------------------------------------------ */
+.tk-form-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(28, 25, 22, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.tk-form {
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 8px;
+  padding: 1rem 1.1rem 1.1rem;
+}
+.tk-form-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.tk-form-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.25rem;
+  margin: 0;
+  text-transform: capitalize;
+}
+.tk-form-x {
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.tk-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* --- Fields --------------------------------------------------------------- */
+.tk-form-input,
+.tk-form-notes,
+.tk-form input[type='date'],
+.tk-form input[type='datetime-local'] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+.tk-form-input:first-child {
+  font-size: 1.05rem;
+}
+.tk-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.tk-form-fieldlabel {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+.tk-form-times {
+  display: flex;
+  gap: 0.5rem;
+}
+.tk-form-times input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The category button: shows the current pick, opens the drill-in picker. */
+.tk-form-catbtn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tk-form-catchev {
+  margin-left: auto;
+  color: var(--ink-muted);
+}
+
+/* Priority chips */
+.tk-form-prios {
+  display: flex;
+  gap: 0.4rem;
+}
+.tk-form-prio {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.32rem 0.7rem;
+  color: var(--ink-muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.tk-form-prio.is-on {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.tk-form-notes {
+  resize: vertical;
+}
+.tk-form-err {
+  color: var(--accent);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Actions */
+.tk-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+.tk-form-actions-right {
+  display: flex;
+  gap: 0.5rem;
+}
+.tk-form-del,
+.tk-form-cancel {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0.45rem 0.5rem;
+  cursor: pointer;
+}
+.tk-form-del:hover {
+  color: var(--overdue);
+}
+.tk-form-save {
+  font: inherit;
+  font-weight: 500;
+  padding: 0.5rem 1.1rem;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tk-form-save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tk-form-back {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0.1rem 0.2rem;
+  cursor: pointer;
+}
+.tk-form-back:hover {
+  color: var(--ink);
+}
+
+/* --- The drill-in category picker ----------------------------------------- */
+.tk-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.tk-pick-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+.tk-pick-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  font-size: 0.72rem;
+}
+.tk-pick-crumb {
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0.1rem 0.2rem;
+  cursor: pointer;
+}
+.tk-pick-crumb:hover {
+  color: var(--ink);
+}
+.tk-pick-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.tk-pick-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.tk-pick-row.is-on {
+  background: rgba(0, 0, 0, 0.04);
+}
+.tk-pick-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.4rem;
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.tk-pick-under {
+  font-size: 0.66rem;
+  color: var(--ink-muted);
+  margin-left: 0.2rem;
+}
+.tk-pick-chev {
+  flex: none;
+  font-size: 1.1rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+.tk-pick-chev:hover {
+  color: var(--ink);
+}
+.tk-pick-dot {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+.tk-pick-dot.is-empty {
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+.tk-pick-empty {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  padding: 0.5rem 0.4rem;
+}
+
+/* --- The undo toast ------------------------------------------------------- */
+.tk-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.tk-toast-undo {
+  font: inherit;
+  font-weight: 500;
+  color: var(--paper);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}

@@ -35,6 +35,70 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T6 — Today's create/edit form + "+ add" + delete/undo + drill-in category picker
+ROADMAP MAPPING: this is **T6** (the create/edit form + "+ add"). Per the explicit Steps 4 & 5
+it also absorbed **T9 (delete + undo toast)** and the **T3 drill-in picker** sub-item — both
+folded into T6 on purpose and marked done-as-part-of-T6 (not silently renumbered).
+STEP 0 — live value-sets (read the proper way): `tasks.priority` nullable, default NULL,
+`CHECK (priority IN ('high','med','low'))` (in use: med×2, null×6) → control = None/Low/Med/
+High. `tasks.status` = `('open','in_progress','done')` (T7 confirmed). All form fields exist —
+**no schema change** (T2 held).
+THE CRITICAL SCOPE RULE — HONOURED: Today opened the SHARED `TaskPanel`/`EventPanel`, which
+**Calendar also uses**. So I built a **new Today-scoped form** (`TodayForm`) and pointed Today
+at it; **the shared panels were NOT modified** (Calendar keeps using them unchanged). Temporary
+duplication is intentional and converges when Calendar is rebuilt.
+WHAT CHANGED (front-end, Today only; writes via existing paths):
+- **`TodayForm`** (sealed kit) — one tap on a task row OR a grid block opens the full form
+  instantly (no preview), same form for create + edit, task + event. Task fields: Title ·
+  Category (picker) · Status (reuses the T7 `StatusPill`) · Day/Time (due date + optional
+  scheduled start/end) · Priority (None/Low/Med/High) · Notes · Delete. Event fields: Title ·
+  Category · Start/End · Location · Notes · Delete. **"Repeat" omitted** (returns with
+  recurrence). Validation: a title is required (events also need start+end).
+- **"+ add a task"** in the "tasks today" module → the same form in create mode, prefilled to
+  today (due = today, bucket Today, category Inbox).
+- **Delete** (from the form) removes the item and shows a quiet **"Deleted · Undo"** toast
+  (`Toast` kit, auto-dismiss ~6s); **Undo re-inserts the exact row** (same id + fields). No
+  confirm dialog. (No repeating-event "this one or all?" — that's the recurrence piece.)
+- **`CategoryPicker`** (sealed kit) — the drill-in picker INSIDE the form: a search box on
+  top (filters all nodes), a breadcrumb, one level at a time; tap a row's **label** to pick
+  that node (any level) and close, tap its **chevron** to go deeper, leaves have no chevron.
+  Each row shows the stored colour dot + name (colour as-is — no inheritance, still open).
+  **Inbox = category_id null** (the data model). Default: existing category on edit, Inbox on
+  create. **Reads the tree only — never creates/nests/renames/deletes** (that's Settings/T13).
+WRITE PATHS REUSED (named): `supabase.from('tasks').insert/update/delete`,
+`supabase.from('events').insert/update/delete` — the same client paths the app already uses
+(via Today's `writeTask`/`writeEvent` helpers). No new data layer, no parallel writer.
+SAVE POINT (Step 1): **`7de0a94`** — "Phase 7 T6 save point — before Today form + picker."
+FILES TOUCHED: src/Today.jsx (now opens `TodayForm`, drops the shared-panel imports),
+src/today.css (the "+ add" link); ADDED src/kit/{TodayForm,CategoryPicker,Toast}.jsx +
+src/kit/todayForm.css. **No db/, no schema, no category-table writes.**
+CONFIRMATIONS: **No shared `TaskPanel`/`EventPanel` or shared hook changed**; Calendar +
+Settings behaviour identical (verified by diff — none of DayColumn/eventLayout/EventPanel/
+TaskPanel/useWeekData/useEventDrag/WeekCalendar/Settings/etc. touched). Frankfurt only for the
+Step-0 read; Ireland never touched. Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed, NOT deployed to the live site.** So it's
+on the Mac (run locally) but **not on the phone yet**. Say the word to push/deploy.
+PICKER NOTE: the live tree is currently shallow (Inbox + "TU Delft" with one child "Q1"), so
+the picker looks sparse until the Settings manager lets you build branches — expected; it just
+works against whatever exists (drill into TU Delft → Q1; pick a mid-level by its label; search).
+HOW TO VERIFY (owner — Mac now; phone after a deploy):
+- Tap a task → full form opens; edit title/category/status/priority/notes/day-time → Save.
+- Tap an event (a grid block) → form opens; edit fields incl. Location → Save.
+- "+ add a task" → creates a task into today.
+- Delete a task and an event → a "Deleted · Undo" toast → Undo restores it.
+- Picker: drill in via the chevron, pick a mid-level by its label, pick a leaf, use search;
+  the choice shows on the form and saves.
+- Existing tasks/events unaffected; Calendar + Settings still work exactly as before.
+KNOWN GAPS: event CREATE has no entry point on Today yet (events are created on the grid in
+T5; "+ add" is task-only by spec). Drag/resize/click-create on the grid + date arrows are
+still their own later pieces (T5/T8). The old shared panels remain for Calendar (to converge
+when Calendar is rebuilt).
+NEXT: T5 — calendar workspace interactions on Today's grid (click-create with event/task
+toggle, drag, resize, 15-min snap) — T5 will open THIS same form.
+FOR THE CHECKER: confirm zero shared-panel/shared-hook changes, Calendar/Settings untouched,
+all writes through existing paths, no category-table writes, no schema change, Frankfurt-only,
+save point exists, and the picker is read-only on the tree.
+
 ### 2026-06-23 — Phase 7, T7 — 3-state status pill + restore "done" on Today (additive schema + front-end)
 LIVE STATUS CONSTRAINT — BEFORE (read the proper way, Management API as role postgres):
 `tasks.status` text NOT NULL default `'open'`; constraint `tasks_status_check` =

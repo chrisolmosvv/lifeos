@@ -211,9 +211,10 @@ it rather than dig (see the Piece-1c decision).
     time. (Kept here struck, not deleted, so the history is visible.) Also settled: **no
     fixed count** at any level — add/nest/delete freely; the only rule is the **depth-3
     cap** (already enforced, T3). See 03-decisions.md (Piece D1).
-  - ⬜ The drill-in picker (Today, read-only) + the **colour-branch model** and
-    **parent-delete behaviour** — both **OPEN questions** (03-decisions.md, Piece D1),
-    decided with the Settings category manager (backlog, below), not assumed.
+  - ✅ The drill-in picker (Today, read-only) — *done as part of T6* (`CategoryPicker`:
+    search + breadcrumb + chevrons, picks any level, reads the tree only). Still OPEN and
+    NOT assumed: the **colour-branch model** and **parent-delete behaviour** (03-decisions.md,
+    Piece D1), decided with the Settings category manager (T13 backlog).
 - ✅ **T4 — Today display build (read-only first) — "Rebuild R1".** Rebuilt Today's
   body to the B layout with REAL data, read-only: left "The Day" = a 7am–midnight
   `DayGrid` (today's events + scheduled tasks as soft **tinted blocks**, overlaps
@@ -227,8 +228,19 @@ it rather than dig (see the Piece-1c decision).
   + add + drag-to-schedule + the Someday drawer. **Owner verifies on Mac + phone.**
 - ⬜ **T5 — Calendar workspace interactions.** Click-create (event default +
   toggle), drag, resize, 15-min snap, overlap split, drag to/from the modules.
-- ⬜ **T6 — The create/edit form.** Task + event fields, one-tap-open everywhere,
-  "+ add".
+- ✅ **T6 — The create/edit form (+ "+ add", delete/undo, the drill-in picker).** A
+  new Today-scoped sealed form (`TodayForm`) opens on one tap of a task row or a grid
+  block — create + edit, task + event (Title/Category/Status/Day-Time/Priority/Notes/
+  Delete for tasks; Title/Category/Start-End/Location/Notes/Delete for events; Repeat
+  omitted till the recurrence piece). "+ add" creates a task into today. **Delete shows
+  a "Deleted · Undo" toast** (re-inserts the exact row). A **drill-in `CategoryPicker`**
+  (search + breadcrumb + chevrons; reads the tree only) picks any level; Inbox = null.
+  All writes go through the EXISTING Supabase task/event paths; no schema, no category
+  writes. **SEPARATE from the shared TaskPanel/EventPanel (Calendar still uses those,
+  unchanged)** — intentional temporary duplication. Save point `7de0a94`.
+  - **Scope note:** this piece absorbed **T9 (delete + undo toast)** and the **T3
+    drill-in picker** sub-item (both folded in per the T6 instruction) — see those lines,
+    marked done-as-part-of-T6 (not silently renumbered).
 - ✅ **T7 — Status pill behaviour + restore "done".** Additive schema: `tasks.status`
   widened `('open','done')` → `('open','in_progress','done')` (`db/08_status_in_progress.sql`,
   applied + verified live on Frankfurt; default `'open'` and existing rows intact; proof
@@ -238,7 +250,9 @@ it rather than dig (see the Piece-1c decision).
   Done again undoes. `todayModel` now treats `in_progress` as active and rolls done off at
   midnight. No Calendar/Settings/shared-hook change. Save point `310f9db`.
 - ⬜ **T8 — Date navigation.** Whole-page re-anchor, weekday titles, back-to-today.
-- ⬜ **T9 — Delete + undo toast.**
+- ✅ **T9 — Delete + undo toast** — *done as part of T6* (the `Toast` kit block: delete a
+  task/event → "Deleted · Undo" → Undo re-inserts the exact row). The repeating-event
+  "this one or all?" branch stays with the recurrence piece.
 - ⬜ **T10 — Recurring events** *(large)*. Recurrence + "this one or all?".
 - ⬜ **T11 — All Tasks inventory screen** — its own spec first.
 - ⬜ **T12 — Conservative trims** of any now-unused Phase 6 Today code (separate
@@ -264,6 +278,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T6 DONE — Today's full create/edit form, "+ add", delete/undo,
+  and the drill-in category picker.** One tap on a task row or a grid block opens a new
+  Today-scoped form (`TodayForm`) — create + edit, task + event — with Title, the drill-in
+  **category picker** (search + breadcrumb + chevrons, picks any level, reads only), the T7
+  **status pill**, Day/Time (due + optional schedule), Priority (None/Low/Med/High), Notes,
+  and Delete. **"+ add a task"** creates into today. **Delete → "Deleted · Undo" toast** that
+  re-inserts the exact row. All writes go through the EXISTING Supabase task/event paths;
+  **no schema, no category-table writes**. Crucially this form is **separate from the shared
+  TaskPanel/EventPanel that Calendar still uses** (intentional temporary duplication), so
+  **Calendar/Settings are untouched**. This piece **absorbed T9** (delete+undo) and the **T3
+  drill-in picker** sub-item (folded in per the instruction; recorded, not silently
+  renumbered). Save point `7de0a94`. Committed locally only — **NOT pushed/deployed** (not on
+  the phone yet). **NEXT: T5 — calendar workspace interactions on Today's grid (click-create,
+  drag, resize) — T5 will open THIS form; or T8 date arrows.**
 - **2026-06-23 — Phase 7, T7 DONE — "done" is back on Today, now as a 3-state pill.**
   Small ADDITIVE schema step first: `tasks.status` widened from `open`/`done` to
   `open`/`in_progress`/`done` (`db/08_status_in_progress.sql`) — applied + proven live on

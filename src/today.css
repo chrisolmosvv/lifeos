@@ -63,6 +63,20 @@
   overflow-y: auto;
 }
 
+/* "+ add a task" — the add action earns the calm accent (per the design doc). */
+.today-add {
+  flex: none;
+  align-self: flex-start;
+  margin-top: 0.3rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0.3rem 0.25rem;
+  cursor: pointer;
+}
+
 /* Empty zones — one warm Fraunces-italic line each. */
 .today-empty {
   font-family: var(--font-serif);
