@@ -132,7 +132,14 @@ offer. **This is the V1 finish line — the proactive engagement layer is alive.
   (0 5,6 * * *). The temporary `brief_test_every3min` proving job has been removed (only
   the real 7am job remains). No spine/src change.
 
-## 🔨 Phase 7 — The redesign (look & feel pass)   ← IN PROGRESS
+## 🔨 Phase 7 — The redesign (look & feel pass)   ← ⏸ PAUSED (front-end track)
+> **PAUSED 2026-06-23 while the backend Marty track (M0–M9) runs.** Phase 7 lives
+> entirely in `src/` (front-end); the Marty track lives entirely in
+> `supabase/functions/` (backend). They touch different folders **on purpose** so
+> the two unfinished bodies of work don't collide. Resume Phase 7 (Settings re-skin,
+> mobile, T12) after the Marty track, or interleave — but never mix the two in one
+> commit. See `08-marty-upgrade.md` and the M-track section below.
+
 The full UX/UI pass once the data foundation and core flows are real. Bring every
 screen up to the broadsheet identity in 06-design.md — layout, type, colour,
 motion, the per-screen feeling — replacing the plain interim verify UIs. The
@@ -516,6 +523,25 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
     scoped strictly to `archive_batch_id == batch AND archived_at IS NOT NULL` (proven live: never
     touches active rows or other batches), tables-then-batch, partial-failure surfaced not hidden.
     Additive routing only; no A2/A3/shared-hook/schema change. Save point `781c908`.
+
+## 🔨 Marty track (M0–M9) — make the Telegram bot conversational   ← IN PROGRESS (backend)
+A separate, **backend-only** track (`supabase/functions/` only — never `src/`) that
+grows Marty from capture/undo/brief into a real assistant you can talk to: questions,
+edit/delete by chat, multi-turn capture, category learning, voice notes, an
+interactive brief, and daytime nudges. Numbered **M0–M9** (not "Phase 8") so it never
+collides with the paused Phase 7 redesign numbering. **Full plan:** `08-marty-upgrade.md`.
+**Ground rules:** backend only; protect the spine (add tables, don't change meaning;
+RLS stays owner-only). Only M0 is built; M1–M9 are the intended shape, each built as
+its own small, owner-verified piece.
+- ✅ **M0 — Prep + one Gemini config seam (backend, no behaviour change).** Added this
+  plan doc as the track's rollback anchor; routed BOTH Gemini callers
+  (`telegram/understand.ts`, `brief/write.ts`) through one shared `_shared/gemini.ts`
+  (key + model + endpoint + fetch/retry/429 in one place), so a later switch to a paid
+  key is a one-place change. Pure refactor — capture, events, and the brief behave
+  exactly as before. Each caller kept its OWN parsing + OWN fallback.
+- ⬜ M1 — the router (the seam) · ⬜ M2 — questions · ⬜ M3 — edit/delete/move ·
+  ⬜ M4 — multi-turn capture · ⬜ M5 — category learning · ⬜ M6 — voice notes ·
+  ⬜ M7 — interactive brief · ⬜ M8 — daytime nudges · ⬜ M9 — hardening + retire test aids.
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.

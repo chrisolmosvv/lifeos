@@ -9,7 +9,17 @@
 
 ---
 
-## Phase 7 — Calendar C4 Part 2: the twins merged into one useGridDrag; no type-(ii) divergence (2026-06-23)
+## Marty conversation work is tracked as M0–M9, separate from the Phase 7 redesign numbering (2026-06-23)
+
+- **[The Telegram-bot upgrade is its own track, prefixed M0–M9, not folded into the phase numbers]** —
+  The redesign is **Phase 7** and is unfinished; the bot upgrade is a second, independent body of work.
+  Giving the bot work its own short prefix (M0–M9) keeps every roadmap line, commit, and decision
+  instantly identifiable as "the bot track" vs "the redesign track," so two in-flight efforts don't get
+  confused for one. **Why:** the two touch **different folders** — Phase 7 is `src/` (front-end), the
+  Marty track is `supabase/functions/` (backend) — so they can run side by side without colliding, as
+  long as they're never mixed in one commit. **Trade-off:** the roadmap now carries two "in progress"
+  tracks at once instead of a single linear sequence; we accept that because the folder split makes them
+  genuinely non-overlapping. Full plan in `08-marty-upgrade.md`; Phase 7 marked ⏸ PAUSED in the roadmap.
 
 - **[The twin hooks collapsed into ONE `kit/useGridDrag`; full merge, no type-(ii) blocker]** — The
   diff of `useTodayGrid` vs `useWeekGrid` found **every** difference to be type (i) a parameter, not a
