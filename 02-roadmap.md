@@ -322,6 +322,17 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
   audit items (the "brief test" trigger word; the 6b timezone duplication).
 - ⬜ **Subtasks in the new UI** — `tasks.parent_task_id` exists but isn't surfaced post-rebuild
   (R1 gap); owner decides how/whether to bring subtasks back.
+- 🔨 **Archive — universal soft-delete** (delete = archive; restore by batch; manual delete-now;
+  Archive screen grouped by delete action — spec in 07-ux-flows.md). Will replace T13's interim
+  "blocked delete" once A2 lands.
+  - ✅ **A1 — schema foundation (additive; live on Frankfurt).** New `archive_batches` table
+    (owner-only RLS) + nullable `archived_at` + `archive_batch_id` (FK→batches ON DELETE SET NULL)
+    on tasks/events/categories (`db/09_archive.sql`). No behaviour change; every row active. Proven
+    live (cols/table/RLS present, depth trigger still fires, rolled back). Save point `b3a84c1`.
+  - ⬜ **A2 — delete→archive write path** (set `archived_at` + a batch; category delete archives
+    its whole branch as one batch; lifts the T13 block).
+  - ⬜ **A3 — active-only read filter** (`archived_at IS NULL`) on every screen's reads.
+  - ⬜ **Archive screen** — grouped by delete action, with Restore and Delete-now.
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -336,6 +347,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Archive A1 DONE — soft-delete + batch SCHEMA foundation (DB only).** Added
+  (additive, live on Frankfurt) a new `archive_batches` table (owner-only RLS matching the spine
+  pattern) and nullable `archived_at` + `archive_batch_id` (FK→batches ON DELETE SET NULL) on
+  tasks/events/categories — `db/09_archive.sql`. **No app code, no behaviour change** (nothing
+  filters on `archived_at` yet — that's A3; the delete→archive write is A2): every row is active,
+  so the app is exactly as before. Proven live: columns + table + RLS present, existing
+  rows/triggers/FKs untouched, the depth trigger still fires, transaction rolled back with no test
+  rows. (Honest: events read 5→6 between the baseline and after-read — that's live owner usage, not
+  the migration.) Save point `b3a84c1`. **The DB changed; the app code did not** — repo commits are
+  local. Archive will replace T13's interim "blocked delete" once A2 lands. **NEXT: A2 — the
+  delete→archive write path (+ category-branch batching), then A3 — the active-only read filter,
+  then the Archive screen.**
 - **2026-06-23 — Phase 7, T13 DONE — the Settings category manager (build, not yet deployed).**
   Built into the current Settings screen (styling polish waits for the Settings re-skin): an
   expanding category tree (Inbox first) with **inline rename + recolour**, **"+ child" / "+ add

@@ -240,6 +240,26 @@ comes with the later Settings re-skin.
   leaf. *(Archive — retention, restore, cascade, task reassignment — is a separate later
   feature, not this.)*
 
+### Archive — universal soft-delete (LOCKED spec; built in pieces A1→…)
+Replaces "delete = gone" with **delete = archive** across **categories, tasks, and events**.
+- **Soft-delete everywhere.** Deleting anything sets `archived_at` (it leaves the active
+  views but is not destroyed). The live screens read **active only** (`archived_at IS NULL`).
+- **Batches label each delete action.** Every delete creates an `archive_batches` row
+  (label + source_type) and stamps the archived rows with its `archive_batch_id`, so a
+  delete can be **restored as one unit**. Deleting a **category archives its WHOLE branch**
+  (the category + all descendants + their tasks/events) **as one batch** — so the T13
+  "blocked if it has tasks/children" guard is **lifted** once Archive is wired (a category
+  with contents simply archives the lot together).
+- **Restore = the batch.** Restoring un-archives every row in that batch together.
+- **No auto-expiry.** Archived items stay until the owner explicitly **"delete now"**
+  (the only place a hard delete happens). No 30-day clock.
+- **Archive screen** lists archived items **grouped by delete action** (batch), newest
+  first, each with Restore and Delete-now.
+- **Build order:** **A1** = additive schema (this — `archived_at` + `archive_batch_id` on
+  the three tables + the `archive_batches` table; no behaviour change). **A2** = the
+  delete→archive write path (+ category-branch batching). **A3** = the active-only read
+  filter on every screen. The Archive screen + restore/delete-now come after.
+
 ---
 
 ## 4. Completing & interactions — how tasks/events change state and move

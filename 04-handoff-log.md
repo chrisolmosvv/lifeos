@@ -35,6 +35,50 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Archive A1 — soft-delete + batch schema foundation (SCHEMA ONLY; additive)
+ROADMAP MAPPING: **Archive A1** — first piece of the Archive sub-feature (A1 schema → A2
+delete→archive write → A3 active-only read filter → the Archive screen). Will later lift T13's
+"blocked delete".
+STEP 0 — LIVE SCHEMA (proper path, Frankfurt eu-central-1), baseline counts tasks=0, events=5,
+categories=4; **no archived/deleted column existed on any table.** RLS on all three: enabled, 4
+owner-only policies each (`auth.uid() = user_id`).
+SCHEMA APPLIED (additive — `db/09_archive.sql`):
+- NEW table **`public.archive_batches`** (id, user_id NN def auth.uid() FK→auth.users CASCADE,
+  label text, source_type text CHECK in category/task/event, created_at) + a user_id index.
+  **RLS enabled with the SAME per-user pattern** — 4 policies: "Owner can read/insert/update/
+  delete own archive_batches" (`using/with check (auth.uid() = user_id)`), matching
+  tasks/categories.
+- Added to **tasks, events, categories** (additive, nullable): **`archived_at` timestamptz**
+  (NULL = active) and **`archive_batch_id` uuid FK→archive_batches(id) ON DELETE SET NULL** +
+  a per-table archive_batch index.
+- NO existing column/default/trigger/FK/RLS modified; NO row data edited.
+PROOF (re-queried live, then a transaction rolled back):
+- After-state: the two columns exist (timestamptz/uuid, nullable) on all three tables;
+  archive_batches exists with its 5 columns + RLS enabled + 4 policies; **all rows archived_at =
+  NULL** (none archived).
+- One transaction: created a batch, set archived_at + archive_batch_id on a temp task/event/
+  category (all **accepted**), and confirmed the **existing depth trigger still fires** (a 4th
+  category level rejected: "Categories can be at most 3 levels deep."); then **rolled back** →
+  archive_batches = 0, zero `__a1_%` probe rows.
+HONEST NOTE on counts: events read **5 at Step-0 baseline, 6 after** — that delta is **live owner
+app usage between the two reads, NOT the migration** (pure DDL, inserted/changed zero rows; every
+row is archived_at NULL). So no existing row was archived or edited by A1.
+SAVE POINT (Step 1): **`b3a84c1`** — "Phase 7 Archive A1 save point — before archive schema."
+FILES TOUCHED: db/09_archive.sql (new, applied), 07-ux-flows.md (Archive spec), 02-roadmap.md,
+04-handoff-log.md. **NO src/ change at all.**
+NO BEHAVIOUR CHANGE: A1 only adds storage. No query filters on archived_at yet (that's A3); no
+delete→archive write yet (A2). Every row is active → the app behaves exactly as before.
+DEPLOY CLARITY: **the DATABASE changed (live on Frankfurt the moment the SQL ran); the APP CODE
+did NOT** (no src/, nothing to deploy). The repo commits are local (not pushed) and carry only the
+migration record + docs.
+NEXT: A2 — the delete→archive write path (set archived_at + a batch; category delete archives its
+whole branch as one batch), then A3 — the active-only (`archived_at IS NULL`) read filter on every
+screen, then the Archive screen (restore / delete-now).
+FOR THE CHECKER (schema change, review BEFORE A2): additive only (1 new table + 2 nullable cols ×3
+tables, no existing column/trigger/FK/RLS touched); archive_batches RLS matches the per-user
+pattern (4 owner-only policies, enabled); existing rows/triggers/FKs/RLS intact; depth trigger
+still fires; no test rows left; no app behaviour change; Frankfurt only; save point `b3a84c1`.
+
 ### 2026-06-23 — Phase 7, T13 — the Settings category manager (front-end + category writes; no schema)
 ROADMAP MAPPING: **T13** (Category management in Settings). No overlap.
 STEP 0 — LIVE categories (proper path, Frankfurt eu-central-1): columns id(uuid), user_id(uuid),
