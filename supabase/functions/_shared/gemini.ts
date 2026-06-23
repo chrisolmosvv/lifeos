@@ -37,25 +37,12 @@ export type GeminiResult =
   | { ok: true; text: string }
   | { ok: false; reason: "rate_limit" | "error" };
 
-// Call Gemini with a system instruction + one user message. `generationConfig` is
-// passed straight through, so callers keep their own settings (e.g. temperature 0,
-// or a JSON responseSchema for the capture parser). Never throws.
-//
-// Up to 3 attempts: a transient 503 ("high demand") usually clears on a quick retry;
-// a 429 means we're over the free limit, so we report that distinctly and stop.
-export async function callGemini(opts: {
-  system: string;
-  user: string;
-  generationConfig?: Record<string, unknown>;
-}): Promise<GeminiResult> {
+// The shared network core: POST a request body, with up to 3 attempts (a transient 503
+// usually clears on a quick retry; a 429 means we're over the free limit, reported
+// distinctly and stopped). Returns the first text candidate. Never throws.
+async function post(body: unknown): Promise<GeminiResult> {
   if (!GEMINI_KEY) return { ok: false, reason: "error" };
   const url = `${ENDPOINT}?key=${GEMINI_KEY}`;
-  const body = {
-    systemInstruction: { parts: [{ text: opts.system }] },
-    contents: [{ role: "user", parts: [{ text: opts.user }] }],
-    generationConfig: opts.generationConfig ?? {},
-  };
-
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch(url, {
@@ -77,4 +64,35 @@ export async function callGemini(opts: {
     }
   }
   return { ok: false, reason: "error" };
+}
+
+// Call Gemini with a system instruction + one user message. `generationConfig` is
+// passed straight through, so callers keep their own settings (e.g. temperature 0,
+// or a JSON responseSchema for the capture parser). Never throws.
+export async function callGemini(opts: {
+  system: string;
+  user: string;
+  generationConfig?: Record<string, unknown>;
+}): Promise<GeminiResult> {
+  return post({
+    systemInstruction: { parts: [{ text: opts.system }] },
+    contents: [{ role: "user", parts: [{ text: opts.user }] }],
+    generationConfig: opts.generationConfig ?? {},
+  });
+}
+
+// Transcribe a voice note to text (M7). Audio needs a different call shape — an inline
+// audio part instead of a text user message — but the SAME key/model/endpoint/retry. Free
+// tier per the M0 decision (a spoken "buy milk" isn't sensitive). Returns the transcript.
+export async function transcribeAudio(base64: string, mimeType: string): Promise<GeminiResult> {
+  return post({
+    contents: [{
+      role: "user",
+      parts: [
+        { text: "Transcribe this voice note to plain text. Return ONLY the words spoken — no commentary, no quotes, no labels." },
+        { inlineData: { mimeType, data: base64 } },
+      ],
+    }],
+    generationConfig: { temperature: 0 },
+  });
 }
