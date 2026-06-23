@@ -9,6 +9,29 @@
 
 ---
 
+## Phase 7 — Calendar C4 Part 2: the twins merged into one useGridDrag; no type-(ii) divergence (2026-06-23)
+
+- **[The twin hooks collapsed into ONE `kit/useGridDrag`; full merge, no type-(ii) blocker]** — The
+  diff of `useTodayGrid` vs `useWeekGrid` found **every** difference to be type (i) a parameter, not a
+  behavioural divergence. Config: `geomRef` (lane vs body), `startMin` (7am=420 vs 0), `dayStartMsAt(x)`
+  (Today a constant fn → single day; week the column under x = re-day), `offAt(x,y)→target|null`
+  (Today: which module; week: offGrid), `onOff(item,target)` (Today re-bucket; week unschedule),
+  `eventsShowOff` (event off-preview: Today false, week true), optional `onTraySelect` (present → tray
+  rows clickable). **Event-snap-back is shared core** (same rule both screens), not a divergence. So a
+  **full merge** was correct — the escape hatch (keep the twins) was not needed.
+- **[Today is the reference; reproduced byte-for-byte — incl. the justDragged subtlety]** — The merge
+  rule was "the hook reproduces Today exactly; week-specific behaviour is the parameterised part; never
+  adjust Today to fit the merge." The one trap a naive merge hits: Today's tray grip has **no onClick**,
+  so a Today tray drag must **not** set `justDragged` (else it would swallow the next block click).
+  Gated on `onTraySelect` presence — Today (no onTraySelect) never sets it; week (has it) does. The
+  unified `blockPreview`/`createDraft` carry extra fields (item/dayStartMs) that Today's DayGrid simply
+  ignores; `dragLabel` is computed but Today never renders it (setStates batch → no extra renders).
+  Return shape unchanged, so DayGrid/WeekGrid/WeekColumn needed no edits.
+- **[Calendar rebuild closed out]** — With C4 done, Calendar is one engine on Today's kit (one grid
+  sheet, the shared form, tray, Month, all-day band, one `useGridDrag`); the old Calendar cluster is
+  deleted. `TaskEditForm` remains only because the *old task-list* cluster still uses it — a separate
+  future cleanup, not the Calendar rebuild.
+
 ## Phase 7 — Calendar C7: all-day/multi-day band + the one schema change (2026-06-23)
 
 - **[Model (a): an `all_day` flag + existing start/end carrying the date(s)]** — Chosen over (b)

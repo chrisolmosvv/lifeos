@@ -363,7 +363,7 @@ separately-verified pieces; old Calendar code retired conservatively in C4, not 
   **retired (no longer imported) but NOT deleted** — they go with the old cluster in C4. Save point
   `d0388df`. *(CHECKER: Today form unchanged bar the 2 disabled rows; Calendar delete = archive+undo;
   the one new write is the archive-delete.)*
-- 🔨 **C4 — Drag-logic convergence (in two parts).**
+- ✅ **C4 — Drag-logic convergence (both parts done) → the Calendar rebuild is COMPLETE.**
   - ✅ **Part 1 — remove the dead old-Calendar cluster** (pure deletion, zero behaviour change).
     Proven a closed dead set (roots `WeekCalendar.jsx` + `DayTimeline.jsx` had 0 importers; live
     bundle hashes unchanged after removal = never shipped). **Deleted (11):** `WeekCalendar`,
@@ -372,9 +372,19 @@ separately-verified pieces; old Calendar code retired conservatively in C4, not 
     (DayAgenda), `eventLayout` (new engine), `calendar.css` + `DayAgenda` (LoggedIn). **Left
     (still referenced):** `TaskEditForm` — used by `TaskRow` (a separate old task-list cluster:
     `TaskRow ← TaskBlock ← SomedayDrawer`), so out of scope here. Save point `6e2a81f`.
-  - ⬜ **Part 2 — collapse `useTodayGrid` + `useWeekGrid` into ONE grid hook** (the documented C2
-    debt; the close twins exist to diff against). **This one DOES touch Today** — its own piece, with
-    Today regression front-and-centre in verification.
+  - ✅ **Part 2 — collapsed `useTodayGrid` + `useWeekGrid` into ONE `kit/useGridDrag.js`** (the C2
+    debt, paid). Parameterised by the proven type-(i) differences (`startMin` / `geomRef` /
+    `dayStartMsAt` / `offAt` / `onOff` / `eventsShowOff` / optional `onTraySelect`); **no type-(ii)
+    divergence** was found, so a full merge was safe. Both screens pass their config; the two twins
+    deleted. **Today reproduced byte-for-byte** (incl. the subtlety that Today's tray drag must NOT
+    set `justDragged`). Return shape unchanged → DayGrid/WeekGrid/WeekColumn untouched. Internal
+    refactor, zero behaviour change. Save point `ce8d54e`.
+
+**🎉 Phase 7 Calendar rebuild-and-converge: COMPLETE (C1→C7 + C4).** Calendar is rebuilt on Today's
+kit as one engine: one grid sheet, the shared `ItemForm`, the tray, Month, the all-day band, and a
+single `useGridDrag` hook shared with Today. The old Calendar cluster is gone. Remaining Phase-7
+backlog is unrelated to the Calendar rebuild (mobile, Settings re-skin, recurrence T10, the old
+task-list cleanup of `TaskEditForm`/`TaskRow`/`TaskBlock`/`SomedayDrawer`).
 - ✅ **C5 — The unscheduled tray** (right-side **push** drawer). The tasks unscheduled in C2 finally
   get an on-Calendar home. Reuses Today's module-to-grid drag by **mirroring its tray gesture into
   `useWeekGrid`** (the documented twin) with the week's own x→day + y→time drop geometry —

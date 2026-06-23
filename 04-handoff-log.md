@@ -35,6 +35,43 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C4 Part 2 — merge the twin grid hooks into one (⚠️ touches Today)
+WHAT CHANGED:
+- The two near-identical drag hooks (`kit/useTodayGrid` for Today, `kit/useWeekGrid` for Calendar)
+  are now **one** hook, `kit/useGridDrag`, that both screens share — the documented C2 debt, paid.
+- It's an **internal refactor only — nothing should behave differently** on either screen. The
+  per-screen differences (Today's 7am lane + single day + its two "drop a task on a module" zones;
+  Calendar's 7 columns + re-day + drag-off-to-unschedule + clickable tray rows) are now settings the
+  shared hook takes; each screen passes its own.
+FILES TOUCHED: added `kit/useGridDrag.js`; edited `Today.jsx` + `WeekView.jsx` (point at it + pass
+config); **deleted** `kit/useTodayGrid.js` + `kit/useWeekGrid.js`. `DayGrid`/`WeekGrid`/`WeekColumn`
+unchanged (the hook's return shape is identical). Build passes; save `ce8d54e`.
+HOW TO VERIFY (dev: http://localhost:5174/) — **TODAY FIRST, it's the screen at risk:**
+  1. **Today** "The Day" grid: **click** an empty slot → 1-hour block + form; **click-drag** → exact
+     span; **drag a block** to move; **drag its top/bottom edge** to resize; all snap to 15 min.
+  2. **Today scroll**: it opens around the working hours; scroll up to the small hours — same as before.
+  3. **Today drag-a-task-from-the-list onto the grid** (the little grip) → schedules it; **drag a
+     scheduled task block onto the "tasks today" / "next 7 days" module** → it unschedules/re-buckets;
+     an **event** dragged onto a module **snaps back**.
+  4. **Today completion** (the status pill) still works; tapping a block opens its editor.
+  5. **Calendar**: create / drag-move / edge-resize / **re-day** (sideways keeps the time) / the
+     **tray drag-to-schedule** / **overlap even-split** / **drag-off-to-unschedule** — all unchanged.
+  6. **All Tasks + navigation** unchanged.
+  Nothing should look or feel one bit different — only the code behind the two grids was unified.
+KNOWN GAPS / RISKS:
+- This is **the** piece that touched Today (byte-for-byte unchanged through the whole rebuild until
+  now) — the load-bearing check is that Today's grid behaves exactly as before.
+- The merged hook reproduces Today exactly, including the subtlety that a Today tray drag must not
+  swallow the next click (handled).
+- Not deployed — local save point only.
+NEXT: **the Calendar rebuild is COMPLETE** (C1→C7 + C4). Remaining Phase-7 work is unrelated:
+mobile Calendar/Today, the Settings re-skin, recurrence (T10), and a future cleanup of the old
+task-list cluster (`TaskEditForm`/`TaskRow`/`TaskBlock`/`SomedayDrawer`).
+FOR THE CHECKER: **this is the Today-touching piece** — directed check that Today's grid (click-create,
+drag-move, edge-resize, the small-hours scroll, the task-from-list drag, the module drop, completion)
+is unchanged, and Calendar likewise. Pure internal refactor: no schema, no data-layer, no form/tray/
+Month/all-day change; `DayGrid`/`WeekGrid`/`WeekColumn` untouched.
+
 ### 2026-06-23 — Phase 7, C4 Part 1 — remove the dead old-Calendar cluster (deletion only)
 WHAT CHANGED:
 - Deleted the old Calendar code that was left in place as a fallback while C1–C7 built the new engine
