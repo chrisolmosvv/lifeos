@@ -35,6 +35,69 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, SUB — subtasks (mini-tasks, one level) on Today / All Tasks / the form
+ROADMAP MAPPING: Phase 7 "subtasks" (the R1 carried-forward gap). No schema (`parent_task_id` +
+the one-level DB guard `tasks_before_write` already exist; `tasks.category_id`/etc. exist).
+DATA MODEL (no schema change): a subtask = a tasks row with `parent_task_id` set. Own due/schedule/
+status; **no own category** — it inherits the PARENT's for display.
+WHERE CATEGORY-INHERITANCE IS APPLIED: one helper, `displayCatId(task, byId)` in `src/subtasks.js`,
+returns the parent's `category_id` for a subtask (else its own). Used at every display point — the
+row `cat` on Today + All Tasks (`dispCat`), and the grid block (scheduled subtasks are mapped to the
+parent's `category_id` for the tint). Never Inbox.
+WHAT I BUILT (reused TodayTaskRow / StatusPill / TodayForm via ADDITIVE props — normal-task
+behaviour unchanged):
+- **Form** (`TodayForm`): for a PARENT task-edit, a new **Subtasks section** (`SubtaskList` kit) —
+  inline per-subtask title · due · 3-state status · delete, "+ add subtask", and a **done/total**
+  count. For a SUBTASK's own form (item has `parent_task_id`), a **variant**: hides category +
+  priority + the subtasks section, shows "↳ under [Parent]". Parent completion stays MANUAL.
+- **Parent rows** (Today + All Tasks) show **"x/N"** (`progressOf`) and an **expand caret** to
+  reveal subtasks (read/check/open; adding is form-only).
+- **Today:** a subtask **due/scheduled on the viewed day** renders as its **own standalone row** in
+  tasks-today (`isSub`, "↳ under [Parent]", parent's colour) and is **excluded from its parent's
+  expand** (never twice). A **scheduled** subtask sits on the grid as its own block, parent-tinted,
+  title prefixed "↳".
+- **All Tasks:** subtasks **nest under their parent** (expand), never their own category row.
+COUNTS EXCLUDE SUBTASKS: unchanged — `allTasksModel.countable = !parent_task_id && status!=='done'`,
+so the "All tasks · N" box, `inboxCount`, and `subtreeCount` already ignore subtasks; `ownTasks`
+lists top-level only. (No change needed; confirmed.)
+ONE-LEVEL GUARD: UI offers "+ add subtask" only on a parent's form (never on a subtask's variant),
+so the UI can't nest deeper; the DB `tasks_before_write` trigger backstops every write.
+ORDERING: subtasks display in **creation order** (the loaded `created_at` order) — there is no
+`sort_order` on tasks, and adding one would be schema, so manual subtask reorder is **deferred**
+(flagged; out of scope for "no schema").
+WRITES (existing paths): add = `tasks.insert({parent_task_id,…})`; edit/status = `tasks.update`;
+delete = `archiveTask` (A2 — archives the subtask). Subtask handlers reload, so the open parent form
+re-reads its subtask list live.
+ARCHIVE (A2, confirmed intact): archiving a parent archives its subtasks in the same batch
+(`archiveTask` gathers children); archiving one subtask archives just it; the parent's "x/N"
+recomputes from active subtasks.
+SAVE POINT (Step 0): **`c3a4411`** — "Phase 7 SUB save point — before subtasks."
+FILES TOUCHED: ADDED src/subtasks.js, src/kit/SubtaskList.jsx; EDITED src/kit/TodayForm.jsx,
+src/kit/TodayTaskRow.jsx, src/kit/todayForm.css, src/kit/todayKit.css, src/Today.jsx,
+src/AllTasks.jsx, 07-ux-flows.md, 02-roadmap.md. **No db/, no schema; old Calendar
+(WeekCalendar/useWeekData/DayColumn/panels) untouched** (a scheduled subtask shows there as a plain
+block — interim, deferred to the Calendar rebuild).
+CONFIRMATIONS: no schema; no old-Calendar/useWeekData change; normal (non-subtask) tasks behave as
+before (the new row/form props are additive, default-off); writes via existing paths; counts exclude
+subtasks; one-level held in UI + DB; archive cascade intact; Frankfurt only. Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed/deployed.**
+RE-TEST (owner, Mac):
+- Open a task → add subtasks (title, due, status) → they save; parent shows "x/N".
+- Complete a subtask → count updates; parent does NOT auto-complete.
+- A subtask due today → its own "↳ under [Parent]" row in tasks-today, parent's colour.
+- Schedule a subtask onto the grid → a "↳"-marked, parent-tinted block.
+- All Tasks: expand a parent → subtasks nested (not their own category row); counts exclude subtasks.
+- Tap a standalone subtask → form with no category, no nested-subtasks, "↳ under [Parent]".
+- A subtask offers no "+ add subtask" (can't nest deeper).
+- Archive a parent → subtasks go too; archive one subtask → parent's count updates.
+- Normal tasks, Calendar, Settings all behave as before.
+NEXT: deploy SUB for owner verification; then Calendar (re-skin-vs-rebuild), Settings re-skin,
+mobile, T12.
+FOR THE CHECKER: no schema; category-inheritance shows the PARENT's category (not Inbox) for
+subtasks (via `displayCatId`); one-level holds (UI + DB guard); counts exclude subtasks; old
+Calendar/useWeekData untouched; row/pill/form reused without changing normal-task behaviour; archive
+cascade (A2) intact; Frankfurt only; save point `c3a4411`.
+
 ### 2026-06-23 — Phase 7, Archive A3b + FULL DEPLOY — brief archive filter, then publish the whole stack
 ROADMAP MAPPING: **Archive A3b** (backend brief filter) + the **first FULL Phase-7 production deploy**
 (front-end + backend).

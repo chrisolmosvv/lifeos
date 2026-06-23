@@ -203,6 +203,96 @@
   cursor: default;
 }
 
+/* The "↳ under [Parent]" line at the top of a subtask's form. */
+.tk-form-parent {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+/* The Subtasks section: a compact list of mini-rows + an add link. */
+.tk-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.tk-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.tk-sub.is-done .tk-sub-title {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+.tk-sub-title {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+}
+.tk-sub-title:focus {
+  border-color: var(--rule);
+  background: var(--paper);
+}
+.tk-sub-due {
+  flex: none;
+  font: inherit;
+  font-size: 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.15rem 0.3rem;
+  background: var(--paper);
+}
+.tk-sub-del {
+  flex: none;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.tk-sub-del:hover {
+  color: var(--overdue);
+}
+.tk-subadd {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+.tk-subadd input {
+  flex: 1;
+  font: inherit;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.tk-subadd button {
+  font: inherit;
+  padding: 0.3rem 0.7rem;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.tk-subaddlink {
+  align-self: flex-start;
+  margin-top: 0.3rem;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0.15rem 0;
+  cursor: pointer;
+}
+
 .tk-form-back {
   align-self: flex-start;
   font: inherit;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
@@ -9,6 +9,7 @@ import {
   orderTasks,
   childrenOf,
 } from './allTasksModel'
+import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, unarchiveBatch, activeOnly } from './archive'
 import TodayTaskRow from './kit/TodayTaskRow'
 import TodayForm from './kit/TodayForm'
@@ -31,6 +32,7 @@ export default function AllTasks({ onBack }) {
   const [showDone, setShowDone] = useState(false)
   const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
+  const [expanded, setExpanded] = useState(new Set()) // parent ids expanded
 
   async function load() {
     const [taskRes, catRes] = await Promise.all([
@@ -108,6 +110,34 @@ export default function AllTasks({ onBack }) {
   const inboxColor = cats.find((c) => isInbox(c))?.color || INBOX_COLOR
   const catById = new Map(cats.map((c) => [c.id, c]))
 
+  // Subtask index + display helpers (subtasks nest under their parent here).
+  const { byId, byParent } = indexTasks(tasks)
+  const dispCat = (t) => {
+    const cid = displayCatId(t, byId)
+    return cid ? catById.get(cid) : null
+  }
+  const toggle = (id) =>
+    setExpanded((s) => {
+      const n = new Set(s)
+      n.has(id) ? n.delete(id) : n.add(id)
+      return n
+    })
+  const subtaskHandlers = (parent) => ({
+    add: (titleText) =>
+      writeTask(supabase.from('tasks').insert({ title: titleText, parent_task_id: parent.id, time_bucket: parent.time_bucket || 'This Week' })),
+    update: (id, fields) => writeTask(supabase.from('tasks').update(fields).eq('id', id)),
+    setStatus: (id, status) => writeTask(supabase.from('tasks').update({ status }).eq('id', id)),
+    remove: async (id) => {
+      const res = await archiveTask(id)
+      if (res.error) setError(friendly(res.error))
+      else await load()
+    },
+  })
+  const formIsParent = form && !form.create && !form.item.parent_task_id
+  const formSubtasks = formIsParent ? byParent.get(form.item.id) || [] : undefined
+  const formOnSubtask = formIsParent ? subtaskHandlers(form.item) : undefined
+  const formParentLabel = form && !form.create && form.item.parent_task_id ? parentTitle(form.item, byId) : undefined
+
   const current = path.length ? path[path.length - 1] : null
   const isInboxView = current?.id === INBOX_NODE.id
   const currentCatId = current && !isInboxView ? current.id : null
@@ -174,18 +204,39 @@ export default function AllTasks({ onBack }) {
           <>
             {rows.length > 0 && (
               <div>
-                {rows.map((t) => (
-                  <TodayTaskRow
-                    key={t.id}
-                    task={t}
-                    cat={t.category_id ? catById.get(t.category_id) : null}
-                    inboxColor={inboxColor}
-                    busy={busy}
-                    badge={t.due_date ? undefined : { text: 'undated' }}
-                    onSetStatus={(status) => updateTask(t.id, { status })}
-                    onOpen={() => setForm({ kind: 'task', item: t, create: false })}
-                  />
-                ))}
+                {rows.map((t) => {
+                  const subs = (byParent.get(t.id) || []).filter((s) => showDone || s.status !== 'done')
+                  return (
+                    <Fragment key={t.id}>
+                      <TodayTaskRow
+                        task={t}
+                        cat={dispCat(t)}
+                        inboxColor={inboxColor}
+                        busy={busy}
+                        badge={t.due_date ? undefined : { text: 'undated' }}
+                        progress={progressOf(t.id, byParent)}
+                        expanded={expanded.has(t.id)}
+                        onToggleExpand={progressOf(t.id, byParent) ? () => toggle(t.id) : undefined}
+                        onSetStatus={(status) => updateTask(t.id, { status })}
+                        onOpen={() => setForm({ kind: 'task', item: t, create: false })}
+                      />
+                      {expanded.has(t.id) &&
+                        subs.map((s) => (
+                          <TodayTaskRow
+                            key={s.id}
+                            task={s}
+                            cat={dispCat(s)}
+                            inboxColor={inboxColor}
+                            isSub
+                            subLabel={t.title}
+                            busy={busy}
+                            onSetStatus={(status) => updateTask(s.id, { status })}
+                            onOpen={() => setForm({ kind: 'task', item: s, create: false })}
+                          />
+                        ))}
+                    </Fragment>
+                  )
+                })}
               </div>
             )}
 
@@ -223,6 +274,9 @@ export default function AllTasks({ onBack }) {
           cats={cats}
           inboxColor={inboxColor}
           busy={busy}
+          subtasks={formSubtasks}
+          onSubtask={formOnSubtask}
+          parentLabel={formParentLabel}
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={() => setForm(null)}

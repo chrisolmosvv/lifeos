@@ -2,6 +2,7 @@ import { useState } from 'react'
 import CategoryTag from '../CategoryTag'
 import StatusPill from './StatusPill'
 import CategoryPicker from './CategoryPicker'
+import SubtaskList from './SubtaskList'
 import './todayForm.css'
 
 // TodayForm — the Today-scoped create/edit form (a sealed kit block). Same form,
@@ -19,8 +20,11 @@ const PRIORITIES = [
   { id: 'high', label: 'High' },
 ]
 
-export default function TodayForm({ kind, item, create, toggle, cats, inboxColor, busy, onSave, onDelete, onClose }) {
+export default function TodayForm({ kind, item, create, toggle, cats, inboxColor, busy, onSave, onDelete, onClose, subtasks, onSubtask, parentLabel }) {
   const t = item || {}
+  // A subtask's own form: no category (it inherits the parent's), no priority, and
+  // no nested-subtasks section. One level — enforced here and in the DB.
+  const isSubtask = !!t.parent_task_id
   const [k, setK] = useState(kind) // the effective kind (a toggle can flip it on create)
   const [title, setTitle] = useState(t.title || '')
   const [notes, setNotes] = useState(t.notes || '')
@@ -125,6 +129,10 @@ export default function TodayForm({ kind, item, create, toggle, cats, inboxColor
                 </button>
               </div>
             )}
+            {isSubtask && (
+              <div className="tk-form-parent">↳ under {parentLabel || 'a task'}</div>
+            )}
+
             <input
               className="tk-form-input"
               value={title}
@@ -134,11 +142,13 @@ export default function TodayForm({ kind, item, create, toggle, cats, inboxColor
               autoFocus
             />
 
-            <button className="tk-form-catbtn" onClick={() => setShowPick(true)}>
-              <span className="tk-form-fieldlabel">Category</span>
-              <CategoryTag name={catTag.name} color={catTag.color} />
-              <span className="tk-form-catchev">›</span>
-            </button>
+            {!isSubtask && (
+              <button className="tk-form-catbtn" onClick={() => setShowPick(true)}>
+                <span className="tk-form-fieldlabel">Category</span>
+                <CategoryTag name={catTag.name} color={catTag.color} />
+                <span className="tk-form-catchev">›</span>
+              </button>
+            )}
 
             {k === 'task' ? (
               <>
@@ -146,21 +156,23 @@ export default function TodayForm({ kind, item, create, toggle, cats, inboxColor
                   <span className="tk-form-fieldlabel">Status</span>
                   <StatusPill status={status} onSet={setStatus} />
                 </div>
-                <div className="tk-form-field">
-                  <span className="tk-form-fieldlabel">Priority</span>
-                  <div className="tk-form-prios">
-                    {PRIORITIES.map((p) => (
-                      <button
-                        key={p.label}
-                        type="button"
-                        className={'tk-form-prio' + ((priority ?? null) === p.id ? ' is-on' : '')}
-                        onClick={() => setPriority(p.id)}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
+                {!isSubtask && (
+                  <div className="tk-form-field">
+                    <span className="tk-form-fieldlabel">Priority</span>
+                    <div className="tk-form-prios">
+                      {PRIORITIES.map((p) => (
+                        <button
+                          key={p.label}
+                          type="button"
+                          className={'tk-form-prio' + ((priority ?? null) === p.id ? ' is-on' : '')}
+                          onClick={() => setPriority(p.id)}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
                 <label className="tk-form-field">
                   <span className="tk-form-fieldlabel">Due date</span>
                   <input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
@@ -172,6 +184,16 @@ export default function TodayForm({ kind, item, create, toggle, cats, inboxColor
                     <input type="datetime-local" value={schEnd} onChange={(e) => setSchEnd(e.target.value)} aria-label="Scheduled end" />
                   </div>
                 </div>
+                {!isSubtask && !create && onSubtask && (
+                  <SubtaskList
+                    subtasks={subtasks || []}
+                    busy={busy}
+                    onAdd={onSubtask.add}
+                    onUpdate={onSubtask.update}
+                    onSetStatus={onSubtask.setStatus}
+                    onRemove={onSubtask.remove}
+                  />
+                )}
               </>
             ) : (
               <>

@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { isSameDay, dayNameFull, formatMastheadDate } from './dateUtils'
 import { buildToday } from './todayModel'
 import { activeTotal } from './allTasksModel'
+import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive'
 import { useTodayGrid } from './kit/useTodayGrid'
 import DayGrid from './kit/DayGrid'
@@ -31,6 +32,7 @@ export default function Today({ onOpenAllTasks }) {
   const [error, setError] = useState('')
   const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
+  const [expandedToday, setExpandedToday] = useState(new Set()) // parent ids expanded in tasks-today
 
   const scrollRef = useRef(null)
   const laneRef = useRef(null)
@@ -151,9 +153,47 @@ export default function Today({ onOpenAllTasks }) {
   const catById = new Map(cats.map((c) => [c.id, c]))
   const catFor = (t) => (t.category_id ? catById.get(t.category_id) : null)
 
+  // Subtask index + display helpers. A subtask shows its PARENT's category.
+  const { byId, byParent } = indexTasks(tasks)
+  const dispCat = (t) => {
+    const cid = displayCatId(t, byId)
+    return cid ? catById.get(cid) : null
+  }
+  const progress = (t) => progressOf(t.id, byParent)
+  const toggleToday = (id) =>
+    setExpandedToday((s) => {
+      const n = new Set(s)
+      n.has(id) ? n.delete(id) : n.add(id)
+      return n
+    })
+
   const { tasksToday, next7, undated } = buildToday(tasks, viewed, isToday)
   const scheduledTasks = (tasks || []).filter(
     (t) => t.scheduled_start && isSameDay(new Date(t.scheduled_start), viewed),
+  )
+  // Subtasks that are due/scheduled on the viewed day show as their OWN standalone
+  // rows in "tasks today" (marked "↳ under [Parent]"); they are then excluded from
+  // their parent's expand list (never shown twice).
+  const dueOnViewed = (t) => {
+    if (!t.due_date) return false
+    const [y, m, d] = t.due_date.split('-').map(Number)
+    return isSameDay(new Date(y, m - 1, d), viewed)
+  }
+  const schOnViewed = (t) => t.scheduled_start && isSameDay(new Date(t.scheduled_start), viewed)
+  const standaloneSubs = (tasks || []).filter(
+    (t) => t.parent_task_id && (dueOnViewed(t) || schOnViewed(t)),
+  )
+  const standaloneIds = new Set(standaloneSubs.map((s) => s.id))
+  const rank = (p) => ({ high: 0, med: 1, low: 2 }[p] ?? 3)
+  const todayItems = [...tasksToday, ...standaloneSubs].sort((a, b) => {
+    const ad = a.status === 'done' ? 1 : 0
+    const bd = b.status === 'done' ? 1 : 0
+    if (ad !== bd) return ad - bd
+    return rank(a.priority) - rank(b.priority) || a.title.localeCompare(b.title)
+  })
+  // Scheduled subtasks render on the grid tinted by the parent's category + marked "↳".
+  const gridTasks = scheduledTasks.map((t) =>
+    t.parent_task_id ? { ...t, category_id: displayCatId(t, byId), title: '↳ ' + t.title } : t,
   )
   const scheduledBadge = (t) =>
     t.scheduled_start && isSameDay(new Date(t.scheduled_start), viewed)
@@ -174,6 +214,27 @@ export default function Today({ onOpenAllTasks }) {
       item: { time_bucket: bucketFor(viewed), due_date: localDateStr(viewed) },
       create: true,
     })
+
+  // Subtask writes (form section) — all through the existing task paths; a delete
+  // archives the subtask (A2). The open parent form re-reads its subtasks on reload.
+  const subtaskHandlers = (parent) => ({
+    add: (title) =>
+      writeTask(supabase.from('tasks').insert({ title, parent_task_id: parent.id, time_bucket: parent.time_bucket || 'Today' })),
+    update: (id, fields) => writeTask(supabase.from('tasks').update(fields).eq('id', id)),
+    setStatus: (id, status) => writeTask(supabase.from('tasks').update({ status }).eq('id', id)),
+    remove: async (id) => {
+      const res = await archiveTask(id)
+      if (res.error) setError(friendly(res.error))
+      else await load()
+    },
+  })
+  // The open form's subtask wiring: a parent task gets the live list + handlers;
+  // a subtask gets its parent's title (and no subtask section).
+  const formIsTaskEdit = form && form.kind === 'task' && !form.create
+  const formIsParent = formIsTaskEdit && !form.item.parent_task_id
+  const formSubtasks = formIsParent ? byParent.get(form.item.id) || [] : undefined
+  const formOnSubtask = formIsParent ? subtaskHandlers(form.item) : undefined
+  const formParentLabel = formIsTaskEdit && form.item.parent_task_id ? parentTitle(form.item, byId) : undefined
 
   // The grid workspace interactions — keyed to the VIEWED day.
   const grid = useTodayGrid({
@@ -228,7 +289,7 @@ export default function Today({ onOpenAllTasks }) {
         </div>
         <DayGrid
           events={events}
-          scheduledTasks={scheduledTasks}
+          scheduledTasks={gridTasks}
           cats={cats}
           today={viewed}
           isToday={isToday}
@@ -251,25 +312,63 @@ export default function Today({ onOpenAllTasks }) {
             <section className="today-mod today-mod-today" ref={todayModRef}>
               <ModuleHeader>{isToday ? 'Tasks today' : dayNameFull(viewed)}</ModuleHeader>
               <div className="today-mod-list">
-                {tasksToday.length === 0 ? (
+                {todayItems.length === 0 ? (
                   <p className="today-empty">
                     {isToday ? 'Nothing due today — a calm one.' : 'Nothing on this day.'}
                   </p>
                 ) : (
-                  tasksToday.map((t) => (
-                    <TodayTaskRow
-                      key={t.id}
-                      task={t}
-                      cat={catFor(t)}
-                      inboxColor={inboxColor}
-                      muted={!!scheduledBadge(t)}
-                      badge={scheduledBadge(t)}
-                      busy={busy}
-                      onSetStatus={(status) => onUpdate(t.id, { status })}
-                      onOpen={() => openTask(t.id)}
-                      trayBind={grid.trayBind}
-                    />
-                  ))
+                  todayItems.map((t) =>
+                    t.parent_task_id ? (
+                      // a standalone subtask row (due/scheduled today)
+                      <TodayTaskRow
+                        key={t.id}
+                        task={t}
+                        cat={dispCat(t)}
+                        inboxColor={inboxColor}
+                        isSub
+                        subLabel={parentTitle(t, byId)}
+                        muted={!!scheduledBadge(t)}
+                        badge={scheduledBadge(t)}
+                        busy={busy}
+                        onSetStatus={(status) => onUpdate(t.id, { status })}
+                        onOpen={() => openTask(t.id)}
+                        trayBind={grid.trayBind}
+                      />
+                    ) : (
+                      <Fragment key={t.id}>
+                        <TodayTaskRow
+                          task={t}
+                          cat={dispCat(t)}
+                          inboxColor={inboxColor}
+                          muted={!!scheduledBadge(t)}
+                          badge={scheduledBadge(t)}
+                          busy={busy}
+                          progress={progress(t)}
+                          expanded={expandedToday.has(t.id)}
+                          onToggleExpand={progress(t) ? () => toggleToday(t.id) : undefined}
+                          onSetStatus={(status) => onUpdate(t.id, { status })}
+                          onOpen={() => openTask(t.id)}
+                          trayBind={grid.trayBind}
+                        />
+                        {expandedToday.has(t.id) &&
+                          (byParent.get(t.id) || [])
+                            .filter((s) => !standaloneIds.has(s.id))
+                            .map((s) => (
+                              <TodayTaskRow
+                                key={s.id}
+                                task={s}
+                                cat={dispCat(s)}
+                                inboxColor={inboxColor}
+                                isSub
+                                subLabel={t.title}
+                                busy={busy}
+                                onSetStatus={(status) => onUpdate(s.id, { status })}
+                                onOpen={() => openTask(s.id)}
+                              />
+                            ))}
+                      </Fragment>
+                    ),
+                  )
                 )}
               </div>
               <button className="today-add" onClick={openAdd}>+ add a task</button>
@@ -332,6 +431,9 @@ export default function Today({ onOpenAllTasks }) {
           cats={cats}
           inboxColor={inboxColor}
           busy={busy}
+          subtasks={formSubtasks}
+          onSubtask={formOnSubtask}
+          parentLabel={formParentLabel}
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={() => setForm(null)}

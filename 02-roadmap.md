@@ -324,8 +324,15 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
 - ⬜ **Mobile All Tasks** — its own pass (desktop-first only so far).
 - ⬜ **T12 — Conservative trims** (above) — provably-unused old Today files + parked Phase-6
   audit items (the "brief test" trigger word; the 6b timezone duplication).
-- ⬜ **Subtasks in the new UI** — `tasks.parent_task_id` exists but isn't surfaced post-rebuild
-  (R1 gap); owner decides how/whether to bring subtasks back.
+- ✅ **Subtasks in the new UI (Phase 7 SUB).** Mini-tasks, one level (DB-enforced): a parent
+  form has a Subtasks section (inline title/due/3-state status/delete, "+ add subtask",
+  done/total); parent rows on Today + All Tasks show "x/N" and expand; a subtask due/scheduled
+  today is its own "↳ under [Parent]" row in tasks-today (and a parent-tinted "↳" block on the
+  grid); All Tasks nests subtasks under the parent (counts still exclude subtasks); tapping a
+  subtask opens a form variant (no category — inherits parent's — no nested subtasks). Reused
+  TodayTaskRow/StatusPill/TodayForm (additive props, normal-task behaviour unchanged). Archive
+  cascade (A2) intact. No schema; old Calendar/useWeekData untouched (a scheduled subtask shows
+  there as a plain block — interim). Save point `c3a4411`.
 - 🔨 **Archive — universal soft-delete** (delete = archive; restore by batch; manual delete-now;
   Archive screen grouped by delete action — spec in 07-ux-flows.md). Front-end feature COMPLETE
   (A1–A4); only the backend brief filter (A3b) remains.
@@ -373,6 +380,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, SUB DONE — subtasks (mini-tasks, one level) surfaced on Today / All Tasks
+  / the form.** A subtask = a tasks row with `parent_task_id` (one level, DB-enforced); it has its
+  own due/schedule/status but **inherits the parent's category** for display. Built: a **Subtasks
+  section** in the parent's form (inline title/due/3-state/delete, "+ add subtask", done/total);
+  **"x/N" + expand** on parent rows (Today + All Tasks); a subtask **due/scheduled today → its own
+  "↳ under [Parent]" row** in tasks-today + a **parent-tinted "↳" block** on the grid; **All Tasks
+  nests** subtasks under the parent (the box + subtree **counts still exclude subtasks**); a
+  **subtask edit variant** (no category, no nested subtasks, "↳ under [Parent]"). Reused
+  TodayTaskRow/StatusPill/TodayForm via **additive props** — normal-task behaviour unchanged.
+  Archive cascade (A2) intact (archive a parent → subtasks go too; archive one subtask → x/N
+  recomputes). **No schema**; **old Calendar + useWeekData untouched** (a scheduled subtask shows
+  there as a plain block — interim, until the Calendar rebuild). New `subtasks.js` + `SubtaskList`
+  kit. Save point `c3a4411`. Committed locally — not deployed. **NEXT: deploy SUB for owner verify;
+  then Calendar (re-skin-vs-rebuild), Settings re-skin, mobile, T12.**
 - **2026-06-23 — Phase 7, Archive A3b + FULL DEPLOY — the brief archive filter, then the FIRST full
   Phase-7 production deploy (both surfaces).** A3b: added `&archived_at=is.null` centrally in the
   brief's `owner()` helper (`brief/sb.ts`), so archived items can't appear in the 7am brief/gap-fill

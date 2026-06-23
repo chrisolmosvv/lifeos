@@ -217,6 +217,31 @@ the Settings manager).
 - **+ add** drops a task into the **currently-viewed category** (Inbox at the top level).
 - **Empty** category → one warm Fraunces-italic line. **No search** on this screen.
 
+### Subtasks — mini-tasks, one level (LOCKED, Phase 7 SUB)
+A task can hold **subtasks** (one level only — a subtask can't have its own; DB-enforced).
+A subtask is just a task with a parent; it carries its **own** due date, schedule and
+status, but **no category of its own** — it **inherits the parent's category** everywhere
+its colour/tag/tint is shown.
+- **In the form (parent, task mode):** a "Subtasks" section lists them (creation order),
+  with "+ add subtask" and, per subtask, inline title · due · 3-state status · delete. The
+  parent shows a **done/total** count. Completing all subtasks does **NOT** auto-complete
+  the parent (completion stays manual).
+- **Parent rows (Today + All Tasks)** show **"x/N"** and **expand** to reveal subtasks
+  (read / check / open-to-edit; adding is form-only).
+- **Today:** a subtask **due today or scheduled today** appears as its **own standalone
+  row** in "tasks today" (not also nested), marked **"↳ under [Parent]"**, in the parent's
+  colour; a **scheduled** subtask sits on the grid as its own block (parent-tinted, marked
+  "↳"). Its status pill works like any task's.
+- **All Tasks:** subtasks are **nested under their parent** (expand), never their own row
+  in a category list. **Counts** (the "All tasks · N" box + subtree counts) count
+  parents/standalone tasks only — **subtasks are not separately counted**.
+- **Subtask edit** (tap a standalone subtask): the form in a **subtask variant** — title,
+  due, schedule, status, delete; **no category**, **no nested-subtasks** — headed "↳ under
+  [Parent]".
+- **Archive:** archiving a parent archives its subtasks in the same batch; archiving one
+  subtask archives just it (the parent's "x/N" recomputes). **Calendar (old screen) shows a
+  scheduled subtask as a plain block** (no "↳") — interim, until the Calendar rebuild.
+
 ### Settings — the category manager (LOCKED, Phase 7 T13)
 Where the category tree is **built and maintained** (the Today picker + All Tasks only
 *read* it). Lives in the current Settings screen as functionality; the broadsheet polish

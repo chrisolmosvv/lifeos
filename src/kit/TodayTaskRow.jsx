@@ -23,6 +23,11 @@ export default function TodayTaskRow({
   onOpen,
   onSetStatus,
   trayBind,
+  progress, // { done, total } for a parent with subtasks
+  expanded,
+  onToggleExpand, // present → show an expand caret
+  isSub, // a subtask row (indented, marked "↳ under …")
+  subLabel, // the parent's title, for the "↳ under" marker
 }) {
   const done = task.status === 'done'
   const high = !done && task.priority === 'high'
@@ -41,15 +46,25 @@ export default function TodayTaskRow({
         'tk-row' +
         (high ? ' is-high' : '') +
         (muted && !done ? ' is-muted' : '') +
-        (done ? ' is-done' : '')
+        (done ? ' is-done' : '') +
+        (isSub ? ' is-sub' : '')
       }
     >
+      {onToggleExpand ? (
+        <button className="tk-row-caret" onClick={onToggleExpand} aria-label={expanded ? 'Collapse' : 'Expand'}>
+          {expanded ? '▾' : '▸'}
+        </button>
+      ) : isSub ? (
+        <span className="tk-row-caret tk-row-tick">↳</span>
+      ) : null}
       {onSetStatus && (
         <StatusPill status={task.status} busy={busy} onSet={onSetStatus} />
       )}
       <button className="tk-row-main" onClick={onOpen}>
         <span className="tk-row-title">{task.title}</span>
         <span className="tk-row-meta">
+          {progress && <span className="tk-prog tnum">{progress.done}/{progress.total}</span>}
+          {isSub && subLabel && <span className="tk-sub-under">under {subLabel}</span>}
           {high && <span className="tk-pri is-high">High</span>}
           {!done && task.priority === 'med' && <span className="tk-pri">Med</span>}
           <CategoryTag name={tag.name} color={tag.color} />

@@ -24,6 +24,22 @@
   border-bottom: 1px solid var(--rule-faint);
   flex-wrap: wrap;
 }
+.tk-row.is-sub {
+  padding-left: 1.4rem; /* indent subtask rows under their parent */
+}
+.tk-row-caret {
+  flex: none;
+  width: 1.1rem;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+.tk-row-tick {
+  cursor: default;
+}
 .tk-row-main {
   flex: 1;
   min-width: 0;
@@ -36,6 +52,15 @@
   background: none;
   border: none;
   cursor: pointer;
+}
+.tk-prog {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.tk-sub-under {
+  font-size: 0.66rem;
+  color: var(--ink-muted);
+  font-style: italic;
 }
 .tk-row-main:hover .tk-row-title {
   color: var(--ink);
