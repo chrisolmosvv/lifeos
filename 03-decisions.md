@@ -9,6 +9,60 @@
 
 ---
 
+## Phase 7 — category decisions (owner, LOCKED 2026-06-23, Piece D1)
+
+> Several category calls were made in planning but never written down, so the docs and
+> "next step" notes still referenced dropped work. Recorded here as owner decisions.
+> Two items are explicitly left OPEN — do not assume them.
+
+- **[No seeded category tree — "T3b" is DROPPED]** — There is **no pre-built starter
+  tree**. The only category that exists at the start is **Inbox**; the owner builds their
+  own categories in-app over time. The earlier plan to "seed the owner's real 5-top tree"
+  (roadmap **T3b**) is **dropped entirely** — not deferred. **Why:** the owner would
+  rather grow the structure from real use than design an abstract tree up front. (Roadmap
+  T3b struck with this reason; history kept, not deleted.)
+
+- **[No fixed number of categories at any level — only the depth-3 cap]** — There is **no
+  limit on how many** top-level, child, or grandchild categories the owner can have. They
+  can **add / nest / delete freely at every level.** The **only** hard structural
+  constraint is **maximum depth 3**, already enforced in the database
+  (`db/07_categories_depth.sql`, T3). (This supersedes any earlier "5 top × 3–5 × 3–5"
+  shape from the locked Today spec — that was an illustrative size, never a limit; the
+  3-level cap is the only rule.)
+
+- **[Inbox is permanent, undeletable, and the default home for uncategorised capture]** —
+  **Inbox always exists and can never be deleted or renamed.** Anything captured with no
+  category lands in Inbox (a task means "Inbox" by having `category_id = NULL` — the
+  existing model; Inbox is never re-pointed). The **delete action must refuse on Inbox
+  wherever it can be triggered** — a guard to enforce in the UI when category management is
+  built. (The DB already refuses to delete/rename Inbox via the Phase-2
+  `categories_before_delete` / `categories_before_write` guards; this records that the UI
+  must match.)
+
+- **[Categories are managed in a dedicated Settings category manager — NOT inline in the
+  Today picker]** — Creating, nesting, re-parenting and deleting categories happen in a
+  **dedicated Settings category manager** (its own future piece). The **Today picker only
+  READS the tree** (drill-in to pick a level) — it never edits it. **Why:** keep capture/
+  filing calm and fast; structural edits live in one deliberate place. (The Settings
+  category manager is a backlog piece — see the roadmap.)
+
+- **[STILL OPEN — the colour-branch model]** — **Undecided, do not assume:** how a
+  **sub-category gets its colour** — inherit the parent's exact colour, a lighter *shade*
+  of it, or its own independently chosen colour. **This must be decided before
+  sub-category colours render** in Settings or on Today. **Current behaviour (T4):** Today
+  uses **each category's own stored `color` as-is** (no inheritance/shading logic) — so
+  this open question doesn't block anything yet, but it gates the colour-branch work.
+  (Resolves nothing here; flags it so no piece silently invents a model.)
+
+- **[STILL OPEN — what happens to children when a parent category is deleted]** —
+  **Undecided, do not assume:** the intended behaviour when a parent with children is
+  deleted. **Current state (T3):** the `parent_id` FK is `ON DELETE CASCADE`, but a
+  Phase-2 trigger (`categories_before_delete`) **re-parents children upward** before the
+  delete, so children are never lost — yet whether "re-parent up" is the *intended* UX
+  (vs "block the delete", vs "delete the subtree with a warning") is **not settled**. This
+  belongs to the **Settings category-manager** piece and must be decided there before
+  delete is wired.
+
 ## Phase 7 — Today is a clean front-end rebuild (owner's explicit call, LOCKED 2026-06-23, Piece 1c)
 
 - **[Today (desktop) is a clean front-end rebuild of that ONE screen — the owner's

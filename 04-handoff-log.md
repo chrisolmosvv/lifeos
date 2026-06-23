@@ -35,6 +35,37 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Piece D1 — record the category decisions (DOCS ONLY)
+WHAT CHANGED: recorded six category decisions made in planning but never written down
+(so the docs/next-steps stopped referencing dropped work). No code, no schema, no data.
+THE DECISIONS (full text in 03-decisions.md, Piece D1):
+1. **No seeded tree — T3b DROPPED.** Start state is just **Inbox**; the owner builds
+   categories in-app over time. (Not deferred — dropped.)
+2. **No fixed count** of categories at any level — add/nest/delete freely; the only hard
+   rule is the **depth-3 cap** (already enforced, `db/07_categories_depth.sql`, T3). This
+   supersedes the "5 top × 3–5 × 3–5" size from the locked Today spec (illustrative only).
+3. **Inbox is permanent, undeletable/unrenamable**, and the default home for any
+   uncategorised capture. The **UI delete must refuse on Inbox** (DB already guards this).
+4. **Categories are managed in a dedicated Settings category manager** (future piece); the
+   **Today picker only READS** the tree.
+5. **OPEN (do not assume): the colour-branch model** — sub-category colour = inherit /
+   shade / own. Must be decided before sub-category colours render. Current T4 behaviour:
+   Today uses each category's **own stored colour as-is**.
+6. **OPEN (do not assume): parent-delete behaviour** — T3 left the FK `ON DELETE CASCADE`
+   with a Phase-2 re-parent-up trigger; the intended UX is undecided (re-parent up vs block
+   vs delete subtree), to be settled with the Settings manager.
+ROADMAP: struck **T3b** (DROPPED, with reason — history kept, not deleted); corrected the
+live "NEXT" pointer that referenced T3b; added a backlog placeholder **T13 — Category
+management (Settings)** that names the two OPEN questions as prerequisites.
+FILES TOUCHED: 03-decisions.md, 02-roadmap.md, 04-handoff-log.md. NO src/, NO db/, NO schema.
+HOW TO VERIFY (owner): top of 03-decisions.md shows the "Phase 7 — category decisions (Piece
+D1)" block with the six items (two marked OPEN); roadmap shows T3b struck (❌) and a new T13.
+KNOWN GAPS: two questions remain OPEN by design (colour-branch model; parent-delete) — they
+gate the Settings category manager (T13), not the current Today work.
+NEXT: T5 — calendar workspace interactions on Today's grid (click-create, drag, resize).
+FOR THE CHECKER: confirm docs-only (no src/db/schema), that T3b is struck not silently
+removed, and that the two OPEN items are recorded as undecided (not assumed).
+
 ### 2026-06-23 — Phase 7, T4 / Rebuild R1 — Today's body rebuilt to the B layout, real data (read-only render)
 ROADMAP MAPPING: this "Piece R1" IS roadmap **T4** ("Today display build — read-only
 first"). Exact match, no overlap/conflict with other T-steps; marked T4 ✅.

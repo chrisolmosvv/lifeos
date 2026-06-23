@@ -206,10 +206,14 @@ it rather than dig (see the Piece-1c decision).
     rejects 4 (proven, rolled back, no test rows). Save point `3201ae0`. Flagged: the
     `parent_id` FK is `ON DELETE CASCADE` + a re-parent-up trigger (not `RESTRICT`) —
     left as-is, deletion UX deferred.
-  - ⬜ **T3b — seed the owner's real 5-top tree** (owner designs it with the planner
-    first; no categories seeded yet).
-  - ⬜ Colour-branch model + drill-in picker + Settings management (re-parent/delete) —
-    front-end, later pieces.
+  - ❌ **T3b — seed the owner's real 5-top tree — DROPPED (2026-06-23, Piece D1).** No
+    seeded tree; the start state is just Inbox and the owner builds categories in-app over
+    time. (Kept here struck, not deleted, so the history is visible.) Also settled: **no
+    fixed count** at any level — add/nest/delete freely; the only rule is the **depth-3
+    cap** (already enforced, T3). See 03-decisions.md (Piece D1).
+  - ⬜ The drill-in picker (Today, read-only) + the **colour-branch model** and
+    **parent-delete behaviour** — both **OPEN questions** (03-decisions.md, Piece D1),
+    decided with the Settings category manager (backlog, below), not assumed.
 - ✅ **T4 — Today display build (read-only first) — "Rebuild R1".** Rebuilt Today's
   body to the B layout with REAL data, read-only: left "The Day" = a 7am–midnight
   `DayGrid` (today's events + scheduled tasks as soft **tinted blocks**, overlaps
@@ -232,6 +236,13 @@ it rather than dig (see the Piece-1c decision).
 - ⬜ **T11 — All Tasks inventory screen** — its own spec first.
 - ⬜ **T12 — Conservative trims** of any now-unused Phase 6 Today code (separate
   commits, provably unused, verified).
+- ⬜ **T13 — Category management (Settings)** *(its own piece; placeholder)*. A dedicated
+  Settings category manager: create / nest / re-parent / delete categories (depth-3 cap
+  enforced; Inbox undeletable/unrenamable). The Today picker stays **read-only** (it never
+  edits the tree). **Must first decide the two OPEN questions** (03-decisions.md, Piece D1):
+  the **colour-branch model** (sub-category colour: inherit / shade / own) and **parent-
+  delete behaviour** (re-parent up vs block vs delete subtree). No seeded tree — start is
+  just Inbox.
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -246,6 +257,16 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Piece D1 (docs only) — category decisions recorded.** Six owner
+  decisions written into 03-decisions.md: **no seeded tree** (T3b **dropped** — start is
+  just Inbox, build in-app); **no fixed count** at any level (only the depth-3 cap);
+  **Inbox permanent/undeletable** + the default home for uncategorised capture (UI delete
+  must refuse on Inbox); **categories managed in a dedicated Settings manager**, the Today
+  picker only **reads** the tree; and two **OPEN** questions left explicitly undecided — the
+  **colour-branch model** (sub-category colour) and **parent-delete behaviour**. Roadmap:
+  T3b struck (with reason, history kept) and a **T13 — Category management (Settings)**
+  placeholder added to the backlog. No code/schema/data. **NEXT unchanged: T5 — the
+  calendar workspace interactions on Today's grid.**
 - **2026-06-23 — Phase 7, T4 / Rebuild R1 DONE — Today's body is rebuilt to the B layout
   with real data (read-only render).** Left "The Day" is a 7am–midnight grid of today's
   events + scheduled tasks as soft Apple-style **tinted blocks** (overlaps split, now-line,
@@ -262,7 +283,7 @@ tasks into the core. We do not touch the spine.
   schedule (T5), and the Someday drawer (now off the home screen by the content-model
   decision; still in the data). Old now-unused files (DayTimeline/TaskBlock/TaskRow/
   SomedayDrawer/useScheduleDrag) are left for the T12 trim. **NEXT: T5 — the calendar
-  workspace interactions on Today's grid (click-create, drag, resize), or T3b.**
+  workspace interactions on Today's grid (click-create, drag, resize).**
 - **2026-06-23 — Phase 7, T3 (schema) DONE — the category tree can now be 3 levels deep.
   FIRST live write to the database.** Additive only: a new `categories_enforce_depth`
   trigger caps the tree at 3 levels (`db/07_categories_depth.sql`), applied + verified on
