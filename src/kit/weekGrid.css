@@ -104,11 +104,20 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* One day column: hour-line backdrop + absolutely-placed blocks. */
+/* One day column: hour-line backdrop + absolutely-placed blocks. The empty lane
+   invites a click/drag to create; touch still scrolls the sheet. */
 .wk-col {
   flex: 1;
   position: relative;
   border-left: 1px solid var(--rule-faint);
+  cursor: copy;
+  touch-action: pan-y;
+}
+/* Weekend wash — a barely-there terracotta on Sat/Sun so the week-ends read at a
+   glance. Fainter than today's tint, and today (its circle + stronger wash) wins
+   when today IS a weekend (this rule sits before .is-today). */
+.wk-col.is-weekend {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
 .wk-col.is-today {
   background: color-mix(in srgb, var(--accent) 5%, transparent);
@@ -150,4 +159,41 @@
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
+}
+
+/* --- C2 interaction visuals --------------------------------------------------
+   The span being drawn while click-dragging on an empty column. */
+.wk-draft {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px dashed var(--accent);
+  border-radius: 4px;
+  z-index: 2;
+  pointer-events: none;
+}
+/* Paper-true lift on the grabbed block — scale + a crisp hairline outline, NO
+   shadow (the ink-on-paper rule). Scoped to .wk-col so Today's blocks are never
+   touched (this overrides the shared .tk-block.is-dragging shadow on the week). */
+.wk-col .tk-block.is-dragging {
+  transform: scale(1.02);
+  outline: 1px solid var(--ink);
+  box-shadow: none;
+  z-index: 6; /* lift above the past veil + now-line while dragging */
+}
+/* The live time label that follows the pointer during a drag (14:15–15:15). */
+.wk-draglabel {
+  position: fixed;
+  z-index: 40;
+  transform: translate(12px, 12px);
+  pointer-events: none;
+  padding: 0.12rem 0.45rem;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 5px;
+  font-size: 0.7rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
