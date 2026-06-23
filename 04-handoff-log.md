@@ -35,6 +35,56 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C1 — Calendar rebuild: week-grid display (read-only)
+WHAT CHANGED:
+- First piece of the Calendar rebuild (full contract: `calendar-uiux-spec.md`). Rebuilt the
+  **desktop week view's look** on Today's kit — a new sealed `WeekGrid`: full-24h sheet that
+  scrolls inside itself (07:00 at the top), a 24-hour gutter (`07…23, 00`), 7 day columns, soft
+  **title-only** tinted blocks (coloured by each item's own sub-category shade), today's column
+  tinted with a terracotta date circle + the only **ticking** now-line, and the past greyed down.
+- New `CalendarWeek` toolbar + navigation: lands on a **today-anchored rolling week** (today =
+  column 1); arrowing off it snaps to standard **Monday–Sunday weeks**; **"Back to this week"**
+  returns home. The Week/Month toggle, the tray button and "+ Add event" are **shown but clearly
+  switched off** this piece (they light up in later pieces).
+- Tapping a block still opens the **existing** edit panel, so viewing/editing/deleting events and
+  scheduled tasks keeps working exactly as before.
+FILES TOUCHED: added `kit/WeekGrid.jsx`, `kit/weekGrid.css`, `CalendarWeek.jsx`, `calendarWeek.css`,
+`WeekView.jsx`, `weekNav.js`, `calendar-uiux-spec.md`; edited `LoggedIn.jsx` (one-line swap to the
+new view). Build passes; save point `7e62078`.
+HOW TO VERIFY (on your Mac, dev: http://localhost:5174/ → **Calendar**):
+  1. **Look:** full-width sheet; the time gutter reads `07, 08 … 23, 00` with 07:00 at the top;
+     scroll up to see the small hours; the whole header/toolbar stays put, only the grid scrolls.
+  2. **Blocks:** events + scheduled tasks show as soft colour-tinted blocks with a coloured left
+     bar and **just the title, no time**. Overlapping items split the column evenly. A sub-category
+     item shows its lighter shade.
+  3. **Today:** today's column has a faint terracotta tint + a terracotta circle on its date, and a
+     terracotta **now-line that ticks**; no now-line on other columns. Earlier-today + past days
+     look greyed/quiet.
+  4. **Navigation:** land on Calendar → today is the **first** column, next 6 days follow. Click
+     **›** once → it jumps to the next Monday–Sunday week; **‹** steps back a week; **"Back to this
+     week"** (appears once you've moved) returns to the today-anchored home.
+  5. **Editing still works:** click any block → the existing edit panel opens; edit or delete, save,
+     and it updates. (You can't yet click empty grid to create, or drag/resize — that's the next
+     piece, C2.)
+  6. **No regressions:** open **Today**, **All Tasks**, **Settings** — all unchanged. (The shared
+     masthead/nav is untouched by this piece.)
+KNOWN GAPS / RISKS (the C1 interim gap, by design):
+- **No create / drag / resize** on the new grid yet — returns in **C2**. The toolbar's Week/Month
+  toggle, tray and "+ Add event" are inert placeholders.
+- The **old Calendar engine** (`WeekCalendar`, `DayColumn`, `EventBlock`, drag hooks) is left in
+  place on purpose (no deletions this piece); it's retired in the convergence pieces (C4). The
+  phone day view is unchanged.
+- Navigating weeks briefly remounts the grid (so the week's data reloads) — you may see blocks pop
+  in a beat after the columns; that's the intended "grid first, blocks fade in" behaviour.
+- Not deployed — local save point only.
+NEXT: **C2 — grid interactions** (click/drag create, move, resize, re-day, 15-min snap, ghost +
+live time label, paper-true lift).
+FOR THE CHECKER: this piece is **front-end display only — no schema / SQL / data-layer change**, and
+**no old Calendar code deleted**. Confirm: (a) Today / All Tasks / Settings unchanged; (b) the
+nav jump rules match spec §2 (rolling home → Next = next Monday week, Prev = current calendar week);
+(c) tap-to-edit still saves/deletes via the preserved panels; (d) `useWeekData` and the shared drag
+hooks are untouched (per-week reload is via the keyed `WeekView` remount, not a hook change).
+
 ### 2026-06-23 — Phase 7, DESK-1 — Today desktop re-skin (shared header + Today screen)
 WHAT CHANGED:
 - Rebuilt the **shared masthead** to match `today-mockup.html`: a small live dateline on the

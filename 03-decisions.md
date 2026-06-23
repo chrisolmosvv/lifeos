@@ -9,6 +9,45 @@
 
 ---
 
+## Phase 7 — Calendar = rebuild-and-converge; C1 week-grid display (2026-06-23)
+
+- **[Calendar is a REBUILD-and-converge, not a re-skin]** — Calendar is rebuilt on Today's
+  component kit so the two screens become **one engine**: the old Calendar panels converge into
+  Today's shared form, and the old shared drag hooks (`useEventDrag`/`useScheduleDrag`) merge with
+  Today's `useTodayGrid`. The full, signed-off desktop contract is **`calendar-uiux-spec.md`**
+  (added to the brain docs; slots into `07-ux-flows.md` §5). Built in small, separately-verified
+  pieces **C1→C6**, each its own save point. **Why:** the Today rebuild deliberately duplicated
+  this logic; converging now collapses the duplication instead of re-skinning two copies.
+  **Trade-off:** more pieces than a re-skin, but no second engine to maintain.
+- **[Old Calendar code is retired CONSERVATIVELY, not in C1]** — `WeekCalendar`, `DayColumn`,
+  `EventBlock`, `WeekDragPreview`, the drag hooks and `calendar.css` are **left in place** through
+  C1; superseded code is removed only in the convergence pieces (C4), provably-unused, in separate
+  commits. **Why:** protects a clean rollback while the new path is proven.
+- **[C1 = display only; the EXISTING editor is preserved]** — The new week grid is read-only:
+  tapping a block opens the **existing** `EventPanel`/`TaskPanel` (view/edit/delete keep working).
+  Click-to-create and drag/resize are an **intentional interim gap**, returning in **C2**. No
+  schema/SQL/data-layer change.
+- **[Per-week reload by remounting, NOT by editing the shared hook]** — `useWeekData` loads on
+  mount only. Rather than change that shared hook (a data-layer change), C1 wraps it in a small
+  `WeekView` mounted with a **`key` per week**, so navigating weeks remounts it and it reloads.
+  **Why:** keeps the data layer untouched. **Trade-off:** a brief grid re-mount per nav (matches
+  the spec's "grid first, blocks fade in" loading feel).
+- **[Nav model: today-anchored rolling home + Monday-week snapping]** — Home = today is column 1,
+  next six days (7 cols). From home: **Next** → the Monday after this week's Monday; **Prev** →
+  the current calendar week; further arrows step whole Mon–Sun weeks; **"Back to this week"** →
+  home. Pure date math in `weekNav.js`. (Spec §2; arrows only, no date picker.)
+- **[24h gutter, full day, title-only tinted blocks]** — The grid is the **full 24h** (not Today's
+  7am–midnight window), auto-scrolled so **07:00 sits at top**; gutter reads `07…23, 00`
+  (resolving the mockup's 12h-vs-spec-24h flag → **24h per spec §18**). Blocks are **title-only**
+  (position = the time), tinted by each item's **own sub-category shade** via `colorModel`'s
+  `resolveColor` (Today colours from raw `color`; the spec wants the shaded branch colour). The
+  **past greys** under a soft paper veil (whole past days; today down to the now-line) — chosen
+  over per-block greying so `TintedBlock` stays unmodified.
+- **[Toolbar shows the FINAL shape; only nav is live in C1]** — The toolbar renders arrows · range
+  · "Back to this week" · Week/Month toggle · tray · "+ Add event", but the toggle/tray/＋ are
+  **inert, clearly-marked placeholders** (Month=C6, tray=C5, create=C2). **Why:** the owner sees
+  the destination composition without anything faked.
+
 ## Phase 7 — Today desktop re-skin: masthead, nav, full-width, live weather (DESK-1, 2026-06-23)
 
 - **[Masthead = 3 columns; the big clock becomes a small dateline]** — Left: a live two-line

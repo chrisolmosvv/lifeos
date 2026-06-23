@@ -347,6 +347,14 @@ increments so the calendar never looks subtly misaligned.
 
 ## 5. Calendar — proper sheets you live in
 
+> **LOCKED desktop spec → `calendar-uiux-spec.md`** (companion brain doc, Phase 7).
+> That document is the full, signed-off build contract for the **desktop** Calendar
+> rebuild-and-converge (frame, 24h grid, rolling/Mon-week nav, tinted title-only
+> blocks, tray, all-day band, Month, the shared form, motion). It **supersedes the
+> desktop description below**; the prose here stays as the original behaviour sketch
+> + the mobile notes (mobile Calendar is a separate later spec). Build sequence:
+> **C1 → C6** (see the roadmap). **C1 (week-grid display, read-only) is built.**
+
 Events and time-blocked tasks share **one timeline** (not two lists).
 
 **Making something on the grid:**

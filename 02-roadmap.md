@@ -318,6 +318,34 @@ it rather than dig (see the Piece-1c decision).
   too (intended; confirmed no layout break).** No schema / data-layer / drag-hook change. Save
   point `2cf0810`. (Topline/Folio kit blocks now unused but left in place.)
 
+### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
+The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →
+Today's shared form; old drag hooks → Today's `useTodayGrid`). Built in small,
+separately-verified pieces; old Calendar code retired conservatively in C4, not before.
+- ✅ **C1 — Week-grid display (read-only).** New sealed `kit/WeekGrid` (+ `weekGrid.css`):
+  full-24h sheet, 07:00 at top, internal scroll, 7 day columns; tinted **title-only** blocks
+  (reuses Today's `TintedBlock`) coloured by each item's **own sub-category shade** (`resolveColor`);
+  even-split overlaps; today tint + terracotta date circle + the only, **ticking** now-line; the
+  past greyed under a veil. New `CalendarWeek` container + `weekNav.js` = today-anchored rolling
+  home + Monday-week snapping (spec §2); **arrows + "Back to this week" live**; Week/Month toggle,
+  tray and "+ Add event" are **inert, clearly-marked placeholders** (C6/C5/C2). Tap a block opens
+  the **existing** `EventPanel`/`TaskPanel` (view/edit/delete preserved). Reads via `useWeekData`;
+  per-week reload by remounting a keyed `WeekView` (shared hook untouched). `LoggedIn` points the
+  desktop Calendar at `CalendarWeek`; the old `WeekCalendar` engine + drag hooks left in place.
+  **No schema/SQL/data-layer change. The shared masthead is unchanged.** Interim gap (returns C2):
+  no click-to-create / drag-resize on the new grid yet. Save point `7e62078`.
+- ⬜ **C2 — Grid interactions.** Click/drag create, move, resize, re-day, 15-min snap, ghost +
+  live time label, paper-true lift.
+- ⬜ **C3 — The shared form.** Converge the old panels → Today's one form; one-click edit; selected
+  outline; delete → archive toast.
+- ⬜ **C4 — Drag-logic convergence.** Merge the duplicated hooks; retire the now-dead old Calendar
+  code (provably unused, separate commits).
+- ⬜ **C5 — The tray.** Button, push-to-squeeze, working mini-list (+ add, complete, drag-to-schedule,
+  drag-off-to-unschedule); tray stays open after a drop.
+- ⬜ **C6 — All-day band + Month.** Auto-height interactive band + multi-day spans; standard Month
+  with events + tasks, "+N more", navigational clicks, strips. *(Flag any all-day/multi-day schema
+  need for the checker first — spec §6/§18.)*
+
 ### Phase 7 — DEPLOY + VERIFY STATE (updated 2026-06-23)
 ✅ **FULL STACK DEPLOYED (A3b deploy, 2026-06-23):** `origin/main` = `fa3bfc2`; Vercel Production
 ● Ready at `lifeos-mlux5hf72-…`; the **brief edge function is v7** (with the A3b filter). Now live:
