@@ -45,6 +45,24 @@ Tasks have states you set; events have a timeline that moves them for you.
 
 ---
 
+## Sign in — email + password (LOCKED migration plan)
+
+Replace the magic-link login with **email + password**, kept **single-user and CLOSED**
+(no public sign-up — only the owner's account exists). A **"Forgot password?"** flow sends
+a reset email that lands on an in-app reset page where a new password is set.
+
+**The safe two-step sequence (auth can lock the owner out — never remove the only way in):**
+- **AUTH-1:** ENABLE email+password (the email provider already powers magic link, so
+  password sign-in is additive); **disable public sign-up**; build the email+password login
+  + "Forgot password?" + the reset page; **keep magic link ON and reachable** as the proven
+  fallback; the owner **sets their password** (via the reset flow or the dashboard).
+- **AUTH-2 (only AFTER the owner verifies AUTH-1):** disable magic link, leaving
+  email+password as the sole sign-in. Not before the owner confirms password login + reset
+  work on Mac AND phone.
+
+The login screen also delivers the deferred **login-screen design** (the broadsheet
+identity — the blackletter masthead). No "create account / sign up" option ever appears.
+
 ## 1. Capture — catch a thought for less than it costs to think it
 
 Three entry points. Default for anything caught with no extras: **Inbox, no

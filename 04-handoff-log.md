@@ -35,6 +35,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, AUTH-1 — add email+password login (magic link STAYS; auth config + front-end)
+ROADMAP MAPPING: **AUTH-1** (step 1 of the auth migration; AUTH-2 disables magic link later, gated on
+owner verification). ⚠️ Auth is the one thing that can lock the owner out — magic link is left fully
+working as the guaranteed way in.
+AUTH CONFIG CHANGED (Frankfurt, Management API) — exactly ONE setting: **`disable_signup` false →
+true** (public sign-up CLOSED, single-user). Everything else left as-is: `external_email_enabled`
+stays **true** (the email provider powers BOTH password sign-in and magic link — so password is
+additive and **magic link stays ON**); anonymous users off; the redirect allow-list already includes
+the app origins (localhost + the prod alias `lifeos-blond-xi.vercel.app`), so reset/magic redirects
+to `window.location.origin` are covered. No other Auth setting touched. (Closing signups does NOT
+block the existing owner's magic link or password reset — both work for an existing user.)
+RESET REDIRECT URL: `window.location.origin` (same as the existing magic link's `emailRedirectTo`,
+already proven to work) — the reset email lands back on the app, which shows the reset page.
+FRONT-END (uses existing Supabase methods — no new auth layer):
+- **`Login.jsx`** rebuilt in the broadsheet identity (blackletter `kit/Masthead`): **email +
+  password** + **Log in** (`signInWithPassword`); **Forgot password?** (`resetPasswordForEmail`,
+  redirect = origin); and a KEPT **"Email me a login link instead"** (`signInWithOtp`) so magic link
+  is always reachable. **No "create account" / sign-up option.** Plain inline errors ("Incorrect
+  email or password", "reset email sent", "check your email").
+- **`ResetPassword.jsx`** (new) — the page the reset email returns to: set a new password
+  (`updateUser({ password })`, min 6), then the recovery session becomes a normal session → the app
+  opens.
+- **`App.jsx`** — on `onAuthStateChange` event `PASSWORD_RECOVERY`, show `ResetPassword`; on success
+  it clears and the active session renders the app.
+- **`login.css`** (new, sealed `login-` styles) — also delivers the deferred login-screen design.
+SET THE OWNER'S PASSWORD (owner does it; I provide the mechanism — no hard-coded/guessed password):
+**after AUTH-1 is reachable (deployed or local),** either (a) on the new login, type the email →
+**"Forgot password?"** → the reset email → the reset page → set a password; OR (b) Supabase dashboard
+→ project `cntlptuacsujbdtwvbis` → **Authentication → Users → the owner → "Send password recovery"**
+→ the email lands on the same reset page. Both set the password without removing magic link.
+SAVE POINT (Step 0): **`20f68c8`** — "Phase 7 AUTH-1 save point — before email+password login."
+FILES TOUCHED: src/App.jsx, src/Login.jsx (rebuilt); ADDED src/ResetPassword.jsx, src/login.css;
+07-ux-flows.md (spec), 02-roadmap.md, 04-handoff-log.md. **No app data, no schema, no other screen,
+no backend.** Auth config: `disable_signup` only.
+CONFIRMATIONS: email+password ENABLED (additive); public signup DISABLED; **magic link STILL enabled
+AND reachable** (the "email me a login link" button + the live old login both use it); no new auth
+layer (Supabase methods only); reset wired to a real reset page; no app data/schema/other-screen
+change; Frankfurt only. Build passes. **No lockout** (magic link works throughout).
+DEPLOY CLARITY: **committed locally only — NOT pushed/deployed.** The auth CONFIG change (signups
+closed) IS live on Frankfurt now, but the live site still serves the OLD magic-link-only login (so
+the live experience is unchanged + still works). **To test email+password the owner MUST deploy
+AUTH-1 (push) or run it locally — login can't be exercised any other way.**
+OWNER VERIFICATION (the owner does ALL of this; I cannot — it's behind login):
+1. Set your password (Forgot-password flow, or dashboard "Send password recovery").
+2. Log in with EMAIL+PASSWORD on Mac → lands in the app.
+3. Log in with email+password on PHONE.
+4. "Forgot password?" → reset email → reset page sets a new password → log in with it works.
+5. **MAGIC LINK STILL WORKS** ("email me a login link") — the safety net is intact.
+6. Wrong password / unknown email show sensible errors; NO "create account" option appears.
+⛔ **AUTH-2 (disable magic link) must NOT run until the owner confirms 1–5.**
+NEXT: deploy AUTH-1 → owner verifies 1–6 → AUTH-2 (retire magic link); plus Calendar / Settings
+re-skin / mobile / T12.
+FOR THE CHECKER: email+password enabled; public signup OFF; **magic link STILL enabled (not
+weakened)**; no new auth layer (Supabase methods); reset flow wired to a real reset page; no app
+data/schema change; Frankfurt only; save point exists. AUTH-2 is GATED on owner verification —
+flag if anyone tries to disable magic link first.
+
 ### 2026-06-23 — Phase 7, SUB — subtasks (mini-tasks, one level) on Today / All Tasks / the form
 ROADMAP MAPPING: Phase 7 "subtasks" (the R1 carried-forward gap). No schema (`parent_task_id` +
 the one-level DB guard `tasks_before_write` already exist; `tasks.category_id`/etc. exist).

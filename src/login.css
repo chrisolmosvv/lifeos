@@ -1,0 +1,122 @@
+/* The sign-in / reset screen (Phase 7, AUTH-1). Sealed `login-` styles; the
+   broadsheet identity (the blackletter masthead comes from the kit). Calm card on
+   the warm paper. Colour/type from the theme. */
+
+.login {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 340px;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+.login .kit-wordmark {
+  margin-bottom: 0.2rem;
+}
+.login-topline {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--ink-muted);
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+.login-field input {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  box-sizing: border-box;
+}
+.login-field input:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.login-btn {
+  margin-top: 0.3rem;
+  font: inherit;
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+}
+.login-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.login-textbtn {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  cursor: pointer;
+}
+
+.login-error {
+  color: var(--accent);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.login-or {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.4rem 0 0.1rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+.login-or::before,
+.login-or::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--rule);
+}
+.login-magic {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+.login-magic:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.login-sent {
+  line-height: 1.5;
+  color: var(--ink);
+}
+.login-hint {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin: 0;
+}

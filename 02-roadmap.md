@@ -320,6 +320,15 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
 - ⬜ **Settings screen** — bring it up to the broadsheet look (incl. account + the entry to T13).
 - ⬜ **T13 — Settings category manager** (above) — gated by the two OPEN questions.
 - ⬜ **T10 — Recurring events** *(large)* — recurrence + "this one or all?".
+- 🔨 **Auth — email + password** (replace magic link; closed single-user; forgot-password reset).
+  - ✅ **AUTH-1 — add email+password (magic link KEPT).** Frankfurt Auth: **public signup disabled**
+    (`disable_signup=true`); email provider already on (so password works); magic link **left ON**.
+    New broadsheet login (email+password + "Forgot password?" + a kept "email me a login link"),
+    a reset page (`updateUser` on PASSWORD_RECOVERY), no "create account". No app-data/schema change.
+    Save point `20f68c8`. **AUTH-2 is GATED on the owner verifying email+password + reset + that
+    magic link still works (Mac + phone) — do NOT disable magic link before then.**
+  - ⬜ **AUTH-2 — disable magic link** (email+password becomes the sole sign-in) — ONLY after the
+    owner confirms AUTH-1 works.
 - ⬜ **Mobile Today** — its own spec (desktop Today is what's built).
 - ⬜ **Mobile All Tasks** — its own pass (desktop-first only so far).
 - ⬜ **T12 — Conservative trims** (above) — provably-unused old Today files + parked Phase-6
@@ -380,6 +389,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, AUTH-1 DONE — email + password login added (magic link STAYS as the safety
+  net).** Frankfurt Auth: **public sign-up disabled** (`disable_signup=true`, closed single-user);
+  the email provider was already on so password sign-in is additive; **magic link left ENABLED**.
+  Built the broadsheet login (blackletter masthead, **email + password**, "Log in", "Forgot
+  password?", and a kept **"email me a login link"** fallback — no "create account"), and a **reset
+  page** (App intercepts the PASSWORD_RECOVERY session → set new password via `updateUser`). Uses the
+  existing Supabase methods (`signInWithPassword` / `resetPasswordForEmail` / `signInWithOtp` /
+  `updateUser`). NO app data/schema/other-screen change. **No lockout:** the live site (old login)
+  still does magic link, which works for the existing owner even with signups closed. Save point
+  `20f68c8`. ⚠️ **Owner must DEPLOY (or run locally) to test — login can't be exercised otherwise.**
+  Owner then: set a password (Forgot-password flow or dashboard "Send password recovery"), log in
+  with email+password on Mac AND phone, test reset, and confirm **magic link still works**. **AUTH-2
+  (disable magic link) must NOT run until the owner confirms all that.** **NEXT: deploy AUTH-1 →
+  owner verifies → AUTH-2; plus Calendar / Settings re-skin / mobile / T12.**
 - **2026-06-23 — Phase 7, SUB DONE — subtasks (mini-tasks, one level) surfaced on Today / All Tasks
   / the form.** A subtask = a tasks row with `parent_task_id` (one level, DB-enforced); it has its
   own due/schedule/status but **inherits the parent's category** for display. Built: a **Subtasks
