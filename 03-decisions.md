@@ -9,7 +9,38 @@
 
 ---
 
-## Marty M1 — router split + a Gemini intent step that asks when unsure; query path is read-only by construction (2026-06-23)
+## Marty M2 — undo is a generalised action log (`marty_actions`), built before any edit/delete feature (2026-06-23)
+
+- **[Undo foundation built FIRST, as its own phase, before edit/delete exists]** — M2 builds and proves the
+  reversal mechanism on the only existing write (capture) before any edit/delete/move feature is added.
+  **Why:** edit/delete are the dangerous operations; having a proven "reverse anything" substrate before
+  they exist means M3 can't ship an irreversible action. **Trade-off:** a phase with no new user-facing
+  feature — accepted because it's load-bearing for everything after.
+- **[A generalised action log with a JSONB items array, replacing create-only `telegram_saves`]** — new
+  table `marty_actions`: one row = one logical action (`kind` create/edit/delete), with `items` JSONB
+  holding one element per affected item and room for **prior state** (edit before-values; the full deleted
+  row). **Why:** "one action = one entry" makes a multi-item capture undo as a unit, and storing prior
+  state is what lets an edit/delete be reversed — designed now so M3 needs **no further schema change**.
+  Chose JSONB over a child table because the per-kind shape varies and one row per action is simpler to
+  read/clear. **Trade-off:** prior-state values live in JSON (not typed columns); fine for a private log.
+- **[No FK from the log to spine rows; superseded `telegram_saves` left in place]** — `items[].id` is a
+  plain value, not a foreign key, so a row deleted elsewhere just goes stale ("already gone — nothing
+  changed") and the log can never block/cascade a spine row. `telegram_saves` is not dropped (additive
+  principle); it's simply no longer read or written. **Trade-off:** a dead table remains until a later
+  cleanup.
+- **[Capture became multi-item to PROVE batch undo — still capture, not a new edit feature]** — `understand`
+  now returns an array and `save` logs all items as ONE create action. **Why:** the verify requires
+  "capture three in one message → undo pulls all three (one action)." Single-item capture wording is kept
+  byte-for-byte. **Trade-off:** a slightly larger capture prompt; mitigated by "prefer one item unless
+  clearly several."
+- **[Undo grammar: whole-action vs named-item, ask when ambiguous; surgical + owner-only]** — "undo" =
+  reverse the last action; "undo <name>" = reverse one item (exact title match preferred, else contains);
+  more than one match → ASK, change nothing. Every spine deletion is by `id` + `user_id` owner filter, one
+  action at a time. **Why:** never guess a destructive action; never touch a human-made row (those are
+  never in the log) except to restore one Marty deleted on an explicit undo. **Trade-off:** "undo <name>"
+  can't act on app-made items — correct by design (Marty only reverses its own actions).
+- **[Schema change → checker-gated]** — M2 is NOT done on the builder's say-so. `db/11_marty_actions.sql`
+  must be run by the owner and the change reviewed by the checker before M2 counts as complete.
 
 - **[Routing moved into its own `route.ts`; `index.ts` is a thin front door]** — `index.ts` now only does
   security → owner gate → text check → hand the message to `route()`. **Why:** new message types

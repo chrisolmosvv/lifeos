@@ -35,6 +35,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Marty track M2 — undo FOUNDATION (load-bearing). ⚠️ SCHEMA CHANGE — CHECKER-GATED, not done yet
+WHAT CHANGED:
+- Built and proved the mechanism to **reverse anything Marty does**, BEFORE any edit/delete feature
+  exists. No new edit/delete/move user features — this is plumbing.
+- **New table `marty_actions`** (`db/11_marty_actions.sql`): a generalised **action log**. One row = one
+  logical action (`kind` = create / edit / delete), with a **JSONB `items` array** — one element per
+  affected item, with room for **prior state** (edit before-values; the full deleted row). So M3
+  (edit/delete) needs **no further schema change**. Today only `kind='create'` is written.
+- **Undo grammar** (`undo.ts`): **"undo"** reverses the whole last action (a multi-item capture is ONE
+  action → all come out together); **"undo <name>"** reverses just that one item; **ambiguous → Marty
+  ASKS**, changes nothing.
+- **Capture is now multi-item** (`understand.ts` returns an array; `save.ts` saves all + logs ONE create
+  action) — needed to prove batch undo. A single capture reads exactly as before.
+- **Surgical + owner-only:** every spine-row delete is by `id` + `user_id` owner filter, one action at a
+  time. A hand-made app row is never in the log and is never touched (except to restore one Marty itself
+  deleted, on an explicit undo). A row deleted elsewhere → "already gone — nothing changed".
+FILES TOUCHED: **new** `db/11_marty_actions.sql`; `telegram/db.ts` (+`update`/PATCH), `understand.ts`
+(array), `save.ts` (multi-item + action log), `undo.ts` (rewritten), `route.ts` (undo <name> + array
+capture), `intent.ts` (multi-item example). No `src/`. All files <250 lines. Committed `894b120`;
+**deployed both functions to Frankfurt** (telegram changed; brief redeployed unchanged for parity).
+
+⚠️ FOR THE CHECKER — THIS IS A SCHEMA CHANGE; please confirm before it's marked done:
+  1. `marty_actions` only logs **pointers + (later) prior values for actions MARTY took** — it does not
+     record or watch app-made rows.
+  2. Undo **never touches a hand-made app row**, except to restore one Marty itself deleted on an explicit
+     undo. Reversal is by `id` + owner filter; one action at a time; never a pattern/bulk delete.
+  3. It's **additive + owner-only RLS**, same shape as `telegram_saves` / `archive_batches`. No existing
+     table/column/default/trigger/FK/policy changed; no existing row edited.
+  4. It does **not** change the meaning of categories/tasks/events (separate table, no FK to them).
+  Also sanity-check: capture's single-item wording is unchanged; "undo <name>" can only reach Marty-logged
+  items; the only spine delete in `undo.ts` (line ~39) carries the owner filter.
+
+OWNER — RUN THIS SQL FIRST (before the phone checks), in the Supabase SQL editor:
+  • Open Supabase → SQL Editor → New query → paste the WHOLE of `db/11_marty_actions.sql` → Run.
+  • Expect "Success. No rows returned." (Until this is run, captures still save but "undo" won't find
+    them — the action log has nowhere to write.)
+
+HOW TO VERIFY (owner, on your phone — AFTER running the SQL):
+  1. **Single create:** text "buy milk" → saved (same as before). Text **"undo"** → "Removed the task
+     'buy milk'." Open the app on Mac → it's gone.
+  2. **Batch as one action:** text "buy milk, call the dentist and book the car in" → "Saved 3 items: …".
+     Text **"undo"** → all three removed in one go. Mac → all three gone.
+  3. **Named single item:** text the same three again → text **"undo call the dentist"** → only that one
+     is removed; the other two remain (check on Mac).
+  4. **Hand-made row is safe:** in the app, make a task yourself (e.g. "MY OWN TASK"). Do any of the
+     undos above → your hand-made task is **never** affected. Confirm it's still there.
+  5. **Already-gone:** capture one, delete it in the app, then "undo" → "already gone — nothing changed".
+KNOWN GAPS / RISKS:
+- Only `create` reversal exists (edit/delete reversal is M3 — the structure is ready for it).
+- "undo <name>" matches by title (exact, then contains); two items with the same name → Marty asks.
+- Captures made BEFORE the SQL is run aren't undoable (they had nowhere to log). Old `telegram_saves` rows
+  are orphaned — harmless.
+- `understand.ts` now multi-item: watch that a single clear capture still parses as one (verify step 1).
+NEXT: owner runs SQL → 5 phone checks → **checker sign-off**. Only then is M2 done. Then **M3 —
+edit/delete/move by chat** (now reversible via this log). Do NOT start M3 until the checker approves M2.
+FOR THE CHECKER: see the ⚠️ block above.
+
 ### 2026-06-23 — Marty track M1 — conversational queries (READ-ONLY): router split + intent step + query path
 WHAT CHANGED:
 - **Marty can now answer questions and changes NOTHING doing it.** Three question types: **"what's on
