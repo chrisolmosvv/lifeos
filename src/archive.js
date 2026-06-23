@@ -123,3 +123,58 @@ export async function archiveCategoryBranch(rootId, label, gathered) {
     { table: 'categories', ids: g.categoryIds },
   ])
 }
+
+// --- The Archive screen (A4) ---------------------------------------------
+
+// Every archive batch (newest first) with its per-table count of archived rows.
+// The count = number of archived rows (archived_at NOT NULL) carrying that
+// batch_id, summed across the three tables.
+export async function listArchiveBatches() {
+  const { data: batches, error } = await supabase
+    .from('archive_batches')
+    .select('id, label, source_type, created_at')
+    .order('created_at', { ascending: false })
+  if (error) return { error }
+
+  const counts = new Map()
+  for (const table of ['tasks', 'events', 'categories']) {
+    const { data, error: e } = await supabase
+      .from(table)
+      .select('archive_batch_id')
+      .not('archived_at', 'is', null)
+    if (e) return { error: e }
+    for (const r of data || []) {
+      if (!r.archive_batch_id) continue
+      const c = counts.get(r.archive_batch_id) || { tasks: 0, events: 0, categories: 0 }
+      c[table] += 1
+      counts.set(r.archive_batch_id, c)
+    }
+  }
+  return {
+    batches: (batches || []).map((b) => {
+      const c = counts.get(b.id) || { tasks: 0, events: 0, categories: 0 }
+      return { ...b, counts: { ...c, total: c.tasks + c.events + c.categories } }
+    }),
+  }
+}
+
+// PERMANENT hard-delete of one batch — the only irreversible operation in the app.
+// SCOPE: each table delete is filtered by `archive_batch_id == batchId` AND
+// `archived_at IS NOT NULL`, so it can ONLY touch this batch's archived rows —
+// never an active row (active rows have archived_at null / batch_id null) and
+// never another batch. Tables first, then the batch row. If a table delete fails,
+// we STOP and report `partial` — a hard delete can't be rolled back, but the batch
+// row is left intact so the remaining rows still list in Archive for a retry.
+export async function hardDeleteBatch(batchId) {
+  for (const table of ['tasks', 'events', 'categories']) {
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .eq('archive_batch_id', batchId)
+      .not('archived_at', 'is', null)
+    if (error) return { error, partial: true }
+  }
+  const { error } = await supabase.from('archive_batches').delete().eq('id', batchId)
+  if (error) return { error }
+  return {}
+}

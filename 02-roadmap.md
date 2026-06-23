@@ -323,8 +323,8 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
 - ⬜ **Subtasks in the new UI** — `tasks.parent_task_id` exists but isn't surfaced post-rebuild
   (R1 gap); owner decides how/whether to bring subtasks back.
 - 🔨 **Archive — universal soft-delete** (delete = archive; restore by batch; manual delete-now;
-  Archive screen grouped by delete action — spec in 07-ux-flows.md). Will replace T13's interim
-  "blocked delete" once A2 lands.
+  Archive screen grouped by delete action — spec in 07-ux-flows.md). Front-end feature COMPLETE
+  (A1–A4); only the backend brief filter (A3b) remains.
   - ✅ **A1 — schema foundation (additive; live on Frankfurt).** New `archive_batches` table
     (owner-only RLS) + nullable `archived_at` + `archive_batch_id` (FK→batches ON DELETE SET NULL)
     on tasks/events/categories (`db/09_archive.sql`). No behaviour change; every row active. Proven
@@ -349,7 +349,13 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
     (`supabase/functions/brief/day.ts`, `gap.ts`) reads OPEN tasks + events WITHOUT an
     archived filter → an archived item could still surface in the brief. Add
     `&archived_at=is.null` to those PostgREST queries (backend; separate deploy surface).
-  - ⬜ **Archive screen** — grouped by delete action, with Restore and Delete-now.
+  - ✅ **A4 — the Archive screen.** New view reached from Settings ("Archive →"; back returns):
+    lists every batch newest-first (label · type · per-table count · when), **Restore** (reuses
+    `unarchiveBatch`; a hard-deleted category leaves restored items as Inbox automatically via the
+    FK ON DELETE SET NULL), and **Delete now** behind an explicit naming confirm. Delete-now is
+    scoped strictly to `archive_batch_id == batch AND archived_at IS NOT NULL` (proven live: never
+    touches active rows or other batches), tables-then-batch, partial-failure surfaced not hidden.
+    Additive routing only; no A2/A3/shared-hook/schema change. Save point `781c908`.
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -364,6 +370,22 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Archive A4 DONE — the Archive screen (front-end Archive feature now
+  COMPLETE).** A new screen reached from **Settings → "Archive →"** (back returns): archived items
+  grouped by delete action (batch), newest first, each showing the label · source type · per-table
+  count · how long ago. **Restore** reuses the A2 `unarchiveBatch` (no parallel restore) — and a
+  task/event whose category was meanwhile hard-deleted comes back as **Inbox automatically** (the
+  `category_id` FK is ON DELETE SET NULL, so it's already null — no orphan, no code). **Delete now**
+  is the one irreversible action: behind an explicit naming confirm, scoped strictly to
+  `archive_batch_id = batch AND archived_at IS NOT NULL` so it can never hit an active row or
+  another batch (proven live in a rolled-back transaction: active row untouched, scope exact, FK
+  fallback nulls the category); partial multi-table failure is surfaced ("some deleted, rest remain
+  — try again"), never a silent half-state. New sealed `ArchiveScreen` + `ArchiveBatchRow` + helpers
+  `listArchiveBatches`/`hardDeleteBatch` in `archive.js`. Additive routing (LoggedIn `archive` view,
+  Settings entry) only — **no A2 write, no A3 read filter, no shared hook, no schema change.** Save
+  point `781c908`. Committed locally — not deployed. **The whole Archive loop (delete→archive→
+  hide→restore / delete-now) is done.** Remaining: **A3b** (backend brief archived filter). **NEXT:
+  deploy the Archive feature (A2+A3+A4) for owner verify; A3b; then Calendar / mobile / T12.**
 - **2026-06-23 — Phase 7, Archive A3 DONE — active-only read filter (the disappear behaviour;
   A2+A3 are now deploy-ready together).** Added a single shared `activeOnly(query)` helper
   (`q.is('archived_at', null)`, in `src/archive.js`) to EVERY rendered read of tasks/events/

@@ -48,6 +48,27 @@
   border-color: var(--accent);
 }
 
+/* Account-band actions: Archive entry + Log out, side by side. */
+.settings-acct-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.settings-archive {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+.settings-archive:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
 /* The Categories manager scrolls inside here (it brings its own scroll). */
 .settings-cats {
   flex: 1;

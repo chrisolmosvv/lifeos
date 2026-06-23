@@ -1,0 +1,172 @@
+/* Sealed styles for the Archive screen (Phase 7, A4). `ar-` prefixed, used only by
+   ArchiveScreen + ArchiveBatchRow. Functionality-first; polish with the Settings
+   re-skin. Colour/type from the theme. */
+
+.ar {
+  height: 100%;
+  box-sizing: border-box;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.ar-top {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+.ar-back {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0.2rem 0.25rem;
+  cursor: pointer;
+}
+.ar-title {
+  flex: none;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.6rem;
+  margin: 0 0 0.2rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--ink);
+}
+.ar-sub {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0 0 0.5rem;
+}
+.ar-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ar-empty {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+  padding: 0.8rem 0.25rem;
+}
+.ar-error {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+/* --- a batch row ---------------------------------------------------------- */
+.ar-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0.25rem;
+  border-bottom: 1px solid var(--rule-faint);
+  flex-wrap: wrap;
+}
+.ar-main {
+  flex: 1;
+  min-width: 12rem;
+}
+.ar-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.ar-type {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+}
+.ar-label {
+  font-size: 0.98rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ar-when {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.ar-counts {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-top: 0.15rem;
+}
+
+.ar-actions {
+  flex: none;
+  display: flex;
+  gap: 0.5rem;
+}
+.ar-restore,
+.ar-delnow,
+.ar-cancel {
+  font: inherit;
+  font-size: 0.82rem;
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+}
+.ar-restore {
+  color: var(--ink);
+}
+.ar-restore:hover {
+  border-color: var(--ink);
+}
+.ar-delnow {
+  color: var(--ink-muted);
+}
+.ar-delnow:hover {
+  color: var(--overdue);
+  border-color: var(--overdue);
+}
+
+/* the irreversible confirm — visually distinct so it's never a stray tap */
+.ar-confirm {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.6rem;
+  background: rgba(168, 92, 68, 0.08); /* faint overdue/brick wash */
+  border: 1px solid var(--overdue);
+  border-radius: 6px;
+}
+.ar-confirm-text {
+  flex: 1;
+  min-width: 14rem;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.ar-danger {
+  font: inherit;
+  font-weight: 500;
+  font-size: 0.82rem;
+  color: var(--paper);
+  background: var(--overdue);
+  border: none;
+  border-radius: 5px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+}
+.ar-cancel {
+  color: var(--ink-muted);
+}

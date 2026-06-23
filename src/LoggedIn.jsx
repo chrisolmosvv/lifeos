@@ -6,6 +6,7 @@ import EditionHeader from './EditionHeader'
 import Today from './Today'
 import Settings from './Settings'
 import AllTasks from './AllTasks'
+import ArchiveScreen from './ArchiveScreen'
 import './calendar.css'
 
 // The logged-in app frame: the masthead (nameplate + Today/Calendar/Settings
@@ -29,6 +30,10 @@ export default function LoggedIn({ email }) {
         <div className="cal-wrap">
           <AllTasks onBack={() => setView('today')} />
         </div>
+      ) : view === 'archive' ? (
+        <div className="cal-wrap">
+          <ArchiveScreen onBack={() => setView('settings')} />
+        </div>
       ) : view === 'calendar' ? (
         <>
           <div className="cal-wrap desktop-only">
@@ -40,7 +45,7 @@ export default function LoggedIn({ email }) {
         </>
       ) : (
         <div className="cal-wrap">
-          <Settings email={email} />
+          <Settings email={email} onOpenArchive={() => setView('archive')} />
         </div>
       )}
 

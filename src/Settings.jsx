@@ -5,7 +5,7 @@ import './settings.css'
 // The Settings page: a calm account band (who you're signed in as + Log out)
 // over the existing Categories manager, moved here unchanged. Categories is no
 // longer a top-level destination — it lives under Settings now.
-export default function Settings({ email }) {
+export default function Settings({ email, onOpenArchive }) {
   async function handleLogout() {
     await supabase.auth.signOut()
   }
@@ -18,9 +18,14 @@ export default function Settings({ email }) {
             <span className="settings-label">Signed in as</span>
             <span className="settings-email">{email}</span>
           </div>
-          <button className="settings-logout" onClick={handleLogout}>
-            Log out
-          </button>
+          <div className="settings-acct-actions">
+            <button className="settings-archive" onClick={onOpenArchive}>
+              Archive →
+            </button>
+            <button className="settings-logout" onClick={handleLogout}>
+              Log out
+            </button>
+          </div>
         </div>
       </div>
 

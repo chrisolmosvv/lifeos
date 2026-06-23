@@ -35,6 +35,66 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Archive A4 — the Archive screen (browse by batch · Restore · Delete-now)
+ROADMAP MAPPING: **Archive A4** — completes the front-end Archive feature (A3b backend remains). No
+schema.
+ROUTING (additive, like T11): `LoggedIn` gains an **`archive`** view; `Settings` takes
+`onOpenArchive` and shows an **"Archive →"** entry in the account band; `ArchiveScreen` takes
+`onBack` → Settings. No refactor of the shell; Today/Calendar/All-Tasks branches untouched.
+THE LIST (grouped by batch): `listArchiveBatches()` reads `archive_batches` (newest first) +, per
+table, the archived rows' `archive_batch_id` (where `archived_at IS NOT NULL`), tallying a per-batch
+**{categories, tasks, events}** count. Each row shows label · source_type · "N categories, M
+tasks…" · relative time. **No expand** this piece (counts are enough — calmer, lower risk; stated).
+Empty → one Fraunces-italic line.
+RESTORE (reuses A2, no parallel restore): calls **`unarchiveBatch(batchId)`** — clears
+`archived_at` + `archive_batch_id` across the three tables and deletes the batch row; A3's filter
+lets the items back onto their screens. A quiet "Restored" toast. **Fallback-to-Inbox:** the
+`tasks.category_id` / `events.category_id` FKs are **ON DELETE SET NULL**, so if a row's category was
+hard-deleted meanwhile, its `category_id` is already null → it restores as Inbox. No detection code
+needed; proven live (below).
+DELETE NOW — the ONE irreversible action: `hardDeleteBatch(batchId)` hard-deletes each table's rows
+**scoped to `archive_batch_id = batchId` AND `archived_at IS NOT NULL`** (so it can ONLY hit this
+batch's archived rows — an active row has archived_at null / batch_id null; another batch has a
+different id), tables first then the batch row. Gated behind an **explicit naming confirm**
+("Permanently delete <label> — 3 categories, 8 tasks…? This cannot be undone.") in a visually-
+distinct (brick-washed) bar, so a stray tap can't destroy data. **Failure handling:** a hard delete
+can't be rolled back; if a table delete fails we STOP and surface "Some items were deleted; the rest
+are still in Archive — try again." (the batch row is left intact so the remainder still lists) —
+never a silent partial state. **No bulk "delete all".**
+LIVE PROOF (rolled-back transaction, Management API, Frankfurt) — because this is the only
+irreversible op: hard-deleting batch1 removed its task/event/category and the batch row; **an ACTIVE
+task was UNTOUCHED** (scope exact); and an ARCHIVED task referencing a category that was hard-deleted
+**survived with `category_id` now NULL** (FK SET NULL = the Inbox fallback). 0 probe rows after
+rollback.
+SAVE POINT (Step 0): **`781c908`** — "Phase 7 Archive A4 save point — before Archive screen."
+FILES TOUCHED: ADDED src/ArchiveScreen.jsx, src/kit/ArchiveBatchRow.jsx, src/kit/archiveScreen.css;
+EDITED src/archive.js (NEW helpers `listArchiveBatches`/`hardDeleteBatch` only — A2/A3 functions
+unchanged), src/LoggedIn.jsx (additive `archive` route), src/Settings.jsx (Archive entry),
+src/settings.css, 02-roadmap.md, 04-handoff-log.md. **No db/, no schema, no backend.**
+CONFIRMATIONS: Restore reuses `unarchiveBatch` (no parallel restore); restore→Inbox fallback works
+(FK SET NULL, proven); **DELETE-NOW scoped strictly to the one batch's archived rows — cannot hit
+active rows or other batches (proven live)**; delete-now has an explicit naming confirm; **no A3 read
+change, no A2 write change, no shared hook touched, no schema**; additive routing only; **Inbox never
+appears** (it's unarchivable, so never in a batch); Frankfurt only. Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed/deployed.** **A2 + A3 + A4 are now the
+complete, deploy-ready Archive feature.**
+RE-TEST (owner, Mac):
+- Delete a task, an event, and a category (branch) → each appears in Archive as a batch with the
+  right label + count, newest first.
+- Restore a task batch → returns to Today/All Tasks; an event batch → returns to Calendar; a
+  category batch → the whole branch + its tasks/events return.
+- Restore a task whose category was meanwhile delete-now'd → it returns as Inbox, no error.
+- Delete-now a batch → confirm names what's destroyed → it's GONE from Archive and the rows are truly
+  hard-deleted (verify in data); active items + other batches untouched. Cancel → nothing happens.
+- Empty Archive shows its one line; Today/All-Tasks/Calendar/Settings otherwise unchanged.
+NEXT: deploy A2+A3+A4 (the Archive feature) for owner verification; **A3b** (the brief's archived
+filter, backend); then Calendar / Settings re-skin / mobile / T12.
+FOR THE CHECKER (special attention to the hard delete — the only irreversible op): Restore reuses
+`unarchiveBatch`; restore→Inbox fallback works; **DELETE-NOW query is scoped to
+`archive_batch_id == batch AND archived_at IS NOT NULL` — cannot touch active rows or other batches**
+(proof above); explicit naming confirm present; no A2/A3/shared-hook/schema change; additive routing;
+Inbox never appears; Frankfurt only; save point `781c908`.
+
 ### 2026-06-23 — Phase 7, Archive A3 — active-only READ filter (completes the archive loop; reads only)
 ROADMAP MAPPING: **Archive A3**. Reads only; no schema, no write change.
 STEP 0 — EVERY READ found (and what got the filter):
