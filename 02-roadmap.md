@@ -197,8 +197,19 @@ it rather than dig (see the Piece-1c decision).
   `status` column allows only `open`/`done` (2 states) per its migration, which won't
   cover the Today pill's three states — a small additive change to confirm + make at
   **T7**, not now. No save point (no change).
-- ⬜ **T3 — Category hierarchy** *(large; may sub-split)*. Tree storage, any-level
+- 🔨 **T3 — Category hierarchy** *(large; sub-splitting)*. Tree storage, any-level
   filing, colour shading, the drill-in picker, and Settings management.
+  - ✅ **T3 (schema) — 3-level depth cap.** Additive: a new `categories_enforce_depth`
+    trigger (max depth 3), `db/07_categories_depth.sql`, applied + verified live on
+    Frankfurt. `parent_id`/`sort_order`/`color` already existed from Phase 2 (not
+    re-added); existing rows + task/event links untouched; depth guard accepts 3 /
+    rejects 4 (proven, rolled back, no test rows). Save point `3201ae0`. Flagged: the
+    `parent_id` FK is `ON DELETE CASCADE` + a re-parent-up trigger (not `RESTRICT`) —
+    left as-is, deletion UX deferred.
+  - ⬜ **T3b — seed the owner's real 5-top tree** (owner designs it with the planner
+    first; no categories seeded yet).
+  - ⬜ Colour-branch model + drill-in picker + Settings management (re-parent/delete) —
+    front-end, later pieces.
 - ⬜ **T4 — Today display build (read-only first).** Render the calendar (tinted
   blocks, now-line, 7am–midnight internal scroll) + both modules with the new
   content model — display only, no interactions yet.
@@ -227,6 +238,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T3 (schema) DONE — the category tree can now be 3 levels deep.
+  FIRST live write to the database.** Additive only: a new `categories_enforce_depth`
+  trigger caps the tree at 3 levels (`db/07_categories_depth.sql`), applied + verified on
+  the live Frankfurt DB via the proper path (the new token now reaches Frankfurt; Ireland
+  never touched). Found that `parent_id`/`sort_order`/`color` already existed from Phase 2
+  (so only the depth cap was new), that the `parent_id` FK is `ON DELETE CASCADE` + a
+  re-parent-up trigger rather than `RESTRICT` (left unchanged — flagged), and that one
+  existing row (`Q1`) is already a nested child (left intact). Proved live: existing rows
+  + colours + task/event links unchanged; a temp 3-level tree is accepted, a 4th level is
+  rejected, all rolled back with no test rows left. Save point `3201ae0`. NO category data
+  seeded, NO src/ change. **NEXT: T3b — seed the owner's real 5-top category tree (owner
+  designs it first), or resume the Today front-end build.**
 - **2026-06-23 — Phase 7, T2 DONE (read-only data audit; nothing changed).** Checked the
   LIVE Frankfurt DB and found **all four form fields the Today spec needs already exist**
   (`tasks.notes`, `tasks.priority`, `events.location`, `events.notes`) and every

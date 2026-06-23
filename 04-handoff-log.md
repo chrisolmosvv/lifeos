@@ -35,6 +35,57 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T3 — category hierarchy schema: a 3-level depth cap (FIRST live write; additive)
+WHAT CHANGED (additive only, schema not data): added a **max-depth-3 cap** to the
+`categories` tree on the live Frankfurt DB (`cntlptuacsujbdtwvbis`). It's a new trigger
+function + trigger (`categories_enforce_depth`) recorded in **`db/07_categories_depth.sql`**.
+No category data was seeded (that's T3b).
+TOKEN / TARGET: the new access token now reaches Frankfurt the PROPER way (Management API
+project GET succeeds — it returned 403 in T2; SQL runs as role `postgres`). Region
+confirmed **eu-central-1**, linked project `cntlptuacsujbdtwvbis`. Ireland never touched.
+WHAT I FOUND FIRST (reality vs the request — two flags):
+- **`parent_id`, `sort_order`, `color` ALREADY EXIST** on `categories` from Phase 2, so
+  T3 did NOT re-add them. The only genuinely new thing is the depth cap.
+- **`parent_id`'s FK is `ON DELETE CASCADE`, not `RESTRICT`** as the task asked — AND a
+  Phase-2 `categories_before_delete` trigger already **re-parents children up** before a
+  delete (so children are never lost; CASCADE never actually fires on them). I did **not**
+  change this (additive-only guardrail; the delete/re-parent UX is deferred anyway). Worth
+  the owner/checker deciding later whether to keep "re-parent up" (current, arguably safer)
+  or switch to "block delete" (RESTRICT).
+- **Not all existing rows are top-level:** `Q1` is already a depth-2 child of `TU Delft`.
+  I left every existing row exactly as-is (no row-data edits); all are depth ≤ 2, valid
+  under the new cap.
+DEPTH ENFORCEMENT — how + why: a **separate, additive trigger** that walks the ancestor
+chain (same pattern as the existing cycle guard) and rejects any insert/update whose depth
+would exceed 3. Chosen over a `depth` column (would need backfilling every row = a data
+write) and over editing the existing load-bearing guard trigger (regression risk on the
+first write). It fires after `categories_before_write`, so cycle/Inbox checks still run
+first. KNOWN LIMIT (deferred to the re-parenting piece): it validates the written row's
+OWN depth, not a moved sub-tree's descendants — fine for the picker insert path, which is
+all that exists now.
+PROOF (re-queried live, Phase-4 antidote):
+- After-state: the 3 existing rows (Inbox/slate/top, TU Delft/brick/top, Q1/mauve/child)
+  are **unchanged**; columns still 7; `tasks.category_id` and `events.category_id` FKs
+  still `ON DELETE SET NULL` (untouched).
+- In one transaction: temp top→child→grandchild **accepted** (3 levels OK); a 4th level
+  **rejected** with "Categories can be at most 3 levels deep."; transaction **rolled back**
+  → `__t3_%` rows = 0, total still 3. No test data left behind.
+SACRED SAVE POINT (Step 2): **`3201ae0`** — "Phase 7 T3 save point — before category
+hierarchy schema." Roll back here if needed.
+FILES TOUCHED: db/07_categories_depth.sql (new; the applied migration), 04-handoff-log.md,
+02-roadmap.md. NO src/ change. The live DB now has the trigger; the spine tables
+(tasks/events) and all category rows are untouched.
+DEFERRED (note only, not built): T3b — seed the owner's real 5-top tree (owner designs it
+first); the colour-branch model (top sets colour, sub-levels shade); re-parenting / deleting
+a category with children (Settings UX); sub-tree-move depth validation (with re-parenting).
+NEXT: T3b (seed the real tree, owner-designed) or resume the Today front-end build.
+FOR THE CHECKER: this is a schema change — please confirm: additive-only (new trigger only;
+no column drop/rename/retype; no row edits), Frankfurt-targeted (eu-central-1), existing
+rows + colours + the Q1 nesting intact, tasks/events category links unchanged, the depth
+guard accepts 3 / rejects 4, no test rows left, and that the PROPER (Management API, role
+postgres) read path was used — not anon probes. Note the CASCADE-vs-RESTRICT divergence
+above is a deliberate no-change, flagged for a later decision.
+
 ### 2026-06-23 — Phase 7, T2 — data-layer readiness audit for the Today rebuild (READ-ONLY; nothing changed)
 WHAT THIS WAS: a read-only check of the LIVE Frankfurt DB (`cntlptuacsujbdtwvbis`) to
 confirm, against reality, what the locked Today forms need. NO schema change, NO
