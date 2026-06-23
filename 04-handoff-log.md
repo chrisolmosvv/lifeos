@@ -35,6 +35,70 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T13 — the Settings category manager (front-end + category writes; no schema)
+ROADMAP MAPPING: **T13** (Category management in Settings). No overlap.
+STEP 0 — LIVE categories (proper path, Frankfurt eu-central-1): columns id(uuid), user_id(uuid),
+name(text NN), parent_id(uuid null, FK→categories ON DELETE CASCADE), **color(text NULL)**,
+sort_order(int NN def 0), created_at. Triggers: categories_before_write (cycle/Inbox/dup),
+categories_before_delete (re-parent-up), categories_enforce_depth (T3 cap). Rows: Inbox/slate,
+TU Delft/brick, Social/ochre (owner-added since T3), Q1/mauve. → **`color` is nullable, so
+null=derived / set=custom works with NO new column. No schema change.**
+WHAT I BUILT (into the current Settings screen; new sealed kit):
+- **`CategoryManager`** + **`CategoryManagerRow`** (kit) + `kit/categoryManager.css`; Settings
+  swapped `<Categories/>` → `<CategoryManager/>` (the old Categories/CategoryRow now unused →
+  T12 trim).
+- **Expanding tree**, all levels, expand/collapse; **Inbox first**. **Inline rename** (click the
+  name) + **recolour** (a swatch popover with the 16 palette colours + "use derived shade").
+  **"+ child"** per row + a separate **"+ add top-level"**. **Drag-grip reorder within a level**
+  (native DnD; same-parent only) → persists `sort_order`.
+- **Depth-3 cap in the UI:** a row at depth 3 offers no "+ child" (canAddChild = render depth < 2;
+  the DB trigger also enforces it).
+- **Colour model (`colorModel.js`) = shade-with-override:** `resolveColor(cat, byId)` returns the
+  pinned palette hex if `color` is set, else a **lighter shade of the parent's resolved colour**
+  (each derived level lightens ~16% toward white; top-level derived → a neutral default, Stone
+  #8C8275). **Derived colours are computed at render, NEVER written** — "use derived shade" sets
+  `color = null`. (Verify: no DB write of a hex; only palette ids or null are stored.)
+- **Inbox:** delete is never offered; rename/recolour/"+ child" all allowed.
+- **Delete guard (safe interim, app-layer):** clicking Delete → if the category **has any
+  sub-categories OR any tasks** → a "move them first" message, no delete; else a confirm →
+  delete. So only an **empty leaf** is ever deleted. Checks: `hasChildren` = any row with
+  `parent_id === id`; `hasTasks` = the category's id is in the set of `tasks.category_id` (read
+  once for the guard). **No FK/trigger change** — the app guard makes the CASCADE/re-parent
+  trigger never fire destructively. **No Archive** (separate later feature).
+WRITES: all via existing paths — `supabase.from('categories').insert/update/delete`; tasks read
+ONLY (`select category_id`) for the delete guard. Reorder persists `sort_order` via update.
+SAVE POINT (Step 1): **`035bd49`** — "Phase 7 T13 save point — before category manager."
+FILES TOUCHED: ADDED src/CategoryManager.jsx, src/colorModel.js, src/kit/CategoryManagerRow.jsx,
+src/kit/categoryManager.css; EDITED src/Settings.jsx (swap the component), 07-ux-flows.md (spec),
+03-decisions.md (resolve the two OPEN questions). **No db/, no schema, no category-table data
+seeded.**
+CONFIRMATIONS: **No Today/All-Tasks/Calendar behaviour or read-hook change** (palette + categoryTree
+imported read-only, not edited); **no trigger/FK change**; category writes via existing paths;
+Frankfurt only; **no schema change**. Build passes.
+DEPLOY CLARITY: **committed locally only — NOT pushed/deployed.** The live site still serves the
+earlier owner-approved deploy `df65a20`; T13 reaches the phone only after a push/deploy.
+KNOWN GAPS: derived colours render in the **manager only**; Today/All-Tasks/the picker still show
+stored `color` as-is (derived = hollow/Inbox there) until a later piece adopts `resolveColor` —
+deliberately out of scope (would change their rendering). Reorder is native DnD (mouse; desktop).
+HOW TO VERIFY (owner — Mac; phone after deploy):
+- See the full tree; expand/collapse.
+- Rename inline; recolour; "use derived shade" → it takes a lighter shade of its parent; change
+  the parent's colour → derived children re-shade, pinned ones don't.
+- "+ add top-level"; "+ child" under one; a depth-3 category offers no "+ child".
+- Drag the grip to reorder within a level → order persists after refresh.
+- Inbox: rename/recolour/"+ child" work; **Delete is not offered on Inbox**.
+- Delete an empty leaf with no tasks → confirm → gone; try to delete one WITH tasks or children
+  → blocked with a clear message.
+- Build a real 2–3 level tree → open Today's picker + All Tasks → the new tree shows and is
+  selectable/drillable (the payoff).
+- Today, All Tasks, Calendar, the rest of Settings behave as before.
+NEXT: deploy T13 for owner verification; then the Calendar re-skin-vs-rebuild decision, T10
+recurring events, mobile Today/All Tasks, T12 trims.
+FOR THE CHECKER: category writes via existing paths only; no Today/All-Tasks/Calendar read-hook or
+behaviour change; no trigger/FK change; delete guard blocks tasks/children; Inbox delete
+impossible; depth cap in UI + DB; **colour derivation never writes a hex (derived = null)**; no
+schema change; Frankfurt only; save point exists.
+
 ### 2026-06-23 — Phase 7 — Today + All Tasks rebuild OWNER-VERIFIED & APPROVED (on Mac + phone)
 The owner tested the live deploy (`df65a20`, production, Frankfurt) and **approved it**. This
 flips the DV1 checklist pieces from UNKNOWN/pending → **owner-verified**. Updated state:

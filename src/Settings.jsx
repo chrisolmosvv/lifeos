@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient'
-import Categories from './Categories'
+import CategoryManager from './CategoryManager'
 import './settings.css'
 
 // The Settings page: a calm account band (who you're signed in as + Log out)
@@ -25,7 +25,7 @@ export default function Settings({ email }) {
       </div>
 
       <div className="settings-cats">
-        <Categories />
+        <CategoryManager />
       </div>
     </div>
   )

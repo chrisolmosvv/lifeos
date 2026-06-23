@@ -9,6 +9,29 @@
 
 ---
 
+## Phase 7 — the two open category questions, RESOLVED (T13, 2026-06-23)
+
+> These were left OPEN in D1/D2; the Settings category manager (T13) settles them.
+
+- **[Colour-branch model = shade-with-override]** — A category with **no explicit `color`**
+  takes a **DERIVED** colour: a lighter shade of its parent's resolved colour, **computed at
+  render time** (`src/colorModel.js`) — so re-colouring a parent re-shades its derived
+  children. Setting a colour on a category **pins** it (custom); "use derived shade" clears it
+  back to derived. **Storage:** `color` null = derived, a palette id = custom — **no new
+  column**, and **derived shades are never written** (only ids or null are stored). Top-level
+  with no colour → a calm neutral default (Stone). **Why:** lets the owner colour a few top
+  branches and have everything beneath fall into tidy shades automatically, without a data
+  migration. **Scope note:** derived colours currently render in the **manager only**;
+  Today/All-Tasks/Calendar/the picker still read `color` as-is until a later piece adopts
+  `resolveColor` (changing their rendering is out of T13's scope).
+- **[Parent-delete behaviour = BLOCK (app-layer guard), for now]** — Deleting a category is
+  **blocked if it has any tasks or any sub-categories** (a confirm dialog only appears for an
+  empty leaf). Enforced in the **UI** (T13); the live FK stays `ON DELETE CASCADE` + the Phase-2
+  re-parent-up trigger **unchanged** — the guard simply means that destructive path never
+  fires. **Why:** safe and simple now; the richer **Archive** flow (retention / restore /
+  cascade / task reassignment) is a separate later feature that will revisit this. (Supersedes
+  the "STILL OPEN — parent-delete" item in D1.)
+
 ## Phase 7 — masthead vs daybar; reaffirmed open questions (owner, LOCKED 2026-06-23, Piece D2)
 
 - **[The shared masthead/folio stays the REAL-today edition; Today's viewed day shows in

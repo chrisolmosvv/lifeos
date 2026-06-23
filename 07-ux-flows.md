@@ -217,6 +217,29 @@ the Settings manager).
 - **+ add** drops a task into the **currently-viewed category** (Inbox at the top level).
 - **Empty** category → one warm Fraunces-italic line. **No search** on this screen.
 
+### Settings — the category manager (LOCKED, Phase 7 T13)
+Where the category tree is **built and maintained** (the Today picker + All Tasks only
+*read* it). Lives in the current Settings screen as functionality; the broadsheet polish
+comes with the later Settings re-skin.
+- **Expanding tree**, all levels, expand/collapse in place; **Inbox always first**.
+- **Inline on each row:** rename (click the name) and recolour (a swatch popover) — no
+  separate form. **Reorder** by dragging the grip, **within the same level only**
+  (persists `sort_order`).
+- **Add:** "+ child" on a row (creates a child under it) and a separate "+ add top-level".
+  A category already at **depth 3 offers no "+ child"** (the depth-3 cap is enforced in the
+  UI and by the DB trigger).
+- **Colour = shade-with-override.** A category with **no explicit colour DERIVES** one — a
+  lighter shade of its parent's resolved colour, **computed at render time** (so changing a
+  parent re-shades its derived children; a derived colour is **never written** to the DB).
+  Setting a colour **pins** it (custom); "use derived shade" clears it back to derived.
+  Top-level with no colour → a calm neutral default.
+- **Inbox** is **permanent** — delete is **never** offered on it — but it is otherwise fully
+  editable (rename, recolour, and it *can* have children).
+- **Delete (safe interim):** a confirm dialog; **blocked** if the category has **any tasks
+  or any sub-categories** (move/empty them first), so delete only ever removes an empty
+  leaf. *(Archive — retention, restore, cascade, task reassignment — is a separate later
+  feature, not this.)*
+
 ---
 
 ## 4. Completing & interactions — how tasks/events change state and move

@@ -282,13 +282,18 @@ it rather than dig (see the Piece-1c decision).
   category-table writes; spec recorded in 07-ux-flows.md. Save point `ed0362a`.
 - ⬜ **T12 — Conservative trims** of any now-unused Phase 6 Today code (separate
   commits, provably unused, verified).
-- ⬜ **T13 — Category management (Settings)** *(its own piece; placeholder)*. A dedicated
-  Settings category manager: create / nest / re-parent / delete categories (depth-3 cap
-  enforced; Inbox undeletable/unrenamable). The Today picker stays **read-only** (it never
-  edits the tree). **Must first decide the two OPEN questions** (03-decisions.md, Piece D1):
-  the **colour-branch model** (sub-category colour: inherit / shade / own) and **parent-
-  delete behaviour** (re-parent up vs block vs delete subtree). No seeded tree — start is
-  just Inbox.
+- ✅ **T13 — Category management (Settings).** A real category manager in the current Settings
+  screen (functionality; broadsheet polish waits for the Settings re-skin): expanding tree
+  (Inbox first), inline rename + recolour, "+ child" / "+ add top-level", drag-grip reorder
+  within a level (`sort_order`), depth-3 cap in UI + DB, and a safe-interim delete (confirm;
+  blocked if the category has any tasks or sub-categories). **Resolved the colour-branch OPEN
+  question → shade-with-override:** no `color` = a derived lighter shade of the parent (computed
+  at render, never written), a set `color` pins it (`colorModel.js`). **Parent-delete OPEN
+  question resolved for now → block (app-layer guard); no FK/trigger change** (Archive is a
+  separate later feature). New sealed `CategoryManager` + `CategoryManagerRow` + `colorModel`;
+  Settings swapped from the old `Categories`. NO schema change (`color` null=derived works). NO
+  Today/All-Tasks/Calendar change. Save point `035bd49`. (Derived colours show in the manager
+  only; wiring them into Today/All Tasks/the picker is a deliberate later change.)
 
 ### Phase 7 — DEPLOY + VERIFY STATE (updated 2026-06-23)
 ✅ **DEPLOYED (DV1):** `origin/main` = `df65a20`; Vercel Production build succeeded (● Ready),
@@ -331,6 +336,21 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T13 DONE — the Settings category manager (build, not yet deployed).**
+  Built into the current Settings screen (styling polish waits for the Settings re-skin): an
+  expanding category tree (Inbox first) with **inline rename + recolour**, **"+ child" / "+ add
+  top-level"**, **drag-grip reorder within a level**, the **depth-3 cap** in the UI (+ the DB
+  trigger), and a **safe-interim delete** (confirm; blocked if it has any tasks or
+  sub-categories — Archive is separate/later). This **resolves the two OPEN category questions**:
+  the **colour-branch model = shade-with-override** (no colour → a derived lighter shade of the
+  parent, computed at render, never written; set colour pins it — `colorModel.js`), and
+  **parent-delete = block via app-layer guard** (no FK/trigger change). All category writes via
+  the existing Supabase paths; tasks read only for the delete guard. **No schema change**
+  (`color` null=derived). **No Today/All-Tasks/Calendar change** (derived colours show in the
+  manager only for now — wiring them into those screens is a deliberate later change). Save
+  point `035bd49`. Committed locally only — **not pushed/deployed** (the live site still has the
+  approved earlier deploy `df65a20`). **NEXT: deploy T13 (+ the local docs commits) for owner
+  verify, then the Calendar re-skin-vs-rebuild decision, T10 recurring events, mobile, T12.**
 - **2026-06-23 — Phase 7 — Today + All Tasks rebuild OWNER-VERIFIED & APPROVED.** The owner tested
   the live production deploy (`df65a20`, Frankfurt) on **Mac and phone** and approved it. T1 / T4 /
   T5 / T6 / T7 / T8 / T9 / T11 are now **owner-verified** (drag is Mac-mouse only by design); auth

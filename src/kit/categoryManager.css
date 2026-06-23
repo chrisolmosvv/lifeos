@@ -1,0 +1,229 @@
+/* Sealed styles for the Settings category manager (Phase 7, T13). All classes are
+   `cm-` prefixed and used only by CategoryManager + CategoryManagerRow, so nothing
+   leaks. Functionality-first; the broadsheet polish comes with the Settings re-skin.
+   Colour/type from the theme. */
+
+.cm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.cm-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.cm-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.5rem;
+  margin: 0;
+}
+.cm-addtop {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.cm-sub {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin: 0 0 0.4rem;
+}
+.cm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cm-note {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+.cm-error {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+/* --- a row ---------------------------------------------------------------- */
+.cm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.cm-row.is-drop {
+  border-top: 2px solid var(--accent);
+}
+.cm-grip {
+  flex: none;
+  cursor: grab;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.cm-caret {
+  flex: none;
+  width: 1.1rem;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+.cm-caret.is-leaf {
+  visibility: hidden;
+  cursor: default;
+}
+.cm-dot {
+  flex: none;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.cm-dot.is-derived {
+  box-shadow: inset 0 0 0 1.5px var(--paper); /* a faint inner ring = derived */
+}
+.cm-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cm-name-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.15rem 0.3rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.cm-act {
+  flex: none;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  padding: 0.15rem 0.3rem;
+  cursor: pointer;
+}
+.cm-act:hover {
+  color: var(--ink);
+}
+.cm-act.cm-del:hover {
+  color: var(--overdue);
+}
+
+/* the inline add-child input */
+.cm-addrow {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.3rem 0.25rem;
+}
+.cm-addrow input {
+  flex: 1;
+  font: inherit;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.cm-addrow button {
+  font: inherit;
+  padding: 0.3rem 0.8rem;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* the colour popover */
+.cm-pop {
+  position: relative;
+}
+.cm-swatches {
+  position: absolute;
+  z-index: 10;
+  top: 1.1rem;
+  left: 0;
+  width: 9.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.cm-swatch {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.cm-swatch.is-on {
+  box-shadow: 0 0 0 2px var(--ink);
+}
+.cm-derive {
+  width: 100%;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule-faint);
+  margin-top: 0.2rem;
+  padding-top: 0.3rem;
+  cursor: pointer;
+}
+
+/* the delete confirm */
+.cm-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.25rem;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+.cm-confirm b {
+  color: var(--ink);
+  font-weight: 500;
+}
+.cm-confirm-yes {
+  font: inherit;
+  color: var(--paper);
+  background: var(--overdue);
+  border: none;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+.cm-confirm-no {
+  font: inherit;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
