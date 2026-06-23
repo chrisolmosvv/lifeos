@@ -12,8 +12,8 @@
 // classify step is added IN FRONT; the capture path itself is untouched.
 
 import { isUnsure, understand, unsureReply } from "./understand.ts";
-import { saveAndConfirm } from "./save.ts";
-import { undoLast } from "./undo.ts";
+import { saveItems } from "./save.ts";
+import { undoLast, undoNamed } from "./undo.ts";
 import { classify } from "./intent.ts";
 import { answerQuery } from "./query.ts";
 
@@ -31,6 +31,11 @@ const AI_ERROR = "I couldn't read that one just now — mind trying again? (Noth
 const UNCLEAR =
   "I'm not sure if you want me to add that or you're asking about it, so I didn't save anything. " +
   "To add it, send it as a plain to-do (like \"call mum tomorrow\"). To ask, try \"what's on Thursday?\".";
+
+// Shown when a capture parsed but none of the parsed items were usable (gibberish).
+const NONE_USABLE =
+  "None of those looked like a task or an appointment, so I didn't save anything.\n" +
+  "Send me something to do, or an appointment with a time, and I'll file it.";
 
 // Fire the separate `brief` function (deployed PRIVATE/jwt-verified). We authenticate
 // with the service-role key this function already runs with. Returns true if accepted.
@@ -59,6 +64,7 @@ export async function route(text: string): Promise<string> {
     return ok ? "" : "I couldn't fetch your brief just now — try again in a moment.";
   }
   if (lower === "undo") return await undoLast();
+  if (lower.startsWith("undo ")) return await undoNamed(text.trim().slice(4).trim());
 
   // 2. Classify everything else: question vs capture vs unclear.
   const intent = await classify(text);
@@ -69,11 +75,16 @@ export async function route(text: string): Promise<string> {
   if (c.kind === "question") return await answerQuery(c); // READ-ONLY path, saves nothing
   if (c.kind === "unclear") return UNCLEAR; // ask, save nothing
 
-  // 3. Capture — the existing path, unchanged. Read it, then save and confirm (or, on
-  // an unsure read, save nothing and ask the owner to rephrase).
+  // 3. Capture — read it into one or more items, then save and confirm. Unsure items
+  // are dropped; if none survive, save nothing and ask the owner to rephrase.
   const result = await understand(text);
   if (result.kind === "rate_limit") return AI_LIMIT;
   if (result.kind === "error") return AI_ERROR;
-  if (isUnsure(result.value)) return unsureReply(result.value);
-  return await saveAndConfirm(result.value);
+
+  const good = result.value.filter((u) => !isUnsure(u));
+  if (good.length === 0) {
+    // One unsure item keeps its tailored "that wasn't a task" reply; nothing/many → generic.
+    return result.value.length === 1 ? unsureReply(result.value[0]) : NONE_USABLE;
+  }
+  return await saveItems(good);
 }

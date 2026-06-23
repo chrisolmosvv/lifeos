@@ -21,23 +21,27 @@ export interface Understood {
 }
 
 // The rules the owner decided, baked in. Gemini is told to return ONLY JSON.
+// M2: the message can describe MORE THAN ONE item; return a JSON ARRAY (one element for
+// a single item). The per-item rules are unchanged from before.
 const SYSTEM = `You read ONE message from the owner of a personal task/calendar app and extract structured data. You never save anything; you only parse.
 
 Rules:
 - All dates and times are in the Europe/Amsterdam timezone. You are given the current local date and time; resolve every relative reference ("today", "tomorrow", "Thursday", "next week") against it.
 - A vague day name means the NEXT upcoming occurrence of that day. If the named day IS today, use today (do not skip a week).
-- Classify "type":
-  - "event" if the message gives a SPECIFIC CLOCK TIME (e.g. "2pm", "at 9", "14:00").
-  - "task" if it has only a day, or no time at all.
-  Time-of-day is the deciding signal.
-- "title": a short, clean name for the thing itself (e.g. "dentist", "call the plumber"). Do NOT put the date or time words in the title.
-- "date": the resolved calendar date as YYYY-MM-DD, or "" if none is implied.
-- "time": the clock time as HH:MM 24-hour, or "" if none.
-- If the message is unclear, gibberish, or you cannot confidently extract a task or event, set "needs_clarification" to true (and "type" to "unknown" if it is neither). Never invent details you were not given.
-- "note": one short clause explaining any uncertainty, else "".
-Output ONLY the JSON object. No prose, no markdown.`;
+- A message USUALLY describes ONE item. Only when it clearly lists SEVERAL distinct things to add (separated by commas, "and", or line breaks) return one object per item, in the order given. When in doubt, prefer a single item. Do NOT split one thing into several.
+- For EACH item:
+  - Classify "type":
+    - "event" if it gives a SPECIFIC CLOCK TIME (e.g. "2pm", "at 9", "14:00").
+    - "task" if it has only a day, or no time at all.
+    Time-of-day is the deciding signal.
+  - "title": a short, clean name for the thing itself (e.g. "dentist", "call the plumber"). Do NOT put the date or time words in the title.
+  - "date": the resolved calendar date as YYYY-MM-DD, or "" if none is implied.
+  - "time": the clock time as HH:MM 24-hour, or "" if none.
+  - If that item is unclear, gibberish, or you cannot confidently extract a task or event, set "needs_clarification" to true (and "type" to "unknown" if it is neither). Never invent details you were not given.
+  - "note": one short clause explaining any uncertainty, else "".
+Output ONLY a JSON array of item objects. No prose, no markdown.`;
 
-const RESPONSE_SCHEMA = {
+const ITEM_SCHEMA = {
   type: "object",
   properties: {
     type: { type: "string", enum: ["task", "event", "unknown"] },
@@ -49,6 +53,9 @@ const RESPONSE_SCHEMA = {
   },
   required: ["type", "title", "date", "time", "needs_clarification", "note"],
 };
+
+// The reply is an ARRAY of items (one element for a single-item message).
+const RESPONSE_SCHEMA = { type: "array", items: ITEM_SCHEMA };
 
 // Current local date/time as a line Gemini can anchor relative dates to.
 function nowLocal(): string {
@@ -62,7 +69,7 @@ function nowLocal(): string {
 // The outcome of a read: understood, over the free AI limit, or unreadable.
 // Lets the caller give the right plain-English reply instead of one catch-all.
 export type ReadResult =
-  | { kind: "ok"; value: Understood }
+  | { kind: "ok"; value: Understood[] }
   | { kind: "rate_limit" }
   | { kind: "error" };
 
@@ -88,9 +95,13 @@ export async function understand(text: string): Promise<ReadResult> {
 
   try {
     const parsed = JSON.parse(result.text);
-    // Basic shape check — if Gemini wandered off the schema, treat as unreadable.
-    if (typeof parsed?.type !== "string" || typeof parsed?.title !== "string") return { kind: "error" };
-    return { kind: "ok", value: parsed as Understood };
+    // Expect an array; keep only well-shaped items. An empty result (gibberish) comes
+    // back as [] and the caller treats it as "nothing usable".
+    if (!Array.isArray(parsed)) return { kind: "error" };
+    const items = parsed.filter(
+      (p) => typeof p?.type === "string" && typeof p?.title === "string",
+    ) as Understood[];
+    return { kind: "ok", value: items };
   } catch (_err) {
     return { kind: "error" };
   }

@@ -17,10 +17,20 @@ import { dbConfigured, insert, OWNER_USER_ID } from "./db.ts";
 
 const SAVE_FAILED = "I understood it, but couldn't save it just now — nothing was saved. Mind sending it again?";
 
-// Record a saved item in the undo log so "undo" can later remove this exact row.
-// Best-effort: if logging fails the item is still saved; undo just won't see it.
-async function logSave(table: "tasks" | "events", id: unknown, title: string) {
-  await insert("telegram_saves", { user_id: OWNER_USER_ID, item_table: table, item_id: id, title });
+// One item that landed: a pointer for the undo log + the confirmation text.
+interface Saved {
+  ptr: { table: "tasks" | "events"; id: unknown; title: string };
+  full: string; // the standalone confirmation (used verbatim for a single-item capture)
+  line: string; // a compact one-liner (used when several items are saved at once)
+}
+
+// Record ONE 'create' action covering every item just saved, so "undo" can reverse the
+// whole batch and "undo <name>" can reverse one of them (M2). Best-effort: if logging
+// fails the items are still saved; undo just won't see them.
+async function logCreate(saved: Saved[]) {
+  const items = saved.map((s) => ({ table: s.ptr.table, id: s.ptr.id, title: s.ptr.title }));
+  const label = saved.length === 1 ? saved[0].ptr.title : `${saved.length} items`;
+  await insert("marty_actions", { user_id: OWNER_USER_ID, kind: "create", label, items });
 }
 
 // How far ahead of UTC the timezone is (in minutes) at a given instant.
@@ -51,10 +61,9 @@ function plusOneHourClock(time: string): string {
   return `${String(hh).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-// Save the understood item and return the confirmation text. Caller guarantees the
-// item is NOT unsure (unsure items save nothing and never reach here).
-export async function saveAndConfirm(u: Understood): Promise<string> {
-  if (!dbConfigured) return SAVE_FAILED;
+// Save ONE understood item; return its pointer + confirmation text, or null on failure.
+// Caller guarantees the item is NOT unsure (unsure items save nothing, never reach here).
+async function saveOne(u: Understood): Promise<Saved | null> {
   const title = u.title.trim();
 
   // EVENT — needs a clock time. Default the date to today if none was stated.
@@ -70,9 +79,13 @@ export async function saveAndConfirm(u: Understood): Promise<string> {
       start_at: start.toISOString(),
       end_at: end.toISOString(),
     });
-    if (!saved) return SAVE_FAILED;
-    await logSave("events", saved.id, title);
-    return `Saved an EVENT: '${title}', ${humanDate(date)} ${u.time}–${plusOneHourClock(u.time)}, Inbox.\nOpen the app to see it on your calendar.`;
+    if (!saved) return null;
+    const span = `${humanDate(date)} ${u.time}–${plusOneHourClock(u.time)}`;
+    return {
+      ptr: { table: "events", id: saved.id, title },
+      full: `Saved an EVENT: '${title}', ${span}, Inbox.\nOpen the app to see it on your calendar.`,
+      line: `EVENT '${title}' — ${span}, Inbox`,
+    };
   }
 
   // TASK — incl. any event-shaped read that somehow lacked a time. A stated date
@@ -90,8 +103,31 @@ export async function saveAndConfirm(u: Understood): Promise<string> {
     due_date: hasDate ? u.date : null,
     source: "telegram",
   });
-  if (!saved) return SAVE_FAILED;
-  await logSave("tasks", saved.id, title);
+  if (!saved) return null;
   const dueStr = hasDate ? `due ${humanDate(u.date)}` : "no due date";
-  return `Saved a TASK: '${title}', ${dueStr}, ${bucket}, Inbox.`;
+  return {
+    ptr: { table: "tasks", id: saved.id, title },
+    full: `Saved a TASK: '${title}', ${dueStr}, ${bucket}, Inbox.`,
+    line: `TASK '${title}' — ${dueStr}, ${bucket}`,
+  };
+}
+
+// Save one OR MORE understood items as a single capture action, then return the
+// confirmation. One item reads exactly as it did before M2; several read as a list with
+// a hint about undo. The whole batch is logged as ONE action so undo treats it as a unit.
+export async function saveItems(items: Understood[]): Promise<string> {
+  if (!dbConfigured) return SAVE_FAILED;
+
+  const saved: Saved[] = [];
+  for (const u of items) {
+    const s = await saveOne(u);
+    if (s) saved.push(s);
+  }
+  if (saved.length === 0) return SAVE_FAILED;
+
+  await logCreate(saved);
+
+  if (saved.length === 1) return saved[0].full;
+  const lines = saved.map((s) => `• ${s.line}`).join("\n");
+  return `Saved ${saved.length} items:\n${lines}\n(Text "undo" to remove all ${saved.length}, or "undo <name>" for just one.)`;
 }

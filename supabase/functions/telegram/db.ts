@@ -48,6 +48,23 @@ export async function select(query: string): Promise<Record<string, unknown>[] |
   }
 }
 
+// Patch (update) rows for a raw PostgREST query; returns the updated rows, or null on
+// failure. Used by undo to rewrite an action's remaining items after reversing one.
+export async function update(query: string, row: Record<string, unknown>): Promise<Record<string, unknown>[] | null> {
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/${query}`, {
+      method: "PATCH",
+      headers: headers({ "Prefer": "return=representation" }),
+      body: JSON.stringify(row),
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) ? rows : null;
+  } catch (_err) {
+    return null;
+  }
+}
+
 // Delete rows for a raw PostgREST query; returns the deleted rows (so the caller
 // can tell whether anything actually matched).
 export async function del(query: string): Promise<Record<string, unknown>[] | null> {

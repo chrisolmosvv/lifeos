@@ -36,7 +36,7 @@ const SYSTEM = `You are the message router for the owner's personal task and cal
 
 Return JSON:
 - "kind":
-  - "capture" — the message states something to ADD or remember (e.g. "call mum tomorrow", "dentist friday 3pm", "buy milk", "gym at 6", "pay rent on the 1st"). A new to-do or appointment.
+  - "capture" — the message states something to ADD or remember (e.g. "call mum tomorrow", "dentist friday 3pm", "buy milk", "gym at 6", "pay rent on the 1st"). A new to-do or appointment. A message listing SEVERAL things to add (e.g. "buy milk, call the dentist and book the car in") is still "capture".
   - "question" — the message ASKS about the existing schedule or tasks (e.g. "what's on thursday?", "what did I forget?", "what's overdue?", "am I free friday afternoon?", "do I have anything tomorrow?", "when's the dentist?").
   - "unclear" — you genuinely cannot tell whether they want to add something or are asking. If you are in doubt between "capture" and "question", choose "unclear". Do NOT guess "capture": a wrong guess would save something the owner did not ask for.
 - "query_type" (for a question only): "agenda" (what's on / do I have on a day), "forgot" (what's overdue / slipping / did I forget), or "free" (am I free / do I have time). Use "" for capture or unclear.
