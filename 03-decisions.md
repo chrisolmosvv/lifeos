@@ -9,6 +9,34 @@
 
 ---
 
+## Phase 7 — Calendar C6: Month view; all-day band split out to C7 (2026-06-23)
+
+- **[C6 = Month only; the all-day band is now its own piece C7]** — The original C6 ("all-day band +
+  Month") is split: **C6 ships Month** (read-only, no schema), and the **interactive all-day band +
+  multi-day editing become C7**, because that genuinely needs the **flagged additive schema** (an
+  `all_day` flag on `events`; multi-day = an end on a later day) and shouldn't ride a no-schema piece.
+  Multi-day events already **render** as strips in Week/Month from C6 ("just render what exists"); C7
+  adds creating/editing them + the band, and lights up the C3 form's disabled All-day toggle.
+- **[A read-only `useMonthData` sibling, not a generalised `useWeekData`]** — `useWeekData` is
+  week-coupled (a 7-day window + the viewed-week tray); generalising it to arbitrary ranges would risk
+  the Week view. The month read is genuinely different (a 42-day grid range, overlap-aware so
+  multi-day strips have their data, tasks scheduled-or-due in range, no tray). So a **read-only**
+  `useMonthData(monthAnchor)` sibling — same documented-twin pattern as C2/C3/C5, reusing `activeOnly`
+  + `resolveColor`. **Read-only; flagged for the checker.**
+- **[Month never opens a form; clicks are navigational, reusing the nav]** — Per spec §13, Month is a
+  "how loaded am I" zoom-out, not an editor. Day/"+N" clicks jump to that day's week; an item-click
+  jumps + selects + scrolls to it + marks the day. The jump reuses `weekNav` via a new **pure
+  `navToDay(day, today)`** (HOME if within the rolling window, else the Monday-week) — Month never
+  reimplements nav.
+- **[Month→Week handoff via an additive `focus` prop]** — The landing week carries a `focus`
+  ({day, itemId, ms}); `WeekView`/`WeekGrid` use it to outline the item (reusing C3's
+  `.tk-block.is-selected`), scroll its time into view, and mark the day's header. `focus` is
+  **undefined in all normal Week use → Week behaves byte-for-byte as before**; cleared on any week
+  arrow / back / view-toggle so a later week never mis-marks.
+- **[Tasks marked in cells; colours reuse `resolveColor`]** — Event = a solid tinted dot, task = a
+  ringed/hollow dot (visibly "a task"), both from the same (sub-)category colour as the week grid — no
+  parallel colour code. Cap ~3 items + "+N more"; empty cell = blank (no copy, spec §15).
+
 ## Phase 7 — Calendar C5: the unscheduled tray (viewed-week, push, mirrored drag) (2026-06-23)
 
 - **[Tray contents = (a) the VIEWED week, not the fixed current week]** — The tray shows undated

@@ -35,6 +35,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, C6 — Month view + live Week/Month toggle (Calendar)
+WHAT CHANGED:
+- The **Week/Month toggle** is now live. **Week stays the landing view**; switching to **Month**
+  shows the month containing the week you were on.
+- **Month** is a standard calendar month: a fixed 6-row grid (the whole month on one screen, no
+  scrolling), neighbouring-month days greyed at the edges, **today marked**, arrows step whole
+  months, and a **"Back to this month"**.
+- Each day shows its **events and tasks** (tasks marked with a hollow ring dot, events a solid dot),
+  tinted by their own category, **~3 then "+N more"**; multi-day events show as **strips** across the
+  days they span.
+- **Month never opens a form** — every click just **jumps to a week**: click an empty day or "+N
+  more" → that day's week; click an item → its week with that item **selected + scrolled into view**
+  and the day marked.
+- Tray and "+ Add event" grey out in Month (they're week tools). Built read-only — **no data was
+  written and no schema changed**.
+FILES TOUCHED: added `kit/MonthView.jsx`, `kit/MonthCell.jsx`, `kit/monthView.css`, `monthLayout.js`
+(pure), `useMonthData.js` (read-only); edited `CalendarWeek.jsx` (toggle + month toolbar + jumps),
+`weekNav.js` (+ navToDay), `WeekView.jsx` + `kit/WeekGrid.jsx` (additive `focus`), `kit/weekGrid.css`,
+`calendarWeek.css`. Build passes; save `aa9305b`. Week interaction core / Today / All Tasks untouched.
+HOW TO VERIFY (dev: http://localhost:5174/ → Calendar):
+  1. **Toggle:** click **Month** (top-right) → the view zooms to a month grid; click **Week** → back.
+     The page itself never scrolls in either.
+  2. **Month grid is right:** 6 rows; the previous/next month's edge days are greyed; **today** has
+     the terracotta circle; the **‹ ›** arrows step whole months; **"Back to this month"** appears
+     once you've moved and returns to the current month.
+  3. **Cells:** days with stuff show small dots + titles — **events solid, tasks ringed** — in their
+     category colours, capped at ~3 with a **"+N more"**. A multi-day event shows as a **strip**
+     across its days. Empty days are blank.
+  4. **Clicks jump, never a form (the key check):**
+     - click an **empty day** → it switches to Week on that day's week (the day underlined);
+     - click an **item** → its week, with that block **outlined and scrolled into view**;
+     - click **"+N more"** → that day's week.
+  5. **Items fade in** when the month loads (grid shows first, no spinner).
+  6. **Unchanged:** Week view + its nav + tray, Today, All Tasks all behave exactly as before.
+KNOWN GAPS / RISKS:
+- **No all-day band** and **no multi-day creating/editing** — that's **C7** (needs the flagged
+  additive schema: an `all_day` flag + multi-day end). Multi-day events only **render** here.
+- Month shows **top-level tasks** (subtasks excluded), on their scheduled day else their due date.
+- A task with only a due date (no scheduled time) isn't a grid block, so clicking it jumps to the
+  week + marks the day but has no block to outline (expected).
+- Not deployed — local save point only.
+NEXT: **C7 — all-day band + multi-day editing** (confirm the `events` all-day/multi-day schema first,
+flag it for the checker, build as its own piece) — then **C4** (the drag-hook collapse + old-cluster
+deletion) can close out the rebuild.
+FOR THE CHECKER: **read-only** — `useMonthData` only reads a month's range (events overlapping the
+grid, tasks scheduled-or-due in range, cats); **no writes, no schema**. Confirm Week/Today/All Tasks/
+tray are unchanged, and that the additive `focus` prop leaves normal Week behaviour (07:00 scroll, no
+stray marks) byte-for-byte.
+
 ### 2026-06-23 — Phase 7, C5 — the unscheduled tray (Calendar)
 WHAT CHANGED:
 - A **right-side tray drawer** on Calendar, opened by the now-live **Tray** button. It **pushes**

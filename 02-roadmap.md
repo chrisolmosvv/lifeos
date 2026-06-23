@@ -385,9 +385,23 @@ separately-verified pieces; old Calendar code retired conservatively in C4, not 
   decide (overlay-below-a-width | fewer-days-in-view) together. *(CHECKER: "+ add" inserts
   time_bucket='Someday' explicitly so a loose task never lands in Today's bucket; complete + schedule
   are existing paths.)*
-- ⬜ **C6 — All-day band + Month.** Auto-height interactive band + multi-day spans; standard Month
-  with events + tasks, "+N more", navigational clicks, strips. *(Flag any all-day/multi-day schema
-  need for the checker first — spec §6/§18.)*
+- ✅ **C6 — Month view + live Week/Month toggle** (read-only, zero schema). Standard 6×7 month
+  (fixed to one screen, no page scroll): adjacent-month days greyed, today marked, whole-month arrows
+  + "Back to this month". Cells show events + **marked** tasks (event = solid tinted dot, task =
+  ring), ~3 then **"+N more"**; multi-day events as **full-width strips** across a week-row (display
+  only). Colours reuse `resolveColor`. **Month never opens a form** — clicks JUMP to a week (empty/
+  +N → that day's week; an item → jump + select + scroll + mark the day) via a new pure
+  `navToDay(day, today)` and an additive `focus` prop threaded to `WeekView`/`WeekGrid` (undefined in
+  normal Week use → unchanged). New `kit/MonthView.jsx` + `MonthCell.jsx` + `monthView.css` +
+  `monthLayout.js` (pure) + **`useMonthData.js` (read-only sibling of `useWeekData`)**. Tray + "+ Add
+  event" greyed in Month (week tools). Motion: month zoom-in (reduced-motion respected). Save point
+  `aa9305b`. *(CHECKER: read-only — `useMonthData` only reads a month's range; no writes/schema;
+  Week/Today/All Tasks/tray unchanged.)*
+- ⬜ **C7 — All-day band + multi-day editing** (split out of the old C6). The interactive all-day band
+  (auto-height; click to create, drag across days, drag to move) + creating/editing multi-day events;
+  these strips already **render** in Week/Month from C6. ⚠️ **Needs the flagged additive schema** (an
+  `all_day` flag on `events`; multi-day = an end on a later day) — confirm against the live table and
+  build as its own flagged piece. The C3 form's **All-day toggle** goes live here.
 
 ### Phase 7 — DEPLOY + VERIFY STATE (updated 2026-06-23)
 ✅ **FULL STACK DEPLOYED (A3b deploy, 2026-06-23):** `origin/main` = `fa3bfc2`; Vercel Production
