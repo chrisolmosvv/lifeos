@@ -9,6 +9,78 @@
 
 ---
 
+## Phase 7 — the Today desktop spec + rebuild approach (LOCKED 2026-06-23, Piece 1b)
+
+> Locks the desktop **Today** screen as a build target and sets how we rebuild it.
+> The full screen-by-screen spec lives in `07-ux-flows.md` §3 ("LOCKED — Today,
+> desktop only"); this records the *decisions* behind it, flagging which are new
+> **behaviour** (not just look) so the checker and build pieces treat them right.
+
+- **[Today is a front-end REBUILD, not a re-skin — but the data spine is preserved
+  and reused]** — The Phase 7 Today work rebuilds the *front end* (the screen, its
+  components, its interactions) rather than re-skinning the interim verify UI. **But
+  the backend / data spine is kept and reused** — we do **not** rewrite working
+  data or logic. **Schema changes are additive only**, each one **flagged for
+  checker review** as its own piece (per **[Phase 7 MAY include schema and logic
+  changes]**, Piece 1). **Deletion is conservative:** only **provably unused** code
+  is removed, **one trim per commit**, in a **commit separate from build commits**,
+  and **verified**. **Why:** the interim Today UI predates the locked spec and its
+  shape diverges enough that re-skinning would fight it; meanwhile the tables, RLS,
+  Telegram capture and the 7am brief all work and are expensive to get right —
+  rebuilding the view on top of the same spine is the cheap, safe path. **Trade-off:**
+  more front-end work than a paint job, but no risk to the working backend.
+
+- **[Locked Today desktop decisions (Phase 7, Piece 1b)]** — The settled choices
+  for the desktop Today screen (full detail in `07-ux-flows.md` §3). Tagged
+  **[NEW BEHAVIOUR]** (changes how the app *works* — needs real build + checker
+  attention) vs **[LOOK]** (presentation only):
+  - **[NEW BEHAVIOUR] The left calendar is a workspace, not a read-out** — on Today
+    you can click-create (event by default, with an event/task toggle), drag to
+    move, drag-edge to resize, 15-min snap, side-by-side split on overlap, and drag
+    tasks onto/off the grid to schedule/unschedule. (Today previously only *showed*
+    the day.)
+  - **[NEW BEHAVIOUR] A 3-level category tree with any-level filing** — 5 top × 3–5
+    sub × 3–5 sub-sub; a task/event can be filed at **any level, not only a leaf**;
+    a **drill-in picker** (breadcrumb + chevrons, label picks / chevron descends);
+    display tinted by the **top-category colour** shading down the branch. This is a
+    real change to the category model and its storage/UI (see the schema note below).
+  - **[NEW BEHAVIOUR] Recurring events — full support** — a recurrence rule on
+    events, repeats rendered on the calendar, and a **"this one or all?"** choice on
+    **edit, move, resize, and delete**. (Not built before.)
+  - **[NEW BEHAVIOUR] The "tasks today" + "next 7 days" content model** — "tasks
+    today" = due today **or** Today-bucket **or** scheduled today (scheduled ones
+    muted, with time), **ordered by priority**, max 5 then internal scroll; "next 7
+    days" = tomorrow→+7 of the **viewed** day, date order, no day headers/empty
+    lines. (Replaces Today / This Week / Someday on the home screen — display logic,
+    confirmed no schema change; the buckets still exist in the data.)
+  - **[NEW BEHAVIOUR] Undated tasks sit at the bottom of "next 7 days"** with a
+    quiet grey "undated" tag (rather than being hidden).
+  - **[NEW BEHAVIOUR] One tap opens the full create/edit form everywhere** — a tap
+    on any calendar block or module row opens the same full form (no preview step);
+    "+ add" opens it prefilled to today. A connected 3-segment status pill (To do ·
+    In progress · Done) sets state inline; **Done greys+strikes till midnight, and
+    tapping Done again before midnight is the undo**. Delete shows a quiet undo
+    toast, no confirm dialog (exception: repeating events ask "this one or all?").
+  - **[NEW BEHAVIOUR] Date arrows flip the whole page to another day's edition** —
+    calendar + both modules re-anchor to the viewed day, the tasks module is titled
+    by weekday name, the folio date follows, the now-line shows only on the real
+    today, and a "Back to today" affordance appears when navigated away.
+  - **[LOOK] Paper `#F6F5F1`; the broadsheet masthead (blackletter wordmark, topline,
+    folio line — copy is placeholder); soft tinted calendar blocks (low-opacity fill
+    + coloured left bar); blank/minimal empty states with no copy; the calendar
+    window 7am–midnight scrolling internally inside a no-whole-page-scroll layout.**
+  - **Scope fence:** Today carries **no settings, no Someday/backlog browsing, no
+    capture beyond "+ add"** — those live on Calendar, mobile capture, Marty, and the
+    future All Tasks screen. The quiet **"All tasks · [count] →"** box opens that
+    (separately specced) inventory screen.
+  - **Schema note (flag for the checker, resolved per-piece later):** the additive
+    schema *check* (next-piece) should confirm what the spine already has before
+    adding anything — the locked `tasks` shape (Phase 3, Piece 1) **already includes
+    `notes` and `priority`**, so those two may **already exist** and need no change;
+    the **3-level category tree + any-level filing** and **event recurrence** are the
+    parts most likely to need additive fields. Add only what's genuinely missing,
+    each as its own checker-flagged piece; never assume from this list alone.
+
 ## Phase 7 — the redesign: opening decisions (LOCKED 2026-06-22, Piece 1)
 
 > Recorded together at the start of Phase 7. These are settled; the per-screen

@@ -152,8 +152,45 @@ prototype.
   06-design.md (component-kit styling; schema/logic changes now allowed;
   Apple-tinted direction; masthead stays blackletter; paper → `#F6F5F1`; calendar
   category = soft tinted block; home model → "tasks today" + "next 7 days"). NO
-  src/ or schema change. NEXT: Piece 2 — the theme/token + component-kit groundwork
-  (incl. the `#F6F5F1` paper change in `src/theme.css`).
+  src/ or schema change.
+- ✅ **Piece 1b — lock the Today (desktop) spec + the rebuild plan (paperwork, no
+  code).** The desktop Today screen is locked in `07-ux-flows.md` §3 (workspace
+  calendar, "tasks today" + "next 7 days", 3-level category tree with any-level
+  filing, one-tap full-edit form, status pill, recurring events, undo toasts —
+  mobile Today is a separate later spec). The decisions + the scope call (a
+  front-end **rebuild** that preserves and reuses the data spine; additive-only
+  schema, checker-flagged; conservative deletion) are in 03-decisions.md. NO src/
+  or schema change.
+
+### Phase 7 — proposed Today build sequence (each its own small piece)
+Each piece is **its own small commit**, with a **save point committed before it**,
+and is **verified by the owner on Mac and phone before the next** starts. **Schema
+pieces are flagged for the checker.** (This is the plan; pieces get their own
+✅/🔨/⬜ as we go.)
+- ⬜ **T1 — Foundation: paper token + the reusable component kit.** Build the kit
+  (header, hairline, small-caps label, tinted calendar block, task row, status
+  pill, motion timings) and apply the **header + `#F6F5F1` paper**. First piece that
+  touches `src/`.
+- ⬜ **T2 — Additive schema check + additions** *(flag for checker)*. Confirm what
+  the spine already has, then add **only the fields confirmed missing** (candidates:
+  task notes, task priority, event location, event notes — note `tasks` likely
+  already has notes + priority, so this may be smaller than it looks).
+- ⬜ **T3 — Category hierarchy** *(large; may sub-split)*. Tree storage, any-level
+  filing, colour shading, the drill-in picker, and Settings management.
+- ⬜ **T4 — Today display build (read-only first).** Render the calendar (tinted
+  blocks, now-line, 7am–midnight internal scroll) + both modules with the new
+  content model — display only, no interactions yet.
+- ⬜ **T5 — Calendar workspace interactions.** Click-create (event default +
+  toggle), drag, resize, 15-min snap, overlap split, drag to/from the modules.
+- ⬜ **T6 — The create/edit form.** Task + event fields, one-tap-open everywhere,
+  "+ add".
+- ⬜ **T7 — Status pill behaviour.** The three states + done-till-midnight + undo.
+- ⬜ **T8 — Date navigation.** Whole-page re-anchor, weekday titles, back-to-today.
+- ⬜ **T9 — Delete + undo toast.**
+- ⬜ **T10 — Recurring events** *(large)*. Recurrence + "this one or all?".
+- ⬜ **T11 — All Tasks inventory screen** — its own spec first.
+- ⬜ **T12 — Conservative trims** of any now-unused Phase 6 Today code (separate
+  commits, provably unused, verified).
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -168,6 +205,24 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, Piece 1b (paperwork only, no app code). The Today
+  desktop spec is LOCKED + the rebuild plan is written down.** `07-ux-flows.md` §3
+  now holds the settled desktop Today screen (a **workspace calendar** you can
+  create/drag/resize on; **"tasks today" + "next 7 days"** modules; a **3-level
+  category tree** you can file at any level via a drill-in picker; a **one-tap full
+  edit form** everywhere; a **status pill** with done-till-midnight + undo;
+  **recurring events** with "this one or all?"; quiet **undo toasts**) — mobile
+  Today is a separate later spec. 03-decisions.md records the **scope call**: this
+  is a front-end **rebuild**, *not* a re-skin, but the **data spine is preserved and
+  reused** — schema changes are **additive only and checker-flagged**, deletion is
+  conservative (provably unused, one trim per commit, separate from build commits).
+  It tags which Today decisions are **new behaviour** (workspace calendar, category
+  tree + any-level filing, recurring events, the tasks-today/next-7 model,
+  undated-at-bottom, one-tap edit) vs look. The roadmap now carries a **12-step
+  Today build sequence (T1–T12)**, each its own verified piece with a save point
+  before it. NO src/ or schema change this piece. **NEXT: T1 — the paper token +
+  reusable component kit, and apply the header + `#F6F5F1` paper (first piece that
+  touches `src/`).**
 - **2026-06-22 — Phase 7 OPENED. Piece 1 (paperwork only, no app code).** Made a
   clean pre-redesign **save point** (a labeled commit at the Phase 6 working
   state, to roll back to if the redesign goes wrong). Added **`07-ux-flows.md`** to

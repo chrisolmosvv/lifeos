@@ -105,21 +105,98 @@ Everything stays movable (see below). Nothing dragged onto the calendar is stuck
 
 ## 3. Today — "here is your day, already in order"
 
-**Desktop — three zones, no vertical scroll. Job: glance and know what's next.**
-- **Left:** the day, hour by hour (events + time-blocked tasks on the timeline).
-- **Top right — "tasks today":** **tasks only, never events.** Shows every task
-  that's *due today, scheduled today, or in the Today bucket* — including
-  scheduled ones (so it's a full task tally). A high-priority loose task can
-  headline here when the timeline has gaps.
-- **Bottom right — "next 7 days":** **tomorrow → +7**, so it never repeats today.
+> **LOCKED — Today, desktop only (Phase 7, Piece 1b, 2026-06-23).** This is the
+> agreed build target for the desktop Today screen; it is settled, not a sketch.
+> **Mobile Today is a separate later spec** (the old "agenda-first single day"
+> direction still stands as a placeholder until then — not described here).
 
-**Mobile — agenda-first (single day).** Open it, see what's on today: the
-timeline with events + time-blocked tasks, loose-but-due tasks tucked at the edge.
+### Frame
+- Paper is the cooler near-white **`#F6F5F1`**. The header is the classic
+  broadsheet **masthead**: blackletter **"LifeOS"** wordmark, a topline, and a
+  **folio line** (date · motto · live clock · edition no.). Folio/topline copy is
+  **placeholder, not final**.
+- The page **fits a 13″ screen with no whole-page vertical scroll** — only the
+  calendar column scrolls internally.
 
-**"What's next" logic (drives the desktop sense of next action):** *time leads,
-priority breaks ties.* If you're booked, the next thing on the clock is "next";
-in a free stretch, the highest-priority loose task is what's suggested. (The
-brief's gap-fill uses the same logic, so they stay consistent.)
+### Layout — three zones + one box
+- **Left:** the **day calendar** (a workspace).
+- **Right-top:** **"tasks today"** (no events).
+- **Right-bottom:** **"next 7 days"**.
+- **Low in the right column:** a quiet **"All tasks · [count] →"** box that opens
+  the future **All Tasks** inventory screen.
+
+### Left — calendar (a workspace)
+- Window **7am–midnight**, scrolls internally. Shows **events + scheduled
+  (time-blocked) tasks** as **soft tinted blocks** (category colour low-opacity
+  fill + coloured left bar). The **now-line shows only on the real current day**.
+  Past items are greyed.
+- **Click an empty slot → create**; defaults to **event**, with an **event/task
+  toggle** in the form; the new block defaults to **1 hour** from the click point.
+  **Click-drag → draws the exact span.** Create / drag / resize all **snap to 15
+  minutes**.
+- **Drag to move, drag the edge to resize.** Overlapping blocks show
+  **side-by-side, split width**.
+- **Drag a task from a module onto the grid = schedule it** (sets day + time).
+  **Drag a block off the grid back into a module:** into **"tasks today"** → dated
+  today, no time; into **"next 7 days"** → dated **+7 days** (the far end of the
+  window), no time.
+- **One tap on a block → opens the full edit form** (no preview step). **Tick a
+  scheduled task done → its block greys in place till midnight.** **Events never
+  complete.**
+- **Date arrows flip the whole page to another day's edition:** the calendar and
+  both modules re-anchor to the viewed day; the **now-line appears only on the
+  real today**; the tasks module is **titled by weekday name** (not "today"); the
+  **folio date reflects the viewed day**; and a quiet **"Back to today"** appears
+  whenever navigated away.
+
+### Right-top — tasks today (no events)
+- A task appears if it's **due today, in the Today bucket, or scheduled today**.
+  **Scheduled-today tasks appear muted** with their time. **Ordered by priority.**
+- Each row carries a connected **three-segment status pill — To do · In progress ·
+  Done** — tap a segment to set state inline. Tapping **Done** greys + strikes the
+  row **till midnight**; tapping **Done again before midnight is the undo**.
+- **Max 5 rows visible**, then internal scroll within the module. A quiet **"+ add"**
+  opens the full task form **prefilled to today**.
+
+### Right-bottom — next 7 days
+- Upcoming tasks, **tomorrow → +7 relative to the viewed day**, in **date order**,
+  with **no date labels or day headers** and **no empty-day lines**. A task appears
+  if **due or scheduled in that window**. **Undated tasks appear at the bottom**,
+  each with a quiet grey **"undated"** tag.
+
+### Forms (same form for create + edit, opened by one tap anywhere — calendar block or module row)
+- **Task form:** Title · Category · Status (3-state) · Day/Time · Priority · Notes ·
+  Delete.
+- **Event form:** Title · Category · Start/End · Location · Repeat · Notes · Delete.
+
+### Category model + picker
+- A **3-level tree**: **5 top categories**, each with **3–5 sub-categories**, each
+  with **3–5 sub-sub-categories**. A task/event may be filed at **any level, not
+  only a leaf**.
+- The picker is **drill-in**: one level on screen at a time, with **breadcrumb +
+  back chevron**. Tapping a row's **label picks that level and closes**; tapping its
+  **chevron goes deeper**; **leaves have no chevron** and tapping picks. The display
+  shows the chosen node, **tinted by its top-category colour** (5 top colours,
+  shading down the branch).
+
+### Delete
+- Deleting anything shows a **quiet undo toast, no confirm dialogs**. **Exception:**
+  **repeating events ask "this one or all?"** (handled by the repeat logic).
+
+### The rest, briefly
+- **Empty states — blank and minimal, no copy.** The calendar still shows its empty
+  grid + now-line; modules sit empty under their kicker.
+- **Repeating events — full support:** a recurrence rule on events, repeats rendered
+  on the calendar, and a **"this one or all?"** choice on **edit, move, resize, and
+  delete**.
+- **Not on Today:** no settings, no Someday/backlog browsing, no capture beyond
+  **"+ add"**. Those live on the **Calendar** screen, **mobile capture**, **Marty**,
+  and **All Tasks**.
+
+*(Earlier behaviour now folded into the locked spec above: the "what's next" sense
+— time leads, priority breaks ties — survives as "tasks today" ordered by priority
+and the calendar's now-line; the brief's gap-fill still uses the same logic so they
+stay consistent.)*
 
 ---
 

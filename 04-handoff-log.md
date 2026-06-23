@@ -35,6 +35,64 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, Piece 1b — lock the Today (desktop) spec + the rebuild plan
+WHAT CHANGED: (paperwork only — NO app code, NO schema change)
+- Replaced the **Today** section of `07-ux-flows.md` with the **locked desktop
+  spec** (marked "LOCKED — Today, desktop only; mobile Today is a separate later
+  spec"). It pins down the whole screen: a **workspace calendar** on the left you
+  can click-create / drag / resize / snap-to-15 on (events default, with an
+  event/task toggle), soft tinted blocks, now-line only on the real today; a
+  **"tasks today"** module (no events) with a 3-segment status pill and
+  done-till-midnight + undo; a **"next 7 days"** module (tomorrow→+7 of the viewed
+  day, undated tasks at the bottom); a quiet **"All tasks →"** box; a **one-tap
+  full edit form** everywhere; a **3-level category tree** (5 top × 3–5 × 3–5) you
+  can file at any level via a **drill-in picker**; **recurring events** with "this
+  one or all?"; quiet **undo toasts**; and date arrows that **flip the whole page**
+  to another day's edition.
+- Recorded in `03-decisions.md`: the **scope call** — Today is a front-end
+  **rebuild, not a re-skin**, but the **data spine is preserved and reused**
+  (schema changes **additive only + checker-flagged**; **conservative deletion** —
+  provably unused, one trim per commit, separate from build commits, verified) —
+  plus the locked Today decisions, each tagged **new behaviour** vs **look**.
+- Wrote the **12-step Today build sequence (T1–T12)** into `02-roadmap.md`, each its
+  own small verified piece with a save point before it, schema pieces flagged; added
+  a session note and a Piece-1b line.
+FILES TOUCHED: 07-ux-flows.md, 03-decisions.md, 02-roadmap.md, 04-handoff-log.md.
+(No 06-design.md change needed — the look choices it carries from Piece 1 still
+hold. No src/, no db/, no schema.)
+HOW TO VERIFY (owner):
+- Open `07-ux-flows.md` → §3 "Today" now starts with a **"LOCKED — Today, desktop
+  only"** banner and reads as a full spec (Frame / Layout / the calendar /
+  tasks-today / next-7-days / Forms / Category picker / Delete / the rest).
+- Skim the top of `03-decisions.md` → a **"Phase 7 — the Today desktop spec +
+  rebuild approach (LOCKED 2026-06-23, Piece 1b)"** block, with each Today choice
+  tagged [NEW BEHAVIOUR] or [LOOK].
+- `02-roadmap.md` → under Phase 7 you'll see **Piece 1b ✅** and a **T1–T12** build
+  sequence.
+- `git log --oneline -1` shows this docs commit; nothing under `src/` or `db/`
+  changed (the app still looks exactly like Phase 6).
+KNOWN GAPS / RISKS:
+- Still **nothing visual built** — this is the *plan*. The app looks like Phase 6
+  until T1 starts touching `src/`.
+- **Honest flag for the schema check (T2):** the locked `tasks` shape (Phase 3,
+  Piece 1) **already includes `notes` and `priority`**, so two of the four
+  "confirmed missing" candidates may already exist. T2 must **check the real schema
+  first** and add only what's genuinely missing — the **category tree** and **event
+  recurrence** are the parts most likely to need additive fields. Don't add columns
+  from the candidate list without confirming.
+- The **3-level fixed-depth category tree** (5 × 3–5 × 3–5, file at any level) is a
+  real change to today's arbitrary-depth category model; T3 is flagged large and may
+  sub-split, and its storage shape needs a checker-flagged decision when built.
+- **Mobile Today** is deliberately left unspecced (separate later spec).
+NEXT: T1 — the paper token + reusable component kit (header, hairline, small-caps
+label, tinted calendar block, task row, status pill, motion timings) and apply the
+header + `#F6F5F1` paper. First piece that touches `src/`; save point before it.
+FOR THE CHECKER: confirm (1) no src/ or db/ file changed and no schema changed;
+(2) the locked spec in 07-ux-flows.md §3 matches this instruction set; (3) the
+decisions correctly separate **new behaviour** from **look**; (4) the T2 schema
+note flags `tasks.notes` / `tasks.priority` as likely-already-present rather than
+asserting all four candidate fields are missing.
+
 ### 2026-06-22 — Phase 7, Piece 1 — open the redesign (clean save point + record decisions)
 WHAT CHANGED: (paperwork only — NO app code, NO schema change)
 - Made a **clean pre-redesign save point**: a labeled commit at the exact Phase 6
