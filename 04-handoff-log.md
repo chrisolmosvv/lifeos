@@ -35,6 +35,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-23 — Phase 7, T2 — data-layer readiness audit for the Today rebuild (READ-ONLY; nothing changed)
+WHAT THIS WAS: a read-only check of the LIVE Frankfurt DB (`cntlptuacsujbdtwvbis`) to
+confirm, against reality, what the locked Today forms need. NO schema change, NO
+migration run, NO src/ change, NO writes of any kind.
+HOW I READ IT (and the access caveat): the Management API token (`SUPABASE_ACCESS_TOKEN`)
+and `supabase db dump --linked` BOTH returned 403 on Frankfurt — that token only lists
+and can reach the OLD **Ireland** project (`qupudazcutkbnxseciwn`, eu-west-1), which I did
+NOT touch. The anon OpenAPI root is locked to service_role (401). So I read the live
+schema the one available read-only way: PostgREST column probes with the anon key (an
+existing column → 200; a missing one → 400 "does not exist"; a control fake column
+correctly came back MISSING), plus malformed-filter probes that make Postgres name each
+column's real type. This gives live, verified **column existence + types**; it does NOT
+give defaults, NOT NULL/nullable, or CHECK value-sets (those need service_role / DB
+password / a Frankfurt-authorised token, none of which are in this environment).
+KEY FINDINGS:
+- **tasks (15 cols) and events (11 cols) live exactly match the committed migrations
+  (db/03_tasks.sql, db/04_events.sql) — nothing missing, nothing extra.**
+- **All four form fields the spec needs ALREADY EXIST live:** `tasks.notes` (text),
+  `tasks.priority` (text), `events.location` (text), `events.notes` (text). **So NO
+  migration is needed for T2's form fields.** (Confirms the decisions-doc belief from
+  reality, not assumption.)
+- **All depended-on fields exist:** tasks.status, due_date (date), scheduled_start/end
+  (timestamptz), category_id (uuid); events.start_at/end_at (timestamptz, real names —
+  NOT bare `start`/`end`), category_id (uuid).
+- **LOUD FLAG — the 3-state status gap:** the live `status` column exists and is text,
+  but its allowed VALUES could not be read live. The migration that built it allows only
+  `open`/`done` (2 states), which does NOT cover the Today pill's three states (to do /
+  in progress / done). This needs confirming + a small additive change when the status
+  pill (T7) is built — it is NOT part of T2's form-field check and no SQL was written for
+  it here.
+RESULT: **No additive migration required for T2.** The apply step that would have
+followed is unnecessary. (Verbatim defaults/nullable/CHECKs, if wanted, need a one-line
+query in the dashboard SQL editor — provided in the session report.)
+FILES TOUCHED: 04-handoff-log.md, 02-roadmap.md (status note only). NO src/, NO db/, NO
+supabase/, NO schema, NO data. No save point (nothing changed).
+FOR THE CHECKER: (1) confirm this was read-only and hit Frankfurt only, never Ireland;
+(2) note the access anomaly above (the token can't reach Frankfurt — worth the owner
+checking project/org access); (3) the "already exists" answers are LIVE probes, not
+doc assumptions; (4) the status 2-vs-3-state gap is real and lands at T7.
+
 ### 2026-06-23 — Phase 7, T1 — paper token + reusable header kit, applied to every screen (LOOK ONLY)
 WHAT CHANGED: (presentation only — no behaviour, no data reads/writes, no schema)
 - **Paper cooled to `#F6F5F1`** (from the cream `#F4EFE4`) in `src/theme.css` — one

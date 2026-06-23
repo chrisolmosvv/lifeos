@@ -188,10 +188,15 @@ it rather than dig (see the Piece-1c decision).
   or in the data layer touched; build passes. Sacred rollback point: commit
   `ac665cb`. *(The calendar-block / task-row / status-pill / motion kit blocks come
   with their screens in later T-pieces, not here.)* **Owner verifies on Mac + phone.**
-- ⬜ **T2 — Additive schema check + additions** *(flag for checker)*. Confirm what
-  the spine already has, then add **only the fields confirmed missing** (candidates:
-  task notes, task priority, event location, event notes — note `tasks` likely
-  already has notes + priority, so this may be smaller than it looks).
+- ✅ **T2 — Data-layer readiness audit (READ-ONLY; nothing changed).** Live Frankfurt
+  DB checked via anon PostgREST probes (the management token is denied on Frankfurt —
+  see handoff). Result: **all four needed form fields already exist live** —
+  `tasks.notes`, `tasks.priority`, `events.location`, `events.notes` — and every
+  depended-on field is present and correctly shaped, so **NO additive migration is
+  needed** (the planned apply step is unnecessary). One LOUD flag for later: the live
+  `status` column allows only `open`/`done` (2 states) per its migration, which won't
+  cover the Today pill's three states — a small additive change to confirm + make at
+  **T7**, not now. No save point (no change).
 - ⬜ **T3 — Category hierarchy** *(large; may sub-split)*. Tree storage, any-level
   filing, colour shading, the drill-in picker, and Settings management.
 - ⬜ **T4 — Today display build (read-only first).** Render the calendar (tinted
@@ -222,6 +227,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-23 — Phase 7, T2 DONE (read-only data audit; nothing changed).** Checked the
+  LIVE Frankfurt DB and found **all four form fields the Today spec needs already exist**
+  (`tasks.notes`, `tasks.priority`, `events.location`, `events.notes`) and every
+  depended-on field is present and correctly shaped — so **no additive migration is
+  needed** and the planned apply step is skipped. Two things for the road: (a) a LOUD
+  flag that the live task `status` only supports `open`/`done`, not the pill's 3 states —
+  a small additive change at **T7**; (b) an access caveat — the management token can only
+  reach the OLD Ireland project and is denied on Frankfurt, so the live read was done via
+  read-only anon API probes (worth the owner checking project/org access). NO DB/src/
+  schema change; no save point. **NEXT: T3 — the category hierarchy (its own piece;
+  large, may sub-split), OR resume the Today front-end build — owner's call.**
 - **2026-06-23 — Phase 7, T1 DONE (first code piece; LOOK ONLY). The broadsheet header
   + cooler paper are live across the app.** Made the **sacred save point** first
   (commit `ac665cb` — clean Phase 6 Today, the rollback target). Then: paper cooled to
