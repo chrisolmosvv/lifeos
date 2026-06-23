@@ -7,7 +7,7 @@ import { buildToday } from './todayModel'
 import { activeTotal } from './allTasksModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive'
-import { useTodayGrid } from './kit/useTodayGrid'
+import { useGridDrag } from './kit/useGridDrag'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
 import TodayTaskRow from './kit/TodayTaskRow'
@@ -236,13 +236,25 @@ export default function Today({ onOpenAllTasks }) {
   const formOnSubtask = formIsParent ? subtaskHandlers(form.item) : undefined
   const formParentLabel = formIsTaskEdit && form.item.parent_task_id ? parentTitle(form.item, byId) : undefined
 
-  // The grid workspace interactions — keyed to the VIEWED day.
-  const grid = useTodayGrid({
+  // The grid workspace interactions — keyed to the VIEWED day. Today's config for
+  // the shared useGridDrag: a SINGLE day (dayStartMsAt ignores x), the 7am lane
+  // offset, and the two module drop-zones as the "off-grid" target.
+  const dayStartMs = startOfDay(viewed).getTime()
+  const inRect = (ref, x, y) => {
+    const el = ref.current
+    if (!el) return false
+    const r = el.getBoundingClientRect()
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom
+  }
+  const moduleAt = (x, y) =>
+    inRect(todayModRef, x, y) ? 'today' : inRect(weekModRef, x, y) ? 'next7' : null
+  const grid = useGridDrag({
+    geomRef: laneRef,
     scrollRef,
-    laneRef,
-    todayModRef,
-    weekModRef,
-    today: viewed, // the hook's "day" is whatever is on screen
+    startMin: 7 * 60,
+    dayStartMsAt: () => dayStartMs,
+    offAt: moduleAt,
+    eventsShowOff: false,
     onSelect: (item) => (item.kind === 'event' ? openEvent(item.id) : openTask(item.id)),
     onCreate: (startIso, endIso) =>
       setForm({
@@ -264,7 +276,7 @@ export default function Today({ onOpenAllTasks }) {
         : writeTask(supabase.from('tasks').update({ scheduled_start: startIso, scheduled_end: endIso }).eq('id', item.id)),
     onSchedule: (id, startIso, endIso) =>
       writeTask(supabase.from('tasks').update({ scheduled_start: startIso, scheduled_end: endIso }).eq('id', id)),
-    onOffTo: (target, item) => {
+    onOff: (item, target) => {
       const fields =
         target === 'today'
           ? { scheduled_start: null, scheduled_end: null, due_date: localDateStr(viewed), time_bucket: bucketFor(viewed) }

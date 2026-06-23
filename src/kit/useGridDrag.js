@@ -1,66 +1,68 @@
 import { useRef, useState } from 'react'
 import { HOUR_HEIGHT } from '../dateUtils'
 
-// Week-grid interactions (Phase 7, C2) — the deliberate SIBLING of Today's
-// `useTodayGrid`. It mirrors that hook's shapes + conventions as closely as the
-// week allows (the same SNAP / THRESHOLD / EDGE / MIN_DUR, the same gesture
-// skeleton, the blockPreview / createDraft shapes, the bind pattern) so that C4
-// can collapse the two into ONE grid hook cheaply. Built on the kit — NOT on the
-// old `useEventDrag`/`useScheduleDrag` (the engine C4 deletes) — and WITHOUT
-// touching `useTodayGrid`, so shipped Today stays byte-for-byte.
-//
-// Documented divergences from useTodayGrid (the cost we collapse in C4):
-//  • N columns: the day under pointer-X re-days a MOVE (horizontal = day only,
-//    vertical = time, diagonal = both; a pure sideways drag never nudges time).
-//  • y=0 is MIDNIGHT (START_MIN = 0), not Today's 7am.
-//  • off-grid drops a TASK to unscheduled (clears its time); an EVENT snaps back.
-//  • no tray yet (C5) → no `trayBind`/`ghost`; instead a live `dragLabel`
-//    (`14:15–15:15`) which Today doesn't have today.
-//
-// Gestures (mouse only — touch keeps tapping):
-//  • press a block        → move / resize (15-min snap), re-day across columns
-//  • press an empty column → click = 1-hour block, drag = exact span → onCreate
-//  • drag a task off-grid  → onUnschedule(item)
-//  • drag a tray row       → drop on the grid schedules a 1-hour block (C5);
-//                            click a tray row → onTraySelect (mirrors Today's tray)
+// useGridDrag — the ONE timeline-drag hook (Phase 7, C4 Part 2), the merge of the
+// former useTodayGrid + useWeekGrid twins. The shared core (snap/threshold/edge,
+// create-draft, move/resize, the tray ghost, the bind pattern) lives here once;
+// the per-screen differences are CONFIG, so each screen reproduces its old twin
+// byte-for-byte:
+//   geomRef       — the element whose rect.top is y=0 and whose height maps hours
+//   scrollRef     — used to tell "dropped over the grid" (tray) — both screens
+//   startMin      — the lane's y=0 in minutes (Today 7am = 420; week midnight = 0)
+//   dayStartMsAt  — (clientX) → the day-origin ms under the pointer (Today: a
+//                   constant fn → single day; week: the column under x = re-day)
+//   offAt         — (x,y) → an off-grid target | null (Today: which module; week:
+//                   offGrid? true : null). Resolves a block dragged off the grid.
+//   onOff         — (item, target) → the off action (Today: re-bucket; week:
+//                   unschedule). Only TASKS trigger it; an EVENT off-grid snaps back.
+//   eventsShowOff — whether an EVENT shows the faded "off" preview while dragged off
+//                   (Today: false; week: true). Pure preview nuance.
+//   onTraySelect  — optional; when present, a tray row is also clickable (week). When
+//                   absent (Today), trayBind is drag-only AND a tray drag never sets
+//                   justDragged (so it can't swallow a later click) — exactly as before.
+// onCreate / onMove / onSelect / onSchedule are the writes/selection.
 const THRESHOLD = 4
 const SNAP = 15
 const MIN_DUR = 15
 const EDGE = 7
-const START_MIN = 0 // the week lane's y=0 is midnight (Today's is 7am)
 const DAY = 24 * 60
-const GUTTER = 52 // px; must match .wk-gutter / .wk-corner width in weekGrid.css
 
-export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnschedule, onSelect, onSchedule, onTraySelect }) {
+export function useGridDrag({
+  geomRef,
+  scrollRef,
+  startMin = 0,
+  dayStartMsAt,
+  offAt,
+  onOff,
+  eventsShowOff = false,
+  onCreate,
+  onMove,
+  onSelect,
+  onSchedule,
+  onTraySelect,
+}) {
   const [blockPreview, setBlockPreview] = useState(null) // {id,item,dayStartMs,startMs,endMs,off}
   const [createDraft, setCreateDraft] = useState(null) // {dayStartMs,startMs,endMs}
   const [dragLabel, setDragLabel] = useState(null) // {x,y,text}
-  const [ghost, setGhost] = useState(null) // {x,y,title} — a tray row dragged to the grid
+  const [ghost, setGhost] = useState(null) // {x,y,title} — a tray row dragged onto the grid
   const drag = useRef(null)
   const justDragged = useRef(false)
 
   const snap = (m) => Math.round(m / SNAP) * SNAP
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
-  const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
 
-  // Minutes-from-midnight at a screen Y (the body's live top already accounts for
-  // scroll). The body's y=0 is 00:00 (START_MIN).
+  // Minutes-from-midnight at a screen Y (the geom element's live top accounts for
+  // scroll). y=0 maps to `startMin`.
   function minutesAt(clientY) {
-    const r = bodyRef.current.getBoundingClientRect()
-    return START_MIN + ((clientY - r.top) / HOUR_HEIGHT) * 60
+    const r = geomRef.current.getBoundingClientRect()
+    return startMin + ((clientY - r.top) / HOUR_HEIGHT) * 60
   }
-  // The day-column midnight under pointer-X — the re-day mechanism.
-  function dayStartMsAt(clientX) {
-    const r = bodyRef.current.getBoundingClientRect()
-    const colW = (r.width - GUTTER) / 7
-    const idx = clamp(Math.floor((clientX - r.left - GUTTER) / colW), 0, 6)
-    return midnight(days[idx])
-  }
-  function offGrid(x, y) {
+  // Dropped over the grid? (the tray drop test — both screens use the scroll rect.)
+  function overGrid(x, y) {
     const el = scrollRef.current
     if (!el) return false
     const r = el.getBoundingClientRect()
-    return x < r.left || x > r.right || y < r.top || y > r.bottom
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom
   }
   const hhmm = (min) => {
     const m = clamp(Math.round(min), 0, DAY)
@@ -72,15 +74,16 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
   function startBlock(e, item, itemDayStartMs) {
     if (e.pointerType === 'touch' || (e.pointerType === 'mouse' && e.button !== 0)) return
     e.stopPropagation() // don't also start a background "create"
+    const origin = itemDayStartMs ?? dayStartMsAt(e.clientX)
     const rect = e.currentTarget.getBoundingClientRect()
     const localY = e.clientY - rect.top
     const edge = Math.min(EDGE, rect.height / 3)
     const mode = localY <= edge ? 'top' : localY >= rect.height - edge ? 'bottom' : 'move'
-    const startMin = (new Date(item.start_at).getTime() - itemDayStartMs) / 60000
-    const endMin = (new Date(item.end_at).getTime() - itemDayStartMs) / 60000
-    const ref = mode === 'bottom' ? endMin : startMin
+    const sMin = (new Date(item.start_at).getTime() - origin) / 60000
+    const eMin = (new Date(item.end_at).getTime() - origin) / 60000
+    const ref = mode === 'bottom' ? eMin : sMin
     drag.current = {
-      type: 'block', item, itemDayStartMs, mode, startMin, endMin, dur: endMin - startMin,
+      type: 'block', item, origin, mode, startMin: sMin, endMin: eMin, dur: eMin - sMin,
       downX: e.clientX, downY: e.clientY, grab: minutesAt(e.clientY) - ref, moved: false, cur: null,
     }
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -94,9 +97,6 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
     }
     e.currentTarget.setPointerCapture(e.pointerId)
   }
-  // A tray row dragged toward the grid (the same mechanism as Today's module-to-
-  // grid drag, mirrored here). On drop over the grid it schedules a 1-hour block
-  // at the drop's day (x) + time (y).
   function startTray(e, task) {
     if (e.pointerType === 'touch' || (e.pointerType === 'mouse' && e.button !== 0)) return
     e.stopPropagation()
@@ -117,8 +117,8 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
 
     if (d.type === 'block') {
       const edgeMin = snap(minutesAt(e.clientY) - d.grab)
-      // Re-day only on a MOVE (the column under x); a resize never changes day.
-      const dayStartMs = d.mode === 'move' ? dayStartMsAt(e.clientX) : d.itemDayStartMs
+      // Re-day only on a MOVE (the day under x); a resize never changes day.
+      const dayStartMs = d.mode === 'move' ? dayStartMsAt(e.clientX) : d.origin
       let s = d.startMin
       let en = d.endMin
       if (d.mode === 'move') {
@@ -130,7 +130,8 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
         en = clamp(edgeMin, d.startMin + MIN_DUR, DAY)
       }
       d.cur = { dayStartMs, s, en }
-      const off = offGrid(e.clientX, e.clientY)
+      const offNow = offAt(e.clientX, e.clientY)
+      const off = d.item.kind === 'task' || eventsShowOff ? offNow : null
       setBlockPreview({ id: d.item.id, item: d.item, dayStartMs, startMs: dayStartMs + s * 60000, endMs: dayStartMs + en * 60000, off })
       setDragLabel({ x: e.clientX, y: e.clientY, text: `${hhmm(s)}–${hhmm(en)}` })
     } else if (d.type === 'create') {
@@ -156,8 +157,10 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
     setGhost(null)
 
     if (d.type === 'tray') {
-      justDragged.current = d.moved
-      if (d.moved && !offGrid(e.clientX, e.clientY)) {
+      // Only gate clicks (set justDragged) when a tray row is clickable — Today's
+      // grip is drag-only, so it must NOT set it (else it'd swallow a later click).
+      if (onTraySelect) justDragged.current = d.moved
+      if (d.moved && overGrid(e.clientX, e.clientY)) {
         const dayStartMs = dayStartMsAt(e.clientX)
         const min = clamp(snap(minutesAt(e.clientY)), 0, DAY - 60)
         const iso = (m) => new Date(dayStartMs + m * 60000).toISOString()
@@ -169,8 +172,9 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
     if (d.type === 'block') {
       justDragged.current = d.moved
       if (!d.moved) return // a tap → the onClick handler opens the editor
-      if (offGrid(e.clientX, e.clientY)) {
-        if (d.item.kind === 'task') onUnschedule(d.item) // event off-grid → snaps back
+      const target = offAt(e.clientX, e.clientY)
+      if (target) {
+        if (d.item.kind === 'task') onOff(d.item, target) // event → snaps back
         return
       }
       const { dayStartMs, s, en } = d.cur
@@ -216,15 +220,17 @@ export function useWeekGrid({ scrollRef, bodyRef, days, onCreate, onMove, onUnsc
     },
   })
   const backgroundBind = { onPointerDown: startCreate, ...moveEnd }
-  const trayBind = (task) => ({
-    onPointerDown: (e) => startTray(e, task),
-    ...moveEnd,
-    onClick: (e) => {
-      e.stopPropagation()
-      if (justDragged.current) { justDragged.current = false; return }
-      onTraySelect(task)
-    },
-  })
+  const trayBind = (task) => {
+    const h = { onPointerDown: (e) => startTray(e, task), ...moveEnd }
+    if (onTraySelect) {
+      h.onClick = (e) => {
+        e.stopPropagation()
+        if (justDragged.current) { justDragged.current = false; return }
+        onTraySelect(task)
+      }
+    }
+    return h
+  }
 
   return { blockPreview, createDraft, dragLabel, ghost, blockBind, backgroundBind, trayBind }
 }

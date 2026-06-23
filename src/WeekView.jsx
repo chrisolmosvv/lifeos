@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { useWeekData } from './useWeekData'
-import { useWeekGrid } from './kit/useWeekGrid'
+import { useGridDrag } from './kit/useGridDrag'
 import { useBandDrag } from './kit/useBandDrag'
 import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
 import WeekGrid from './kit/WeekGrid'
@@ -36,10 +36,29 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
   // opens a blank create form on the current week via this ref bridge.
   if (requestAdd) requestAdd.current = () => setForm({ kind: 'event', item: {}, create: true, toggle: true })
 
-  const grid = useWeekGrid({
+  // Week config for the shared useGridDrag: N columns (the day under x re-days a
+  // move), a midnight lane (startMin 0), and "off the grid" = outside the scroll.
+  const GUTTER = 52 // must match .wk-gutter / .wk-corner in weekGrid.css
+  const dayStartMsAt = (clientX) => {
+    const r = bodyRef.current.getBoundingClientRect()
+    const colW = (r.width - GUTTER) / 7
+    const idx = Math.max(0, Math.min(6, Math.floor((clientX - r.left - GUTTER) / colW)))
+    const d = days[idx]
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  }
+  const offGrid = (x, y) => {
+    const el = scrollRef.current
+    if (!el) return null
+    const r = el.getBoundingClientRect()
+    return x < r.left || x > r.right || y < r.top || y > r.bottom ? true : null
+  }
+  const grid = useGridDrag({
+    geomRef: bodyRef,
     scrollRef,
-    bodyRef,
-    days,
+    startMin: 0,
+    dayStartMsAt,
+    offAt: offGrid,
+    eventsShowOff: true,
     // Create from the grid → the shared form, preset to the drawn slot (event;
     // the task/event toggle is available while creating).
     onCreate: (startIso, endIso) =>
@@ -48,8 +67,8 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
       item.kind === 'event'
         ? onSaveEvent(item.id, { start_at: startIso, end_at: endIso })
         : onScheduleTask(item.id, startIso, endIso),
-    onUnschedule: (item) =>
-      onUpdateTask(item.id, { scheduled_start: null, scheduled_end: null }),
+    // Drag a TASK off the grid → unschedule it; an EVENT snaps back (no write).
+    onOff: (item) => onUpdateTask(item.id, { scheduled_start: null, scheduled_end: null }),
     // Tap a block → open the shared form on its row (type locked on edit).
     onSelect: (item) =>
       item.kind === 'event'
