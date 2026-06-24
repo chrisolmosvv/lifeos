@@ -35,6 +35,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Health → Gym G15 — the proactive hook: an optional Gym line in the morning brief. BACKEND ONLY. (Awaiting owner deploy + brief verify.)
+WHAT CHANGED: the brief can now carry ONE small, optional Gym line. Read-only, AI-free, degrade-safe; touches
+the shared brief as little as possible (a new self-contained module + ~4 lines in index.ts).
+- **NEW `supabase/functions/brief/gym.ts`** — `gymLine(): Promise<string|null>`. Reads gym tables via the
+  brief's existing service-role `select()` (with a PLAIN `user_id` filter — NOT `sb.owner()`, which appends
+  `archived_at`, a column the gym cache doesn't have). Returns AT MOST ONE line; most mornings null.
+- **INTEGRATION (AI-free path):** `index.ts` appends the line **AFTER** `writeBrief` (post-Gemini) —
+  `withGym = gym ? brief + "\n\n" + gym : brief` — so gym/health data NEVER enters the model. The actions
+  list now hangs off `withGym`. Nothing else in the brief changed (schedule/nudge/gap/numbering untouched).
+- **DEGRADE-SAFE:** empty gym tables / any read failure / a `try/catch` → null → the brief sends exactly as
+  today. The gym read never throws into the brief.
+- **TEMPLATES + THRESHOLDS (art director — tweak in `gym.ts`):**
+  • PR (priority 1, only if last session ≤ **PR_RECENT_DAYS = 2** days ago):
+    `On the gym: new best last session — {lift} at {weight} kg.` (or "new bests … including …" for several)
+  • Gap (priority 2, only at **GAP_DAYS = 3**+ days since last session):
+    `On the gym: {N} days since your last training session.`
+  • Otherwise → null (trained recently, no PR → nothing said). PR & gap are near-mutually-exclusive.
+  PR detection reuses the locked rule (heaviest WORKING weight per lift beating all prior, warm-ups excluded),
+  reimplemented in gym.ts (separate Deno runtime — no cross-track import).
+FILES TOUCHED: **new** `supabase/functions/brief/gym.ts`; **edited** `supabase/functions/brief/index.ts`; docs
+`02`/`04`. **NO `src/`, NO `db/`, no new schema, no new secrets.** (Could not type-check locally — Deno not
+installed here; the TS is straightforward and imports are confirmed present.)
+DEPLOY (owner) — the brief is PRIVATE, deploy WITH jwt (NOT --no-verify-jwt), to the project where the gym
+tables + secrets live (**Frankfurt `cntlptuacsujbdtwvbis`** per all gym docs — note: `supabase projects list`
+here showed a different, unlinked ref, so confirm the project before deploying):
+  `supabase functions deploy brief --project-ref cntlptuacsujbdtwvbis`
+HOW TO VERIFY (owner): after deploy, trigger the brief on demand (send **"brief"** to the bot / the existing
+fireBrief path) and check:
+  • If you trained in the last 2 days AND set a weight PR → the brief ends with ONE calm "On the gym: new best
+    …" line. If you haven't trained in 3+ days → "On the gym: N days since your last training session."
+  • On a normal day (trained recently, no PR) → NO gym line, brief otherwise identical to today's.
+  • Empty gym data would still send the brief normally (degrade-safe). The line is templated (AI-free).
+  Compare: the brief body (schedule/attention/forgotten/gap/numbered actions) must be unchanged — only the
+  optional gym line is added.
+KNOWN GAPS / RISKS: PR detection reads the full set history once per on-demand/7am brief (bounded, paginated;
+fine at ~92 workouts). Wording is a first pass (tweak in gym.ts). NOT YET DEPLOYED — code committed only.
+NEXT: **G16 — polish + end-to-end** (final unit/formatting passes, empty states, a full walk-through).
+FOR THE CHECKER: n/a — no schema change (read-only on existing gym tables under service-role + explicit
+user_id filter); backend-only, never mixed with src/.
+
 ### 2026-06-25 — Health → Gym G14 — the Records (pinned lifts + PR climb charts). SRC/ ONLY (first front-end WRITE). (Awaiting owner's Mac check.)
 WHAT CHANGED: a per-lift Records screen, and the module's FIRST front-end write (pin/unpin to the existing
 `gym_pins`). Reads the calc layer; writes via the app's existing Supabase pattern. No schema change.

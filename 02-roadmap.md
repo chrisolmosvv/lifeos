@@ -725,8 +725,12 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   then alphabetical; a hand-rolled SVG **top-set climb chart** (`ClimbChart.jsx`, PR point marked) for pinned/
   expanded lifts. Entry = a "Records →" link by the Archive link; Health `view` state gains 'records'.
   src/-only (a runtime write, no schema change).
-- ⬜ **G15 — Story headline (code templates, no AI) + polish.** Unit formatting,
-  empty states, pins (`gym_pins`).
+- 🔨 **G15 — the proactive hook (BACKEND) ✅ BUILT (awaiting deploy + brief verify).** *(Story headline +
+  polish was reassigned: the headline shipped at G8; G15 is now the optional Gym line in the morning brief.)*
+  `brief/gym.ts` (read-only, AI-free, degrade-safe) returns AT MOST ONE line — a fresh PR (last session ≤2
+  days, heaviest-weight PR, warm-ups excluded) OR a real gap (≥3 days since training); most mornings null.
+  `brief/index.ts` appends it AFTER Gemini wrote the prose (gym data never reaches the model). Backend-only
+  commit; deploy `brief` WITH jwt. **NEXT: G16 polish + end-to-end.**
 
 *(Mobile Health/Gym is a deliberately deferred later spec — not in G0–G15.)*
 

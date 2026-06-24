@@ -45,6 +45,7 @@ import { writeBrief } from "./write.ts";
 import { buildActions } from "./actions.ts";
 import { storeBriefMap } from "./store.ts";
 import { scanForNudge } from "./nudge.ts";
+import { gymLine } from "./gym.ts";
 import { localHour } from "../_shared/datetime.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -86,14 +87,20 @@ async function buildAndSend() {
   const gap = await pickGapOffer(fTitle);
   const brief = await writeBrief(factsForGemini(day, fTitle, gap), formatChecklist(day, fTitle, gap));
 
+  // G15: an OPTIONAL, AI-free gym line — appended AFTER Gemini wrote the prose, so no
+  // gym/health data ever reaches the model. null on most days / empty data / read
+  // failure (degrade-safe), in which case the brief is byte-for-byte as before.
+  const gym = await gymLine();
+  const withGym = gym ? `${brief}\n\n${gym}` : brief;
+
   // M8: number the actionable items, store the number→item map, and append a "Reply to
   // act" list — but only if the map actually stored (so we never show numbers that can't
   // resolve, e.g. before the marty_brief table exists).
   const { lines, map } = buildActions(day, forgotten);
   const stored = await storeBriefMap(map);
   const text = (lines.length && stored)
-    ? `${brief}\n\nReply to act — e.g. "done 1" or "move 2 to Friday":\n${lines.join("\n")}`
-    : brief;
+    ? `${withGym}\n\nReply to act — e.g. "done 1" or "move 2 to Friday":\n${lines.join("\n")}`
+    : withGym;
 
   await sendMessage(OWNER_CHAT_ID!, text);
 }
