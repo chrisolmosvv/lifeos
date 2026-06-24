@@ -35,6 +35,34 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G11 Commit B — recent-sessions table (front-page zone 5). FRONT PAGE COMPLETE. SRC/ ONLY. (Awaiting owner's Mac check.)
+WHAT CHANGED: front-page zone 5 — a calm table of recent workouts; this completes the five front-page zones.
+Display-only.
+- **NEW `src/gym/gymSessions.js`** (calc layer, pure): `recentSessions(workouts)` → rows newest-first, each
+  `{ id, dateYMD (Amsterdam), title, volume, minutes, isPR }`. **PR-per-session REUSES `gymCalc.prWeight`**
+  (heaviest WORKING-set weight, warm-ups excluded): a chronological oldest-first pass keeps the all-time best
+  weight per lift; a session is flagged when any lift beats — or first sets — that best (same "no prior best
+  counts" rule as the box-score `newPRs`). Volume/time via `workoutVolume`/`workoutMinutes`.
+- **NEW kit `src/kit/RecentSessions.jsx`**: a quiet broadsheet table — Date · Session · Volume · Time · a
+  terracotta **PR dot** on PR sessions. Hairline rows, tabular figures, head row. Shows 10 with a "Show all N"
+  toggle. **Rows are STATIC** (no click) — opening a full session report is G12. Honest empty state.
+- **`src/Health.jsx`** adds the "Recent sessions" zone; computes `recentSessions` in `useMemo` (no recompute).
+  **`formGuide.css`** gained the table styles (+ a narrow-screen column shrink).
+FILES TOUCHED: **new** `src/gym/gymSessions.js`, `src/kit/RecentSessions.jsx`; **edited** `src/Health.jsx`,
+`src/kit/formGuide.css`; docs `02`/`04`. No `supabase/`, no `db/`. All files < 250 lines. `vite build` passes.
+Node-verified: newest-first order; PR dots on rising-weight + first-appearance sessions; a lighter-weight day
+with HIGHER volume correctly NOT a PR (PR = heaviest weight, not volume); volume counts warm-ups; Amsterdam dates.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health** → below Body-part balance, "RECENT
+SESSIONS" lists your real workouts most-recent first with plausible volume + time and Amsterdam dates; a quiet
+**PR dot** sits on sessions where you actually hit a working-set PR (heaviest weight on some lift, warm-ups
+ignored). "Show all" reveals the full history. Rows don't open anything yet (that's G12). Today/Calendar/
+Settings unchanged. **The Form Guide front page is now complete (zones 1–5).**
+KNOWN GAPS / RISKS: rows are static until G12 wires the session report. PR = heaviest-weight PR per lift
+(rep-PRs at lower weight aren't flagged — by the locked PR rule). Otherwise none.
+NEXT: **G8 — the code-templated story headline** (no AI; sits at the top of the front page, completing the
+front-page CONTENT), then **G12 the session report** (makes these rows open a full workout).
+FOR THE CHECKER: n/a — src/ only, no schema.
+
 ### 2026-06-24 — Health → Gym G11 Commit A — body-part balance (front-page zone 4). SRC/ ONLY. (Awaiting owner's Mac check.)
 WHAT CHANGED: front-page zone 4 — how the last-7-Amsterdam-days training splits across primary muscle groups,
 proving the G6 muscle dictionary resolves in the UI. Display-only; same window as the band.
