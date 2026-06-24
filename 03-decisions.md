@@ -9,6 +9,41 @@
 
 ---
 
+## Health → Gym — G3: the backfill (2026-06-24)
+
+- **[Replace-children on re-import, not merge]** — when a workout already exists,
+  the backfill **deletes that workout's exercises (sets cascade) and reinserts
+  them fresh** from Hevy, rather than diffing/merging set-by-set. **Why:** a
+  workout edited in Hevy (a set added/removed/changed) re-imports correctly and
+  sets can never silently accumulate; it's the simplest correct recovery net. This
+  is a **within-module (gym→gym) delete — it never touches the spine.**
+  **Trade-off:** a re-run rewrites every child row even when nothing changed (more
+  writes), which is fine for a twice-daily / on-demand job on one user's data.
+- **[Idempotency key = upsert on (user_id, hevy_id) + replace-children]** — re-
+  running the backfill can never duplicate. **Why:** this IS the module's recovery
+  net (we keep no undo log for gym). **Trade-off:** none.
+- **[Page size 10, ~350 ms between pages, ONE 429 backoff then stop]** — Hevy caps
+  pageSize at 10; we pace requests and, on a 429, back off once (honouring
+  `Retry-After` if sent) then **stop cleanly and report progress**. **Why:** Hevy's
+  real rate ceiling is still unknown (G1 saw no headers); a clean stop is safe
+  because the job is idempotent — the owner just re-runs. The run also **measures**
+  the ceiling (we surface every rate-limit header seen). **Trade-off:** a low cap
+  means more pages, but history is small (~92 workouts ≈ 10 pages).
+- **[Store Hevy's raw `set.type` verbatim]** — no normalisation at write time
+  (normal/warmup/dropset/failure stored as-is, free text, no CHECK). **Why:** a
+  read-only cache must never break on an unseen Hevy tag; the known tags + warm-up
+  exclusion live in the read-time calc util (G8). **Trade-off:** none.
+- **[Mapping coded against Hevy's documented v1 shape, defensively]** — `id→hevy_id`,
+  `start_time→started_at`, `end_time→ended_at`; exercise `index→position`,
+  `exercise_template_id` kept now (for G6); set `index→position`, `weight_kg`,
+  `reps`, `type→set_type`, `rpe`, `distance_meters→distance_m`, `duration_seconds`.
+  Unknown/renamed fields degrade to `null` rather than crashing. **Why:** the key
+  is a server-only secret, so the live payload is confirmed by the owner's run, not
+  from the dev machine. **Trade-off:** if Hevy's real shape differs, the backfill
+  stops with a clear note instead of writing bad rows — by design.
+
+---
+
 ## Health → Gym "The Form Guide" — G0: the locked decisions (2026-06-24)
 
 > A new **read-only** Health module that caches Hevy workout data into its own

@@ -35,6 +35,61 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G3 — the backfill (one-shot history loader). BACKEND ONLY. No schema, no src/.
+WHAT CHANGED: the private `gym` edge function gained a **`"backfill"` mode** that pages all of Hevy's
+workouts into the G2 tables, server-side with the service-role key (owner-only RLS stays intact). It is
+**idempotent — a re-run never duplicates** (workouts upsert on `(user_id, hevy_id)`; each workout's children
+are **replaced**, not merged). Split into small files (none over ~250 lines), G1's count behaviour preserved:
+- **`hevy.ts`** (NEW) — read-only Hevy client: count + paged `GET /v1/workouts` (pageSize 10), surfaces any
+  rate-limit headers.
+- **`store.ts`** (NEW) — service-role writes: `upsertWorkout` (merge on `(user_id, hevy_id)`) +
+  `replaceWorkoutChildren` (delete this workout's exercises → sets cascade → reinsert). Stamps every row with
+  **`OWNER_USER_ID`** (the same secret telegram uses; if it/SERVICE_KEY/URL is missing it **fails closed and
+  names the missing secret** — never a hardcoded id).
+- **`backfill.ts`** (NEW) — the page loop: ~350 ms between pages, **one polite 429 backoff then a clean stop**,
+  payload→row mapping, and a tally report.
+- **`index.ts`** (slimmed to a dispatcher) — `mode:"count"` (G1 default) vs `mode:"backfill"` (G3).
+MAPPING (Hevy's documented v1 shape; unknown fields degrade to null, they don't crash the run):
+  workout `id→hevy_id`, `title`, `start_time→started_at`, `end_time→ended_at`; exercise `index→position`,
+  `title`, `exercise_template_id` (kept now for G6); set `index→position`, `weight_kg`, `reps`,
+  **`type→set_type` (raw, verbatim — no transform)**, `rpe`, `distance_meters→distance_m`, `duration_seconds`.
+FILES TOUCHED: **new** `supabase/functions/gym/hevy.ts`, `store.ts`, `backfill.ts`; rewrote
+`supabase/functions/gym/index.ts`. **No `src/`, no schema, spine untouched. Frankfurt `cntlptuacsujbdtwvbis` only.**
+HOW TO DEPLOY (owner — backend only):
+  `supabase functions deploy gym --project-ref cntlptuacsujbdtwvbis`  (private — **NO** `--no-verify-jwt`).
+  No new secrets: it reuses `HEVY_API_KEY`, the auto-injected `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`, and
+  the existing `OWNER_USER_ID`. (If `OWNER_USER_ID` isn't visible to the gym function, the backfill replies
+  `{ ok:false, missing:[...] }` — set it with `supabase secrets set OWNER_USER_ID='…' --project-ref …`.)
+HOW TO TRIGGER (the one-shot): `POST …/functions/v1/gym` with a **Bearer project key** and JSON body
+  **`{ "mode": "backfill" }`**. It replies with a tally:
+  `{ ok, workouts_written, exercises_written, sets_written, pages_fetched, page_size, delay_ms,
+     rate_limit_429s, rate_limits_seen, stopped_early, note }`.
+HOW TO VERIFY (the three checks — "deployed" ≠ "done"):
+  **V1 — count cross-check.** `select count(*) from gym_workouts;` → must equal **92** (your G1 Hevy count).
+  **V2 — spot-check one session** (eyeball against the Hevy app — weights, reps, set types, set count all match):
+    ```sql
+    select w.title, w.started_at, e.position as ex_pos, e.title as exercise,
+           s.position as set_pos, s.weight_kg, s.reps, s.set_type, s.rpe
+    from gym_workouts w
+    join gym_exercises e on e.workout_id = w.id
+    join gym_sets      s on s.exercise_id = e.id
+    where w.title ilike '%<a recent workout name>%'   -- or pick by w.started_at
+    order by e.position, s.position;
+    ```
+  **V3 — idempotency (the important one).** Re-trigger the SAME `{ "mode":"backfill" }` call, then re-run V1:
+    the count must be **UNCHANGED at 92** (also re-run V2 — same rows, not doubled). This proves the recovery net.
+KNOWN GAPS / RISKS:
+  - **Hevy rate ceiling — measured on YOUR run, not yet by me.** I couldn't see the live payload (the key is a
+    server-only secret), so paging/mapping are coded against Hevy's *documented* v1 shape, defensively. Read
+    `rate_limits_seen` + `rate_limit_429s` in the reply and paste them back — that's the real ceiling we confirm
+    before wiring the G5 cron. If the payload shape differs, the run **stops with a clear `note`** rather than
+    writing bad rows (re-run is always safe).
+  - Tables were empty before this; nothing else changed.
+NEXT: **G4 — incremental sync** (`GET /v1/workouts/events` since `gym_sync_state.last_event_at`, upsert
+  changes / remove deletes). Cadence (twice-daily cron) is wired at G5.
+FOR THE CHECKER: not gated (no schema). If you want, confirm `store.ts` only ever deletes **gym** rows
+  (`gym_exercises` by `workout_id`) and never references `tasks`/`events`/`categories`.
+
 ### 2026-06-24 — Health → Gym G2 — the gym tables. ⚠️ SCHEMA CHANGE — CHECKER-GATED (awaiting sign-off + run).
 WHAT CHANGED: five new **additive** tables for the read-only Hevy cache, each copied from the `marty_*`
 pattern (owner-only RLS, `user_id` keyed to `auth.users`, **no foreign key into the spine**):

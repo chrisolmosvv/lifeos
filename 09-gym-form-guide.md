@@ -104,8 +104,13 @@ later spec — not planned here.
   no spine FK; `gym_workouts` unique on `(user_id, hevy_id)`; intra-module FKs only.
   **SQL written (`db/17`–`db/21`, commit `e9238a9`); awaiting checker sign-off +
   owner run on Frankfurt + device-verify before it counts done.**
-- ⬜ **G3 — Backfill (one-shot, re-runnable).** Pull the full Hevy workout history
+- 🔨 **G3 — Backfill (one-shot, re-runnable).** Pull the full Hevy workout history
   (paginated `GET /v1/workouts`) into the tables. Re-running it is the recovery net.
+  **Built (backend only): `gym` function gains a `"backfill"` mode** across new
+  `hevy.ts` (paging + rate-limit surfacing), `store.ts` (service-role upsert +
+  replace-children), `backfill.ts` (loop, mapping, 429 backoff). **Awaiting owner
+  deploy + the three verifies** (count = 92, spot-check one session, re-run leaves
+  counts unchanged). "Deployed" ≠ "done".
 - ⬜ **G4 — Incremental sync logic.** A function that reads
   `GET /v1/workouts/events` since the last sync (from `gym_sync_state`) and
   upserts changes / removes deletes. (Cadence wired in G5.)
