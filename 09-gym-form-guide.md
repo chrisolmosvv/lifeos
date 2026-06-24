@@ -93,10 +93,12 @@ later spec — not planned here.
 **Backend foundation**
 - ✅ **G0 — Lock the spec into the brain.** Paperwork only (this doc + the
   `02/03/06/07` updates). No code.
-- ⬜ **G1 — Prove the Hevy connection (plumbing).** A new **private** edge function
-  (jwt-verified, like `brief`) that calls Hevy `GET /v1/workouts/count` with the
-  `api-key` header and returns the real workout count as JSON. No DB, no UI, no
-  schedule. Also **reports Hevy's rate limits** back.
+- ✅ **G1 — Prove the Hevy connection (plumbing).** A new **private** edge function
+  `supabase/functions/gym/index.ts` (jwt-verified, like `brief`) that calls Hevy
+  `GET /v1/workouts/count` with the `api-key` header and returns the real workout
+  count as JSON. No DB, no UI, no schedule. **Owner-verified — real count `92`.**
+  Hevy returned no rate-limit headers here, so the real ceiling gets confirmed at
+  the G3 backfill (watch for `429` / `Retry-After`).
 - ⬜ **G2 — The gym tables (schema, checker-gated).** `gym_workouts`,
   `gym_exercises`, `gym_sets`, `gym_sync_state`, `gym_pins` — additive, owner-RLS,
   no spine FK; `gym_workouts` unique on `(user_id, hevy_id)`. Its own SQL commit.

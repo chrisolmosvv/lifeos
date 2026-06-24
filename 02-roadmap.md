@@ -636,9 +636,11 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   `09-gym-form-guide.md`; recorded the locked decisions (`03-decisions.md`), the
   Fraunces big-numbers exception (`06-design.md`), and the four-screen Health spec
   (`07-ux-flows.md`). Name is **Health** from line one. No code.
-- ⬜ **G1 — Prove the Hevy connection (plumbing).** A new **private** edge function
-  (jwt-verified, like `brief`) calling Hevy `GET /v1/workouts/count`; returns the
-  real count. No DB/UI/schedule. Reports Hevy's rate limits back.
+- ✅ **G1 — Prove the Hevy connection (plumbing).** New **private** edge function
+  `supabase/functions/gym/index.ts` (jwt-verified, like `brief`) calling Hevy
+  `GET /v1/workouts/count` with the secret `HEVY_API_KEY`. Deployed Frankfurt;
+  **owner-verified — real count `92` came back.** Hevy exposed no rate-limit
+  headers on this endpoint (confirm the real ceiling at G3's paginated backfill).
 - ⬜ **G2 — The gym tables (schema, checker-gated, own SQL commit).** `gym_workouts`
   (`unique(user_id, hevy_id)`), `gym_exercises` (with `exercise_template_id`),
   `gym_sets`, `gym_sync_state`, `gym_pins` — additive, owner-RLS, no spine FK.
@@ -681,6 +683,10 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-24 — Health → Gym G1 — proved the Hevy connection (plumbing only; no DB, no src/).** New private
+  edge function `gym` reads Hevy `/v1/workouts/count` with the secret `HEVY_API_KEY`; deployed Frankfurt and
+  **owner-verified — real count `92`.** Hevy sent no rate-limit headers (confirm the ceiling at G3 backfill).
+  **NEXT: G2 — the gym tables (schema; checker-gated, own SQL commit + checker + owner verify).**
 - **2026-06-24 — Health → Gym G0 — locked the spec into the brain (paperwork only, no code).** Opened the new
   **G-track** (a read-only Hevy "Form Guide" under a new **Health** section — name baked in from line one).
   Created `09-gym-form-guide.md`; recorded the locked decisions (`03-decisions.md`), the Fraunces big-numbers

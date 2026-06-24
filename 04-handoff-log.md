@@ -35,6 +35,33 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G1 (Commit B) — prove the Hevy connection. PLUMBING ONLY. No DB, no src/.
+WHAT CHANGED:
+- **NEW private edge function `supabase/functions/gym/index.ts`** (110 lines). Calls Hevy
+  `GET /v1/workouts/count` with the `api-key` header and returns `{ ok, workout_count, rate_limits }`.
+  Read-only — never a Hevy write endpoint. No database, no Telegram, no schedule, no UI.
+- **PRIVATE** (deployed WITHOUT `--no-verify-jwt`, like `brief`): the gateway refuses any call without a
+  valid project JWT. The G5 cron will call it with the Vault service-role key, like the 7am brief.
+- **The Hevy key is a SECRET:** set as the Supabase function secret `HEVY_API_KEY` (inline at deploy, never
+  in a file/repo/response/log). Read at run time via `Deno.env.get`. The function has NO secret in it.
+- Named **`gym`** (not `gym-count`): like `brief`, one function that grows modes by request body (count now →
+  backfill/sync later, which the G5 cron targets).
+HOW IT WAS DEPLOYED + VERIFIED (done = real count seen):
+- `supabase secrets set HEVY_API_KEY='…' --project-ref cntlptuacsujbdtwvbis` (token inline), then
+  `supabase functions deploy gym --project-ref cntlptuacsujbdtwvbis` (private — NO `--no-verify-jwt`).
+- Test: `POST …/functions/v1/gym` with a Bearer project key →  **`{ "ok": true, "workout_count": 92,
+  "rate_limits": {} }`**. The owner's real Hevy count (92) came back. ✅
+KNOWN GAPS / RISKS:
+- **Hevy rate limits not yet known:** `/v1/workouts/count` returned no rate-limit headers, so `rate_limits`
+  was empty. Twice-daily sync (2 calls/day) is trivially safe regardless; confirm the real ceiling at **G3**
+  (during the paginated backfill, watch for `429` / `Retry-After`) before relying on the G5 cadence.
+- The Hevy key + a Supabase access token were shared in chat this session (owner chose "I deploy"). Both can
+  be rotated later if desired — the function reads whatever `HEVY_API_KEY` currently holds, no code change.
+NEXT: **G2 — the gym tables** (`gym_workouts` unique(user_id,hevy_id), `gym_exercises` w/
+`exercise_template_id`, `gym_sets`, `gym_sync_state`, `gym_pins`) — additive, owner-RLS, no spine FK. SCHEMA
+CHANGE → **checker-gated, its own SQL commit, checker sign-off + owner device-verify before it counts done.**
+FOR THE CHECKER: nothing this piece (no schema). G2 is the first schema change.
+
 ### 2026-06-24 — Health → Gym G0 (Commit A of the G0+G1 session) — lock the spec into the brain. DOCS ONLY.
 WHAT CHANGED (no code, no SQL, no `src/`, no `supabase/functions/`):
 - **NEW `09-gym-form-guide.md`** — the G-track plan doc: what Gym is, the **Health** naming (the section is
