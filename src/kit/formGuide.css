@@ -77,3 +77,59 @@
     gap: 1.5rem 1rem;
   }
 }
+
+/* --- Zone 2: the weekly trend chart (hand-rolled SVG) --------------------- */
+.fg-trend {
+  margin-top: 0.9rem;
+}
+.fg-trend-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  justify-content: center;
+  margin-bottom: 0.7rem;
+}
+.fg-trend-toggle button {
+  background: none;
+  border: none;
+  padding: 0 0 2px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  border-bottom: 1.5px solid transparent;
+}
+.fg-trend-toggle button.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+.fg-trend-toggle button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.fg-trend-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.fg-axis { stroke: var(--rule); stroke-width: 1; }
+.fg-grid { stroke: var(--rule-faint); stroke-width: 1; }
+.fg-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.fg-dot { fill: var(--ink); }
+.fg-dot--last { fill: var(--accent); }
+.fg-ytick,
+.fg-xtick {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  fill: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}

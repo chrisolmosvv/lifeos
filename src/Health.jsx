@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import ModuleHeader from './kit/ModuleHeader'
 import BoxScoreBand from './kit/BoxScoreBand'
+import TrendChart from './kit/TrendChart'
 import { loadGymData } from './gym/gymLoad'
 import { buildWorkouts, boxScore } from './gym/gymCalc'
+import { trendSeries } from './gym/gymTrend'
 import './kit/formGuide.css'
 
 // Health — the broadsheet "Health" section; its front page IS the Gym "Form
@@ -32,6 +34,7 @@ export default function Health() {
     [data],
   )
   const box = useMemo(() => boxScore(built), [built])
+  const trend = useMemo(() => (built.length ? trendSeries(built, { weeks: 12 }) : null), [built])
 
   return (
     <div className="fg-page">
@@ -42,10 +45,16 @@ export default function Health() {
       ) : built.length === 0 ? (
         <p className="fg-note">No workouts on record yet — once Hevy syncs, the Form Guide fills in here.</p>
       ) : (
-        <section className="fg-zone">
-          <ModuleHeader>The last 7 days</ModuleHeader>
-          <BoxScoreBand box={box} />
-        </section>
+        <>
+          <section className="fg-zone">
+            <ModuleHeader>The last 7 days</ModuleHeader>
+            <BoxScoreBand box={box} />
+          </section>
+          <section className="fg-zone">
+            <ModuleHeader>The trend</ModuleHeader>
+            <TrendChart series={trend} />
+          </section>
+        </>
       )}
     </div>
   )

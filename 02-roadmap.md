@@ -684,11 +684,14 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   `src/kit/FormGuideHead.jsx`/`formGuide.css` (serif "The Form Guide" nameplate, dateline, calm placeholder —
   no data zones yet); calc-check scaffolding removed. Owner decision: consistency headline = sessions-per-week.
 - ➡️ **G8 — (merged into G7 Commit A above — the calc util is built there).**
-- 🔨 **G9 — Front page zones 1–2** (two src/ commits). **Commit A ✅ BUILT (awaiting owner Mac check):**
-  removed the duplicate in-page header (deleted `FormGuideHead.jsx`; Health now sits under the shared
-  masthead) + the rolling-7-day **box-score band** (`BoxScoreBand.jsx` + `gymFormat.js`) — Volume · Sessions ·
-  Time · New PRs, Fraunces hero numbers, honest zero state, reads `gymCalc.boxScore`. **Commit B — the
-  switchable trend chart (NOT STARTED; recommend hand-rolled SVG, no new dep — confirm before building).**
+- 🔨 **G9 — Front page zones 1–2** (two src/ commits; both BUILT, awaiting final Mac check of the chart).
+  **Commit A ✅ owner-verified:** removed the duplicate in-page header (deleted `FormGuideHead.jsx`; Health now
+  sits under the shared masthead) + the rolling-7-day **box-score band** (`BoxScoreBand.jsx` + `gymFormat.js`).
+  **+ TZ fix ✅ owner-verified:** box score / training-days / streak now share one Europe/Amsterdam calendar-day
+  helper (`gymDates.js`) — Sessions reads the true 6, stable across time of day. **Commit B ✅ BUILT (awaiting
+  Mac check):** a hand-rolled inline-SVG **trend chart** (`TrendChart.jsx` + calc `gymTrend.js`), no new dep —
+  toggle: weekly volume (default) / weekly sessions / most-frequent lift's est-1RM; latest weekly point matches
+  the band (Node-verified). Display-only.
 - ⬜ **G10 — Front page zone 3.** Consistency heatmap.
 - ⬜ **G11 — Front page zones 4–5.** Body-part balance + recent sessions table.
 - ⬜ **G12 — Session report.** One workout in full + its templated story headline.

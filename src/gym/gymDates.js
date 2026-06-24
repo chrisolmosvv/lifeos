@@ -47,3 +47,10 @@ export function lastNDaysSet(n, now = Date.now()) {
   for (let i = 0; i < n; i++) out.add(shiftYMD(today, -i));
   return out;
 }
+
+// "2026-06-18" → "18 Jun" (Amsterdam). Noon-UTC avoids any date-shift. For axis labels.
+export function humanDayShort(ymd) {
+  const d = new Date(`${ymd}T12:00:00Z`);
+  if (!Number.isFinite(d.getTime())) return ymd;
+  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric", month: "short" }).format(d);
+}

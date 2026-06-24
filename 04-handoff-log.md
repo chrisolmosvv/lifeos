@@ -35,6 +35,38 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G9 Commit B — the switchable weekly trend chart. SRC/ ONLY. (Awaiting owner's Mac check of the chart + toggle.)
+WHAT CHANGED: front-page zone 2 — a calm, hand-rolled inline-SVG trend chart (NO new dependency) with a small
+toggle. Display-only; reads the calc layer (now on the corrected Amsterdam date logic).
+- **NEW `src/gym/gymTrend.js`** (calc layer, pure): `trendSeries(workouts,{weeks,now,lift})` → weekly **volume**
+  + **sessions** + the **most-frequent lift's est-1RM** per week, plus `mostFrequentLift`. Weeks are rolling
+  7-Amsterdam-day windows ending today (same `gymDates` definition as the box score), so the **latest weekly
+  Volume point equals the band's 7-day Volume** (and Sessions likewise — Node-verified equal). A week the lift
+  wasn't trained → a `null` point (the line breaks; honest, no fake zero). Default 12 weeks.
+- **NEW kit `src/kit/TrendChart.jsx`** (~140 lines): hand-rolled SVG line chart, quiet broadsheet styling
+  (theme tokens; faint baseline + a single max gridline, no loud grid; latest point in terracotta). Internal
+  toggle: **Volume / week** (default) · **Sessions / week** · **<most-frequent lift> · 1RM**. Honest empty
+  state ("Not enough history yet to chart this") per series; the 1RM tab disables itself if no lift resolves.
+- **`src/gym/gymDates.js`** gained `humanDayShort` (axis labels, e.g. "18 Jun", Amsterdam). **`src/Health.jsx`**
+  adds a second zone ("The trend") under the band — loads once, computes via `gymTrend` in a `useMemo`, passes
+  the series to the chart (UI does not recompute). **`formGuide.css`** gained the trend/​toggle styles.
+FILES TOUCHED: **new** `src/gym/gymTrend.js`, `src/kit/TrendChart.jsx`; **edited** `src/gym/gymDates.js`,
+`src/Health.jsx`, `src/kit/formGuide.css`; docs `02`/`04`. No `supabase/`, no `db/`. All files < 250 lines.
+`vite build` passes.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health**. Below the box-score band, "THE TREND"
+shows a quiet line chart, defaulting to **Volume / week** — the **rightmost (latest) point should match the
+band's Volume**. The three toggle tabs switch the series; "Sessions / week" latest point = the band's Sessions;
+the lift tab is named after your most-trained lift and shows its est-1RM over time (line breaks on weeks you
+didn't train it). Today/Calendar/Settings unchanged.
+THEN STOP — owner verifies the chart + toggle on the Mac. **This completes G9 (zones 1–2).**
+KNOWN GAPS / RISKS: the 1RM series picks your most-frequent lift automatically (no lift-picker yet — a later
+polish if you want to choose). `lastNWeeksSessions` (an older helper) is now unused by the UI; left in place,
+harmless. Otherwise none.
+NEXT: **G10 — front-page zone 3: the consistency heatmap** (calendar grid of training days; feature
+sessions-per-week per the G7 decision), then **G11** (body-part balance + recent sessions table), and **G8**
+the code-templated story headline.
+FOR THE CHECKER: n/a — src/ only, no schema.
+
 ### 2026-06-24 — Health → Gym G9 — box-score timezone fix (Amsterdam calendar-day window). SRC/ ONLY. (Awaiting owner's re-check Sessions = 6.)
 WHAT CHANGED: fixed a wrong Sessions count (showed 7, real 6). Diagnosed with a throwaway read-only page (now
 deleted): the box score selected sessions by a rolling **168-hour instant cutoff** + bucketed days by the
