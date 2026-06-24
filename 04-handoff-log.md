@@ -35,6 +35,47 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G4 — incremental sync ("sync" mode). BACKEND ONLY. No schema, no src/. (Awaiting 5-check verify.)
+WHAT CHANGED: the private `gym` function gains a third mode, **"sync"** — pull only what changed since
+the last run from Hevy's `GET /v1/workouts/events` (read-only) and apply it locally. The G5 cron will call
+this mode on a timer (G5 not built here).
+- **Reuses the G3 writer** (`upsertWorkout` + `replaceWorkoutChildren`) and `mapWorkout` — no second writer.
+- **The delete signal is CONFIRMED off live data** (owner deleted a throwaway "test api" workout): Hevy emits
+  an explicit `{ "type":"deleted", "id":"<workout hevy_id>", "deleted_at":"<iso>" }`. The delete branch reads
+  `id`, removes the local workout by `(user_id, hevy_id)` (its exercises/sets cascade — a gym→gym delete, the
+  spine is untouched), and advances the cursor on `deleted_at`.
+- **Safety model (this is the only pipe piece that deletes local rows):** COLLECT all events first, then APPLY
+  — updates first, deletes second (a delete always wins over an update in the same batch). A delete happens
+  ONLY for an explicit `type:"deleted"` event matched by hevy_id; we NEVER infer a delete from absence; if a
+  "deleted" event can't yield an id the run STOPS and reports the raw event (deletes nothing). A fetch stop
+  (429/error) applies NOTHING. The cursor (`gym_sync_state.last_event_at`) advances ONLY on a fully clean pass,
+  to the newest event time processed — never past what was applied. So any partial run is safe to just re-run
+  (idempotent). No-op uses `cursor + 1ms` so an unchanged Hevy yields ~0 events.
+FILES TOUCHED: **new** `supabase/functions/gym/sync.ts`; edited `gym/hevy.ts` (events fetcher),
+`gym/store.ts` (delete-by-hevy_id + cursor read/write), `gym/backfill.ts` (export `mapWorkout`),
+`gym/index.ts` ("sync" mode). No `src/`, no schema. All files < 250 lines. **Frankfurt only.**
+HOW TO VERIFY (owner — the FIVE checks; "deployed" ≠ "done"): see the message accompanying this entry for the
+exact deploy command, the `{"mode":"sync"}` trigger, and the count/spot-check SQL. In short:
+  • **Init run** (first sync, cursor empty) → reconciles history, count stays 92.
+  • **V1 no-op** → run sync again, nothing changed → ~0 events, count 92 (proves the cursor).
+  • **V2 edit** → change a weight in Hevy → sync → SQL shows the new value; count 92.
+  • **V3 add** → log a workout in Hevy → sync → count 92→93, new session present.
+  • **V4 delete** → delete a workout in Hevy → sync → that workout + its sets gone, count −1 exactly, nothing
+    else touched.
+  • **V5 recovery** → run `{"mode":"backfill"}` → restores cleanly (the net still works alongside sync).
+KNOWN GAPS / RISKS:
+- **Events feed shape (confirmed live):** newest-first, `{ events, page, page_count }`; "updated" carries the
+  full `workout`; "deleted" is `{ type, id, deleted_at }`. The feed holds the LATEST event per workout (92
+  workouts → 92 "updated"; after the test delete, +1 "deleted"), so an update can't resurrect a deleted
+  workout — and the apply-deletes-last ordering guards it anyway.
+- **First sync reprocesses history** (G3 backfill didn't set a cursor), so the init run touches all ~92
+  idempotently; the no-op proof is the SECOND run. Documented in the verify steps so it doesn't read as a
+  broken cursor.
+- One workout's JSON contains a control character that broke a shell `jq` probe; Deno's `res.json()` handles
+  it (G3 backfilled all 92 fine), so it's a shell-tooling artifact, not a function bug.
+NEXT: **G5 — the twice-daily cron (pg_cron + pg_net + the Vault service-role key) that calls `{"mode":"sync"}`
+on a timer, plus the Settings "Hevy" status line.** Only after all five checks pass on the owner's data.
+
 ### 2026-06-24 — Health → Gym G3 — the backfill (one-shot history loader). BACKEND ONLY. No schema, no src/.
 WHAT CHANGED: the private `gym` edge function gained a **`"backfill"` mode** that pages all of Hevy's
 workouts into the G2 tables, server-side with the service-role key (owner-only RLS stays intact). It is

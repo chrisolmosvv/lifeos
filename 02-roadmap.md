@@ -649,8 +649,13 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   — not done until all three. NEXT after that: G3.
 - ⬜ **G3 — Backfill (one-shot, re-runnable = the recovery net).** Pull full Hevy
   history (paginated `/v1/workouts`) into the tables.
-- ⬜ **G4 — Incremental sync logic.** Read `/v1/workouts/events` since the last sync
-  (`gym_sync_state`) and upsert changes / remove deletes.
+- 🔨 **G4 — Incremental sync logic.** Read `/v1/workouts/events` since the last sync
+  (`gym_sync_state`) and upsert changes / remove deletes. **Built (backend only): `gym`
+  function gains a `"sync"` mode** (`sync.ts` + events fetcher + delete-by-hevy_id + cursor).
+  Delete signal confirmed live (`{type:"deleted", id, deleted_at}`); collect-then-apply,
+  updates-before-deletes, explicit-delete-only, cursor advances on a clean pass. **Awaiting
+  the owner's five-check verify (no-op / edit / add / delete-removes-one / backfill-recovers)
+  before G5.** "Deployed" ≠ "done".
 - ⬜ **G5 — Twice-daily cron + a Settings "Hevy" status line.** pg_cron + pg_net +
   the existing Vault service-role key (real name confirmed here) fire G4 twice a
   day; Settings shows **connection + last-synced** status only (never the key).

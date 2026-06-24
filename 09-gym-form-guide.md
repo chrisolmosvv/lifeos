@@ -111,9 +111,12 @@ later spec — not planned here.
   replace-children), `backfill.ts` (loop, mapping, 429 backoff). **Awaiting owner
   deploy + the three verifies** (count = 92, spot-check one session, re-run leaves
   counts unchanged). "Deployed" ≠ "done".
-- ⬜ **G4 — Incremental sync logic.** A function that reads
+- 🔨 **G4 — Incremental sync logic.** A function that reads
   `GET /v1/workouts/events` since the last sync (from `gym_sync_state`) and
-  upserts changes / removes deletes. (Cadence wired in G5.)
+  upserts changes / removes deletes. (Cadence wired in G5.) **Built (backend only):
+  `gym` `"sync"` mode in `sync.ts`. Delete signal confirmed live
+  (`{type:"deleted", id, deleted_at}`); explicit-delete-only, collect-then-apply,
+  cursor advances only on a clean pass. Awaiting the owner's five-check verify.**
 - ⬜ **G5 — Twice-daily cron + a Settings "Hevy" status line.** pg_cron + pg_net +
   the Vault service-role key fire G4 twice a day (real Vault name confirmed here).
   A Settings "Hevy" line shows **connection + last-synced** status only.

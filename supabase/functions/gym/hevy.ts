@@ -67,6 +67,32 @@ export async function countWorkouts(): Promise<
   return { ok: true, count, rate };
 }
 
+// One page of the CHANGES feed (G4 incremental sync). Hevy returns events newest-first:
+//   { page, page_count, events: [ { type: "updated", workout: {...} }
+//                                | { type: "deleted", ... } ] }
+// We pass a `since` (ISO time) so we only get what changed; same defensive paging as the
+// workouts feed. Mapping/decisions about each event happen in sync.ts. Confirmed live: an
+// "updated" event carries the full workout under `.workout` (id, title, start_time, end_time,
+// exercises, updated_at, …); the "deleted" shape is read off real data in G4 before we act.
+export async function fetchWorkoutEventsPage(since: string, page: number): Promise<
+  | { ok: true; status: 200; events: unknown[]; pageCount: number | null; rate: Record<string, string> }
+  | { ok: false; status: number; note: string; rate: Record<string, string> }
+> {
+  const url =
+    `${HEVY_BASE}/v1/workouts/events?since=${encodeURIComponent(since)}&page=${page}&pageSize=${HEVY_PAGE_SIZE}`;
+  const res = await fetch(url, { headers: hevyHeaders() });
+  const rate = rateLimitInfo(res);
+  if (!res.ok) {
+    const note = await res.text().catch(() => "");
+    return { ok: false, status: res.status, note: note.slice(0, 200), rate };
+  }
+  const data = await res.json().catch(() => null) as Record<string, unknown> | null;
+  const events = Array.isArray(data?.events) ? (data!.events as unknown[]) : [];
+  const pcRaw = data?.page_count;
+  const pageCount = typeof pcRaw === "number" ? pcRaw : null;
+  return { ok: true, status: 200, events, pageCount, rate };
+}
+
 // One page of full workouts (each carries its exercises + sets inline). We return
 // the raw Hevy workout objects; mapping to our table shape happens in backfill.ts.
 // `page_count` (when present) tells us the last page; we also stop on an empty page.

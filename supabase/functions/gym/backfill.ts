@@ -32,7 +32,7 @@ const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
 //   exercise: index→position, title, exercise_template_id (kept now for G6)
 //   set:      index→position, weight_kg, reps, type→set_type (raw, verbatim),
 //             rpe, distance_meters→distance_m, duration_seconds
-function mapWorkout(raw: Record<string, unknown>) {
+export function mapWorkout(raw: Record<string, unknown>) {
   const rawExercises = Array.isArray(raw.exercises) ? raw.exercises : [];
   const exercises = rawExercises.map((e) => {
     const ex = e as Record<string, unknown>;

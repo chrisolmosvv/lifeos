@@ -127,3 +127,60 @@ export async function replaceWorkoutChildren(
     return null;
   }
 }
+
+// G4 — delete ONE workout by (owner, hevy_id); its gym_exercises + gym_sets cascade away.
+// This is a within-module (gym→gym) delete; it NEVER touches the task/event/category spine.
+// Returns how many workout rows were removed (0 if it was already gone — safe/idempotent), or
+// null on a request failure (the caller stops and reports). Only ever called for an EXPLICIT
+// Hevy "deleted" event matched by hevy_id — never inferred from a workout's absence.
+export async function deleteWorkoutByHevyId(hevyId: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/gym_workouts?user_id=eq.${OWNER_USER_ID}&hevy_id=eq.${encodeURIComponent(hevyId)}`,
+      { method: "DELETE", headers: headers({ "Prefer": "return=representation" }) },
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) ? rows.length : null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+// G4 — read the owner's stored incremental cursor (last_event_at), or null if there is no
+// sync-state row yet (first ever sync → caller starts from epoch). A read failure also
+// returns null; starting from epoch is safe because every write is idempotent.
+export async function readSyncCursor(): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/gym_sync_state?user_id=eq.${OWNER_USER_ID}&select=last_event_at`,
+      { headers: headers() },
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const v = Array.isArray(rows) ? rows[0]?.last_event_at : null;
+    return typeof v === "string" ? v : null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+// G4 — upsert the owner's sync state (one row per owner, PK = user_id). Written ONLY after a
+// fully successful sync pass, so the cursor never advances past what was actually applied.
+export async function writeSyncState(
+  s: { last_event_at: string | null; last_synced_at: string },
+): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/gym_sync_state?on_conflict=user_id`,
+      {
+        method: "POST",
+        headers: headers({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
+        body: JSON.stringify({ user_id: OWNER_USER_ID, ...s }),
+      },
+    );
+    return res.ok;
+  } catch (_err) {
+    return false;
+  }
+}
