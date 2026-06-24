@@ -35,6 +35,57 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Marty track M8 — interactive + smarter 7am brief. ⚠️ SCHEMA CHANGE — CHECKER-GATED, not done yet.
+WHAT CHANGED:
+- **Part A — smarter ordering (reorder, not rebuild):** the brief now LEADS with today's schedule (events +
+  time-blocked tasks) and puts due/overdue under a NEEDS-ATTENTION footer. Same caps: at most one
+  forgotten-task nudge + one gap offer. (day.ts checklist + facts reordered; write.ts prompt mirrors it.)
+- **Part B — reply to act:** the brief numbers its actionable items and appends a "Reply to act" list. A
+  reply **"done 1"** or **"move 3 to Friday"** acts on the EXACT briefed item through M3's edit engine, so
+  it's undoable. Replying by NAME ("done report") still works.
+- **State:** the number→item map is STORED when the brief sends (owner's decision over re-deriving) in a
+  new `marty_brief` table, so a reply maps a number to the exact row even if data changed. Numbers are only
+  shown once the map can be stored — so before the SQL, the brief is just the reordered version.
+FILES TOUCHED: **new** `db/14_marty_brief.sql`, `brief/actions.ts` (numbered list + map), `brief/store.ts`
+(parks the map), `telegram/briefmap.ts` (reads it); edited `brief/day.ts` (row ids threaded + reorder),
+`brief/index.ts` (build/store/append), `brief/write.ts` (prompt order), `telegram/intent.ts`
+(target_number), `telegram/edit.ts` (handleEdit forced-target path), `telegram/route.ts` (numbered routing).
+No `src/`. edit.ts is 240 lines (split candidate for M10). Committed `33610a1`; **deployed BOTH functions
+to Frankfurt** (the brief genuinely changed this time).
+
+⚠️ FOR THE CHECKER — THIS IS A SCHEMA CHANGE; please confirm (all hold):
+  1. **One row per owner** — `marty_brief` PK = user_id, so a new brief overwrites the old map (no pile-up).
+  2. **Additive + owner-only RLS** — brand-new table, same policies as the other Marty tables; nothing
+     existing changed.
+  3. **NO foreign key into tasks/events** — the item ids live inside the JSON `items` array as plain values,
+     so a deleted task/event can never block or cascade through the map (a reply to a gone number just gets
+     "that one's gone").
+  4. **Acts through the existing edit path** — a numbered reply resolves to {table,id} and runs M3's edit
+     engine (logs before-values → undoable); it does not introduce a parallel write or change spine meaning.
+
+OWNER — RUN THIS SQL FIRST (before the numbered-reply checks), in the Supabase SQL editor:
+  • Open Supabase → SQL Editor → New query → paste the WHOLE of `db/14_marty_brief.sql` → Run.
+  • Expect "Success. No rows returned." (Before this, the brief still arrives reordered — it just won't show
+    the numbered "Reply to act" list, because the numbers can't be stored/resolved yet.)
+
+HOW TO VERIFY (owner — phone + Mac). Have a few items today (an event with a time, a task due today, etc.):
+  1. **Smarter order:** text **"brief test"** → the brief LEADS with your schedule and ends with the
+     NEEDS-ATTENTION (due/overdue) items; still at most one "been waiting" nudge + one free-window offer.
+     Below it, a numbered "Reply to act:" list.
+  2. **Reply by NUMBER:** text **"done 1"** → it completes item #1 from that list → check the app → **"undo"**
+     reverts it.
+  3. **Reply by NAME still works:** text **"done <name>"** for a briefed task → completes it.
+  4. **Reschedule by number:** text **"move 3 to Friday"** → item #3 moves to Friday → check the app → undo
+     reverts.
+  5. **No regression:** a normal capture / question / M4 follow-up still works as before.
+KNOWN GAPS / RISKS:
+- Numbers are from your MOST RECENT brief; firing a new brief renumbers (the old map is overwritten).
+- A reply to a number whose item was deleted/finished since the brief says "that one's gone" (honest).
+- "done 2" where item 2 is an event → "that's an event, can't mark it done" (only tasks complete).
+NEXT: owner runs SQL → 5 phone checks → **checker sign-off**. Only then is M8 done. Then **M9 — daytime
+nudges**. Do NOT start M9 until the checker approves M8.
+FOR THE CHECKER: see the ⚠️ block above (the four confirmations).
+
 ### 2026-06-23 — Marty track M7 — voice notes (transcribe → same pipeline). No schema change.
 WHAT CHANGED:
 - You can SPEAK to Marty. A Telegram voice note is transcribed and the transcript runs through the EXACT

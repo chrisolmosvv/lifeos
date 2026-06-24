@@ -9,7 +9,29 @@
 
 ---
 
-## Marty M7 — voice notes route through the exact same pipeline; full parity, echo + undo as the safety net (2026-06-23)
+## Marty M8 — interactive brief: numbers stored at send-time; replies act via the M3 edit engine (2026-06-24)
+
+- **[Part A: reorder the existing brief, don't rebuild it]** — the brief now LEADS with today's schedule and
+  puts due/overdue under a NEEDS-ATTENTION footer; the one-nudge + one-gap caps are unchanged. Done by
+  reordering `day.ts` (checklist + facts) and the `write.ts` prompt — no new brief logic. **Why:** "don't
+  increase what the brief says — just order so what matters leads." **Trade-off:** none.
+- **[Part B: the number→item map is STORED at send-time, not re-derived on reply (owner's choice)]** — when
+  the brief sends, its numbered actionable list is parked in a new `marty_brief` table; a reply reads it, so
+  "1" is authoritative even if the data changed. **Why:** re-deriving is fragile — an item added/removed
+  between brief and reply would shift the numbers and act on the WRONG item; "verify, don't trust." The two
+  functions (brief sends, telegram receives the reply) can't share memory, so a table is required. **Trade-off:**
+  a schema change (checker-gated); accepted for correctness. A reply to a since-deleted number says "that
+  one's gone."
+- **[A numbered reply acts on the EXACT row via the existing M3 edit engine — a forced target, not a re-match]**
+  — `intent.ts` gained `target_number`; the number resolves (via `marty_brief`) to {table,id}, and
+  `handleEdit` takes a forced candidate so the op runs on that precise row (bypassing title matching). **Why:**
+  reuse M3 (so every brief action is undoable) AND avoid a title re-match that could hit a duplicate. Names
+  still work (the non-forced path). **Trade-off:** `edit.ts` grew to ~240 lines (split candidate for M10).
+- **[New `marty_brief` table — one row/owner, no FK to spine — CHECKER-GATED]** — PK = user_id (a new brief
+  overwrites); `items` is JSON [{n,table,id,title}] with the ids as plain values (no FK), so a deleted
+  task/event can't block/cascade through the map. The brief function got its one small write (`store.ts`);
+  it stays read-only otherwise. Numbers are only shown when the map actually stored, so pre-SQL the brief is
+  simply the reordered version (no dangling numbers). Must be run + checker-reviewed before M8 is done.
 
 - **[A voice note is transcribed, then fed into the SAME `route()` as a typed message — nothing is
   re-implemented]** — the transcript flows through capture / multi-item / category guessing / the follow-up

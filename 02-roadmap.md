@@ -589,8 +589,15 @@ its own small, owner-verified piece.
   apply. Every reply is prefixed **`Heard: "…"`** so a mis-hear is obvious + undoable.
   Owner's call: FULL PARITY (voice can do everything typed can; echo + undo are the net).
   Fixes the old "non-text silently dropped". Typed path unchanged.
-- ⬜ M8 — interactive brief · ⬜ M9 — daytime nudges · ⬜ M10 — hardening + retire test
-  aids. *(see `08-marty-upgrade.md`.)*
+- 🔨 **M8 — interactive + smarter brief (built + deployed; AWAITING SQL run + checker).**
+  Part A: the 7am brief now LEADS with the schedule and footers due/overdue under NEEDS
+  ATTENTION (same caps: one nudge + one gap). Part B: the brief numbers its actionable items
+  + appends a "Reply to act" list; **"done 1" / "move 3 to Friday"** act on the EXACT briefed
+  item via M3's edit engine (undoable); names still work. Number→item map stored at send-time
+  (owner's choice) in new table **`marty_brief`** (one row/owner, no FK to spine). **Not done
+  until `db/14_marty_brief.sql` is run and the checker signs off.** (Numbers only show once the
+  map can store — i.e. after the SQL.)
+- ⬜ M9 — daytime nudges · ⬜ M10 — hardening + retire test aids. *(see `08-marty-upgrade.md`.)*
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -605,6 +612,19 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-24 — Marty track M8 — interactive + smarter brief (built + deployed; AWAITING SQL + checker).**
+  Surfaced the state decision first; owner chose to STORE the number-map at send-time (vs fragile
+  re-derive). Part A reordered the existing brief (schedule leads; due/overdue → NEEDS ATTENTION footer;
+  same one-nudge/one-gap caps) in `day.ts` + `write.ts` prompt — didn't rebuild it. Part B: threaded row
+  IDs through `day.ts`, new `brief/actions.ts` builds a deduped numbered list + map, `brief/store.ts`
+  parks it in the new `marty_brief` table at send-time; `telegram/briefmap.ts` reads it; `intent.ts`
+  gained `target_number`; `edit.ts handleEdit` gained a forced-target path so "done 1" acts on the EXACT
+  briefed row via the existing M3 edit engine (undoable); names still work. ⚠️ **SCHEMA CHANGE —
+  checker-gated like M2/M4/M6: not done until `db/14_marty_brief.sql` is run AND the checker reviews.**
+  Numbers only show once the map can store (so pre-SQL the brief is just the reorder). Committed `33610a1`;
+  deployed BOTH functions to Frankfurt (brief genuinely changed this time). **NEXT: owner runs SQL → phone
+  checks → checker sign-off; then M9 — daytime nudges.** (Note: `edit.ts` is 240 lines — split candidate
+  for M10.)
 - **2026-06-23 — Marty track M7 — voice notes (built + deployed; no schema change).** Speak to Marty. A
   voice note is transcribed and the transcript runs through the EXACT SAME pipeline as typed — nothing
   re-implemented. Surfaced the one decision first (owner chose FULL PARITY: voice can do everything typed

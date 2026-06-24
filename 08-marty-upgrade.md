@@ -127,8 +127,15 @@ verify, and its own decision entry when we actually build it. The order may shif
   **Owner's call: full parity** — voice can do everything typing can (incl. undo/edit/
   delete); the echo + undo are the safety net. (Fixes the old "non-text silently dropped".)
 
-- **M8 — The interactive brief.** Reply to the 7am brief to act on it — tick a
-  nudge done, reschedule a forgotten task, accept a free-window offer — by chat.
+- **M8 — Interactive + smarter brief.** *(built + deployed — awaiting SQL run + checker.)*
+  **Part A (reorder, not rebuild):** the 7am brief now LEADS with today's schedule and puts
+  due/overdue in a NEEDS-ATTENTION footer; same caps (one nudge + one gap). **Part B
+  (interactive):** the brief numbers its actionable items and appends a "Reply to act" list;
+  a reply **"done 1"** / **"move 3 to Friday"** acts on the EXACT briefed item via M3's edit
+  engine (so it's undoable) — names still work too. The number→item map is stored at
+  send-time (owner's choice over re-deriving) in a new table **`marty_brief`**, which the
+  telegram function reads when a numbered reply arrives. (Numbers only show once the map can
+  be stored, i.e. after the SQL is run.)
 
 - **M9 — Daytime nudges.** A gentle, reserved midday check-in (the same
   "proactive engagement" idea as the brief, but during the day), built on the same
