@@ -605,8 +605,14 @@ its own small, owner-verified piece.
   edit engine (undoable); "no" closes it for today (no memory). "nudge test" verifies on demand;
   `db/16` is the production cron (owner-run). **Not done until `db/15_marty_nudges.sql` is run +
   checker signs off.**
-- ⬜ M10 — hardening + retire test aids (the deferred cleanup: `force`/every-3-min bypass,
-  `brief test` 0-day, extra AI calls per capture, split `edit.ts`). *(see `08-marty-upgrade.md`.)*
+- 🔨 **M10 — hardening pass (pieces 2–4 done + deployed; piece 1 awaiting owner cron confirm).**
+  (2) Gemini retry loop fails fast on deterministic 4xx, keeps the transient 5xx/408/network
+  retry; (3) `edit.ts` split — commit engine → leaf `editcore.ts` (edit.ts 242→203), identical
+  behaviour; (4) nudge "yes" re-checks the slot is still free → no double-book, declines
+  gracefully if taken. No schema change. **Piece 1 (retire `brief test` 0-day + `force`/every-
+  3-min + `nudge test` bypasses) NOT done** — needs the owner to confirm the every-3-min test
+  cron job is gone first (can't remove code a live cron still calls). Proposed: keep "brief" +
+  "nudge" as guardrail-respecting on-demand triggers. *(see `08-marty-upgrade.md`.)*
 - **M-track feature phases M0–M9 are all BUILT.** Once M6/M8/M9 clear their SQL+checker gates,
   the conversational + proactive Marty is complete; only the M10 hardening pass remains.
 
@@ -623,6 +629,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-24 — Marty track M10 — hardening pass (pieces 2–4 done + deployed; piece 1 flagged, not done).**
+  Cleanup only, as separate commits. (2) `_shared/gemini.ts`: the shared retry loop re-asked on ANY non-ok
+  status; a deterministic 4xx returns the same result at temp 0, so now it fails fast on 4xx and keeps only
+  the transient retry (5xx/408/network) — saves ~6s of pointless re-asks, same user-visible result
+  (`49b5abc`). (3) split `edit.ts` (was 242, the engine for M3/M8/M9): commit/commitReply + Change/CommitResult
+  moved to a leaf `editcore.ts`; edit.ts→203; `nudge.ts` imports from editcore now; pure move, identical
+  behaviour (`12d7d32`). (4) `telegram/nudge.ts` acceptNudge re-checks the slot is still free before the
+  block (the M9 checker's non-blocking flag) → declines gracefully if taken, never double-books; conservative
+  on a read failure (`0ee52b8`). No schema change; deployed both functions to Frankfurt. **Piece 1 (retire
+  test scaffolding) NOT done** — flagged for the owner: I can't see the live cron jobs, and removing the
+  `force`/every-3-min code while a test cron still calls it would break things. Owner to run
+  `select jobname, schedule, command from cron.job;` and confirm the every-3-min brief-test job is gone;
+  then I'll retire "brief test" 0-day + force + "nudge test" bypass, keeping "brief"/"nudge" as
+  guardrail-respecting on-demand triggers. **NEXT: owner confirms cron state → I do piece 1.**
 - **2026-06-24 — Marty track M9 — daytime opportunity nudges (built + deployed; AWAITING SQL + checker). END
   OF THE M-TRACK FEATURE PHASES.** Highest nag-risk, so guardrails are the feature. Surfaced two decisions
   first (owner chose: add the `marty_nudges` table; keep all test scaffolding). Built a NUDGE mode into the

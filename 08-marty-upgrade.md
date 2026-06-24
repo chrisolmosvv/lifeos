@@ -146,9 +146,17 @@ verify, and its own decision entry when we actually build it. The order may shif
   (undoable); **"no"** closes it for today only (no block, no memory). "nudge test" mirrors
   "brief test" for on-demand verifying.
 
-- **M10 — Hardening + retire the test scaffolding.** Remove the temporary aids
-  ("brief test" 0-day threshold, the brief's `force` gate, the every-3-min test
-  job) once the real features make them unnecessary; tighten and tidy.
+- **M10 — Hardening pass (close-out).** *(pieces 2–4 done + deployed; piece 1 awaiting owner
+  cron confirmation.)* Cleanup, no new features, as small separate commits. **Done:** (2) the
+  shared Gemini retry loop now fails fast on deterministic 4xx errors and keeps only the
+  transient "server busy" (5xx/408/network) retry; (3) `edit.ts` (242 lines, load-bearing) split
+  — the commit engine moved to a leaf `editcore.ts`, behaviour identical; (4) the nudge "yes"
+  now re-checks the slot is still free before blocking (no double-book; declines gracefully if
+  taken). **Pending owner confirmation (piece 1):** retire the test scaffolding ("brief test"
+  0-day, the brief's `force`/every-3-min bypass, "nudge test" force-bypass) — NOT removed yet,
+  because the every-3-min cron job lives in the owner's DB and removing the code while a test
+  cron still calls it would break things. Proposed: keep "brief" + "nudge" as guardrail-
+  respecting on-demand triggers; retire only the bypasses.
 
 > **Numbering note:** the track has grown as phases were defined session by session.
 > M1 merged "router" + "questions"; M2 became the **undo foundation** (before edit/delete);

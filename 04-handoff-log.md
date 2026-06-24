@@ -35,6 +35,47 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Marty track M10 — hardening pass (pieces 2–4 done; piece 1 flagged). No schema change.
+WHAT CHANGED (each its own commit so any one rolls back):
+- **(2) Gemini retry trim (`_shared/gemini.ts`, `49b5abc`):** the shared call retried on ANY non-ok status.
+  A deterministic 4xx returns the same answer at temp 0, so re-asking wasted ~6s. Now it retries only
+  transient failures (5xx / 408 / network throw) and errors immediately on other 4xx. The genuine "server
+  busy" retry is kept; capture/brief behave the same, just fail faster on the rare deterministic error.
+- **(3) Split `edit.ts` (`12d7d32`):** it had grown to 242 lines as the shared engine for M3 edits, M8
+  numbered replies, and M9 "yes". Moved the commit engine (`commit`/`commitReply` + `Change`/`CommitResult`)
+  into a new leaf module `editcore.ts`; `edit.ts` (ops + dispatch) and `telegram/nudge.ts` import from it.
+  Pure code move — behaviour identical. edit.ts → 203, editcore.ts 45.
+- **(4) Nudge double-book guard (`telegram/nudge.ts`, `0ee52b8`):** accepting a nudge now re-checks the slot
+  is still free (no event / other scheduled task overlaps) before blocking; if it's taken it declines
+  gracefully ("looks like that hour's taken now — left your calendar as it is") instead of double-booking.
+  Conservative — a read failure also declines. Still undoable when it does block.
+No `src/`. **No schema change.** All telegram files <250 (edit.ts 203). Deployed both functions to Frankfurt.
+
+⚠️ PIECE 1 — RETIRE TEST SCAFFOLDING — NOT DONE (needs owner confirmation first):
+- The "brief test" 0-day threshold, the brief's `force`/every-3-min bypass, and "nudge test"'s force-bypass
+  are still in the code. I did NOT remove them: the every-3-min test CRON JOB lives in the owner's database
+  (I can't see it), and removing the code while a live cron still calls it would break things.
+- OWNER, RUN THIS to list your live cron jobs:  select jobname, schedule, command from cron.job;
+  Look for: the every-3-min brief-test job (passes {"force":true}); the real 7am brief job (05:00+06:00 UTC);
+  and any nudge job. Tell me which exist. (If the every-3-min job is GONE, the force code is safe to remove.)
+- PLAN once confirmed: retire "brief test" 0-day + `force` + "nudge test" force-bypass, but KEEP "brief" and
+  "nudge" as on-demand triggers that RESPECT the guardrails (a plain on-demand "nudge" offers only if it's
+  9–6, within caps, and a real window exists — no bypass). So you keep on-demand testing without bypassing.
+HOW TO VERIFY (owner — phone + Mac; M10 pieces 2–4):
+  1. **Normal brief still works:** "brief" → a brief arrives (schedule-led, numbered list) as before.
+  2. **Capture unaffected:** single ("buy milk"), multi-item ("buy milk, lunch friday"), VOICE, and the
+     category guess all still work exactly as before.
+  3. **Edits still work after the split:** M3 ("move the dentist to Friday" / "done report"), M8 numbered
+     ("done 1") and M9 "yes" → all still apply and "undo" reverts them.
+  4. **Double-book guard (the one new behaviour):** trigger a nudge ("nudge test") → BEFORE replying, put
+     something else in that hour (add an event at that time in the app or by text) → then reply "yes" →
+     Marty says "looks like that hour's taken now…" and does NOT double-book.
+  5. Nothing else user-facing changed.
+KNOWN GAPS: piece 1 (scaffolding) is the only remaining M10 item, pending your cron confirmation.
+NEXT: owner confirms the cron state → I do piece 1 (retire bypasses, keep guardrail-respecting on-demand).
+FOR THE CHECKER (optional, no schema): confirm the retry trim keeps the 5xx retry; the edit.ts split is
+behaviour-preserving; the double-book check reads events + other scheduled tasks overlapping the slot.
+
 ### 2026-06-24 — Marty track M9 — daytime opportunity nudges. ⚠️ SCHEMA CHANGE — CHECKER-GATED. END OF M-TRACK.
 WHAT CHANGED:
 - Marty can proactively offer ONE good use of a free window — calmly, guardrailed. A scan (the brief

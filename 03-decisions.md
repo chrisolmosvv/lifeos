@@ -9,7 +9,31 @@
 
 ---
 
-## Marty M9 — daytime nudges: guardrails are the feature; one offer, undoable yes, no-memory no (2026-06-24)
+## Marty M10 — hardening pass: trim the wasted re-ask, split the edit engine, double-book guard; scaffolding deferred (2026-06-24)
+
+- **[The Gemini retry loop now fails fast on deterministic errors, keeping only the transient retry]** — it
+  re-asked on ANY non-ok status; at temperature 0 a deterministic 4xx returns the same result, so it now
+  retries only 5xx/408/network (the genuine "server busy") and errors immediately on other 4xx. **Why:** the
+  recon's "wasted re-ask." **Trade-off:** none user-visible — same error reply, just ~6s faster on the rare
+  deterministic error; the real server-busy retry is untouched. (Distinct from the M0 fix that moved the
+  capture JSON parse out of the retry loop — that wasted re-ask was already gone.)
+- **[`edit.ts` split: the commit engine extracted to a leaf `editcore.ts`]** — `edit.ts` had grown to 242
+  (the shared engine for M3 edits, M8 numbered replies, M9 "yes"). The `commit`/`commitReply` engine +
+  `Change`/`CommitResult` types moved to `editcore.ts`; `edit.ts` (ops + dispatch) and `nudge.ts` import from
+  it (no cycle: editcore is a leaf). **Why:** the ~250-line rule on a load-bearing file. **Trade-off:** none
+  — pure code move, behaviour identical (edit.ts→203).
+- **[The nudge "yes" re-checks the slot is still free before blocking]** — the M9 checker noted accept
+  checked the window hadn't passed + the task exists, but not whether the owner filled that hour between the
+  offer and the reply. `acceptNudge` now re-reads events + other scheduled tasks overlapping the slot; if
+  anything's there it declines ("looks like that hour's taken now — left your calendar as it is") rather than
+  double-book. Conservative: a read failure also declines. **Trade-off:** one extra read on accept — fine.
+- **[Test scaffolding retirement DEFERRED, pending the owner's cron state]** — the "brief test" 0-day, the
+  brief's `force`/every-3-min bypass, and "nudge test"'s force-bypass were NOT removed this session: the
+  every-3-min cron job lives in the owner's database (not visible from the repo), and removing the code while
+  a live cron still calls it would break things. **The plan once confirmed:** retire the bypasses, but KEEP
+  "brief" and "nudge" as on-demand triggers that RESPECT the real guardrails (a plain on-demand "nudge" only
+  offers if it's 9–6, within caps, and a real window exists — no bypass). **Why:** don't strip all testing
+  ability, and never remove code a live cron still serves.
 
 - **[Built as a NUDGE mode of the brief function, reusing its cron/pg_net + DST-safe local-hour gate]** —
   rather than a new function or a new timezone scheme, the daytime scan is a `{ nudge: true }` mode of the
