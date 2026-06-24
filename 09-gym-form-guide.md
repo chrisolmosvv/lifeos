@@ -117,9 +117,12 @@ later spec — not planned here.
   `gym` `"sync"` mode in `sync.ts`. Delete signal confirmed live
   (`{type:"deleted", id, deleted_at}`); explicit-delete-only, collect-then-apply,
   cursor advances only on a clean pass. Awaiting the owner's five-check verify.**
-- ⬜ **G5 — Twice-daily cron + a Settings "Hevy" status line.** pg_cron + pg_net +
-  the Vault service-role key fire G4 twice a day (real Vault name confirmed here).
-  A Settings "Hevy" line shows **connection + last-synced** status only.
+- 🔨 **G5 — Twice-daily cron + a Settings "Hevy" status line.** Two commits.
+  **Commit A (DB, checker-gated):** `db/22_gym_sync_cron.sql` — `gym-twice-daily-sync`
+  at `0 4,18 * * *`, reusing the confirmed Vault secret `brief_service_role_key` to
+  call `gym` `{"mode":"sync"}`. Self-healing (idempotent + clean-pass cursor).
+  **Written; awaiting checker + run + manual-fire.** **Commit B (src/ only):** the
+  Settings "last synced" status line — not started (after A).
 - ⬜ **G6 — Exercise-templates lookup.** Build a small lookup table from
   `GET /v1/exercise_templates` (muscle groups), keyed by `exercise_template_id`.
   Backfillable without re-pulling workout history.

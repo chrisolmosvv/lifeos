@@ -35,6 +35,57 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G5 Commit A — twice-daily sync cron. ⚠️ DB CHANGE — CHECKER-GATED (awaiting sign-off + run + manual-fire).
+WHAT CHANGED: one new pg_cron job, **`gym-twice-daily-sync`**, that pokes the PRIVATE `gym` function in
+**"sync" mode twice a day** — modelled EXACTLY on the live `brief_daily_7am_ams` cron (pg_cron → pg_net
+`net.http_post` → service-role key read from the Vault at run time).
+- **Vault secret name CONFIRMED LIVE (the db/16 trap avoided):** queried the project —
+  `select name from vault.decrypted_secrets` returns ONLY `brief_service_role_key` (no `service_role_key`).
+  The gym cron reuses **`brief_service_role_key`** (the same secret the working brief cron uses); no new
+  secret minted; read at run time, never in the SQL/repo.
+- **Cadence `0 4,18 * * *`** = 04:00 + 18:00 UTC = Amsterdam 06:00 & 20:00 (summer) / 05:00 & 19:00 (winter):
+  a morning + evening sync, clear of the brief (05/06 UTC) and nudge (07–17 UTC) windows. Twice daily is
+  trivially safe — the G3 full backfill saw 0 rate-limit 429s.
+- **Self-healing:** "sync" is idempotent and its cursor advances only on a clean pass (G4), so a missed or
+  partial scheduled run just catches up next time — the job can't run away or double-apply.
+FILES TOUCHED: **new** `db/22_gym_sync_cron.sql`. SQL only — no `src/`, no function code, spine untouched.
+**Frankfurt project `cntlptuacsujbdtwvbis` only.**
+⚠️ TWO LIVE-DB FINDINGS surfaced this session (NOT changed here — flagged for the owner):
+  • **The `marty-daytime-nudge` cron is silently broken:** it references Vault secret `service_role_key`,
+    which does NOT exist (only `brief_service_role_key` does), so its `Bearer` resolves empty and the private
+    brief function 401s it. The hourly nudge has not been firing via cron. Separate Marty-track fix
+    (re-point it to `brief_service_role_key`) — out of G5 scope; raised for a decision.
+  • **`gym_sync_state` is empty** — no `"sync"` has ever written to it, so G4's five-check verify wasn't
+    completed/persisted. Not a blocker for the cron; the Commit A manual-fire below is the first real sync and
+    doubles as the G4 sync proof.
+HOW TO VERIFY (owner — AFTER the checker signs off; Frankfurt SQL editor):
+  1. **Add the job:** paste/Run `db/22_gym_sync_cron.sql` → one row returned (the new job id).
+  2. **Confirm scheduled:** `select jobname, schedule from cron.job where jobname='gym-twice-daily-sync';`
+     → shows `0 4,18 * * *`.
+  3. **Manual fire (prove the scheduled path end-to-end, no waiting for the clock):** run the SAME call the
+     cron runs —
+     `select net.http_post(
+        url := 'https://cntlptuacsujbdtwvbis.supabase.co/functions/v1/gym',
+        headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer ' ||
+          (select decrypted_secret from vault.decrypted_secrets where name='brief_service_role_key')),
+        body := jsonb_build_object('mode','sync'));`
+     Wait ~1–2 min (the FIRST sync reconciles all ~92 workouts), then
+     `select last_synced_at, last_event_at from gym_sync_state;` → a fresh `last_synced_at` (now-ish).
+     Optional: `select status_code from net._http_response order by created desc limit 1;` → `200`.
+  No junk left behind — the fire writes real, idempotent sync state (that's the point).
+KNOWN GAPS / RISKS: none for the cron itself. If the manual fire does NOT populate `gym_sync_state`, that's a
+G4/sync issue to chase before relying on the schedule (the function returns a JSON report either way).
+NEXT: owner runs the SQL + checker signs the four points + the manual fire updates `last_synced_at` (all three)
+→ then **G5 Commit B — the Settings "last synced" status line (src/ only)**.
+FOR THE CHECKER — please confirm (raw SQL is `db/22_gym_sync_cron.sql`):
+  1. ADDITIVE — adds ONE cron job; alters nothing about the spine/any table; doesn't touch the existing
+     brief/nudge jobs.
+  2. Reuses the EXISTING Vault secret `brief_service_role_key` (confirmed live), read at run time — never in
+     the SQL or repo.
+  3. Twice daily (`0 4,18 * * *`); target is the `gym` function with body `{"mode":"sync"}` — not the brief,
+     not public.
+  4. Can't run away — idempotent sync + cursor-advances-only-on-a-clean-pass = a partial/failed run repeats safely.
+
 ### 2026-06-24 — Health → Gym G4 — incremental sync ("sync" mode). BACKEND ONLY. No schema, no src/. (Awaiting 5-check verify.)
 WHAT CHANGED: the private `gym` function gains a third mode, **"sync"** — pull only what changed since
 the last run from Hevy's `GET /v1/workouts/events` (read-only) and apply it locally. The G5 cron will call
