@@ -1,0 +1,33 @@
+/* Health → Gym, G5 Commit B — the read-only "Hevy: last synced" line in Settings.
+   A calm thin band below the account band, sharing its paper/ink/rule tokens and its
+   600px inner width so the two line up. Status + freshness only; never the key. */
+
+.hevy-status {
+  flex: none;
+  border-bottom: 1px solid var(--rule);
+  padding: 0.7rem 1.5rem;
+}
+.hevy-status-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.hevy-status-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+.hevy-status-val {
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.hevy-status-on {
+  color: var(--ink);
+  font-weight: 500;
+}
+.hevy-status-dim {
+  color: var(--ink-muted);
+}

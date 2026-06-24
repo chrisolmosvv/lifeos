@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient'
 import CategoryManager from './CategoryManager'
+import HevyStatus from './kit/HevyStatus'
 import './settings.css'
 
 // The Settings page: a calm account band (who you're signed in as + Log out)
@@ -28,6 +29,8 @@ export default function Settings({ email, onOpenArchive }) {
           </div>
         </div>
       </div>
+
+      <HevyStatus />
 
       <div className="settings-cats">
         <CategoryManager />
