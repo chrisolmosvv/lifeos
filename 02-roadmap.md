@@ -132,13 +132,13 @@ offer. **This is the V1 finish line — the proactive engagement layer is alive.
   (0 5,6 * * *). The temporary `brief_test_every3min` proving job has been removed (only
   the real 7am job remains). No spine/src change.
 
-## 🔨 Phase 7 — The redesign (look & feel pass)   ← ⏸ PAUSED (front-end track)
-> **PAUSED 2026-06-23 while the backend Marty track (M0–M9) runs.** Phase 7 lives
-> entirely in `src/` (front-end); the Marty track lives entirely in
-> `supabase/functions/` (backend). They touch different folders **on purpose** so
-> the two unfinished bodies of work don't collide. Resume Phase 7 (Settings re-skin,
-> mobile, T12) after the Marty track, or interleave — but never mix the two in one
-> commit. See `08-marty-upgrade.md` and the M-track section below.
+## 🔨 Phase 7 — The redesign (look & feel pass)   ← RESUMABLE (front-end track)
+> **Was PAUSED 2026-06-23 while the backend Marty track ran; that track (M0–M10) is now
+> COMPLETE (2026-06-24), so Phase 7 is the next track to resume** — Settings re-skin, the
+> category-manager/Archive polish, mobile Today/All-Tasks, and T12 (conservative trims).
+> Phase 7 lives entirely in `src/` (front-end); the Marty track was entirely in
+> `supabase/functions/` (backend) — different folders on purpose. Never mix the two in one
+> commit. See `08-marty-upgrade.md` for the finished backend track.
 
 The full UX/UI pass once the data foundation and core flows are real. Bring every
 screen up to the broadsheet identity in 06-design.md — layout, type, colour,
@@ -605,14 +605,16 @@ its own small, owner-verified piece.
   edit engine (undoable); "no" closes it for today (no memory). "nudge test" verifies on demand;
   `db/16` is the production cron (owner-run). **Not done until `db/15_marty_nudges.sql` is run +
   checker signs off.**
-- 🔨 **M10 — hardening pass (pieces 2–4 done + deployed; piece 1 awaiting owner cron confirm).**
-  (2) Gemini retry loop fails fast on deterministic 4xx, keeps the transient 5xx/408/network
-  retry; (3) `edit.ts` split — commit engine → leaf `editcore.ts` (edit.ts 242→203), identical
-  behaviour; (4) nudge "yes" re-checks the slot is still free → no double-book, declines
-  gracefully if taken. No schema change. **Piece 1 (retire `brief test` 0-day + `force`/every-
-  3-min + `nudge test` bypasses) NOT done** — needs the owner to confirm the every-3-min test
-  cron job is gone first (can't remove code a live cron still calls). Proposed: keep "brief" +
-  "nudge" as guardrail-respecting on-demand triggers. *(see `08-marty-upgrade.md`.)*
+- ✅ **M10 — hardening pass (DONE; all four pieces + deployed).** (1) Retired the test scaffolding
+  (owner confirmed no every-3-min cron): removed "brief test" 0-day, the brief's `force`/hour-gate
+  bypass, "nudge test" force. "brief"/"nudge" remain as on-demand triggers through the FULLY-
+  guardrailed path — `scanForNudge()` always enforces 9–6 + max-2/day + never-back-to-back, no
+  bypass anywhere. (2) Gemini retry fails fast on deterministic 4xx, keeps the transient retry.
+  (3) `edit.ts` split → leaf `editcore.ts` (242→203), identical behaviour. (4) Nudge "yes"
+  re-checks the slot is still free → no double-book. No schema change; cron jobs untouched.
+- **🎉 The Marty backend track (M0–M10) is COMPLETE.** Conversational + proactive Marty, end to
+  end, all undoable, all free-tier. The paused Phase 7 front-end redesign is the next track to
+  resume (Settings re-skin, mobile, T12).
 - **M-track feature phases M0–M9 are all BUILT.** Once M6/M8/M9 clear their SQL+checker gates,
   the conversational + proactive Marty is complete; only the M10 hardening pass remains.
 
@@ -629,6 +631,17 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-24 — Marty track M10 Piece 1 — retired the test scaffolding. M10 + THE WHOLE M-TRACK COMPLETE.**
+  Owner confirmed only two live crons (real 7am brief + real hourly nudge; NO every-3-min test job), so the
+  bypass code was safe to remove. Removed: the brief `test` 0-day path (`buildAndSend()` always uses
+  FORGOTTEN_DAYS), the brief `force`/hour-gate bypass (the 7am gate is now just `scheduled && localHour() !==
+  SEND_HOUR`), and `scanForNudge`'s `force` param (it now ALWAYS enforces 9–6 + caps + never-back-to-back).
+  Triggers: "brief" (on-demand, real-rule) and "nudge" (on-demand, fully guardrailed — offers only if it's
+  genuinely 9–6, within caps, with a real window; otherwise silent). `fireBrief()`/`fireNudge()` take no
+  args; "brief test"/"nudge test" gone. Confirmed by sweep: NO force/test/bypass route left in any code path
+  — the only ways to fire (on-demand "brief"/"nudge" + the two live crons) all go through the guardrailed
+  path. Stale comments tidied; cron jobs untouched. Deployed both functions (`bb3253a`). **The Marty backend
+  track M0–M10 is DONE. NEXT: resume the paused Phase 7 front-end redesign (Settings re-skin, mobile, T12).**
 - **2026-06-24 — Marty track M10 — hardening pass (pieces 2–4 done + deployed; piece 1 flagged, not done).**
   Cleanup only, as separate commits. (2) `_shared/gemini.ts`: the shared retry loop re-asked on ANY non-ok
   status; a deterministic 4xx returns the same result at temp 0, so now it fails fast on 4xx and keeps only

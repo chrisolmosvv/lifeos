@@ -146,17 +146,21 @@ verify, and its own decision entry when we actually build it. The order may shif
   (undoable); **"no"** closes it for today only (no block, no memory). "nudge test" mirrors
   "brief test" for on-demand verifying.
 
-- **M10 — Hardening pass (close-out).** *(pieces 2–4 done + deployed; piece 1 awaiting owner
-  cron confirmation.)* Cleanup, no new features, as small separate commits. **Done:** (2) the
-  shared Gemini retry loop now fails fast on deterministic 4xx errors and keeps only the
-  transient "server busy" (5xx/408/network) retry; (3) `edit.ts` (242 lines, load-bearing) split
-  — the commit engine moved to a leaf `editcore.ts`, behaviour identical; (4) the nudge "yes"
-  now re-checks the slot is still free before blocking (no double-book; declines gracefully if
-  taken). **Pending owner confirmation (piece 1):** retire the test scaffolding ("brief test"
-  0-day, the brief's `force`/every-3-min bypass, "nudge test" force-bypass) — NOT removed yet,
-  because the every-3-min cron job lives in the owner's DB and removing the code while a test
-  cron still calls it would break things. Proposed: keep "brief" + "nudge" as guardrail-
-  respecting on-demand triggers; retire only the bypasses.
+- **M10 — Hardening pass (close-out).** *(DONE — all four pieces + deployed.)* Cleanup, no new
+  features, as small separate commits. (1) **Retired the test scaffolding** (owner confirmed no
+  every-3-min cron): removed the "brief test" 0-day path, the brief's `force`/hour-gate bypass,
+  and "nudge test"'s force. "brief" and "nudge" remain as on-demand triggers that go through the
+  FULLY-guardrailed path — `scanForNudge()` always enforces 9–6 + max-2/day + never-back-to-back,
+  with NO bypass left anywhere. (2) Gemini retry loop fails fast on deterministic 4xx, keeps the
+  transient (5xx/408/network) "server busy" retry. (3) Split `edit.ts` (242→203): the commit
+  engine moved to a leaf `editcore.ts`, behaviour identical. (4) The nudge "yes" re-checks the
+  slot is still free before blocking (no double-book; declines gracefully if taken). No schema
+  change; cron jobs untouched.
+
+> **M-track COMPLETE.** M0–M9 are all built, deployed, SQL-run and checker-approved; M10 (this
+> hardening pass) is done. Marty is now conversational + proactive end to end — capture by text
+> and voice, questions, edit/delete, multi-turn and multi-item, category learning, the
+> interactive numbered brief, and guardrailed daytime nudges — all undoable, all on free tiers.
 
 > **Numbering note:** the track has grown as phases were defined session by session.
 > M1 merged "router" + "questions"; M2 became the **undo foundation** (before edit/delete);

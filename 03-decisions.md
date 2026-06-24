@@ -27,13 +27,17 @@
   offer and the reply. `acceptNudge` now re-reads events + other scheduled tasks overlapping the slot; if
   anything's there it declines ("looks like that hour's taken now — left your calendar as it is") rather than
   double-book. Conservative: a read failure also declines. **Trade-off:** one extra read on accept — fine.
-- **[Test scaffolding retirement DEFERRED, pending the owner's cron state]** — the "brief test" 0-day, the
-  brief's `force`/every-3-min bypass, and "nudge test"'s force-bypass were NOT removed this session: the
-  every-3-min cron job lives in the owner's database (not visible from the repo), and removing the code while
-  a live cron still calls it would break things. **The plan once confirmed:** retire the bypasses, but KEEP
-  "brief" and "nudge" as on-demand triggers that RESPECT the real guardrails (a plain on-demand "nudge" only
-  offers if it's 9–6, within caps, and a real window exists — no bypass). **Why:** don't strip all testing
-  ability, and never remove code a live cron still serves.
+- **[Test scaffolding RETIRED (owner confirmed no every-3-min cron)]** — the owner verified only two live
+  cron jobs (the real 7am brief + the real hourly nudge, both `scheduled`, neither `force`), so the bypass
+  code served nothing live and was safe to remove. Removed: the brief `test` 0-day path, the brief
+  `force`/hour-gate bypass, and `scanForNudge`'s `force` param (it now ALWAYS enforces 9–6 + caps +
+  never-back-to-back). **Kept** "brief" and "nudge" as on-demand triggers that go through the FULLY-
+  guardrailed path — an on-demand "nudge" offers only when it genuinely would (9–6, within caps, real
+  window) and is silent otherwise. **Verified by sweep:** no force/test/bypass route remains in any code
+  path; the only ways to fire a brief/nudge (on-demand + the two live crons) all run the guarded code.
+  **Why:** retire dead test paths without losing on-demand testing, and never remove code a live cron serves.
+  **Trade-off:** an on-demand "nudge" outside hours / over caps now stays silent (correct, by design — there
+  is no longer any way to force one).
 
 - **[Built as a NUDGE mode of the brief function, reusing its cron/pg_net + DST-safe local-hour gate]** —
   rather than a new function or a new timezone scheme, the daytime scan is a `{ nudge: true }` mode of the

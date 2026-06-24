@@ -35,6 +35,32 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Marty track M10 Piece 1 — retired the test scaffolding. M10 + WHOLE M-TRACK COMPLETE. No schema.
+WHAT CHANGED:
+- Owner confirmed the live cron jobs: ONLY the real 7am brief (`scheduled`) and the real hourly nudge
+  (`scheduled`, not force) — NO every-3-min test job. So the bypass code served nothing live and was removed:
+  - The brief `test` 0-day forgotten path → `buildAndSend()` always uses FORGOTTEN_DAYS.
+  - The brief `force`/hour-gate bypass → the 7am gate is now just `scheduled && localHour() !== SEND_HOUR`.
+  - `scanForNudge`'s `force` param → it now ALWAYS enforces 9–6 + max-2/day + never-back-to-back.
+- Triggers are now **"brief"** (on-demand, real-rule) and **"nudge"** (on-demand, FULLY guardrailed — offers
+  only if it's genuinely 9–6, within caps, and a real window exists; otherwise stays quiet — correct, not a
+  bug). "brief test" and "nudge test" are gone; `fireBrief()`/`fireNudge()` take no args.
+- CONFIRMED BY SWEEP (plain English): there is NO force/test/bypass route left anywhere in the code. The only
+  ways to fire a brief or nudge — on-demand "brief"/"nudge" AND the two live crons ({scheduled:true} and
+  {nudge:true,scheduled:true}) — ALL run the fully-guardrailed path. No guardrail-skipping path remains.
+FILES TOUCHED: `brief/index.ts` (drop test/force parsing + 0-day; nudge always guarded), `brief/nudge.ts`
+(scanForNudge no force), `brief/day.ts` (comment), `telegram/route.ts` (fireBrief/fireNudge no args; "brief"
++ "nudge" triggers). No `src/`. **No schema change. Cron jobs untouched** (they're correct as-is). Committed
+`bb3253a`; deployed both functions to Frankfurt.
+HOW TO VERIFY (owner — phone):
+  1. **"brief"** still works on demand → a normal brief arrives (schedule-led + numbered list).
+  2. **"nudge"** on demand → offers ONLY if it's genuinely 9–6, within today's caps, and a real free window
+     exists; otherwise Marty stays quiet (that's correct — there is no longer any way to force one).
+  3. **No force path:** there's no "brief test"/"nudge test" anymore, and no way to fire a nudge outside 9–6
+     or back-to-back. (The hourly cron + the 9–6/caps gates are the only nudge route.)
+NEXT: the backend M-track (M0–M10) is DONE. Resume the paused Phase 7 front-end redesign (Settings re-skin,
+mobile, T12) when ready — that work lives in `src/`, never mixed with backend commits.
+
 ### 2026-06-24 — Marty track M10 — hardening pass (pieces 2–4 done; piece 1 flagged). No schema change.
 WHAT CHANGED (each its own commit so any one rolls back):
 - **(2) Gemini retry trim (`_shared/gemini.ts`, `49b5abc`):** the shared call retried on ANY non-ok status.
