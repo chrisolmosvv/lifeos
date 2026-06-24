@@ -678,9 +678,11 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   `src/gym/gymCalc.js` (Epley 1RM, PR=heaviest, total volume, top-set, warm-up exclusion via
   exact `"warmup"`, streak/consistency, body-part split, rolling-7-day box score) + a thin
   `src/gym/gymLoad.js` fetcher + a **throwaway** `calccheck.html` harness (removed in Commit B).
-  Nothing visible in the app. **Commit B — Health nav + empty Form Guide shell (NOT STARTED;
-  begins only after the owner confirms Commit A's numbers):** view `health`, NAV label `Health`
-  (third), an empty broadsheet-dressed Form Guide page; remove the calc-check scaffolding.
+  Nothing visible in the app. **✅ Owner hand-verified the numbers against real Hevy sessions.**
+  **Commit B — Health nav + empty Form Guide shell ✅ BUILT (awaiting owner's Mac check):** `health` view +
+  branch in `LoggedIn.jsx`, NAV label `Health` (third) in `EditionHeader.jsx`, new `src/Health.jsx` + gym kit
+  `src/kit/FormGuideHead.jsx`/`formGuide.css` (serif "The Form Guide" nameplate, dateline, calm placeholder —
+  no data zones yet); calc-check scaffolding removed. Owner decision: consistency headline = sessions-per-week.
 - ➡️ **G8 — (merged into G7 Commit A above — the calc util is built there).**
 - ⬜ **G9 — Front page zones 1–2.** Box-score band + trend chart.
 - ⬜ **G10 — Front page zone 3.** Consistency heatmap.

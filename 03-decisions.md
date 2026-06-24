@@ -9,6 +9,22 @@
 
 ---
 
+## Health → Gym — G7: the calc layer + consistency metric (2026-06-24)
+- **[Consistency headline = sessions-per-week; daily streak is a small secondary
+  stat only]** — the front page leads on **how many sessions per week** (last 8
+  weeks); a strict consecutive-**day** streak is shown small, beside it, never as
+  the headline. **Why:** rest days are normal and correct in training — a daily
+  streak punishes healthy recovery and would read as "you're failing" on a planned
+  off-day; sessions-per-week rewards the real habit. (Owner-confirmed after
+  hand-checking G7 Commit A against real Hevy data.) **Trade-off:** none — both
+  numbers are computed; this is purely which one gets the visual weight.
+- **[Calc layer order: built the maths (calc util) BEFORE the visible shell]** —
+  the doc lists the shell as G7 and the calc as G8; the owner reordered to build
+  and **hand-verify the maths first**, then dress the empty page. **Why:** numbers
+  you can't see can still be wrong — verifying them against real sessions before
+  any UI exists removes the risk that a styled page hides a maths bug. **Trade-off:**
+  none — same files, safer order.
+
 ## Health → Gym — G3: the backfill (2026-06-24)
 
 - **[Replace-children on re-import, not merge]** — when a workout already exists,

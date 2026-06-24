@@ -51,6 +51,9 @@ later spec — not planned here.
 - **Warm-ups excluded** from PR / estimated-1RM / top-set; **total volume counts
   all sets**. (Hevy tags each set normal / warmup / dropset / failure.)
 - **Rolling-7-day box-score band:** Volume, Sessions, Time, New PRs.
+- **Consistency headline = sessions-per-week** (last 8 weeks); a strict daily
+  streak is a **small secondary stat only** (rest days are normal — a daily streak
+  shouldn't read as failure). Owner-confirmed at G7 after hand-checking real data.
 - **Sync cadence: twice daily** via pg_cron, reusing the **existing Vault
   service-role key** (its real name confirmed when we build the cron at **G5**);
   Hevy webhooks are a later upgrade. **G1 confirms Hevy's own API rate limits**

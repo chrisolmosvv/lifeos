@@ -35,6 +35,34 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G7 Commit B — Health nav + empty Form Guide shell. SRC/ ONLY. (Awaiting owner's Mac check.)
+WHAT CHANGED: the first VISIBLE Health piece — a "Health" tab in the top nav that opens an empty, correctly-
+dressed "The Form Guide" page. No real data zones yet (those are G9–G11); this is the frame.
+- **NEW `src/Health.jsx`** — the Health section screen; its front page is the Gym "Form Guide". Renders the
+  section masthead + a calm placeholder ("The Form Guide — coming together"). No numbers yet.
+- **NEW gym kit `src/kit/FormGuideHead.jsx` + `src/kit/formGuide.css`** — a sealed broadsheet section head:
+  topline kicker "LifeOS · The Health Section", the serif "The Form Guide" nameplate, a dateline between two
+  hairline rules. All theme tokens; no hard-coded colour/type. The page frame + placeholder styles live here too.
+- **Two shell edits ONLY (the allowed ones):** `EditionHeader.jsx` NAV gains `{ id:'health', label:'Health' }`
+  (third — Today · Calendar · **Health** · Settings); `LoggedIn.jsx` gains the `Health` import + a
+  `view === 'health'` branch. Nothing else in the shell touched.
+- **Removed the Commit A throwaway scaffolding:** `calccheck.html` + `src/gym/calccheck.js` (git rm). The pure
+  `src/gym/gymCalc.js` + `src/gym/gymLoad.js` stay (G9 wires them in).
+- **Owner decision recorded:** consistency headline = **sessions-per-week**; daily streak is a small secondary
+  stat only (`03-decisions.md` G7 block + `09-gym-form-guide.md` locked list).
+FILES TOUCHED: **new** `src/Health.jsx`, `src/kit/FormGuideHead.jsx`, `src/kit/formGuide.css`; edited
+`src/EditionHeader.jsx` (NAV entry), `src/LoggedIn.jsx` (import + branch); **deleted** `calccheck.html`,
+`src/gym/calccheck.js`; docs `02`/`03`/`09`. No `supabase/`, no `db/`. All files < 250 lines. `vite build` passes.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in. You should see **Health** in the top nav, third
+(Today · Calendar · Health · Settings). Tap it → an empty, broadsheet-styled "The Form Guide" page (serif
+nameplate, dateline between hairlines, a calm "coming together" note). Today / Calendar / Settings all still
+work and look unchanged. (The `/calccheck.html` page is now gone — expected.)
+KNOWN GAPS / RISKS: the page is intentionally empty (frame only). None otherwise.
+NEXT: **G9 — front-page zones 1–2: the box-score band (rolling-7-day Volume / Sessions / Time / New PRs) +
+the trend chart**, wiring in `gymLoad.js` + `gymCalc.js`. Then G10 (consistency heatmap — featuring
+sessions-per-week per the G7 decision) and G11 (body-part balance + recent sessions).
+FOR THE CHECKER: n/a — src/ only, no schema, no checker gate.
+
 ### 2026-06-24 — Health → Gym G7 Commit A — the calc layer (pure maths + throwaway check). SRC/ ONLY. (Awaiting owner hand-verify of the numbers BEFORE Commit B.)
 WHAT CHANGED: the compute-on-read maths for the Form Guide — pure functions only, nothing visible in the app
 yet. Verify the numbers by hand, then I build the visible shell (Commit B).

@@ -1,0 +1,86 @@
+/* Form Guide — the gym kit's broadsheet "furniture" for the Health section.
+   Every class is prefixed `fg-`; all colour and type come from the shared theme
+   (theme.css), nothing here hard-codes a value. Sealed: used only by the Form
+   Guide kit blocks + the Health screen. The data zones (G9+) add their own
+   blocks here; this file starts with the section head + the empty-page frame. */
+
+/* --- The page frame ------------------------------------------------------- */
+.fg-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+/* --- FormGuideHead: the section masthead ---------------------------------- */
+.fg-head {
+  text-align: center;
+  margin: 0 0 1.5rem;
+}
+.fg-topline {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--ink-muted);
+}
+.fg-nameplate {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1.02;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  margin: 0.3rem 0 0.7rem;
+}
+.fg-rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  height: 0;
+  margin: 0;
+}
+.fg-dateline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+}
+.fg-dateline-date {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* --- The calm empty-page placeholder (replaced by the zones in G9+) ------- */
+.fg-placeholder {
+  text-align: center;
+  padding: 3.5rem 1rem;
+  color: var(--ink-muted);
+}
+.fg-placeholder-lead {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.4rem;
+  color: var(--ink);
+  margin: 0 0 0.6rem;
+}
+.fg-placeholder-sub {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-width: 34ch;
+  margin: 0 auto;
+}
+
+/* On the phone the dateline tagline steps aside so it never collides with the
+   date (Health is desktop-first; this just keeps the head tidy if narrowed). */
+@media (max-width: 768px) {
+  .fg-dateline .kit-kicker {
+    display: none;
+  }
+}
