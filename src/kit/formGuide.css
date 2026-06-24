@@ -214,3 +214,51 @@
   height: 11px;
   border-radius: 2px;
 }
+
+/* --- Zone 4: body-part balance (ranked bars) ------------------------------ */
+.fg-bal {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fg-bal-row {
+  display: grid;
+  grid-template-columns: 9rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+.fg-bal-name {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fg-bal-track {
+  height: 10px;
+  background: var(--rule-faint);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.fg-bal-fill {
+  display: block;
+  height: 100%;
+  background: color-mix(in srgb, var(--accent) 55%, var(--paper));
+  border-radius: 2px;
+}
+.fg-bal-val {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .fg-bal-row {
+    grid-template-columns: 6.5rem 1fr 2rem;
+    gap: 0.5rem;
+  }
+}

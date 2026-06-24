@@ -696,7 +696,10 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   `ConsistencyHeatmap.jsx` (kit): a ~12-week grid of rolling 7-Amsterdam-day columns (last column = the band
   window, so it agrees with band/streak — Node-verified), calm terracotta tints graded by sets/day. Leads with
   **sessions-per-week** (G7 headline decision); daily streak is a small secondary figure. Display-only.
-- ⬜ **G11 — Front page zones 4–5.** Body-part balance + recent sessions table.
+- 🔨 **G11 — Front page zones 4–5** (two src/ commits). **Commit A ✅ BUILT (awaiting Mac check):** body-part
+  balance (`gymBalance.js` + `MuscleBalance.jsx`) — last-7-days working sets per PRIMARY muscle group (G6
+  dictionary join, resolved in the UI), ranked calm bars, same window as the band. **Commit B — recent-sessions
+  table (NOT STARTED).** (Front page complete after B.)
 - ⬜ **G12 — Session report.** One workout in full + its templated story headline.
 - ⬜ **G13 — Archive.** All past sessions, browsable / paginated.
 - ⬜ **G14 — Records.** PRs + estimated 1RM per exercise, with dates.

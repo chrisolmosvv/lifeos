@@ -35,6 +35,37 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G11 Commit A — body-part balance (front-page zone 4). SRC/ ONLY. (Awaiting owner's Mac check.)
+WHAT CHANGED: front-page zone 4 — how the last-7-Amsterdam-days training splits across primary muscle groups,
+proving the G6 muscle dictionary resolves in the UI. Display-only; same window as the band.
+- **NEW `src/gym/gymBalance.js`** (calc layer, pure): `muscleBalance(workouts,{days,now})` → ranked
+  `{ muscle, sets, volume }` over `lastNDaysSet(7)` (the SAME window as the band/heatmap, shared gymDates).
+  Groups by `ex.muscle` (the G6 `primary_muscle_group` already joined onto each exercise by `buildWorkouts`).
+  **MEASURE = working-set COUNT** (warm-ups excluded, matching PR/1RM) — chosen over volume because volume is
+  dominated by heavy compounds and is 0 for bodyweight/duration moves; set-count is the truer "attention per
+  muscle" and never drops a reps-only/duration exercise (it still adds sets, 0 volume, no NaN). Volume is kept
+  for the hover. An orphan template (none today) falls back to "other".
+- **NEW kit `src/kit/MuscleBalance.jsx`**: a calm ranked list — muscle name, a quiet terracotta bar (sets ÷
+  top muscle's sets, `color-mix` on `--accent`), the set count (tabular). Labels humanised ("lower_back" →
+  "Lower back"). Honest empty state ("No working sets logged in the last 7 days"). Hover shows sets + volume.
+- **`src/Health.jsx`** adds the "Body-part balance" zone; computes `muscleBalance` in `useMemo` (no recompute).
+  **`formGuide.css`** gained the balance styles.
+FILES TOUCHED: **new** `src/gym/gymBalance.js`, `src/kit/MuscleBalance.jsx`; **edited** `src/Health.jsx`,
+`src/kit/formGuide.css`; docs `02`/`04`. No `supabase/`, no `db/`. All files < 250 lines. `vite build` passes.
+Node-verified: out-of-window workout excluded (agrees with band), warm-ups excluded (quads 11 not 13),
+bodyweight glutes present (4 sets, 0 vol), no blank/undefined muscle.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health** → below Consistency, "BODY-PART
+BALANCE" lists muscle groups (most-trained first) with bars + set counts for THIS week — it should reflect what
+you actually trained (e.g. two leg days → quads/legs dominate; a push day → chest/shoulders present). Every
+group has a real NAME (no blank/"undefined" — proof the G6 dictionary join works in the UI). The window matches
+the band (only this week's sessions feed it). Today/Calendar/Settings unchanged.
+THEN STOP — owner confirms the balance zone before the recent-sessions table (Commit B).
+KNOWN GAPS / RISKS: PRIMARY muscle only (the secondary-group array is left for a richer later pass).
+Working-set count (not volume) is the measure — say if you'd prefer volume. Otherwise none.
+NEXT: **G11 Commit B — the recent-sessions table** (date · title · volume · time · PR dot), then **G8** the
+code-templated story headline, then **G12** the session report.
+FOR THE CHECKER: n/a — src/ only, no schema.
+
 ### 2026-06-24 — Health → Gym G10 — the consistency heatmap (front-page zone 3). SRC/ ONLY. (Awaiting owner's Mac check.)
 WHAT CHANGED: front-page zone 3 — a calm, broadsheet take on the GitHub-contribution grid, below the trend
 chart. Display-only; reads the calc layer on the SAME corrected Amsterdam date logic (no second date path).

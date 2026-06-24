@@ -3,10 +3,12 @@ import ModuleHeader from './kit/ModuleHeader'
 import BoxScoreBand from './kit/BoxScoreBand'
 import TrendChart from './kit/TrendChart'
 import ConsistencyHeatmap from './kit/ConsistencyHeatmap'
+import MuscleBalance from './kit/MuscleBalance'
 import { loadGymData } from './gym/gymLoad'
 import { buildWorkouts, boxScore, currentStreakDays } from './gym/gymCalc'
 import { trendSeries } from './gym/gymTrend'
 import { heatmap } from './gym/gymHeatmap'
+import { muscleBalance } from './gym/gymBalance'
 import './kit/formGuide.css'
 
 // Health — the broadsheet "Health" section; its front page IS the Gym "Form
@@ -39,6 +41,7 @@ export default function Health() {
   const trend = useMemo(() => (built.length ? trendSeries(built, { weeks: 12 }) : null), [built])
   const heat = useMemo(() => (built.length ? heatmap(built, { weeks: 12 }) : null), [built])
   const streak = useMemo(() => currentStreakDays(built), [built])
+  const balance = useMemo(() => (built.length ? muscleBalance(built) : null), [built])
 
   return (
     <div className="fg-page">
@@ -61,6 +64,10 @@ export default function Health() {
           <section className="fg-zone">
             <ModuleHeader>Consistency</ModuleHeader>
             <ConsistencyHeatmap data={heat} streak={streak} />
+          </section>
+          <section className="fg-zone">
+            <ModuleHeader>Body-part balance</ModuleHeader>
+            <MuscleBalance data={balance} />
           </section>
         </>
       )}
