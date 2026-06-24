@@ -692,7 +692,10 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   Mac check):** a hand-rolled inline-SVG **trend chart** (`TrendChart.jsx` + calc `gymTrend.js`), no new dep —
   toggle: weekly volume (default) / weekly sessions / most-frequent lift's est-1RM; latest weekly point matches
   the band (Node-verified). Display-only.
-- ⬜ **G10 — Front page zone 3.** Consistency heatmap.
+- 🔨 **G10 — Front page zone 3: consistency heatmap ✅ BUILT (awaiting Mac check).** `gymHeatmap.js` (calc) +
+  `ConsistencyHeatmap.jsx` (kit): a ~12-week grid of rolling 7-Amsterdam-day columns (last column = the band
+  window, so it agrees with band/streak — Node-verified), calm terracotta tints graded by sets/day. Leads with
+  **sessions-per-week** (G7 headline decision); daily streak is a small secondary figure. Display-only.
 - ⬜ **G11 — Front page zones 4–5.** Body-part balance + recent sessions table.
 - ⬜ **G12 — Session report.** One workout in full + its templated story headline.
 - ⬜ **G13 — Archive.** All past sessions, browsable / paginated.

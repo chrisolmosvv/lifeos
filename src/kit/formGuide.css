@@ -133,3 +133,84 @@
   fill: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* --- Zone 3: the consistency heatmap -------------------------------------- */
+.fg-hm {
+  margin-top: 0.9rem;
+}
+.fg-hm-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+/* Sessions-per-week is the headline (Fraunces, the data-page exception). */
+.fg-hm-num {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.9rem;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.fg-hm-unit {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+/* The streak is a small SECONDARY figure, never the hero. */
+.fg-hm-streak {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.fg-hm-grid {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+.fg-hm-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fg-hm-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--rule-faint);
+}
+/* Calm terracotta tints mixed onto the paper tone — never loud. */
+.fg-hm-cell--t0 { background: var(--rule-faint); }
+.fg-hm-cell--t1 { background: color-mix(in srgb, var(--accent) 30%, var(--paper)); }
+.fg-hm-cell--t2 { background: color-mix(in srgb, var(--accent) 60%, var(--paper)); }
+.fg-hm-cell--t3 { background: var(--accent); }
+.fg-hm-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.7rem;
+}
+.fg-hm-range,
+.fg-hm-legend {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+.fg-hm-legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.fg-hm-legend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}

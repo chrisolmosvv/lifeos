@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import ModuleHeader from './kit/ModuleHeader'
 import BoxScoreBand from './kit/BoxScoreBand'
 import TrendChart from './kit/TrendChart'
+import ConsistencyHeatmap from './kit/ConsistencyHeatmap'
 import { loadGymData } from './gym/gymLoad'
-import { buildWorkouts, boxScore } from './gym/gymCalc'
+import { buildWorkouts, boxScore, currentStreakDays } from './gym/gymCalc'
 import { trendSeries } from './gym/gymTrend'
+import { heatmap } from './gym/gymHeatmap'
 import './kit/formGuide.css'
 
 // Health — the broadsheet "Health" section; its front page IS the Gym "Form
@@ -35,6 +37,8 @@ export default function Health() {
   )
   const box = useMemo(() => boxScore(built), [built])
   const trend = useMemo(() => (built.length ? trendSeries(built, { weeks: 12 }) : null), [built])
+  const heat = useMemo(() => (built.length ? heatmap(built, { weeks: 12 }) : null), [built])
+  const streak = useMemo(() => currentStreakDays(built), [built])
 
   return (
     <div className="fg-page">
@@ -53,6 +57,10 @@ export default function Health() {
           <section className="fg-zone">
             <ModuleHeader>The trend</ModuleHeader>
             <TrendChart series={trend} />
+          </section>
+          <section className="fg-zone">
+            <ModuleHeader>Consistency</ModuleHeader>
+            <ConsistencyHeatmap data={heat} streak={streak} />
           </section>
         </>
       )}

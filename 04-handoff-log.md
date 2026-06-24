@@ -35,6 +35,34 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G10 — the consistency heatmap (front-page zone 3). SRC/ ONLY. (Awaiting owner's Mac check.)
+WHAT CHANGED: front-page zone 3 — a calm, broadsheet take on the GitHub-contribution grid, below the trend
+chart. Display-only; reads the calc layer on the SAME corrected Amsterdam date logic (no second date path).
+- **NEW `src/gym/gymHeatmap.js`** (calc layer, pure): `heatmap(workouts,{weeks,now})` → a grid of `weeks`
+  columns × 7 days as **rolling 7-Amsterdam-day** windows ending today (newest column's bottom cell = today),
+  so the **last column IS the box-score's last-7-days window** — the heatmap agrees with the band/trend/streak
+  by construction. Each day cell carries `trained` + a calm intensity `tier` (0 rest; 1/2/3 by sets that day:
+  <12 / <24 / ≥24). Also returns `avgPerWeek` (workouts-in-window ÷ weeks) + a range label. Default 12 weeks.
+- **NEW kit `src/kit/ConsistencyHeatmap.jsx`**: the zone — LEADS with **sessions-per-week** (Fraunces headline,
+  the G7 decision) with the **daily streak as a small secondary figure** ("· N-day streak"); then the quiet
+  terracotta grid (tints mixed onto paper via `color-mix(var(--accent)…)`, never loud green; rest days faint),
+  a range caption + a "less→more" legend. Honest empty state ("No training logged in this window yet").
+- **`src/Health.jsx`** adds the third zone ("Consistency"); computes `heatmap` + `currentStreakDays` in
+  `useMemo` and passes them in (UI does not recompute). **`formGuide.css`** gained the heatmap styles.
+FILES TOUCHED: **new** `src/gym/gymHeatmap.js`, `src/kit/ConsistencyHeatmap.jsx`; **edited** `src/Health.jsx`,
+`src/kit/formGuide.css`; docs `02`/`04`. No `supabase/`, no `db/`. All files < 250 lines. `vite build` passes.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health** → below the trend, "CONSISTENCY" leads
+with "**X.X sessions / week**" and a small "· 5-day streak", then a ~12-week grid. The **last (right-most)
+column = this week**: it should show the **same 6 trained days behind Sessions = 6** shaded, with the rest day
+(19 Jun) faint. Hover a cell for its date + set count. Eyeball any recent week — shaded days = days you really
+trained. The streak figure matches what you verified (5). Today/Calendar/Settings unchanged.
+KNOWN GAPS / RISKS: shading tiers use fixed set-count thresholds (<12 / <24 / ≥24) — a reasonable lifter scale;
+say if they read off. Columns are rolling 7-day (not Monday-aligned) on purpose, so the last column equals the
+band window. Otherwise none.
+NEXT: **G11 — front-page zones 4–5: body-part balance (from the G6 templates) + the recent-sessions table**
+(completes the front page), then **G8** the code-templated story headline.
+FOR THE CHECKER: n/a — src/ only, no schema.
+
 ### 2026-06-24 — Health → Gym G9 Commit B — the switchable weekly trend chart. SRC/ ONLY. (Awaiting owner's Mac check of the chart + toggle.)
 WHAT CHANGED: front-page zone 2 — a calm, hand-rolled inline-SVG trend chart (NO new dependency) with a small
 toggle. Display-only; reads the calc layer (now on the corrected Amsterdam date logic).
