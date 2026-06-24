@@ -7,6 +7,7 @@ import MuscleBalance from './kit/MuscleBalance'
 import RecentSessions from './kit/RecentSessions'
 import StoryHeadline from './kit/StoryHeadline'
 import SessionReport from './SessionReport'
+import GymArchive from './GymArchive'
 import { loadGymData } from './gym/gymLoad'
 import { buildWorkouts, boxScore, currentStreakDays } from './gym/gymCalc'
 import { trendSeries } from './gym/gymTrend'
@@ -27,7 +28,8 @@ import './kit/formGuide.css'
 export default function Health() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
-  const [openId, setOpenId] = useState(null) // a session drilled into, or null = front page
+  const [view, setView] = useState('front') // 'front' | 'archive'
+  const [openId, setOpenId] = useState(null) // a session drilled into, or null
 
   useEffect(() => {
     let alive = true
@@ -62,6 +64,8 @@ export default function Health() {
         <p className="fg-note">No workouts on record yet — once Hevy syncs, the Form Guide fills in here.</p>
       ) : openWorkout ? (
         <SessionReport workout={openWorkout} allWorkouts={built} onBack={() => setOpenId(null)} />
+      ) : view === 'archive' ? (
+        <GymArchive rows={sessions} workouts={built} onOpen={setOpenId} onBack={() => setView('front')} />
       ) : (
         <>
           <StoryHeadline text={story} />
@@ -84,6 +88,9 @@ export default function Health() {
           <section className="fg-zone">
             <ModuleHeader>Recent sessions</ModuleHeader>
             <RecentSessions rows={sessions} onOpen={setOpenId} />
+            <button className="fg-archive-link" onClick={() => setView('archive')}>
+              The full archive →
+            </button>
           </section>
         </>
       )}

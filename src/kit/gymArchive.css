@@ -1,0 +1,84 @@
+/* Gym Archive — the full-history screen. Prefixed `ga-`; rows reuse the recent-
+   sessions look (`.fg-rs-*` in formGuide.css). All colour/type from theme.css. */
+
+.ga {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.ga-head {
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+.ga-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3.4vw, 2.2rem);
+  line-height: 1.1;
+  color: var(--ink);
+  margin: 0;
+}
+.ga-totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.4rem;
+  margin-top: 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+.ga-totals b {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.ga-search {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 0.4rem;
+  padding: 0.55rem 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+.ga-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.ga-filter-note {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  margin: 0 0 1rem;
+}
+
+.ga-month {
+  margin-bottom: 1.4rem;
+}
+.ga-month-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
+  border-bottom: 1px solid var(--rule);
+}
+.ga-month-name {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+.ga-month-sub {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}

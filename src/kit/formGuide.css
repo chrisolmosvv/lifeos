@@ -377,6 +377,25 @@
   color: var(--ink);
   border-bottom-color: var(--accent);
 }
+.fg-archive-link {
+  display: block;
+  margin: 1rem auto 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  border-bottom: 1.5px solid transparent;
+  padding: 0 0 2px;
+}
+.fg-archive-link:hover {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
 
 @media (max-width: 640px) {
   .fg-rs-head,

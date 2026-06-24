@@ -35,6 +35,40 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Health → Gym G13 — the Archive (full workout history). SRC/ ONLY. (Awaiting owner's Mac check.)
+WHAT CHANGED: a browsable full history of every workout, grouped by Amsterdam month. Display-only; reuses the
+calc layer + the G12 session report as-is.
+- **ENTRY POINT (my call):** a "The full archive →" link **under the Recent-sessions zone** on the front page.
+  No new top-level nav — nav is a Health **`view` state ('front' | 'archive')**; the session report overlays
+  whichever view opened it (`openId`), so back from a report returns to the Archive when opened there, to the
+  front page when opened there.
+- **SEARCH/FILTER shape (my call):** ONE free-text **exercise-name search** (case-insensitive substring on
+  resolved exercise titles) — narrows to sessions containing that lift; month grouping is the browse axis (no
+  extra dropdown, kept clean). The all-time head line stays full-history; a small note shows the filtered count.
+- **NEW `src/GymArchive.jsx`** (screen) + **`src/gym/gymArchive.js`** (pure: `archiveMonths` groups rows by the
+  YYYY-MM of their already-Amsterdam `dateYMD` with per-month subtotals, `archiveTotals`, `matchWorkoutIds`) +
+  **`src/kit/gymArchive.css`**. Rows reuse the recent-sessions look (`.fg-rs-*`) and tap into **G12
+  SessionReport** via `onOpen` (not rebuilt). Honest empty state on no matches.
+- **`src/Health.jsx`** wires `view` + the archive link; **`formGuide.css`** gained `.fg-archive-link`.
+- Month subtotal = **sessions · volume (kg) · time**; all-time head = **sessions · volume · time**.
+FILES TOUCHED: **new** `src/GymArchive.jsx`, `src/gym/gymArchive.js`, `src/kit/gymArchive.css`; **edited**
+`src/Health.jsx`, `src/kit/formGuide.css`; docs `02`/`04`. (RecentSessions/SessionReport reused UNCHANGED.)
+No `supabase/`, no `db/`. All files < 250 lines. `vite build` passes. Node-verified: months newest-first;
+per-month subtotals reconcile to the all-time totals (6 sessions / 3395 kg split across months = all-time);
+search "squat" → only squat sessions; case-insensitive; blank search = all.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health** → under "Recent sessions" tap **"The
+full archive →"**. You should see your whole history grouped by month (newest first), each month's subhead
+showing its sessions/volume/time that **add up**, and an all-time line at the top. Type a lift in the search
+(e.g. "squat") → only sessions containing it remain. **Tap any row** → the same G12 session report opens;
+**back** returns to the Archive (not the front page). "← The Form Guide" leaves the Archive. Today/Calendar/
+Settings unchanged.
+KNOWN GAPS / RISKS: renders the full history at once (~92 rows — trivial; would paginate at thousands). No
+URL/deep-link (in-memory state; refresh returns to the front page). Search is exercise-name only (no muscle/
+date-range filter yet). Otherwise none.
+NEXT: **G14 — the Records** (PR + estimated-1RM per exercise with dates; pinned favourites writing to the
+existing `gym_pins` table; PR-climb mini charts).
+FOR THE CHECKER: n/a — src/ only, no schema, no AI.
+
 ### 2026-06-25 — Health → Gym G12 — the session report (drill into one workout). SRC/ ONLY. (Awaiting owner's Mac check.)
 WHAT CHANGED: tapping a recent-sessions row now opens a calm report for that ONE workout. Display-only; reuses
 the calc layer on the shared gymDates (no recompute, no second date path).

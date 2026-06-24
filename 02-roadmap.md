@@ -712,7 +712,12 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   a line per exercise (resolved name + muscle, top set · volume · est 1RM) that EXPANDS its set table
   (weight×reps/reps/duration, set type, RPE) with warm-ups marked + excluded from the best mark. Nav = a
   sub-state inside Health (`openId`), no new top-level nav. Display-only.
-- ⬜ **G13 — Archive.** All past sessions, browsable / paginated.
+- 🔨 **G13 — Archive ✅ BUILT (awaiting Mac check).** Full history grouped by Amsterdam month, newest first
+  (`GymArchive.jsx` + calc `gymArchive.js` + `gymArchive.css`): per-month subtotal (sessions · volume · time) +
+  an all-time head line; an exercise-name search (case-insensitive substring on resolved titles); rows reuse
+  the recent-sessions look and tap into the **G12 SessionReport as-is** (back → Archive). Entry = a "The full
+  archive →" link under the Recent-sessions zone; nav via Health `view` state ('front' | 'archive'), no new
+  top-level nav. Display-only; renders the full history (~92 rows; trivial — would paginate at thousands).
 - ⬜ **G14 — Records.** PRs + estimated 1RM per exercise, with dates.
 - ⬜ **G15 — Story headline (code templates, no AI) + polish.** Unit formatting,
   empty states, pins (`gym_pins`).
