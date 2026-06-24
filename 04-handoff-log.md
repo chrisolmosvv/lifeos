@@ -35,7 +35,32 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
-### 2026-06-24 — Brain-doc sync — bring ALL docs to the completed-M-track reality (docs only, no code).
+### 2026-06-24 — Health → Gym G0 (Commit A of the G0+G1 session) — lock the spec into the brain. DOCS ONLY.
+WHAT CHANGED (no code, no SQL, no `src/`, no `supabase/functions/`):
+- **NEW `09-gym-form-guide.md`** — the G-track plan doc: what Gym is, the **Health** naming (the section is
+  **Health**; Gym "The Form Guide" is its front page; nav Today · Calendar · **Health** · Settings; view id
+  `health`), the ground rules + standing per-piece ritual, the full desktop build plan **G0–G15**, and the
+  Hevy API reference. Name is **Health** from line one — there was nothing to rename.
+- **`03-decisions.md`** — a Gym G0 decisions block on top (Epley 1RM; PR = heaviest; warm-ups excluded from
+  PR/1RM/top-set but counted in volume; rolling-7-day box score; twice-daily cron reusing the Vault key;
+  compute-on-read / store raw only; `exercise_template_id` from the start; no undo-log; the table list;
+  `HEVY_API_KEY` is a secret; the two-track boundary rule; doc/prefix homes).
+- **`06-design.md`** — recorded the **exception**: default stays Inter tabular, but Gym data pages may set big
+  **hero numbers in Fraunces** (small/inline figures stay Inter). An exception, not a reversal.
+- **`07-ux-flows.md`** — new **"7. Health — The Form Guide"** section: the four desktop screens (front page's
+  five zones — box-score band, trend chart, consistency heatmap, body-part balance, recent table; Session
+  report; Archive; Records), mobile noted deferred.
+- **`02-roadmap.md`** — new **G-track** section as the ACTIVE parallel track (before Phase 8) with a
+  "two tracks, never one shared commit" note; G0–G15 listed (G0 ✅, rest ⬜); a session note added.
+HOW TO VERIFY (owner — just read): open `09-gym-form-guide.md` and skim the four updated docs
+(`03/06/07/02`) — confirm the decisions and the plan read true. No code to run.
+KNOWN GAPS / RISKS: none — paperwork only. The Hevy rate-limit numbers + the real Vault key name are still
+to be confirmed (G1 / G5), as the plan states.
+NEXT: **G1 (Commit B) — a PRIVATE edge function returning the real Hevy workout count.** Begins only after the
+owner confirms Commit A reads true. I'll need the **Hevy API key** at deploy time (set inline as the
+`HEVY_API_KEY` secret — never committed); I'll stop and ask for it then. After G1: **G2 — the gym tables**
+(checker-gated, its own SQL commit + checker sign-off + owner device-verify before it counts as done).
+FOR THE CHECKER: nothing this piece (docs only). G2 will be the first schema change.
 WHAT CHANGED: the stable/reference docs still described the pre-M-track world; brought them current.
 - **00-overview.md** — "What V1 is" now reflects the conversational + proactive Marty (text/voice capture,
   questions, edits, category learning, interactive brief, daytime nudge; all undoable).

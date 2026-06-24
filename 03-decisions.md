@@ -9,6 +9,72 @@
 
 ---
 
+## Health → Gym "The Form Guide" — G0: the locked decisions (2026-06-24)
+
+> A new **read-only** Health module that caches Hevy workout data into its own
+> tables and reports it on four desktop screens. Full plan: `09-gym-form-guide.md`.
+> Section is **Health** (nav: Today · Calendar · Health · Settings; view id
+> `health`); **Gym is Health's front page** for now.
+
+- **[The section is "Health", not "Gym"]** — Gym / "The Form Guide" is the
+  *content* of a Health section. **Why:** later Health sub-sections (sleep, mood,
+  nutrition, body stats) slot under the same banner with no new nav change.
+  **Trade-off:** none — Health = Gym until a second sub-section exists.
+- **[Read-only + no AI]** — LifeOS only reads Hevy (never a write endpoint), and
+  the one "story" headline is built from **code-picked templates, not Gemini**.
+  **Why:** keeps Health/Gym free + private and means the **"health data → paid
+  AI"** hard constraint never trips (no health data is ever sent to an AI).
+  **Trade-off:** the headline is template-shaped, not free-written prose — fine.
+- **[Estimated 1RM = Epley]** — `weight × (1 + reps / 30)`. **Why:** a simple,
+  widely-used estimate, good enough for trend/records. **Trade-off:** an estimate,
+  not a measured max (all formulas are).
+- **[PR = heaviest weight, used consistently everywhere]** — **Why:** one
+  unambiguous definition across every screen avoids "which PR?" confusion.
+  **Trade-off:** doesn't credit a rep-PR at lower weight (estimated-1RM covers that
+  separately).
+- **[Warm-ups excluded from PR / estimated-1RM / top-set; total volume counts ALL
+  sets]** — Hevy tags each set normal / warmup / dropset / failure. **Why:** a
+  warm-up shouldn't set a record, but it is still work done (volume). **Trade-off:**
+  none — it matches how lifters read their own numbers.
+- **[Rolling-7-day box-score band]** — Volume, Sessions, Time, New PRs. **Why:** a
+  glanceable "last week of training" line, the front page's lead stat. **Trade-off:**
+  a rolling window, not calendar-week — chosen for "how am I doing right now".
+- **[Sync twice daily via pg_cron, reusing the existing Vault service-role key]** —
+  real Vault name confirmed when the cron is built at G5; Hevy webhooks are a later
+  upgrade; **G1 confirms Hevy's own rate limits** first. **Why:** mirrors the proven
+  brief/nudge cron pattern; twice daily is plenty for a personal log. **Trade-off:**
+  up to ~12h stale between syncs — invisible for this use.
+- **[Metrics computed ON-READ; store only RAW Hevy data]** — a `src/` calc util
+  derives every number at read time; nothing derived is stored. **Why:** no drift
+  between cache and source; the backfill stays the single truth. **Trade-off:**
+  a little compute per page load (cache later only if perf ever needs it).
+- **[Store `exercise_template_id` from the start; muscle groups via a G6 lookup]** —
+  **Why:** keeping the template id lets us add the muscle-group lookup
+  (`/v1/exercise_templates`) later **without re-pulling history**. **Trade-off:**
+  one extra stored id now — trivial.
+- **[No undo-log piece for Gym]** — unlike Marty's `marty_actions`. **Why:** the
+  gym tables are a **read-only cache** of Hevy, so **re-running the backfill (G3)
+  is the recovery net**. **Trade-off:** none — there's nothing owner-authored to undo.
+- **[Tables: additive, owner-RLS, no spine FK]** — `gym_workouts`
+  (`unique(user_id, hevy_id)`), `gym_exercises` (with `exercise_template_id`),
+  `gym_sets`, `gym_sync_state`, `gym_pins` (all G2); the exercise-templates lookup
+  (G6). **Why:** same spine-protecting pattern as the `marty_*` tables. **Trade-off:**
+  none.
+- **[The Hevy key is a secret: `HEVY_API_KEY` in the Supabase secret store]** —
+  never in `src/`, never in the repo; a later Settings "Hevy" line (G5) shows
+  **connection / last-synced status only**, never the key. **Why:** the repo is
+  public and anything in `src/` ships to the browser. **Trade-off:** none.
+- **[Two-track boundary rule]** — Health/Gym runs in parallel with the paused
+  Phase 7 redesign. Every Gym front-end piece is **new files only** (may touch
+  `LoggedIn.jsx` + the `NAV` array in `EditionHeader.jsx` and nothing else in the
+  shell; imports kit blocks as-is; new primitives only as new `src/kit/` blocks);
+  **never a single commit that mixes `src/` with `supabase/functions/`**. **Why:**
+  the two tracks must never entangle so either can roll back cleanly. **Trade-off:**
+  some pieces span two commits — worth it.
+- **[Doc home `09-gym-form-guide.md`; phase prefix `G` (G0–G15)]** — **Why:** `08`
+  is the Marty plan; `G` collides with no existing prefix (Phase 0–8, M, T, C, A,
+  SUB, AUTH, DESK). **Trade-off:** none.
+
 ## Marty M10 — hardening pass: trim the wasted re-ask, split the edit engine, double-book guard; scaffolding deferred (2026-06-24)
 
 - **[The Gemini retry loop now fails fast on deterministic errors, keeping only the transient retry]** — it

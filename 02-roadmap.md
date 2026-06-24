@@ -618,6 +618,56 @@ its own small, owner-verified piece.
 - **M-track feature phases M0–M9 are all BUILT.** Once M6/M8/M9 clear their SQL+checker gates,
   the conversational + proactive Marty is complete; only the M10 hardening pass remains.
 
+## 🔨 Health → Gym "The Form Guide" — the G-track   ← ACTIVE (parallel module)
+The first **Health-pillar** module: a **read-only** cache of your **Hevy** workouts,
+reported on four **desktop** screens under a new **Health** section
+(nav: Today · Calendar · **Health** · Settings; view id `health`; **Gym is Health's
+front page** for now). Never writes to Hevy, **no AI**. **Full plan:**
+`09-gym-form-guide.md`. **Ground rules:** read-only; additive tables, no spine FK;
+RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred**.
+
+> **⚠️ TWO TRACKS RUN AT ONCE — they must NEVER share a commit.** Phase 7
+> (front-end redesign, **paused**) and this G-track (**active**) run in parallel.
+> A Gym front-end piece is **new files only** (may touch `LoggedIn.jsx` + the `NAV`
+> array in `EditionHeader.jsx`, nothing else in the shell); **never one commit that
+> mixes `src/` with `supabase/functions/`**. DB pieces are checker-gated, own commit.
+
+- ✅ **G0 — Lock the spec into the brain (paperwork only).** Created
+  `09-gym-form-guide.md`; recorded the locked decisions (`03-decisions.md`), the
+  Fraunces big-numbers exception (`06-design.md`), and the four-screen Health spec
+  (`07-ux-flows.md`). Name is **Health** from line one. No code.
+- ⬜ **G1 — Prove the Hevy connection (plumbing).** A new **private** edge function
+  (jwt-verified, like `brief`) calling Hevy `GET /v1/workouts/count`; returns the
+  real count. No DB/UI/schedule. Reports Hevy's rate limits back.
+- ⬜ **G2 — The gym tables (schema, checker-gated, own SQL commit).** `gym_workouts`
+  (`unique(user_id, hevy_id)`), `gym_exercises` (with `exercise_template_id`),
+  `gym_sets`, `gym_sync_state`, `gym_pins` — additive, owner-RLS, no spine FK.
+- ⬜ **G3 — Backfill (one-shot, re-runnable = the recovery net).** Pull full Hevy
+  history (paginated `/v1/workouts`) into the tables.
+- ⬜ **G4 — Incremental sync logic.** Read `/v1/workouts/events` since the last sync
+  (`gym_sync_state`) and upsert changes / remove deletes.
+- ⬜ **G5 — Twice-daily cron + a Settings "Hevy" status line.** pg_cron + pg_net +
+  the existing Vault service-role key (real name confirmed here) fire G4 twice a
+  day; Settings shows **connection + last-synced** status only (never the key).
+- ⬜ **G6 — Exercise-templates lookup.** Built from `/v1/exercise_templates` (muscle
+  groups), keyed by `exercise_template_id`; backfillable without re-pulling history.
+- ⬜ **G7 — Health nav + empty Form Guide shell (front-end, new files).** Add view
+  `health`, NAV label `Health` (third), a placeholder front page reading a real number.
+- ⬜ **G8 — The metrics calc util (compute-on-read).** Pure `src/` functions (Epley
+  1RM, PR, volume, top-set, warm-up exclusion, rolling-7-day box score) + kit blocks.
+- ⬜ **G9 — Front page zones 1–2.** Box-score band + trend chart.
+- ⬜ **G10 — Front page zone 3.** Consistency heatmap.
+- ⬜ **G11 — Front page zones 4–5.** Body-part balance + recent sessions table.
+- ⬜ **G12 — Session report.** One workout in full + its templated story headline.
+- ⬜ **G13 — Archive.** All past sessions, browsable / paginated.
+- ⬜ **G14 — Records.** PRs + estimated 1RM per exercise, with dates.
+- ⬜ **G15 — Story headline (code templates, no AI) + polish.** Unit formatting,
+  empty states, pins (`gym_pins`).
+
+*(Mobile Health/Gym is a deliberately deferred later spec — not in G0–G15.)*
+
+---
+
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
 **Done when:** V1 done, foundations quietly logging for the future.
@@ -631,6 +681,12 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-24 — Health → Gym G0 — locked the spec into the brain (paperwork only, no code).** Opened the new
+  **G-track** (a read-only Hevy "Form Guide" under a new **Health** section — name baked in from line one).
+  Created `09-gym-form-guide.md`; recorded the locked decisions (`03-decisions.md`), the Fraunces big-numbers
+  exception (`06-design.md`), and the four-screen Health spec (`07-ux-flows.md`); added this G-track section
+  with the two-track "never share a commit" note. G0 done; G1–G15 not started. **NEXT: G1 — a private edge
+  function that returns the real Hevy workout count (plumbing only; owner verifies the count before G2).**
 - **2026-06-24 — Marty track M10 Piece 1 — retired the test scaffolding. M10 + THE WHOLE M-TRACK COMPLETE.**
   Owner confirmed only two live crons (real 7am brief + real hourly nudge; NO every-3-min test job), so the
   bypass code was safe to remove. Removed: the brief `test` 0-day path (`buildAndSend()` always uses

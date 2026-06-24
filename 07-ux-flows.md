@@ -436,6 +436,48 @@ muted), loosen from real experience.
 
 ---
 
+## 7. Health — "The Form Guide" (desktop, LOCKED spec; built in the G-track)
+
+A new broadsheet **section: Health** (nav becomes **Today · Calendar · Health ·
+Settings** — Health **third**, view id `health`). For now **Health = Gym**:
+tapping Health opens straight onto the Gym **Form Guide**. It is **read-only** — a
+cache of your **Hevy** workouts, reported; it never writes to Hevy and uses **no
+AI**. Full plan: `09-gym-form-guide.md`. **Mobile is a deferred later spec** — the
+screens below are **desktop only**.
+
+### Form Guide — the front page (five zones, top to bottom)
+The feeling is a sports section about one athlete: lead with the story, back it
+with honest numbers (see `06-design.md`). A short **story headline** sits at the
+top, built from **code-picked templates** (never AI) — e.g. "a personal best —
+twelve straight days." Below it, five zones:
+- **1. Box-score band** — the **rolling-7-day** line: **Volume · Sessions · Time ·
+  New PRs**. The lead stat strip (big hero numbers in Fraunces; units in kg with a
+  thousands separator, time as h:mm).
+- **2. Trend chart** — training over time (e.g. weekly volume), drawn in quietly.
+- **3. Consistency heatmap** — a calendar-style grid of which days you trained
+  ("how loaded / how regular").
+- **4. Body-part balance** — how work split across muscle groups (from the G6
+  exercise-templates lookup), so imbalance is visible.
+- **5. Recent sessions table** — the last several workouts as rows (date, title, a
+  key number), each opening its **Session report**.
+
+### Session report — one workout in full
+Opened from a recent row. Shows the workout's **exercises and sets** (weight × reps,
+RPE; warm-ups marked), **total volume**, any **PRs hit** that day, and its own
+**code-templated story headline**. Warm-ups are shown but **excluded** from PR /
+estimated-1RM / top-set; **volume counts all sets**.
+
+### Archive — every past session
+The full history of workouts, browsable / paginated — the quiet "everything on
+record" view (distinct from the spine's task/event Archive; this is gym sessions).
+
+### Records — PRs and estimated 1RMs
+Per exercise: the **PR (heaviest weight)** and the **estimated 1RM** (Epley:
+`weight × (1 + reps / 30)`), each with its date. The reference page the front
+page's "New PRs" count points at. Pins (`gym_pins`) let favourite lifts sit on top.
+
+---
+
 ## Defaults at a glance (the "if I add nothing" table)
 
 | Thing | Default |

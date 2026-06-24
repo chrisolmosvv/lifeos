@@ -270,6 +270,14 @@ should read like a short, warm recap of the day ahead.
   **Inter**, two weights each (regular + medium). This supersedes the earlier
   *working* faces above (UnifrakturCook / Playfair / Libre Caslon). Numbers use
   Inter's tabular figures so they line up. Now live across the whole app.
+- **Big hero numbers in Fraunces on Health/Gym data pages — a documented
+  EXCEPTION (Gym track, G0):** the binding rule above stays "numbers in Inter
+  (tabular)" everywhere, but the **Health → Gym "Form Guide"** screens may set
+  their **big, lead "hero" numerals in Fraunces** (the results-table / racing-form
+  feeling the mood-line below calls for). **Small / inline figures stay Inter
+  tabular** so columns still line up. This is an exception that *reconciles* the
+  original "numbers in serif on the data pages" aspiration (see "Type — this is the
+  soul" above) with the settled Inter rule — **not a reversal of it.**
 - **Accent (Phase 2, Piece 1) — in use:** warmed from broadsheet red to a
   **terracotta `#C8643D`**. Used sparingly for today, the now-line, the add
   action, key marks. Validated live through Phases 2–4 (still tweakable in Phase 7).
