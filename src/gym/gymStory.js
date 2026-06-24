@@ -20,6 +20,7 @@
 
 import { boxScore, prWeight } from "./gymCalc.js";
 import { trendSeries } from "./gymTrend.js";
+import { sessionPRs } from "./gymSessions.js";
 import { amsYMD, lastNDaysSet } from "./gymDates.js";
 
 const liftKey = (ex) => ex.exercise_template_id || ex.title || "?";
@@ -103,4 +104,14 @@ export function storyHeadline(workouts, now = Date.now()) {
   if (vol != null && vol <= -15) return `A lighter week — volume down ${Math.round(-vol)}%.`;
 
   return `${cap(word(sessions))} session${sessions === 1 ? "" : "s"} logged this week.`;
+}
+
+// One templated line for a SINGLE session (the report header), or null if nothing
+// notable. Same NO-AI rule as the headline — reuses the PR logic. Leads on a PR.
+export function sessionStory(workouts, sessionId) {
+  const prs = sessionPRs(workouts, sessionId);
+  if (prs.length === 0) return null;
+  const top = prs.slice().sort((a, b) => b.weight - a.weight)[0];
+  if (prs.length === 1) return `New ${top.lift} best: ${fmtKg(top.weight)} kg.`;
+  return `${cap(word(prs.length))} new bests — including ${top.lift} at ${fmtKg(top.weight)} kg.`;
 }

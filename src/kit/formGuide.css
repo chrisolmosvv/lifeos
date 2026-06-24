@@ -304,7 +304,16 @@
   text-align: right;
 }
 .fg-rs-row {
+  width: 100%;
+  background: none;
+  border: none;
   border-bottom: 1px solid var(--rule-faint);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.fg-rs-row:hover {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 .fg-rs-date {
   font-family: var(--font-sans);

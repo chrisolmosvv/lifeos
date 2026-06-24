@@ -16,6 +16,30 @@ const ms = (v) => {
 };
 const liftKey = (ex) => ex.exercise_template_id || ex.title || "?";
 
+// The working-set PRs set IN one session → [{ lift, weight }] (empty if none).
+// Same rule as recentSessions: chronological best-per-lift (gymCalc.prWeight,
+// warm-ups excluded); a lift counts if it beats — or first sets — its all-time best
+// as of that session. Used by the session report's templated "new best" line.
+export function sessionPRs(workouts, sessionId) {
+  const chrono = (workouts || []).slice().sort((a, b) => ms(a.started_at) - ms(b.started_at));
+  const best = {};
+  for (const w of chrono) {
+    const isTarget = w.id === sessionId;
+    const found = [];
+    for (const ex of w.exercises || []) {
+      const top = prWeight(ex.sets);
+      if (top == null) continue;
+      const key = liftKey(ex);
+      if (best[key] == null || top > best[key]) {
+        if (isTarget) found.push({ lift: ex.title || key, weight: top });
+        best[key] = top;
+      }
+    }
+    if (isTarget) return found; // prior sessions already folded into `best`
+  }
+  return [];
+}
+
 // All session rows, most recent first. Each: { id, dateYMD, title, volume, minutes, isPR }.
 export function recentSessions(workouts) {
   // Oldest-first pass to accumulate the all-time best working weight per lift, so a

@@ -6,6 +6,7 @@ import ConsistencyHeatmap from './kit/ConsistencyHeatmap'
 import MuscleBalance from './kit/MuscleBalance'
 import RecentSessions from './kit/RecentSessions'
 import StoryHeadline from './kit/StoryHeadline'
+import SessionReport from './SessionReport'
 import { loadGymData } from './gym/gymLoad'
 import { buildWorkouts, boxScore, currentStreakDays } from './gym/gymCalc'
 import { trendSeries } from './gym/gymTrend'
@@ -26,6 +27,7 @@ import './kit/formGuide.css'
 export default function Health() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
+  const [openId, setOpenId] = useState(null) // a session drilled into, or null = front page
 
   useEffect(() => {
     let alive = true
@@ -48,6 +50,7 @@ export default function Health() {
   const balance = useMemo(() => (built.length ? muscleBalance(built) : null), [built])
   const sessions = useMemo(() => (built.length ? recentSessions(built) : []), [built])
   const story = useMemo(() => (built.length ? storyHeadline(built) : null), [built])
+  const openWorkout = useMemo(() => (openId ? built.find((w) => w.id === openId) : null), [openId, built])
 
   return (
     <div className="fg-page">
@@ -57,6 +60,8 @@ export default function Health() {
         <p className="fg-note">Loading your training…</p>
       ) : built.length === 0 ? (
         <p className="fg-note">No workouts on record yet — once Hevy syncs, the Form Guide fills in here.</p>
+      ) : openWorkout ? (
+        <SessionReport workout={openWorkout} allWorkouts={built} onBack={() => setOpenId(null)} />
       ) : (
         <>
           <StoryHeadline text={story} />
@@ -78,7 +83,7 @@ export default function Health() {
           </section>
           <section className="fg-zone">
             <ModuleHeader>Recent sessions</ModuleHeader>
-            <RecentSessions rows={sessions} />
+            <RecentSessions rows={sessions} onOpen={setOpenId} />
           </section>
         </>
       )}

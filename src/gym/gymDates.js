@@ -54,3 +54,10 @@ export function humanDayShort(ymd) {
   if (!Number.isFinite(d.getTime())) return ymd;
   return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric", month: "short" }).format(d);
 }
+
+// "2026-06-18" → "Thursday 18 June 2026" (Amsterdam). For the session-report header.
+export function humanDayLong(ymd) {
+  const d = new Date(`${ymd}T12:00:00Z`);
+  if (!Number.isFinite(d.getTime())) return ymd;
+  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(d);
+}

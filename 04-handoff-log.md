@@ -35,6 +35,40 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Health → Gym G12 — the session report (drill into one workout). SRC/ ONLY. (Awaiting owner's Mac check.)
+WHAT CHANGED: tapping a recent-sessions row now opens a calm report for that ONE workout. Display-only; reuses
+the calc layer on the shared gymDates (no recompute, no second date path).
+- **NAV WIRING (my call):** a **sub-state inside Health** (`openId`) — front page when null, the report when a
+  row sets it, a "← The Form Guide" back button to clear it. **No new top-level nav item** (it's a drill-in).
+  The only existing gym file touched is `RecentSessions.jsx` (rows are now `<button>`s calling `onOpen(id)`).
+- **NEW `src/SessionReport.jsx`** (screen): header — title, full Amsterdam date (`humanDayLong`), totals
+  (volume, time, #exercises, #sets) — a templated **"new best" line** (`gymStory.sessionStory`, NO AI, reuses
+  the PR logic; omitted gracefully when no PR), then a line per exercise.
+- **NEW kit `src/kit/SessionExercise.jsx`** (+ `sessionReport.css`): each exercise shows resolved title +
+  muscle group (G6 dictionary) and a summary (top set · volume · est 1RM) and **taps to EXPAND** its set table:
+  each set's weight×reps (or reps / duration / distance for no-weight moves — never NaN), set type, RPE; a
+  "best" dot on the top WORKING set; **warm-ups marked ("warm-up") and excluded** from the top-set/1RM/best.
+- **Calc additions (pure):** `gymSessions.sessionPRs(workouts,id)` (PRs set in one session) + `gymStory
+  .sessionStory(workouts,id)` (the header line) + `gymDates.humanDayLong`.
+NOTE on the summary: "est 1RM" is `best1RM` — the strongest Epley estimate across the exercise's WORKING sets,
+which can come from a different set than the heaviest (e.g. top set 105×3 but est 1RM 117 from 100×5). Standard
+behaviour (Hevy does the same); flagged so it doesn't look inconsistent.
+FILES TOUCHED: **new** `src/SessionReport.jsx`, `src/kit/SessionExercise.jsx`, `src/kit/sessionReport.css`;
+**edited** `src/Health.jsx`, `src/kit/RecentSessions.jsx`, `src/kit/formGuide.css`, `src/gym/gymSessions.js`,
+`src/gym/gymStory.js`, `src/gym/gymDates.js`; docs `02`/`04`. No `supabase/`, no `db/`. All files < 250 lines.
+`vite build` passes. Node-verified: totals (1215 kg / 75 min / 6 sets), top set excludes the warm-up, est 1RM
+117, bodyweight/duration exercises show 0 volume + null top set (no NaN), session story "New … best: 105 kg."
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health** → in "Recent sessions", **tap a row**.
+The report opens: title, Amsterdam date, totals matching Hevy for that session; each exercise shows its name +
+muscle group; **tap an exercise** to expand its real set table (weights, reps, set types) matching Hevy — the
+warm-up rows are marked and the "best" dot sits on the heaviest WORKING set; a reps-only/duration exercise (if
+any) shows its real data, no NaN. "← The Form Guide" returns to the front page. Today/Calendar/Settings
+unchanged.
+KNOWN GAPS / RISKS: report reachable only from the front-page recent table for now (G13 Archive will also feed
+it). No deep-link/URL (drill-in is in-memory state — refresh returns to the front page). Otherwise none.
+NEXT: **G13 — the Archive** (month-grouped full history, filter/search, rows tapping into THIS session report).
+FOR THE CHECKER: n/a — src/ only, no schema, no AI.
+
 ### 2026-06-25 — Health → Gym G8 — the code-templated story headline (NO AI). SRC/ ONLY. (Awaiting owner's Mac check + wording review.)
 WHAT CHANGED: one calm "story" line at the TOP of the Form Guide (above the box-score band) — the sports-
 section lead about your week. **Built entirely from code templates filled with calc-layer numbers; ZERO AI**

@@ -1,0 +1,182 @@
+/* Session report — the drill-in for one workout. Prefixed `sr-`/`sx-`; all colour
+   and type from the shared theme (theme.css). Calm broadsheet: a back link, a serif
+   header with totals, then hairline exercise rows that expand to a quiet set table. */
+
+.sr {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.sr-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 2px;
+  margin-bottom: 1.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  border-bottom: 1.5px solid transparent;
+}
+.sr-back:hover {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+.sr-head {
+  text-align: center;
+  margin-bottom: 1.6rem;
+}
+.sr-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3.4vw, 2.2rem);
+  line-height: 1.1;
+  color: var(--ink);
+  margin: 0;
+}
+.sr-date {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  margin-top: 0.4rem;
+}
+.sr-story {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--accent);
+  margin: 0.7rem 0 0;
+}
+.sr-totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.4rem;
+  margin-top: 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+.sr-totals b {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.sr-empty {
+  text-align: center;
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--ink-muted);
+  padding: 2rem 1rem;
+}
+
+/* --- One exercise (expandable) ------------------------------------------- */
+.sx {
+  border-top: 1px solid var(--rule-faint);
+}
+.sx:last-child {
+  border-bottom: 1px solid var(--rule-faint);
+}
+.sx-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.1rem 1fr auto;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.7rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.sx-caret {
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+}
+.sx-name {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.sx-muscle {
+  margin-left: 0.5rem;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+.sx-summary {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* --- The set table (shown on expand) ------------------------------------- */
+.sx-sets {
+  padding: 0 0 0.7rem 1.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.sx-set {
+  display: grid;
+  grid-template-columns: 8rem 6rem 4rem auto;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.sx-set--warm {
+  color: var(--ink-muted);
+}
+.sx-set-fig {
+  white-space: nowrap;
+}
+.sx-set-tag {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+.sx-set-rpe {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.sx-set-best {
+  text-align: right;
+}
+.sx-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+.sx-dot::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+@media (max-width: 560px) {
+  .sx-set {
+    grid-template-columns: 6.5rem 1fr 3rem auto;
+    gap: 0.4rem;
+  }
+  .sx-summary {
+    font-size: 0.72rem;
+  }
+}

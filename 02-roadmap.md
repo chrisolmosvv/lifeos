@@ -706,7 +706,12 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   muscle group (G6 dictionary join, resolved in the UI), ranked calm bars, same window as the band.
   **Commit B:** recent-sessions table (`gymSessions.js` + `RecentSessions.jsx`) — date · title · volume · time ·
   a PR dot (reuses `prWeight`, warm-ups excluded), newest-first, "show all" toggle, static rows (G12 opens them).
-- ⬜ **G12 — Session report.** One workout in full + its templated story headline.
+- 🔨 **G12 — Session report ✅ BUILT (awaiting Mac check).** Drill-in for one workout, reached by tapping a
+  recent-sessions row (`SessionReport.jsx` + `SessionExercise.jsx` kit + `sessionReport.css`). Header (title,
+  Amsterdam date, totals) + a templated "new best" line (`gymStory.sessionStory`, no AI, reuses PR logic);
+  a line per exercise (resolved name + muscle, top set · volume · est 1RM) that EXPANDS its set table
+  (weight×reps/reps/duration, set type, RPE) with warm-ups marked + excluded from the best mark. Nav = a
+  sub-state inside Health (`openId`), no new top-level nav. Display-only.
 - ⬜ **G13 — Archive.** All past sessions, browsable / paginated.
 - ⬜ **G14 — Records.** PRs + estimated 1RM per exercise, with dates.
 - ⬜ **G15 — Story headline (code templates, no AI) + polish.** Unit formatting,
