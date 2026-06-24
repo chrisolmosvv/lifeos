@@ -35,6 +35,44 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Health → Gym G8 — the code-templated story headline (NO AI). SRC/ ONLY. (Awaiting owner's Mac check + wording review.)
+WHAT CHANGED: one calm "story" line at the TOP of the Form Guide (above the box-score band) — the sports-
+section lead about your week. **Built entirely from code templates filled with calc-layer numbers; ZERO AI**
+(no Gemini, no API, no model, no network — a deterministic string: same data → same line). This is why Gym
+stays free + private and the "health data → paid AI" rule never trips.
+- **NEW `src/gym/gymStory.js`** (pure): `storyHeadline(workouts, now)` reuses `boxScore` / `prWeight` /
+  `trendSeries` on the shared `gymDates` (Amsterdam) — no recompute, no second date path.
+- **NEW kit `src/kit/StoryHeadline.jsx`**: renders the line in the serif display face (Fraunces data-page
+  exception), centred above the band. **`src/Health.jsx`** computes the line in `useMemo` and renders it first.
+  **`formGuide.css`** gained `.fg-story`.
+- **AI-FREE proof:** `grep -niE "gemini|openai|anthropic|fetch|http|api|model" src/gym/gymStory.js` matches
+  only the disclaimer COMMENT — no AI/API/network code. Node-verified deterministic (same input → same output).
+
+THE TEMPLATES + PRIORITY (art director — react to any wording; these are easy to tweak in `gymStory.js`).
+First match wins, top to bottom; the last is the always-on fallback:
+  1. **PR this week** → `New {lift} best: {weight} kg.`   (most recent working-set PR; warm-ups excluded)
+  2. **Back after a gap ≥10 days** → `Back under the bar after {N} days away.`
+  3. **Volume up ≥ +15%** (this week vs prior weeks' avg) → `Training volume up {X}% on recent weeks.`
+  4. **≥3 sessions this week** → `{N} sessions this week — holding the rhythm.`
+  5. **Volume down ≤ −15%** → `A lighter week — volume down {X}%.`
+  6. **1–2 sessions, nothing else notable** → `{N} session(s) logged this week.`
+  0. **No sessions this week (fallback)** → `A quiet week on the platform — the Form Guide is ready when you are.`
+(Verified live in Node: PR→"New Bench best: 105 kg."; gap→"Back under the bar after 23 days away."; vol→
+"Training volume up …% on recent weeks."; plain→"One session logged this week."; quiet→the fallback.)
+
+FILES TOUCHED: **new** `src/gym/gymStory.js`, `src/kit/StoryHeadline.jsx`; **edited** `src/Health.jsx`,
+`src/kit/formGuide.css`; docs `02`/`04`. No `supabase/`, no `db/`. All files < 250 lines. `vite build` passes.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health** → one calm Fraunces headline sits at
+the very top. It should read TRUE for your real week: if you hit a PR this week it leads with that lift +
+weight; otherwise the right secondary story (returned-from-a-gap / volume up / a 3+ session week / a lighter
+week / a plain count); on a dead week, the quiet-week fallback — never blank, never wrong. It's instant and
+offline (no AI). Today/Calendar/Settings unchanged.
+KNOWN GAPS / RISKS: wording is a first pass — expected to be tuned by the art director. The PR line names the
+exercise title from Hevy (can be long, e.g. "Bench Press (Barbell)"). Priority is fixed/deterministic.
+NEXT: **G12 — the session report** (make the recent-sessions rows clickable → a full workout: exercises, sets,
+volume, PRs hit, its own templated headline).
+FOR THE CHECKER: n/a — src/ only, no schema, no AI.
+
 ### 2026-06-24 — Health → Gym G11 Commit B — recent-sessions table (front-page zone 5). FRONT PAGE COMPLETE. SRC/ ONLY. (Awaiting owner's Mac check.)
 WHAT CHANGED: front-page zone 5 — a calm table of recent workouts; this completes the five front-page zones.
 Display-only.

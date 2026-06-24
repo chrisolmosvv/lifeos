@@ -683,7 +683,12 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   branch in `LoggedIn.jsx`, NAV label `Health` (third) in `EditionHeader.jsx`, new `src/Health.jsx` + gym kit
   `src/kit/FormGuideHead.jsx`/`formGuide.css` (serif "The Form Guide" nameplate, dateline, calm placeholder —
   no data zones yet); calc-check scaffolding removed. Owner decision: consistency headline = sessions-per-week.
-- ➡️ **G8 — (merged into G7 Commit A above — the calc util is built there).**
+- 🔨 **G8 — the code-templated story headline (NO AI) ✅ BUILT (awaiting Mac check).** *(The doc's original
+  "G8 = calc util" was folded into G7 Commit A; the owner reassigned G8 to the front-page story headline.)*
+  `gymStory.js` (pure, deterministic, zero AI/API) + `StoryHeadline.jsx` (kit): one Fraunces lead line at the
+  TOP of the Form Guide, assembled from code templates filled with calc-layer numbers. Priority: PR → back
+  after a gap (≥10d) → volume up (≥+15%) → ≥3 sessions → lighter week (≤−15%) → plain note → quiet-week
+  fallback. Reuses gymCalc/gymTrend on gymDates; display-only.
 - 🔨 **G9 — Front page zones 1–2** (two src/ commits; both BUILT, awaiting final Mac check of the chart).
   **Commit A ✅ owner-verified:** removed the duplicate in-page header (deleted `FormGuideHead.jsx`; Health now
   sits under the shared masthead) + the rolling-7-day **box-score band** (`BoxScoreBand.jsx` + `gymFormat.js`).

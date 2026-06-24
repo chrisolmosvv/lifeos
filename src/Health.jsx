@@ -5,12 +5,14 @@ import TrendChart from './kit/TrendChart'
 import ConsistencyHeatmap from './kit/ConsistencyHeatmap'
 import MuscleBalance from './kit/MuscleBalance'
 import RecentSessions from './kit/RecentSessions'
+import StoryHeadline from './kit/StoryHeadline'
 import { loadGymData } from './gym/gymLoad'
 import { buildWorkouts, boxScore, currentStreakDays } from './gym/gymCalc'
 import { trendSeries } from './gym/gymTrend'
 import { heatmap } from './gym/gymHeatmap'
 import { muscleBalance } from './gym/gymBalance'
 import { recentSessions } from './gym/gymSessions'
+import { storyHeadline } from './gym/gymStory'
 import './kit/formGuide.css'
 
 // Health — the broadsheet "Health" section; its front page IS the Gym "Form
@@ -45,6 +47,7 @@ export default function Health() {
   const streak = useMemo(() => currentStreakDays(built), [built])
   const balance = useMemo(() => (built.length ? muscleBalance(built) : null), [built])
   const sessions = useMemo(() => (built.length ? recentSessions(built) : []), [built])
+  const story = useMemo(() => (built.length ? storyHeadline(built) : null), [built])
 
   return (
     <div className="fg-page">
@@ -56,6 +59,7 @@ export default function Health() {
         <p className="fg-note">No workouts on record yet — once Hevy syncs, the Form Guide fills in here.</p>
       ) : (
         <>
+          <StoryHeadline text={story} />
           <section className="fg-zone">
             <ModuleHeader>The last 7 days</ModuleHeader>
             <BoxScoreBand box={box} />

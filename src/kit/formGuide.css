@@ -14,6 +14,19 @@
   margin: 0 0 2rem;
 }
 
+/* The story headline — the lead line, in the serif display face (the data-page
+   Fraunces exception), calm and centred above the box-score band. */
+.fg-story {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(1.4rem, 3.2vw, 2.1rem);
+  line-height: 1.15;
+  color: var(--ink);
+  text-align: center;
+  margin: 0 0 1.6rem;
+  text-wrap: balance;
+}
+
 /* A calm full-width note for loading / error / no-data-yet states. */
 .fg-note {
   font-family: var(--font-serif);
