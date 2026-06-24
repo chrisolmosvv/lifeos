@@ -35,6 +35,41 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G9 Commit A — header fix + the rolling-7-day box-score band. SRC/ ONLY. (Awaiting owner's Mac check of the real numbers.)
+WHAT CHANGED: the first DATA zone of the Form Guide, plus a header de-duplication. Reads the already-verified
+calc layer; the UI only displays.
+- **HEADER FIX:** removed the bespoke in-page Form Guide header so Health sits under the ONE shared
+  `EditionHeader` masthead like every other page. **Deleted `src/kit/FormGuideHead.jsx`.** `formGuide.css`
+  KEPT but rewritten — dropped all the header bits (nameplate/kicker/dateline/hairlines); kept `.fg-page`
+  (the page frame) and added the box-score band styles. The page now opens straight into content, titled by
+  the house small-caps `ModuleHeader` ("The last 7 days") exactly like Today.
+- **NEW box-score band** (`src/kit/BoxScoreBand.jsx`): the rolling-7-day lead strip — **Volume · Sessions ·
+  Time · New PRs**. Big hero numerals in **Fraunces** (the documented data-page exception); labels small-caps
+  Inter; units small Inter. Honest **zero state** ("No sessions in the last 7 days — the week's still open")
+  when nothing was logged in the window; never a blank or NaN.
+- **NEW `src/gym/gymFormat.js`** — pure display formatters: kg with a thousands separator, time as min or
+  h:mm, counts; a missing/0 time reads "—", not a false zero.
+- **`src/Health.jsx` rewired** — loads once via `gymLoad`, builds workouts + computes the box score via
+  `gymCalc` (NO recompute in the UI), with loading / error / no-workouts-yet states. Still only the `health`
+  branch; no further shell edits.
+FILES TOUCHED: **new** `src/kit/BoxScoreBand.jsx`, `src/gym/gymFormat.js`; **rewritten** `src/Health.jsx`,
+`src/kit/formGuide.css`; **deleted** `src/kit/FormGuideHead.jsx`; docs `02`/`04`. No `supabase/`, no `db/`.
+All files < 250 lines. `vite build` passes.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health**. You should see ONLY the shared
+masthead at top (no second "The Form Guide" nameplate), then "THE LAST 7 DAYS" over four big numbers:
+  • **Sessions** = how many times you trained in the last 7 days (hand-check against Hevy).
+  • **Volume** plausible (kg, thousands separator); **Time** ≈ your week's total (min or h:mm); **New PRs** right.
+  If you didn't train this week you'll see the calm "week's still open" line instead. Today/Calendar/Settings
+  unchanged. 
+THEN STOP — owner confirms the band's real numbers BEFORE the trend chart (Commit B).
+KNOWN GAPS / RISKS: "Time" shows "—" if your workouts have no start/end timestamps (can't tell 0-minutes from
+no-data); surface if that looks wrong. Otherwise none.
+NEXT: **G9 Commit B — the switchable trend chart** (weekly volume / weekly sessions / a named lift's est-1RM
+or top set over time). **Chart library: I recommend hand-rolled inline SVG — the project has NO chart
+dependency and a quiet broadsheet chart doesn't warrant adding a heavy one. Will confirm with the owner before
+building B.**
+FOR THE CHECKER: n/a — src/ only, no schema, no checker gate. (Owner hand-verifies the numbers.)
+
 ### 2026-06-24 — Health → Gym G7 Commit B — Health nav + empty Form Guide shell. SRC/ ONLY. (Awaiting owner's Mac check.)
 WHAT CHANGED: the first VISIBLE Health piece — a "Health" tab in the top nav that opens an empty, correctly-
 dressed "The Form Guide" page. No real data zones yet (those are G9–G11); this is the frame.

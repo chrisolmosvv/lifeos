@@ -684,7 +684,11 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   `src/kit/FormGuideHead.jsx`/`formGuide.css` (serif "The Form Guide" nameplate, dateline, calm placeholder —
   no data zones yet); calc-check scaffolding removed. Owner decision: consistency headline = sessions-per-week.
 - ➡️ **G8 — (merged into G7 Commit A above — the calc util is built there).**
-- ⬜ **G9 — Front page zones 1–2.** Box-score band + trend chart.
+- 🔨 **G9 — Front page zones 1–2** (two src/ commits). **Commit A ✅ BUILT (awaiting owner Mac check):**
+  removed the duplicate in-page header (deleted `FormGuideHead.jsx`; Health now sits under the shared
+  masthead) + the rolling-7-day **box-score band** (`BoxScoreBand.jsx` + `gymFormat.js`) — Volume · Sessions ·
+  Time · New PRs, Fraunces hero numbers, honest zero state, reads `gymCalc.boxScore`. **Commit B — the
+  switchable trend chart (NOT STARTED; recommend hand-rolled SVG, no new dep — confirm before building).**
 - ⬜ **G10 — Front page zone 3.** Consistency heatmap.
 - ⬜ **G11 — Front page zones 4–5.** Body-part balance + recent sessions table.
 - ⬜ **G12 — Session report.** One workout in full + its templated story headline.
