@@ -26,7 +26,7 @@ function word(table: string): string {
 // One row to change: its prior values (for undo) and the new values to write. For a
 // delete, batch_id is the archive_batches row this archive belongs to (so undo can
 // remove the empty batch afterwards, exactly like the app's restore).
-interface Change {
+export interface Change {
   table: "tasks" | "events";
   id: string;
   title: string;
@@ -57,7 +57,9 @@ async function commit(kind: "edit" | "delete", changes: Change[], confirm: strin
 }
 
 // Convenience for the ops that don't need to compensate on failure (everything but delete).
-async function commitReply(kind: "edit" | "delete", changes: Change[], confirm: string): Promise<string> {
+// Exported so the M9 daytime nudge can write its calendar block through the SAME engine
+// (logs before-values → undoable) instead of a parallel write.
+export async function commitReply(kind: "edit" | "delete", changes: Change[], confirm: string): Promise<string> {
   return (await commit(kind, changes, confirm)).reply;
 }
 

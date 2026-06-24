@@ -18,6 +18,7 @@ import { classify } from "./intent.ts";
 import { answerQuery } from "./query.ts";
 import { handleEdit } from "./edit.ts";
 import { briefItem } from "./briefmap.ts";
+import { acceptNudge, declineNudge, openNudge } from "./nudge.ts";
 import { clearPending, completePending, getPending, parseTimeAnswer, setPending, timeQuestion } from "./pending.ts";
 
 // Used only to fire the separate PRIVATE brief function (it texts the owner itself).
@@ -56,6 +57,27 @@ async function fireBrief(test: boolean): Promise<boolean> {
   }
 }
 
+// Fire the brief function's DAYTIME NUDGE mode (M9). `force` (the "nudge test" path) skips
+// its 9–6 gate + caps so the scan can be tried on demand. The brief function sends the
+// offer itself; we only speak up if firing failed.
+async function fireNudge(force: boolean): Promise<boolean> {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/brief`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ nudge: true, force }),
+    });
+    return res.ok;
+  } catch (_err) {
+    return false;
+  }
+}
+
+// Affirmative / negative replies to an open daytime nudge offer.
+const YES = new Set(["yes", "yeah", "yep", "yup", "sure", "ok", "okay", "do it", "go on", "go for it", "block it", "please"]);
+const NO = new Set(["no", "nope", "nah", "skip", "not now", "later", "no thanks", "no thank you"]);
+
 // Decide and act on one owner message. Returns the text to send back, or "" to stay
 // quiet (the brief path: the brief function does its own sending).
 export async function route(text: string): Promise<string> {
@@ -77,10 +99,22 @@ export async function route(text: string): Promise<string> {
     await clearPending();
   }
 
+  // M9: a "yes"/"no" answer to an OPEN daytime nudge offer (only checks the log when the
+  // message is actually a yes/no word, so it's not an extra read on every message).
+  if (YES.has(lower) || NO.has(lower)) {
+    const offer = await openNudge();
+    if (offer) return YES.has(lower) ? await acceptNudge(offer) : await declineNudge(offer);
+    // No open offer → fall through (a bare "yes"/"no" with nothing pending is just unclear).
+  }
+
   // 1. Reserved trigger words — no AI, behaviour exactly as before.
   if (lower === "brief" || lower === "brief test") {
     const ok = await fireBrief(lower === "brief test");
     return ok ? "" : "I couldn't fetch your brief just now — try again in a moment.";
+  }
+  if (lower === "nudge test") {
+    const ok = await fireNudge(true); // force: bypass the 9–6 gate + caps to try it now
+    return ok ? "" : "I couldn't run the nudge scan just now — try again in a moment.";
   }
   if (lower === "undo") return await undoLast();
   if (lower.startsWith("undo ")) return await undoNamed(text.trim().slice(4).trim());

@@ -44,6 +44,7 @@ import { pickGapOffer } from "./gap.ts";
 import { writeBrief } from "./write.ts";
 import { buildActions } from "./actions.ts";
 import { storeBriefMap } from "./store.ts";
+import { scanForNudge } from "./nudge.ts";
 import { localHour } from "../_shared/datetime.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -102,13 +103,30 @@ Deno.serve(async (req) => {
     return new Response("not configured", { status: 500 });
   }
 
-  let test = false, scheduled = false, force = false;
+  let test = false, scheduled = false, force = false, nudge = false;
   try {
     const body = await req.json();
     test = body?.test === true;
     scheduled = body?.scheduled === true;
     force = body?.force === true;
+    nudge = body?.nudge === true;
   } catch (_err) { /* no/!json body — a normal on-demand brief */ }
+
+  // M9: the DAYTIME NUDGE is a different mode of this proactive function. It has its OWN
+  // 9–6 hour-gate + caps inside scanForNudge (the 7am gate below does not apply). `force`
+  // (the "nudge test" path) bypasses its gate + caps. Send only if it has a calm offer.
+  if (nudge) {
+    try {
+      const offer = await scanForNudge(force);
+      if (offer) await sendMessage(OWNER_CHAT_ID, offer);
+      // On the manual "nudge test" (force), always give a sign of life so it's verifiable;
+      // a real scheduled scan with no offer stays silent (that's the whole point).
+      else if (force) await sendMessage(OWNER_CHAT_ID, "No free 60-min window (9–6) or nothing worth offering right now — no nudge.");
+      return new Response(offer ? "nudge sent" : "no nudge", { status: 200 });
+    } catch (_err) {
+      return new Response("nudge-error-handled", { status: 200 });
+    }
+  }
 
   // DST-safe 7am: a scheduled run fires at both 05:00 and 06:00 UTC; only the one in
   // the 7am Amsterdam hour proceeds (so exactly one send/day, year-round). The temp
