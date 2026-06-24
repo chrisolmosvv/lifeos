@@ -6,7 +6,7 @@
 // today (no block, no nagging, no lasting memory). Only acts when an offer is actually open.
 
 import { OWNER_USER_ID, select, update } from "./db.ts";
-import { type Change, commitReply } from "./edit.ts";
+import { type Change, commitReply } from "./editcore.ts";
 import { clockLabel } from "../_shared/datetime.ts";
 
 export interface OpenOffer { id: string; taskId: string; slotStart: string; slotEnd: string }

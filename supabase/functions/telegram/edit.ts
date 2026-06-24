@@ -10,57 +10,18 @@
 //   3. applies the change surgically, by row id + owner filter.
 // No new schema — these are the 'edit'/'delete' action types M2's table was built to hold.
 
-import { dbConfigured, del, insert, OWNER_USER_ID, select, update } from "./db.ts";
+import { dbConfigured, del, insert, OWNER_USER_ID, select } from "./db.ts";
 import { humanDate, localHM, localToUtc, localYMD, rollPastBareDateForward, todayYMD } from "../_shared/datetime.ts";
 import type { Classified } from "./intent.ts";
 import { type Candidate, loadCandidates, matchCandidates } from "./find.ts";
 import { logCorrection, resolveCategory } from "./categorize.ts";
+import { type Change, commit, commitReply } from "./editcore.ts";
 
 const READ_FAILED = "I couldn't reach your items just now — nothing was changed. Try again?";
 const HOUR_MS = 3_600_000;
 
 function word(table: string): string {
   return table === "events" ? "event" : "task";
-}
-
-// One row to change: its prior values (for undo) and the new values to write. For a
-// delete, batch_id is the archive_batches row this archive belongs to (so undo can
-// remove the empty batch afterwards, exactly like the app's restore).
-export interface Change {
-  table: "tasks" | "events";
-  id: string;
-  title: string;
-  before: Record<string, unknown>;
-  after: Record<string, unknown>;
-  batch_id?: string;
-}
-
-interface CommitResult { ok: boolean; reply: string }
-
-// Log prior state FIRST, then apply — so we never change anything without a logged way
-// back. (If the log write fails we change nothing; if an apply fails, the log is at worst
-// a harmless no-op on undo.)
-async function commit(kind: "edit" | "delete", changes: Change[], confirm: string): Promise<CommitResult> {
-  const items = changes.map((c) => ({
-    table: c.table, id: c.id, title: c.title, before: c.before,
-    ...(c.batch_id ? { batch_id: c.batch_id } : {}),
-  }));
-  const label = changes.length === 1 ? changes[0].title : `${changes.length} items`;
-  const logged = await insert("marty_actions", { user_id: OWNER_USER_ID, kind, label, items });
-  if (!logged) return { ok: false, reply: "I couldn't set up an undo for that, so I left it unchanged. Try again?" };
-
-  for (const c of changes) {
-    const ok = await update(`${c.table}?id=eq.${c.id}&user_id=eq.${OWNER_USER_ID}&select=id`, c.after);
-    if (ok === null) return { ok: false, reply: "I hit a snag applying that — text \"undo\", then try again." };
-  }
-  return { ok: true, reply: confirm };
-}
-
-// Convenience for the ops that don't need to compensate on failure (everything but delete).
-// Exported so the M9 daytime nudge can write its calendar block through the SAME engine
-// (logs before-values → undoable) instead of a parallel write.
-export async function commitReply(kind: "edit" | "delete", changes: Change[], confirm: string): Promise<string> {
-  return (await commit(kind, changes, confirm)).reply;
 }
 
 // Turn a candidate list into either the single match, or a reply (ask / not-found).
