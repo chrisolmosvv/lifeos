@@ -7,7 +7,8 @@
 //   - MAX 2 per day: one morning, one afternoon (the marty_nudges log, today's rows).
 //   - NEVER back-to-back (>= MIN_GAP_HOURS since the last offer).
 //   - One offer, one task — never a list. The single most-overdue task, or ONE quick-win.
-// `force` (the "nudge test" path) bypasses the hour-gate + caps so it can be verified now.
+// The guardrails are ALWAYS enforced — there is no bypass (the M10 cleanup retired the
+// "nudge test"/force path). On-demand "nudge" runs this exact guarded scan.
 
 import { clockLabel, localHour, localToUtc, todayYMD } from "../_shared/datetime.ts";
 import { owner, select, todayWindow } from "./sb.ts";
@@ -116,20 +117,19 @@ async function recordOffer(taskId: string, start: number, end: number, period: s
   }
 }
 
-// The scan. Returns the calm offer text to send, or null to stay quiet. `force` (the
-// "nudge test" path) skips the hour-gate + caps so it can be tried on demand.
-export async function scanForNudge(force: boolean): Promise<string | null> {
+// The scan. Returns the calm offer text to send, or null to stay quiet. The guardrails
+// are ALWAYS enforced — there is no bypass — whether this was poked by the hourly cron or
+// fired on demand ("nudge"). Outside hours / over the caps / no window → it stays quiet.
+export async function scanForNudge(): Promise<string | null> {
   const hour = localHour();
-  if (!force && (hour < WORK_START || hour >= WORK_END)) return null; // 9–6 only
+  if (hour < WORK_START || hour >= WORK_END) return null; // 9–6 only
   const period = hour < 12 ? "morning" : "afternoon";
 
-  if (!force) {
-    const todays = await todaysOffers();
-    if (todays === null) return null;                                   // read failed → quiet
-    if (todays.some((n) => n.period === period)) return null;           // already offered this half-day
-    const last = Math.max(0, ...todays.map((n) => n.createdMs));
-    if (last && Date.now() - last < MIN_GAP_HOURS * 3_600_000) return null; // never back-to-back
-  }
+  const todays = await todaysOffers();
+  if (todays === null) return null;                                   // read failed → quiet
+  if (todays.some((n) => n.period === period)) return null;           // already offered this half-day
+  const last = Math.max(0, ...todays.map((n) => n.createdMs));
+  if (last && Date.now() - last < MIN_GAP_HOURS * 3_600_000) return null; // never back-to-back
 
   const win = await findWindow();
   if (!win) return null;

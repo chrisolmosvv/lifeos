@@ -15,17 +15,17 @@
 // Piece 6e (gap): the code also finds a real free stretch in today's calendar and a
 //   worth-doing task for it (reserved — often nothing), and offers ONE gentle
 //   suggestion; also in both prose and fallback.
-// Piece 6f (THIS): the 7am alarm. pg_cron calls this function (service-role key from
-//   Vault) at 05:00 AND 06:00 UTC; a SCHEDULED run proceeds only in the 7am Amsterdam
-//   hour (DST-safe, exactly once/day) — unless { force: true } (the temp test job).
-//   The scheduled run ALWAYS sends, even on an empty day, and an internal error still
-//   attempts a minimal "had trouble" message — so a silent morning means the job broke.
+// Piece 6f: the 7am alarm. pg_cron calls this function (service-role key from Vault) at
+//   05:00 AND 06:00 UTC; a SCHEDULED run proceeds only in the 7am Amsterdam hour (DST-safe,
+//   exactly once/day). The scheduled run ALWAYS sends, even on an empty day, and an internal
+//   error still attempts a minimal "had trouble" message — so a silent morning means broke.
+// M9: the DAYTIME NUDGE mode (the hourly cron, and on-demand "nudge") — scanForNudge()
+//   enforces all its own guardrails (9–6, max 2/day, never back-to-back).
 //
-// REQUEST BODY (all optional):
-//   { test: true }       — forgotten-task threshold 0 days (telegram "brief test").
+// REQUEST BODY (all optional). There is NO test/force bypass anywhere (retired M10):
 //   { scheduled: true }  — a cron run: apply the 7am-Amsterdam-hour gate + always-send.
-//   { force: true }      — bypass the hour gate (the temporary every-3-min test job).
-// No body / on-demand "brief" = the normal real-rule brief, exactly as before.
+//   { nudge: true }      — run the daytime nudge scan (always fully guardrailed).
+//   no body / on-demand "brief" = the normal real-rule brief.
 //
 // PRIVATE: this function is deployed WITH jwt verification (NOT --no-verify-jwt),
 // so its public URL refuses anonymous calls. Only a caller holding the service-role
@@ -71,7 +71,7 @@ async function sendMessage(chatId: number | string, text: string) {
 
 // Build today's brief text and send it. On an empty day this still sends a calm
 // "quiet one" (gatherDay returns empty groups, not null) — the always-send behaviour.
-async function buildAndSend(test: boolean) {
+async function buildAndSend() {
   const day = await gatherDay();
   if (!day) {
     await sendMessage(OWNER_CHAT_ID!, READ_FAILED);
@@ -81,7 +81,7 @@ async function buildAndSend(test: boolean) {
   // of either; put both in the prose facts AND the checklist fallback so the nudges
   // hold even if Gemini is unavailable. The gap offer reuses the forgotten task as
   // its top-priority candidate, so it's computed after.
-  const forgotten = await pickForgotten(test ? 0 : FORGOTTEN_DAYS); // {id,title} | null (M8)
+  const forgotten = await pickForgotten(FORGOTTEN_DAYS); // {id,title} | null (M8)
   const fTitle = forgotten?.title ?? null;
   const gap = await pickGapOffer(fTitle);
   const brief = await writeBrief(factsForGemini(day, fTitle, gap), formatChecklist(day, fTitle, gap));
@@ -103,40 +103,36 @@ Deno.serve(async (req) => {
     return new Response("not configured", { status: 500 });
   }
 
-  let test = false, scheduled = false, force = false, nudge = false;
+  let scheduled = false, nudge = false;
   try {
     const body = await req.json();
-    test = body?.test === true;
     scheduled = body?.scheduled === true;
-    force = body?.force === true;
     nudge = body?.nudge === true;
   } catch (_err) { /* no/!json body — a normal on-demand brief */ }
 
-  // M9: the DAYTIME NUDGE is a different mode of this proactive function. It has its OWN
-  // 9–6 hour-gate + caps inside scanForNudge (the 7am gate below does not apply). `force`
-  // (the "nudge test" path) bypasses its gate + caps. Send only if it has a calm offer.
+  // M9: the DAYTIME NUDGE is a different mode of this proactive function. scanForNudge()
+  // ALWAYS enforces the guardrails itself (9–6, max 2/day, never back-to-back), whether it
+  // was poked by the hourly cron or on demand — there is no bypass. It sends only when it
+  // has a calm offer; otherwise it stays quiet (that's correct, not a failure).
   if (nudge) {
     try {
-      const offer = await scanForNudge(force);
+      const offer = await scanForNudge();
       if (offer) await sendMessage(OWNER_CHAT_ID, offer);
-      // On the manual "nudge test" (force), always give a sign of life so it's verifiable;
-      // a real scheduled scan with no offer stays silent (that's the whole point).
-      else if (force) await sendMessage(OWNER_CHAT_ID, "No free 60-min window (9–6) or nothing worth offering right now — no nudge.");
       return new Response(offer ? "nudge sent" : "no nudge", { status: 200 });
     } catch (_err) {
       return new Response("nudge-error-handled", { status: 200 });
     }
   }
 
-  // DST-safe 7am: a scheduled run fires at both 05:00 and 06:00 UTC; only the one in
-  // the 7am Amsterdam hour proceeds (so exactly one send/day, year-round). The temp
-  // every-3-min test job passes { force: true } to bypass this gate.
-  if (scheduled && !force && localHour() !== SEND_HOUR) {
+  // DST-safe 7am: a scheduled run fires at both 05:00 and 06:00 UTC; only the one in the
+  // 7am Amsterdam hour proceeds (so exactly one send/day, year-round). An on-demand "brief"
+  // has no `scheduled` flag, so it skips this gate and always sends.
+  if (scheduled && localHour() !== SEND_HOUR) {
     return new Response("skipped (not 7am Amsterdam)", { status: 200 });
   }
 
   try {
-    await buildAndSend(test);
+    await buildAndSend();
     return new Response("sent", { status: 200 });
   } catch (_err) {
     // Always-send safety net: never die silently — attempt a minimal sign of life.

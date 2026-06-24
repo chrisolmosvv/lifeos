@@ -3,7 +3,7 @@
 // the reply to send ("" = send nothing, e.g. the brief texts the owner itself).
 //
 // The order:
-//   1. Reserved trigger words ("brief" / "brief test" / "undo") — exact match, no AI.
+//   1. Reserved trigger words ("brief" / "nudge" / "undo") — exact match, no AI.
 //   2. Otherwise classify (intent.ts): QUESTION → the read-only query path (query.ts);
 //      CAPTURE → the existing, unchanged capture path (understand.ts → save.ts);
 //      UNCLEAR → ASK, save nothing (a wrong capture guess would write).
@@ -41,15 +41,17 @@ const NONE_USABLE =
   "None of those looked like a task or an appointment, so I didn't save anything.\n" +
   "Send me something to do, or an appointment with a time, and I'll file it.";
 
-// Fire the separate `brief` function (deployed PRIVATE/jwt-verified). We authenticate
-// with the service-role key this function already runs with. Returns true if accepted.
-async function fireBrief(test: boolean): Promise<boolean> {
+// Fire the separate `brief` function (deployed PRIVATE/jwt-verified) on demand. We
+// authenticate with the service-role key this function already runs with. An on-demand
+// brief carries no `scheduled` flag, so it skips the 7am gate and always sends. Returns
+// true if accepted.
+async function fireBrief(): Promise<boolean> {
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/brief`, {
       method: "POST",
       headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ test }),
+      body: JSON.stringify({}),
     });
     return res.ok;
   } catch (_err) {
@@ -57,16 +59,17 @@ async function fireBrief(test: boolean): Promise<boolean> {
   }
 }
 
-// Fire the brief function's DAYTIME NUDGE mode (M9). `force` (the "nudge test" path) skips
-// its 9–6 gate + caps so the scan can be tried on demand. The brief function sends the
-// offer itself; we only speak up if firing failed.
-async function fireNudge(force: boolean): Promise<boolean> {
+// Fire the brief function's DAYTIME NUDGE scan on demand (M9). There is NO bypass — the
+// scan always enforces the guardrails (9–6, max 2/day, never back-to-back), so an on-demand
+// "nudge" offers only when it legitimately would, and stays quiet otherwise. The brief
+// function sends any offer itself; we only speak up if firing failed.
+async function fireNudge(): Promise<boolean> {
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/brief`, {
       method: "POST",
       headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ nudge: true, force }),
+      body: JSON.stringify({ nudge: true }),
     });
     return res.ok;
   } catch (_err) {
@@ -89,7 +92,7 @@ export async function route(text: string): Promise<string> {
   // handled normally below.
   const pending = await getPending();
   if (pending) {
-    const isCommand = lower === "undo" || lower.startsWith("undo ") || lower === "brief" || lower === "brief test";
+    const isCommand = lower === "undo" || lower.startsWith("undo ") || lower === "brief" || lower === "nudge";
     if (!isCommand) {
       const ans = await parseTimeAnswer(text, pending.item);
       if (ans.kind === "time") return await completePending(pending, ans.time); // clears + saves
@@ -107,13 +110,15 @@ export async function route(text: string): Promise<string> {
     // No open offer → fall through (a bare "yes"/"no" with nothing pending is just unclear).
   }
 
-  // 1. Reserved trigger words — no AI, behaviour exactly as before.
-  if (lower === "brief" || lower === "brief test") {
-    const ok = await fireBrief(lower === "brief test");
+  // 1. Reserved trigger words — no AI. Both fire through the FULLY-GUARDRAILED path.
+  if (lower === "brief") {
+    const ok = await fireBrief();
     return ok ? "" : "I couldn't fetch your brief just now — try again in a moment.";
   }
-  if (lower === "nudge test") {
-    const ok = await fireNudge(true); // force: bypass the 9–6 gate + caps to try it now
+  if (lower === "nudge") {
+    // On-demand nudge scan — offers only if it's genuinely 9–6, within caps, and a real
+    // free window exists; otherwise it stays quiet (correct, not a failure).
+    const ok = await fireNudge();
     return ok ? "" : "I couldn't run the nudge scan just now — try again in a moment.";
   }
   if (lower === "undo") return await undoLast();

@@ -22,8 +22,8 @@ import { dayConfigured, owner, select, todayWindow } from "./sb.ts";
 import type { GapOffer } from "./gap.ts";
 
 // How long an open This Week task sits untouched before the brief gently surfaces it.
-// One named constant so it's easy to read/change. ("brief test" passes 0 to see it
-// fire immediately on real tasks — see index.ts.)
+// One named constant so it's easy to read/change. (Always used now — the M10 cleanup
+// retired the "brief test" 0-day override.)
 export const FORGOTTEN_DAYS = 3;
 
 // The gathered, structured day — the single source of truth for the checklist (the
@@ -93,7 +93,7 @@ export async function gatherDay(): Promise<DayData | null> {
 // 'This Week', created `thresholdDays`+ ago, that is NOT shown elsewhere in today's
 // brief — i.e. not due today, not overdue, not scheduled onto today's calendar. Of
 // those, the single MOST untouched (oldest created_at). Code-side and deterministic;
-// Gemini only phrases it. Returns the task's title. (thresholdDays = 0 in test mode.)
+// Gemini only phrases it. Returns the task's id + title (always thresholdDays = FORGOTTEN_DAYS).
 export async function pickForgotten(thresholdDays: number): Promise<NamedItem | null> {
   if (!dayConfigured) return null;
   const { today, startUtc, endUtc } = todayWindow();
