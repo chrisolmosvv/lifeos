@@ -121,8 +121,10 @@ later spec — not planned here.
   **Commit A (DB, checker-gated):** `db/22_gym_sync_cron.sql` — `gym-twice-daily-sync`
   at `0 4,18 * * *`, reusing the confirmed Vault secret `brief_service_role_key` to
   call `gym` `{"mode":"sync"}`. Self-healing (idempotent + clean-pass cursor).
-  **Written; awaiting checker + run + manual-fire.** **Commit B (src/ only):** the
-  Settings "last synced" status line — not started (after A).
+  **✅ DONE & verified (run + checker + manual-fire).** **Commit B (src/ only):** the
+  Settings "last synced" status line (`src/kit/HevyStatus.jsx`) reading
+  `gym_sync_state.last_synced_at` — status + freshness only, no key, no controls.
+  **Built; awaiting the owner's Mac check.**
 - ⬜ **G6 — Exercise-templates lookup.** Build a small lookup table from
   `GET /v1/exercise_templates` (muscle groups), keyed by `exercise_template_id`.
   Backfillable without re-pulling workout history.

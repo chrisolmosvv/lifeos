@@ -35,6 +35,28 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G5 Commit B — Settings "last synced" status line. SRC/ ONLY. (Awaiting owner's Mac check.)
+WHAT CHANGED: a small **read-only** status line in the existing Settings screen, below the account band —
+**"Hevy · connected · last synced Xh ago"**, or **"Hevy · not connected"** when `gym_sync_state` has no
+row / a null `last_synced_at`. Connection + freshness ONLY: no key, no "edit key", no manual-sync button, no
+controls. (G5 Commit A — the twice-daily cron — is verified done; this is the front-end half.)
+- Reads `last_synced_at` from `gym_sync_state` via the existing `supabaseClient` (the table's owner-only RLS
+  already scopes it to this user — `maybeSingle()` is null when there's never been a sync). It NEVER reads,
+  shows, stores, or references `HEVY_API_KEY` (that lives only in a backend secret).
+- Age formatted plainly: "just now" / "N min ago" / "Nh ago" / "Nd ago".
+FILES TOUCHED: **new** `src/kit/HevyStatus.jsx` + `src/kit/hevyStatus.css` (a self-contained kit block);
+`src/Settings.jsx` gains one import + one `<HevyStatus />` line. **Nothing else in the shell.** No backend,
+no DB. `npx vite build` passes (145 modules). **src/-only commit** (two-track rule kept).
+HOW TO VERIFY (owner, on the Mac): open **Settings** → below "Signed in as" you should see
+**"HEVY  connected · last synced Xh ago"**, the age matching `gym_sync_state.last_synced_at` (a few
+hours/minutes, since you synced today). **No key shown anywhere.** Empty/never-synced state would read
+**"HEVY  not connected"** (and a transient read error reads "status unavailable").
+KNOWN GAPS / RISKS: "connected" is inferred from "a sync has run" (a `last_synced_at` exists) — the front-end
+can't see the backend key and must not, so this is the honest proxy. No controls by design (a manual-sync
+button is a later Settings-reskin decision).
+NEXT: **G6 — the exercise-templates lookup** (build a small lookup table from `/v1/exercise_templates` for
+muscle groups, keyed by `exercise_template_id`) — checker-gated (schema), its own SQL commit.
+
 ### 2026-06-24 — BACKLOG (Marty track — recorded, NOT done) — fix the broken `marty-daytime-nudge` cron (wrong Vault secret).
 RECORDED so we don't lose it (found during Gym G5; do NOT fold into Gym, do NOT fix now).
 THE BUG: the live `marty-daytime-nudge` pg_cron job authenticates with Vault secret **`service_role_key`,

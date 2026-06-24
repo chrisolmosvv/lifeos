@@ -657,14 +657,15 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   the owner's five-check verify (no-op / edit / add / delete-removes-one / backfill-recovers)
   before G5.** "Deployed" ≠ "done".
 - 🔨 **G5 — Twice-daily cron + a Settings "Hevy" status line.** Two commits.
-  **Commit A (DB, checker-gated): cron written** — `db/22_gym_sync_cron.sql`,
+  **Commit A (DB) — ✅ DONE & verified:** `db/22_gym_sync_cron.sql`,
   `gym-twice-daily-sync` at `0 4,18 * * *` (06:00 & 20:00 Ams summer / 05:00 & 19:00
-  winter), reusing the **confirmed** Vault secret `brief_service_role_key` (NOT the
-  nonexistent `service_role_key`) to call `gym` `{"mode":"sync"}`. **Awaiting checker +
-  owner run + manual-fire verify.** **Commit B (src/ only): Settings "last synced"
-  status line — not started** (begins after A is done). *(Two live findings flagged:
-  the `marty-daytime-nudge` cron uses a nonexistent vault secret and is silently
-  no-op'ing; `gym_sync_state` is empty so G4's sync hasn't been run/verified.)*
+  winter), reusing the **confirmed** Vault secret `brief_service_role_key` to call
+  `gym` `{"mode":"sync"}`. Run live + checker + manual-fire all passed.
+  **Commit B (src/ only) — built, awaiting owner's Mac check:** a read-only Settings
+  line "Hevy · connected · last synced Xh ago" (`src/kit/HevyStatus.jsx`), reading
+  `gym_sync_state.last_synced_at`; status + freshness only, never the key, no controls.
+  *(Backlog flagged: the `marty-daytime-nudge` cron uses a nonexistent vault secret and
+  is silently no-op'ing — its own Marty-track fix, recorded in the handoff.)*
 - ⬜ **G6 — Exercise-templates lookup.** Built from `/v1/exercise_templates` (muscle
   groups), keyed by `exercise_template_id`; backfillable without re-pulling history.
 - ⬜ **G7 — Health nav + empty Form Guide shell (front-end, new files).** Add view
