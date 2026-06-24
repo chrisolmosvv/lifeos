@@ -17,6 +17,7 @@ import { undoLast, undoNamed } from "./undo.ts";
 import { classify } from "./intent.ts";
 import { answerQuery } from "./query.ts";
 import { handleEdit } from "./edit.ts";
+import { briefItem } from "./briefmap.ts";
 import { clearPending, completePending, getPending, parseTimeAnswer, setPending, timeQuestion } from "./pending.ts";
 
 // Used only to fire the separate PRIVATE brief function (it texts the owner itself).
@@ -91,7 +92,16 @@ export async function route(text: string): Promise<string> {
 
   const c = intent.value;
   if (c.kind === "question") return await answerQuery(c); // READ-ONLY path, saves nothing
-  if (c.kind === "edit") return await handleEdit(c); // change an existing item, riding undo
+  if (c.kind === "edit") {
+    // A numbered reply to the brief ("done 1") → act on the EXACT briefed item (M8);
+    // otherwise the normal name/last-item path.
+    if (c.target_number > 0) {
+      const it = await briefItem(c.target_number);
+      if (!it) return `I don't have a #${c.target_number} from your last brief. (Nothing changed.)`;
+      return await handleEdit(c, { table: it.table, id: it.id });
+    }
+    return await handleEdit(c); // change an existing item, riding undo
+  }
   if (c.kind === "unclear") return UNCLEAR; // ask, save nothing
 
   // 3. Capture — read it into one or more items, then save and confirm. Unsure items

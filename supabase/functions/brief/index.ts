@@ -42,6 +42,8 @@
 import { factsForGemini, FORGOTTEN_DAYS, formatChecklist, gatherDay, pickForgotten } from "./day.ts";
 import { pickGapOffer } from "./gap.ts";
 import { writeBrief } from "./write.ts";
+import { buildActions } from "./actions.ts";
+import { storeBriefMap } from "./store.ts";
 import { localHour } from "../_shared/datetime.ts";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -78,9 +80,20 @@ async function buildAndSend(test: boolean) {
   // of either; put both in the prose facts AND the checklist fallback so the nudges
   // hold even if Gemini is unavailable. The gap offer reuses the forgotten task as
   // its top-priority candidate, so it's computed after.
-  const forgotten = await pickForgotten(test ? 0 : FORGOTTEN_DAYS);
-  const gap = await pickGapOffer(forgotten);
-  const text = await writeBrief(factsForGemini(day, forgotten, gap), formatChecklist(day, forgotten, gap));
+  const forgotten = await pickForgotten(test ? 0 : FORGOTTEN_DAYS); // {id,title} | null (M8)
+  const fTitle = forgotten?.title ?? null;
+  const gap = await pickGapOffer(fTitle);
+  const brief = await writeBrief(factsForGemini(day, fTitle, gap), formatChecklist(day, fTitle, gap));
+
+  // M8: number the actionable items, store the number→item map, and append a "Reply to
+  // act" list — but only if the map actually stored (so we never show numbers that can't
+  // resolve, e.g. before the marty_brief table exists).
+  const { lines, map } = buildActions(day, forgotten);
+  const stored = await storeBriefMap(map);
+  const text = (lines.length && stored)
+    ? `${brief}\n\nReply to act — e.g. "done 1" or "move 2 to Friday":\n${lines.join("\n")}`
+    : brief;
+
   await sendMessage(OWNER_CHAT_ID!, text);
 }
 

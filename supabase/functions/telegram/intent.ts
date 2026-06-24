@@ -29,6 +29,7 @@ export interface Classified {
   // edit:
   op: EditOp | "";
   target_title: string; // a name fragment identifying the existing item
+  target_number: number; // a numbered brief item ("done 1" → 1); 0 if none
   target_time: string; // HH:MM, to identify by time ("the 3pm"); else ""
   target_date: string; // YYYY-MM-DD, to identify by day; else ""
   new_title: string; // rename → the new name
@@ -54,6 +55,7 @@ const SYSTEM = `You are the message router for the owner's personal task and cal
     - rename: "rename X to Y", "change X's name to Y", "call X 'Y' instead".
     - delete: "delete X", "remove X", "cancel X", "drop X".
     - categorize: file/refile an item under a CATEGORY. "that's Admin", "no, Errands", "file call plumber under Work", "call plumber is Errands". Put the category name in "new_category". If the item isn't named (e.g. just "that's Admin" — correcting the thing just added), leave "target_title" "". NOTE: "move X to <a category>" is categorize, but "move X to <a day or time>" is reschedule — a category is a named bucket, not a date/time.
+  Replies to a NUMBERED brief are edits too: "done 1" = complete item 1, "move 3 to Friday" = reschedule item 3, "delete 2" = delete item 2. Put the number in "target_number" (leave "target_title" "").
 - "unclear" — you genuinely cannot tell whether they want to add, ask, or change. If in doubt, choose "unclear" — do NOT guess; a wrong guess could write or change the wrong thing.
 
 Date/time rules (Europe/Amsterdam, resolve against the current local date you are given):
@@ -62,7 +64,7 @@ Date/time rules (Europe/Amsterdam, resolve against the current local date you ar
 
 Fill these (use "" / false when not applicable):
 - question: "query_type" = "agenda" | "forgot" | "free"; "date" = the day asked about (YYYY-MM-DD); "day_part" = "morning"|"afternoon"|"evening"|"day" for a "free" question.
-- edit: "op" = complete|reschedule|rename|delete|categorize. "target_title" = the words naming the existing item (e.g. "the dentist" → "dentist"); leave "" for a bare "that's X" correction. "target_time" = HH:MM if the item is identified by a clock time ("the 3pm" → "15:00"). "target_date" = YYYY-MM-DD if identified by a day. "new_title" = the new name (rename). "new_date" = the new day YYYY-MM-DD (reschedule). "new_time" = the new clock time HH:MM (reschedule). "new_date_bare" = true if new_date came from a bare month-day with no year. "new_category" = the category name (categorize).
+- edit: "op" = complete|reschedule|rename|delete|categorize. "target_title" = the words naming the existing item (e.g. "the dentist" → "dentist"); leave "" for a bare "that's X" correction or a numbered reply. "target_number" = the brief item number if the reply refers to one ("done 1" → 1), else 0. "target_time" = HH:MM if the item is identified by a clock time ("the 3pm" → "15:00"). "target_date" = YYYY-MM-DD if identified by a day. "new_title" = the new name (rename). "new_date" = the new day YYYY-MM-DD (reschedule). "new_time" = the new clock time HH:MM (reschedule). "new_date_bare" = true if new_date came from a bare month-day with no year. "new_category" = the category name (categorize).
 
 Output ONLY the JSON object. No prose, no markdown.`;
 
@@ -75,6 +77,7 @@ const SCHEMA = {
     day_part: { type: "string" },
     op: { type: "string" },
     target_title: { type: "string" },
+    target_number: { type: "integer" },
     target_time: { type: "string" },
     target_date: { type: "string" },
     new_title: { type: "string" },
@@ -84,7 +87,7 @@ const SCHEMA = {
     new_category: { type: "string" },
   },
   required: [
-    "kind", "query_type", "date", "day_part", "op", "target_title",
+    "kind", "query_type", "date", "day_part", "op", "target_title", "target_number",
     "target_time", "target_date", "new_title", "new_date", "new_time", "new_date_bare", "new_category",
   ],
 };
@@ -127,6 +130,7 @@ export async function classify(text: string): Promise<ClassifyResult> {
         day_part: (DAY_PARTS.includes(p?.day_part) ? p.day_part : "") as Classified["day_part"],
         op: (EDIT_OPS.includes(p?.op) ? p.op : "") as EditOp | "",
         target_title: str(p?.target_title),
+        target_number: Number.isInteger(p?.target_number) && p.target_number > 0 ? p.target_number : 0,
         target_time: str(p?.target_time),
         target_date: str(p?.target_date),
         new_title: str(p?.new_title),

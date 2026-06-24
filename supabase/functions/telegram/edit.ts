@@ -73,19 +73,20 @@ function pick(matches: Candidate[], desc: string): Candidate | string {
 
 // 3a — COMPLETE (tasks only). The DB trigger clears/sets completed_at from status, so
 // recording status alone is enough for an exact undo.
-async function opComplete(all: Candidate[], c: Classified, desc: string): Promise<string> {
-  const r = pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date, tasksOnly: true }), desc);
+async function opComplete(all: Candidate[], c: Classified, desc: string, forced?: Candidate): Promise<string> {
+  const r = forced ?? pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date, tasksOnly: true }), desc);
   if (typeof r === "string") return r;
+  if (r.table !== "tasks") return `'${r.title}' is an event, not a task — I can't mark it done. (Nothing changed.)`;
   if (r.status === "done") return `'${r.title}' is already done. (Nothing changed.)`;
   const change: Change = { table: "tasks", id: r.id, title: r.title, before: { status: r.status }, after: { status: "done" } };
   return await commitReply("edit", [change], `Marked '${r.title}' done. (Text "undo" to reopen it.)`);
 }
 
 // 3c — RENAME (task or event).
-async function opRename(all: Candidate[], c: Classified, desc: string): Promise<string> {
+async function opRename(all: Candidate[], c: Classified, desc: string, forced?: Candidate): Promise<string> {
   const newTitle = c.new_title.trim();
   if (!newTitle) return "What should I rename it to? (Nothing changed.)";
-  const r = pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc);
+  const r = forced ?? pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc);
   if (typeof r === "string") return r;
   const change: Change = { table: r.table, id: r.id, title: r.title, before: { title: r.title }, after: { title: newTitle } };
   return await commitReply("edit", [change], `Renamed '${r.title}' to '${newTitle}'. (Text "undo" to change it back.)`);
@@ -93,8 +94,8 @@ async function opRename(all: Candidate[], c: Classified, desc: string): Promise<
 
 // 3b — RESCHEDULE (event, scheduled task, or due-only task). Missing day keeps the item's
 // day; missing time keeps its time. Duration is preserved.
-async function opReschedule(all: Candidate[], c: Classified, desc: string): Promise<string> {
-  const r = pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc);
+async function opReschedule(all: Candidate[], c: Classified, desc: string, forced?: Candidate): Promise<string> {
+  const r = forced ?? pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc);
   if (typeof r === "string") return r;
 
   let newDate = c.new_date.trim();
@@ -143,8 +144,8 @@ async function opReschedule(all: Candidate[], c: Classified, desc: string): Prom
 // the app's Archive screen and can be restored there too — AND stays undoable via Marty's
 // "undo" (which reverts the rows and removes the now-empty batch). For a task we archive
 // its active subtasks into the same batch, matching the app's cascade. Nothing destroyed.
-async function opDelete(all: Candidate[], c: Classified, desc: string): Promise<string> {
-  const r = pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc);
+async function opDelete(all: Candidate[], c: Classified, desc: string, forced?: Candidate): Promise<string> {
+  const r = forced ?? pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc);
   if (typeof r === "string") return r;
 
   // 1) The archive batch first — same shape the app writes (label = title, source_type).
@@ -193,14 +194,14 @@ async function lastCreatedCandidate(all: Candidate[]): Promise<Candidate | strin
 
 // 3e — CATEGORIZE / refile under a category (M6). Reuses the edit commit path (so it's
 // undoable), and logs the correction so Marty can learn the owner's filing over time.
-async function opCategorize(all: Candidate[], c: Classified, desc: string): Promise<string> {
+async function opCategorize(all: Candidate[], c: Classified, desc: string, forced?: Candidate): Promise<string> {
   const cat = await resolveCategory(c.new_category);
   if (!cat) return `I don't have a category called '${c.new_category.trim()}'. (Nothing changed.)`;
 
   const named = !!(c.target_title || c.target_time || c.target_date);
-  const r = named
+  const r = forced ?? (named
     ? pick(matchCandidates(all, { title: c.target_title, time: c.target_time, date: c.target_date }), desc)
-    : await lastCreatedCandidate(all);
+    : await lastCreatedCandidate(all));
   if (typeof r === "string") return r;
 
   const before = r.row.category_id ? String(r.row.category_id) : null;
@@ -214,18 +215,25 @@ async function opCategorize(all: Candidate[], c: Classified, desc: string): Prom
 }
 
 // Dispatch a classified EDIT to the right op. (Caller guarantees c.kind === "edit".)
-export async function handleEdit(c: Classified): Promise<string> {
+// `forcedRef` (M8) is a brief item resolved by number → act on THAT exact row, not a match.
+export async function handleEdit(c: Classified, forcedRef?: { table: string; id: string }): Promise<string> {
   if (!dbConfigured) return "I can't change things right now — give it a moment and try again.";
   const all = await loadCandidates();
   if (all === null) return READ_FAILED;
 
-  const desc = c.target_title.trim() || (c.target_time ? `the ${c.target_time}` : "that item");
+  let forced: Candidate | undefined;
+  if (forcedRef) {
+    forced = all.find((cand) => cand.id === forcedRef.id && cand.table === forcedRef.table);
+    if (!forced) return "That item from your brief isn't around anymore. (Nothing changed.)";
+  }
+
+  const desc = forced ? `'${forced.title}'` : (c.target_title.trim() || (c.target_time ? `the ${c.target_time}` : "that item"));
   switch (c.op) {
-    case "complete": return await opComplete(all, c, desc);
-    case "reschedule": return await opReschedule(all, c, desc);
-    case "rename": return await opRename(all, c, desc);
-    case "delete": return await opDelete(all, c, desc);
-    case "categorize": return await opCategorize(all, c, desc);
+    case "complete": return await opComplete(all, c, desc, forced);
+    case "reschedule": return await opReschedule(all, c, desc, forced);
+    case "rename": return await opRename(all, c, desc, forced);
+    case "delete": return await opDelete(all, c, desc, forced);
+    case "categorize": return await opCategorize(all, c, desc, forced);
     default:
       return "I wasn't sure what change you meant. Try \"move X to Friday\", \"rename X to Y\", \"done X\", \"delete X\", or \"that's Admin\".";
   }
