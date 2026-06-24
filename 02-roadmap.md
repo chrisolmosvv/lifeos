@@ -666,8 +666,12 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   `gym_sync_state.last_synced_at`; status + freshness only, never the key, no controls.
   *(Backlog flagged: the `marty-daytime-nudge` cron uses a nonexistent vault secret and
   is silently no-op'ing — its own Marty-track fix, recorded in the handoff.)*
-- ⬜ **G6 — Exercise-templates lookup.** Built from `/v1/exercise_templates` (muscle
+- 🔨 **G6 — Exercise-templates lookup.** Built from `/v1/exercise_templates` (muscle
   groups), keyed by `exercise_template_id`; backfillable without re-pulling history.
+  **Table `gym_exercise_templates` written (`db/23`, commit `289ec79`) + `gym`
+  `"sync_templates"` fill mode built/deployed.** Shape confirmed live (437 templates;
+  `primary_muscle_group` + `secondary_muscle_groups[]` + type/equipment/is_custom, raw).
+  **Awaiting checker sign-off + owner run + JOIN verify** — not done until all three.
 - ⬜ **G7 — Health nav + empty Form Guide shell (front-end, new files).** Add view
   `health`, NAV label `Health` (third), a placeholder front page reading a real number.
 - ⬜ **G8 — The metrics calc util (compute-on-read).** Pure `src/` functions (Epley

@@ -125,9 +125,12 @@ later spec — not planned here.
   Settings "last synced" status line (`src/kit/HevyStatus.jsx`) reading
   `gym_sync_state.last_synced_at` — status + freshness only, no key, no controls.
   **Built; awaiting the owner's Mac check.**
-- ⬜ **G6 — Exercise-templates lookup.** Build a small lookup table from
+- 🔨 **G6 — Exercise-templates lookup.** Build a small lookup table from
   `GET /v1/exercise_templates` (muscle groups), keyed by `exercise_template_id`.
-  Backfillable without re-pulling workout history.
+  Backfillable without re-pulling workout history. **Table `gym_exercise_templates`
+  (`db/23`) + `gym` `"sync_templates"` fill built/deployed; shape confirmed live
+  (437 templates; primary + secondary[] muscle groups, raw). Awaiting checker + run
+  + JOIN verify.**
 
 **Front-end (desktop only; new files; the two-track rule)**
 - ⬜ **G7 — Health nav + empty Form Guide shell.** Add view id `health`, NAV label

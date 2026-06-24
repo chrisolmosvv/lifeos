@@ -93,6 +93,30 @@ export async function fetchWorkoutEventsPage(since: string, page: number): Promi
   return { ok: true, status: 200, events, pageCount, rate };
 }
 
+// One page of the EXERCISE TEMPLATE dictionary (G6). Read-only. Hevy returns
+//   { page, page_count, exercise_templates: [ { id, title, type, primary_muscle_group,
+//     secondary_muscle_groups: [...], equipment, is_custom } ] }  (confirmed live; ~437
+//   templates over 44 pages at pageSize 10). Mapping happens in templates.ts.
+export async function fetchExerciseTemplatesPage(page: number): Promise<
+  | { ok: true; status: 200; templates: unknown[]; pageCount: number | null; rate: Record<string, string> }
+  | { ok: false; status: number; note: string; rate: Record<string, string> }
+> {
+  const url = `${HEVY_BASE}/v1/exercise_templates?page=${page}&pageSize=${HEVY_PAGE_SIZE}`;
+  const res = await fetch(url, { headers: hevyHeaders() });
+  const rate = rateLimitInfo(res);
+  if (!res.ok) {
+    const note = await res.text().catch(() => "");
+    return { ok: false, status: res.status, note: note.slice(0, 200), rate };
+  }
+  const data = await res.json().catch(() => null) as Record<string, unknown> | null;
+  const templates = Array.isArray(data?.exercise_templates)
+    ? (data!.exercise_templates as unknown[])
+    : (Array.isArray(data?.templates) ? (data!.templates as unknown[]) : []);
+  const pcRaw = data?.page_count;
+  const pageCount = typeof pcRaw === "number" ? pcRaw : null;
+  return { ok: true, status: 200, templates, pageCount, rate };
+}
+
 // One page of full workouts (each carries its exercises + sets inline). We return
 // the raw Hevy workout objects; mapping to our table shape happens in backfill.ts.
 // `page_count` (when present) tells us the last page; we also stop on an empty page.

@@ -35,6 +35,51 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G6 — exercise-templates lookup. ⚠️ SCHEMA CHANGE — CHECKER-GATED (awaiting sign-off + run + JOIN).
+WHAT CHANGED: a new additive dictionary table + a fill mode, so a Hevy exercise id resolves to a name +
+muscle group (the input the G7 body-part-balance calc needs). `gym_exercises` already stores
+`exercise_template_id` (G3); this maps it.
+- **NEW table `gym_exercise_templates`** (`db/23`, its own SQL commit): `template_id` (text, natural key),
+  `title`, `type`, **`primary_muscle_group` text**, **`secondary_muscle_groups` text[]**, `equipment`,
+  `is_custom` — all RAW (no enum/CHECK, same robustness rule as `set_type`). Owner-RLS + four owner policies;
+  `unique(user_id, template_id)`; **no FK into the spine or into `gym_exercises`** (link is by `template_id`
+  value). One bonus index `(user_id, primary_muscle_group)` for the G7 balance aggregation.
+- **NEW `gym` mode `"sync_templates"`** (backend): pages Hevy `GET /v1/exercise_templates` (read-only) and
+  UPSERTS on `(user_id, template_id)` — idempotent, re-runnable; same defensive paging as G3 (~350ms/page,
+  one 429 backoff then STOP-and-report). Files: `templates.ts` (new), `hevy.ts` (templates fetcher),
+  `store.ts` (`upsertExerciseTemplates`), `index.ts` (the mode).
+- **Shape confirmed live (G6 Part 1 probe, via direct read-only curl — no throwaway probe code deployed, so
+  nothing to clean up):** 437 templates over 44 pages, 0 rate-limit 429s, no limit headers. Fields per
+  template: `id, title, type, primary_muscle_group (single), secondary_muscle_groups (array), equipment,
+  is_custom`. The owner's data has 75 distinct template ids (same id format) → the JOIN resolves.
+FILES TOUCHED: **new** `db/23_gym_exercise_templates.sql` (SQL commit `289ec79`), **new**
+`supabase/functions/gym/templates.ts`; edited `gym/hevy.ts`, `gym/store.ts`, `gym/index.ts`. No `src/`. All
+gym files < 250 lines. **Frankfurt only.** (Function deployed so the fill is ready once the table exists.)
+HOW TO VERIFY (owner — AFTER the checker signs off):
+  1. **Run the table:** Supabase SQL editor (Frankfurt `cntlptuacsujbdtwvbis`) → paste/Run `db/23` →
+     "Success. No rows returned."
+  2. **Fill it:** trigger the gym function with `{"mode":"sync_templates"}` (curl from the message with this
+     entry) → expect `templates_written` ≈ **437**, `pages_fetched` 44, `stopped_early: false`.
+  3. **Row count plausible:** `select count(*) from gym_exercise_templates;` → ~437.
+  4. **JOIN resolves YOUR data** (the real proof):
+     `select e.exercise_template_id, t.title, t.primary_muscle_group, t.secondary_muscle_groups
+      from gym_exercises e join gym_exercise_templates t
+        on t.template_id = e.exercise_template_id and t.user_id = e.user_id
+      group by 1,2,3,4 order by t.primary_muscle_group limit 20;`
+     → your real exercises show their name + muscle group. (Also check none are left unresolved:
+     `select count(distinct e.exercise_template_id) from gym_exercises e
+        left join gym_exercise_templates t on t.template_id=e.exercise_template_id and t.user_id=e.user_id
+        where t.template_id is null;` → expect **0**, incl. any custom exercises.)
+  No junk left behind — the fill writes the real dictionary (that's the point).
+KNOWN GAPS / RISKS: if the unresolved-count above is > 0, some (likely custom) templates aren't in Hevy's
+feed; surface before relying on them in G7. Otherwise none.
+NEXT: **G7 — the metrics calc util + Health nav/front page** (compute-on-read; `src/`, two-track rule).
+FOR THE CHECKER — please confirm (raw SQL is `db/23_gym_exercise_templates.sql`):
+  1. ADDITIVE — nothing about tasks/events/categories is altered.
+  2. RLS ON + four owner-only policies — rejects non-owner rows.
+  3. NO FK into the spine — `template_id` and the `gym_exercises` link are plain values (no FK either way).
+  4. `unique(user_id, template_id)` — so the fill can't duplicate.
+
 ### 2026-06-24 — Health → Gym G5 Commit B — Settings "last synced" status line. SRC/ ONLY. (Awaiting owner's Mac check.)
 WHAT CHANGED: a small **read-only** status line in the existing Settings screen, below the account band —
 **"Hevy · connected · last synced Xh ago"**, or **"Hevy · not connected"** when `gym_sync_state` has no

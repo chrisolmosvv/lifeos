@@ -147,6 +147,36 @@ export async function deleteWorkoutByHevyId(hevyId: string): Promise<number | nu
   }
 }
 
+// G6 — upsert a batch of exercise templates on (user_id, template_id) — idempotent, so the
+// fill re-runs without duplicating. Returns the number written, or null on any failure.
+export async function upsertExerciseTemplates(
+  rows: Array<{
+    template_id: string;
+    title: string | null;
+    type: string | null;
+    primary_muscle_group: string | null;
+    secondary_muscle_groups: string[];
+    equipment: string | null;
+    is_custom: boolean | null;
+  }>,
+): Promise<number | null> {
+  if (rows.length === 0) return 0;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/gym_exercise_templates?on_conflict=user_id,template_id`,
+      {
+        method: "POST",
+        headers: headers({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
+        body: JSON.stringify(rows.map((r) => ({ ...r, user_id: OWNER_USER_ID }))),
+      },
+    );
+    if (!res.ok) return null;
+    return rows.length;
+  } catch (_err) {
+    return null;
+  }
+}
+
 // G4 — read the owner's stored incremental cursor (last_event_at), or null if there is no
 // sync-state row yet (first ever sync → caller starts from epoch). A read failure also
 // returns null; starting from epoch is safe because every write is idempotent.
