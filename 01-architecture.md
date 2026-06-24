@@ -7,9 +7,9 @@
 |---|---|---|---|
 | The app | What you see and tap; installs to phone + desktop (PWA) | React + Vite (plain CSS — see note), hosted on Vercel | Free |
 | The brain | Stores data, handles login, runs the agent code | Supabase (Postgres + Auth + RLS + Edge Functions) | Free tier |
-| The messenger | You ↔ agent chat | Telegram bot | Free |
-| The intelligence | Reads the day, writes the brief in real words | Gemini API (Flash, free tier) | Free |
-| The alarm | Wakes the agent at 7am | Supabase scheduler (pg_cron) | Free |
+| The messenger | You ↔ agent chat (text **and** voice notes) | Telegram bot | Free |
+| The intelligence | Reads your messages (capture / questions / edits), transcribes voice, guesses categories, writes the brief — all through ONE shared config seam | Gemini API (Flash, free tier) | Free |
+| The alarm | Wakes the agent at 7am (the brief) **and** hourly in working hours (the daytime nudge) | Supabase scheduler (pg_cron) | Free |
 | The vault | Saves every version of the code | GitHub | Free |
 
 Build tool: **Claude Code** on the owner's Claude Max plan.
@@ -100,36 +100,73 @@ Delete = **archive**, not destroy. **Additive** to the spine (no existing meanin
   task/event whose category was hard-deleted comes back as Inbox automatically (FK SET NULL).
 
 ### Added module tables (ADD to the spine, never change it)
-- **telegram_saves** (added Phase 5) — the Telegram bot's own bookkeeping log so it can
-  "undo" the last thing IT saved. One row per bot-saved item: `item_table`
-  ('tasks'|'events') + `item_id` (the saved row's id) + `title` + `user_id` +
-  `created_at`. RLS owner-only (same as the spine). It does **not** change the meaning of
-  categories/tasks/events — it only records pointers to rows the bot created, so undo can
-  delete exactly that row by id and never touch a task/event made in the app. No foreign
-  key to the core rows (a row deleted elsewhere just leaves a stale log entry that undo
-  reports as "already gone"). This is the architecture's "modules add tables, protect the
-  spine" pattern in practice.
+Every Marty table follows the same pattern: **additive, owner-only RLS, NO foreign key into
+categories/tasks/events** (ids are stored as plain values, so a deleted spine row can never be
+blocked or cascaded — a stale pointer is just reported as "already gone"). None of them change
+what a category/task/event means.
+- **telegram_saves** (Phase 5) — the bot's original create-only undo log. **Superseded by
+  `marty_actions` in M2** (left in place, no longer read or written; a later cleanup may drop it).
+- **marty_actions** (M2) — the generalised **undo log**. One row = one logical action
+  (`kind` = create / edit / delete), with a JSONB `items` array holding each affected item +
+  its **prior state** (edit before-values; a delete's archive columns). This is what makes every
+  Marty action reversible: `undo` reverses the last action (a multi-item capture is one action),
+  `undo <name>` reverses one item.
+- **marty_pending** (M4) — a tiny one-row-per-owner scratchpad for a **half-finished capture**
+  (an event missing its time). Marty parks the draft, asks once ("What time?"), and the next
+  message completes it; cleared on completion / abandonment / a ~5-min expiry.
+- **marty_category_learning** (M6) — a log of **category corrections** (title + guessed + corrected
+  category id). The capture guess reads it and applies a learned preference only after the SAME
+  kind of correction has happened **2** times — so a one-off never retrains.
+- **marty_brief** (M8) — the **numbered action map** of the latest brief (one row/owner), so a
+  reply like "done 1" — which arrives at the *telegram* function, not the brief — maps the number
+  back to the exact item.
+- **marty_nudges** (M9) — daytime-nudge **scheduling state** (the offer + slot + morning/afternoon
+  + answered). Enforces the guardrails (max 2/day, never back-to-back) and lets a "yes"/"no" reply
+  resolve the open offer.
 
 ## How the pieces connect (runtime)
-You → the app → Supabase (read/write your data). Supabase's agent talks to
-Telegram (two-way chat) and Gemini (writes the brief). GitHub just stores the
-code (not part of the running flow).
+You → the app → Supabase (read/write your data). Supabase runs **two edge functions** —
+the public `telegram` webhook (Marty's chat) and the private `brief` (the proactive sends).
+Both talk to Gemini through one shared config seam; GitHub just stores the code.
 
-**The morning brief (built Phase 6).** The brief is its own **private** edge
-function (`brief`, jwt-verified — only trusted server code can fire it), separate
-from the public Telegram webhook function. Two ways it runs:
-- **On demand** — you text Marty "brief" (or "brief test"); the webhook function
-  calls the private brief with the service-role key.
-- **The 7am alarm** — **pg_cron** runs a job at 05:00 **and** 06:00 UTC that uses
-  **pg_net** (HTTP from the database) to call the private brief, authenticating with
-  the **service-role key stored in Supabase Vault** (read at run time, never in the
-  cron SQL or the repo). The function proceeds only when the Europe/Amsterdam hour is
-  7, so exactly one brief lands at 7am Amsterdam year-round (DST-safe). The scheduled
-  run always sends — silence would mean the alarm itself broke.
+**Marty — the conversational + proactive bot (M-track M0–M10, complete).** The public
+`telegram` function is a **thin front door** (security secret-token check → owner-only gate →
+text/voice check) that hands every message to a small **router**. The router decides what a
+message IS — a reserved command, a question, an edit/delete, a capture, or an answer to a
+pending question — and routes it. What Marty can do, all through Gemini's free tier and all
+**undoable** via the `marty_actions` log:
+- **Capture** (text or **voice note**) — one message → one or several tasks/events, classified
+  task-vs-event by clock time, filed under a **guessed category** (shown, correctable; learns
+  your filing over ~2 corrections), `source='telegram'`. If an event is missing its time, Marty
+  asks **once** and completes on your reply.
+- **Questions** (read-only) — "what's on Thursday?", "what did I forget?", "am I free Friday
+  afternoon?".
+- **Edits** — "done report", "move the dentist to Friday", "rename …", "delete the 3pm",
+  "that's Admin" (recategorise). Delete = **archive** (same `archive_batches` machinery as the
+  app, so it shows in the Archive screen too). Numbered brief replies ("done 1") act here too.
+- **Undo** — `undo` reverses the last action; `undo <name>` reverses one item.
+- **Voice notes** are transcribed (Gemini audio) and routed through the *exact same* pipeline,
+  with the transcript echoed back ("Heard: …") so a mis-hear is obvious and reversible.
 
-The brief is **read-only on the spine**: it only reads tasks/events to summarise the
-day; it never writes to tasks/events/categories. Its reads are **active-only**
-(`archived_at IS NULL`, Phase 7 A3b) so archived items never surface in the brief.
+**The morning brief + daytime nudge (Phase 6 + M8/M9).** The `brief` function is **private**
+(jwt-verified — only trusted server code can fire it). It has two modes:
+- **The 7am brief** — **pg_cron** runs a job at 05:00 **and** 06:00 UTC that uses **pg_net**
+  (HTTP from the database) to call it, authenticating with the **service-role key in Supabase
+  Vault** (read at run time, never in the cron SQL or repo). It proceeds only when the
+  Europe/Amsterdam hour is 7 (DST-safe, exactly one/day). The brief **leads with the schedule**,
+  footers due/overdue, keeps one "been waiting" nudge + one gap offer, and **numbers its items**
+  so you can reply "done 1" / "move 2 to Friday" (M8). Also fires **on demand** when you text
+  "brief".
+- **The daytime nudge** (M9) — an hourly pg_cron job (working hours) calls the same function in
+  nudge mode. It offers, calmly, ONE good use of a 60+ min free window (the most-overdue task, or
+  one quick-win). **The guardrails are the feature:** 9am–6pm only, max 2/day (one morning, one
+  afternoon), never back-to-back. "yes" time-blocks the task (undoable); "no" stays quiet.
+  Also fires on demand when you text "nudge" — through the **same fully-guardrailed** path (no
+  bypass exists; the M10 cleanup retired all `force`/`test` routes).
+
+The brief/nudge are **read-only on the spine for reading** (active-only, `archived_at IS NULL`)
+and only ever WRITE through Marty's undoable edit engine (a "yes" calendar block) — never a
+parallel write.
 
 ## Hard constraints
 - **Free tiers only.** If a choice needs paid hosting/DB, stop and flag it.

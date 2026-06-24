@@ -37,19 +37,52 @@
   Vault/secret store, never in the app or GitHub.
 - **API** — a way for two programs to talk to each other (e.g. our app asking
   Gemini to write text, or pulling data from the Hevy gym app later).
-- **Gemini** — Google's AI that writes the morning brief in real words.
-- **Telegram bot** — the chat account you text to add things and that texts
-  you back.
-- **Marty** — the name of your Telegram bot (@lifeos_marty_bot).
+- **Gemini** — Google's AI. It does all of Marty's language work on the free tier: reading
+  your messages (deciding capture vs question vs edit), parsing a message into tasks/events,
+  **transcribing voice notes**, **guessing a category**, and **writing the morning brief**. All
+  of it goes through one shared config (so switching to a paid key later is a one-place change).
+- **Telegram bot** — the chat account you text (or send voice notes to) to add things, ask
+  questions, change things, and get your brief/nudges.
+- **Marty** — the name of your Telegram bot (@lifeos_marty_bot). Now a full conversational +
+  proactive assistant (see the Marty terms below).
 - **Webhook** — a "ping me when something happens" link: Telegram calls your
   cloud function at this address every time you text the bot.
 - **Secret token** — a private password Telegram sends in a hidden header on
   every webhook call; the function refuses any request without it, so the public
   address can't be abused.
-- **Undo (Marty)** — text "undo" and Marty removes the single most recent thing
-  *he* saved. Never touches tasks/events you made in the app yourself.
-- **Marty's save log (telegram_saves)** — a small private list noting what Marty
-  saved, so "undo" knows exactly which one row to remove.
+- **Undo (Marty)** — text **"undo"** and Marty reverses his **last action** as a unit (a
+  multi-item capture comes out together); **"undo \<name\>"** reverses just that one item. It
+  reverses creates, edits, *and* deletes (a deleted item is restored exactly), and walks back
+  step by step. It only ever touches things Marty did — never a row you made in the app, except
+  to restore one Marty itself deleted.
+- **Marty's action log (marty_actions)** — the private list of what Marty did, each entry holding
+  the **prior state** so any action can be reversed exactly. (Replaced the old create-only
+  `telegram_saves`.)
+- **Capture (Marty)** — texting or speaking a thought and having it saved. Handles **several
+  items in one message** ("buy milk, call plumber, dentist Thursday 3pm" → 3 saved as one
+  action), and **finishes over two messages** when an event is missing its time ("add lunch
+  Friday" → "What time?" → "1pm" → saved).
+- **Voice note (Marty)** — hold-to-talk in Telegram; Marty transcribes it and runs the words
+  through the exact same pipeline as typing, echoing back **"Heard: …"** so a mis-hear is obvious
+  and undoable.
+- **Questions (Marty)** — read-only asks Marty answers without changing anything: "what's on
+  Thursday?", "what did I forget?", "am I free Friday afternoon?".
+- **Edit by text (Marty)** — change an existing item in words: "done report", "move the dentist
+  to Friday", "rename …", "delete the 3pm", "that's Admin" (refile). Every change is undoable.
+- **Category guessing + learning (Marty)** — on capture Marty **guesses a category** from your
+  real categories and shows it (Inbox if nothing fits). Correct it in words ("that's Errands")
+  and he refiles that one item; after the **same kind of correction twice**, similar new captures
+  file there on their own. A one-off never retrains him.
+- **The interactive brief** — the 7am brief now **numbers** its items so you can reply **"done
+  1"** or **"move 3 to Friday"** to act straight from it (the number maps to the exact item). It
+  leads with your schedule and footers what needs attention.
+- **Daytime nudge** — a calm, guardrailed offer to use a real free hour: 9am–6pm only, **at most
+  twice a day**, never back-to-back, one task (most-overdue, or a quick-win). **"yes"** time-blocks
+  it (undoable); **"no"** stays quiet, no nagging.
+- **"brief" / "nudge" (triggers)** — text **"brief"** for your brief on demand, or **"nudge"** to
+  run the daytime scan on demand (it only offers if it's genuinely in-hours, within caps, and a
+  free window exists — otherwise it stays quiet). There is no test/force shortcut — both go
+  through the real guardrails.
 - **Token** — a chunk of text (roughly a few characters). AI usage and cost are
   measured in tokens.
 - **Context window** — how much an AI can "hold in its head" at once. When it's

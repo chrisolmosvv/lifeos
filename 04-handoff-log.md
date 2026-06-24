@@ -35,6 +35,25 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Brain-doc sync — bring ALL docs to the completed-M-track reality (docs only, no code).
+WHAT CHANGED: the stable/reference docs still described the pre-M-track world; brought them current.
+- **00-overview.md** — "What V1 is" now reflects the conversational + proactive Marty (text/voice capture,
+  questions, edits, category learning, interactive brief, daytime nudge; all undoable).
+- **01-architecture.md** — stack table broadened (Gemini does capture/questions/voice/category/brief via
+  one seam; the alarm fires the 7am brief AND the hourly nudge). Replaced the `telegram_saves`-only "Added
+  module tables" section with the full M-track set (marty_actions, marty_pending, marty_category_learning,
+  marty_brief, marty_nudges — all additive, owner-only, no FK to spine). Runtime section rewritten: the
+  `telegram` router + everything Marty does, voice, and the brief/nudge modes; dropped retired "brief test".
+- **05-glossary.md** — broadened Gemini/Marty; rewrote Undo (action-based, reverses create/edit/delete) +
+  the save-log (marty_actions, superseding telegram_saves); added terms for capture/voice/questions/edit/
+  category-learning/interactive-brief/daytime-nudge and the "brief"/"nudge" triggers.
+- **06-design.md** — the "quiet broadsheet" voice note now records that the voice carries into all of
+  Marty's chat + the interactive brief + the daytime nudge.
+- **07-ux-flows.md** — the status note's two "not built yet" mismatches (separate nudge layer; tasks-today
+  home) marked resolved/built; the original intent text kept for the record.
+FILES TOUCHED: 00, 01, 05, 06, 07 (docs only). 02/03/04/08 were already current from the M-track sessions.
+No code, no `src/`, no schema. **OWNER: re-upload the brain docs to project knowledge.**
+
 ### 2026-06-24 — Marty track M10 Piece 1 — retired the test scaffolding. M10 + WHOLE M-TRACK COMPLETE. No schema.
 WHAT CHANGED:
 - Owner confirmed the live cron jobs: ONLY the real 7am brief (`scheduled`) and the real hourly nudge

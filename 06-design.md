@@ -289,6 +289,12 @@ should read like a short, warm recap of the day ahead.
   observations and offers, never nags. This is the first place the **Voice & words**
   direction above is actually generated text (Gemini, temperature 0, told to use only
   the supplied facts), not just static UI copy. Now live in the daily brief.
+  **Carried further (M-track, complete):** the same restrained voice now runs all of
+  Marty's chat — capture confirmations, question answers, edit/undo replies, the
+  **interactive** numbered brief ("done 1"), and the **daytime nudge** (a calm, reserved
+  offer to use a free hour — the strongest test of "never naggy," so the guardrails are
+  the feature: 9–6, max twice a day, never back-to-back). Same columnist, no exclamation
+  marks, no nagging.
 - **Navigation + core layouts now EXIST as built (Phases 2–4):** previously this
   doc was mood-only; these are now real screens —
   - the **broadsheet masthead** (Fraunces nameplate, dateline + live clock) with a

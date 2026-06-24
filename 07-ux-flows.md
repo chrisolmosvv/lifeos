@@ -12,13 +12,15 @@
 > and any flow can be reopened, changed, or dropped on its screen's turn. When
 > a flow does change, update it here and say why (per the rule above).
 >
-> Two honest mismatches to keep in mind while reading: (1) §6 splits the
-> proactive layer into a calm 7am brief **plus** a separate nudge layer — this
-> is the *intended* future shape and differs from what Phase 6 actually shipped
-> (one bundled 7am brief that already folds in the staleness nudge + gap offer);
-> the split is recorded as open intent, not built yet. (2) §3's "tasks today /
-> next 7 days" home model is the agreed direction but is a later Phase-7 piece,
-> not the current built Today / This Week / Someday view.
+> **Update (2026-06-24) — the proactive + capture layer is now BUILT (backend M-track
+> M0–M10, complete).** The two mismatches noted below are resolved: (1) §6's "7am brief
+> **plus** a separate nudge layer" now exists — the brief is interactive (numbered, reply
+> "done 1" to act) AND there's a separate, heavily-guardrailed **daytime nudge** (M9). (2)
+> §3's "tasks today / next 7 days" Today home is built (Phase 7). And Marty (§1 Capture)
+> is now a full conversational assistant: capture by **text or voice**, single / multi-turn
+> / multi-item, questions, edit/delete by text, category guessing + learning, all undoable.
+> See `08-marty-upgrade.md` + `01-architecture.md` for the built reality; the original
+> intent text is kept below for the record.
 
 ## The one principle behind every flow
 

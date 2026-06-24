@@ -20,10 +20,20 @@ The calendar and tasks are the foundation; the morning brief is the point.
 
 ## What V1 is (deliberately small)
 - Tasks + events + a week-view calendar (feels like Apple Calendar).
-- Add things manually in the app, OR by texting the Telegram agent.
-- A 7am brief: today's overview + nudges on stale items + a suggestion to
-  fill a gap in the day.
+- Add and manage things manually in the app, OR by **talking to Marty** (the Telegram
+  bot) — now a full conversational + proactive assistant: capture by **text or voice**
+  (one or several things at once), ask questions ("what's on Thursday?"), change things
+  ("move the dentist to Friday", "done report", "delete the 3pm"), and have him **guess +
+  learn** which category things belong in. Every change is **undoable**.
+- A **7am brief** (today's schedule first, then what needs attention, plus at most one
+  stale-item nudge + one gap offer) — now **interactive**: reply "done 1" / "move 3 to
+  Friday" to act straight from it.
+- A **daytime nudge**: a calm, heavily-guardrailed offer (max twice a day, 9–6, never
+  back-to-back) to use a real free hour for an overdue task or a quick win.
 - Everything else (gym, meals, people, etc.) comes later as bolt-on modules.
+- *(All of the above — the conversational + proactive Marty — was built as the backend
+  "M-track" (M0–M10), now complete. The app's own look-and-feel redesign, Phase 7, is the
+  remaining front-end work.)*
 
 ## Who it's for
 One user. Just the owner. No accounts for other people, ever. This lets us
