@@ -35,6 +35,42 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Health → Gym G14 — the Records (pinned lifts + PR climb charts). SRC/ ONLY (first front-end WRITE). (Awaiting owner's Mac check.)
+WHAT CHANGED: a per-lift Records screen, and the module's FIRST front-end write (pin/unpin to the existing
+`gym_pins`). Reads the calc layer; writes via the app's existing Supabase pattern. No schema change.
+- **WRITE PATTERN (reused, not invented):** `src/gym/gymPins.js` mirrors `archive.js` — plain `supabaseClient`
+  calls returning `{ error }`. **No `user_id` passed** (gym_pins has `default auth.uid()` + owner-RLS, exactly
+  like every other src/ insert). Pin = `upsert(..., { onConflict:'user_id,exercise_template_id',
+  ignoreDuplicates:true })` so `unique(user_id, template_id)` means a double-pin can't duplicate; unpin =
+  `delete().eq('exercise_template_id', id)`. UI toggles **optimistically and REVERTS on error** with a gentle
+  message (never lies that it pinned).
+- **NEW `src/gym/gymRecords.js`** (pure): `liftRecords(workouts)` → per lift: heaviest-ever working set
+  (PR = heaviest weight, warm-ups excluded — locked rule) + the Amsterdam date + reps, best est-1RM, session
+  count, and a top-set climb series. **NEW `src/GymRecords.jsx`** (screen): index ordered **pinned → most-
+  trained → alphabetical**; ☆/★ pin toggle; PR weight×reps + date per row; pinned/expanded lifts show a chart.
+- **NEW kit `src/kit/ClimbChart.jsx`** (+ reuses the trend `.fg-*` chart CSS): a quiet hand-rolled SVG of a
+  lift's top-set weight over time (NO chart dep), the **PR point marked** in terracotta; single-point and flat
+  series handled; bodyweight lifts (no weighted set) show a calm "not enough weighted sets" note, no broken chart.
+- **ENTRY POINT (my call):** a "Records →" link beside "The full archive →" under the Recent-sessions zone.
+  Health `view` state gains 'records' (no new top-level nav). **`gymRecords.css`** + `.fg-links` added.
+- **Defaults flagged:** chart metric = **top-set weight** (most verifiable vs Hevy; est-1RM is the alternative).
+FILES TOUCHED: **new** `src/GymRecords.jsx`, `src/gym/gymRecords.js`, `src/gym/gymPins.js`,
+`src/kit/ClimbChart.jsx`, `src/kit/gymRecords.css`; **edited** `src/Health.jsx`, `src/kit/formGuide.css`; docs
+`02`/`04`. No `supabase/functions`, no `db/` (a runtime WRITE to the existing table, not a schema change). All
+files < 250 lines. `vite build` passes. Node-verified `liftRecords`: PR 110 kg ×2 on the right date (warm-up
+excluded), climb ascending, bodyweight lift → null PR + no chart.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health** → under "Recent sessions" tap
+**"Records →"**. Each lift shows its heaviest-ever working set + the date — **cross-check one against the Hevy
+app / its session report**. Tap **☆** on a lift to PIN it (it jumps to the top, ★) → **reload the page**: it's
+still pinned (proves the gym_pins write persisted). **Unpin** it → reload: it's gone. A pinned/expanded lift
+shows a quiet climb chart with the PR point marked, reading true against your progression. Today/Calendar/
+Settings unchanged.
+KNOWN GAPS / RISKS: pins persist server-side (no offline). Chart metric is top-set weight only (est-1RM later
+if wanted). A bodyweight-only lift shows no chart by design. Otherwise none.
+NEXT: **G15 — the optional proactive hook (BACKEND)**: feed a Gym line into the daily brief — its OWN backend
+commit (`supabase/functions/…`), NEVER mixed with src/ — then **G16 polish**.
+FOR THE CHECKER: n/a — src/ only, no schema (writes to the existing G2 `gym_pins` under its owner-RLS).
+
 ### 2026-06-25 — Health → Gym G13 — the Archive (full workout history). SRC/ ONLY. (Awaiting owner's Mac check.)
 WHAT CHANGED: a browsable full history of every workout, grouped by Amsterdam month. Display-only; reuses the
 calc layer + the G12 session report as-is.

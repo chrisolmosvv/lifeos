@@ -377,6 +377,15 @@
   color: var(--ink);
   border-bottom-color: var(--accent);
 }
+.fg-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+.fg-links .fg-archive-link {
+  margin: 0;
+}
 .fg-archive-link {
   display: block;
   margin: 1rem auto 0;

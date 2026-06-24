@@ -8,6 +8,7 @@ import RecentSessions from './kit/RecentSessions'
 import StoryHeadline from './kit/StoryHeadline'
 import SessionReport from './SessionReport'
 import GymArchive from './GymArchive'
+import GymRecords from './GymRecords'
 import { loadGymData } from './gym/gymLoad'
 import { buildWorkouts, boxScore, currentStreakDays } from './gym/gymCalc'
 import { trendSeries } from './gym/gymTrend'
@@ -28,7 +29,7 @@ import './kit/formGuide.css'
 export default function Health() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
-  const [view, setView] = useState('front') // 'front' | 'archive'
+  const [view, setView] = useState('front') // 'front' | 'archive' | 'records'
   const [openId, setOpenId] = useState(null) // a session drilled into, or null
 
   useEffect(() => {
@@ -66,6 +67,8 @@ export default function Health() {
         <SessionReport workout={openWorkout} allWorkouts={built} onBack={() => setOpenId(null)} />
       ) : view === 'archive' ? (
         <GymArchive rows={sessions} workouts={built} onOpen={setOpenId} onBack={() => setView('front')} />
+      ) : view === 'records' ? (
+        <GymRecords workouts={built} onBack={() => setView('front')} />
       ) : (
         <>
           <StoryHeadline text={story} />
@@ -88,9 +91,14 @@ export default function Health() {
           <section className="fg-zone">
             <ModuleHeader>Recent sessions</ModuleHeader>
             <RecentSessions rows={sessions} onOpen={setOpenId} />
-            <button className="fg-archive-link" onClick={() => setView('archive')}>
-              The full archive →
-            </button>
+            <div className="fg-links">
+              <button className="fg-archive-link" onClick={() => setView('records')}>
+                Records →
+              </button>
+              <button className="fg-archive-link" onClick={() => setView('archive')}>
+                The full archive →
+              </button>
+            </div>
           </section>
         </>
       )}

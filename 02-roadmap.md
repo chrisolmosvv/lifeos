@@ -718,7 +718,13 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   the recent-sessions look and tap into the **G12 SessionReport as-is** (back → Archive). Entry = a "The full
   archive →" link under the Recent-sessions zone; nav via Health `view` state ('front' | 'archive'), no new
   top-level nav. Display-only; renders the full history (~92 rows; trivial — would paginate at thousands).
-- ⬜ **G14 — Records.** PRs + estimated 1RM per exercise, with dates.
+- 🔨 **G14 — Records ✅ BUILT (awaiting Mac check). First front-end WRITE in the module.** Per-lift PR
+  (heaviest working set + Amsterdam date) + best est-1RM (`GymRecords.jsx` + calc `gymRecords.js`); PIN/UNPIN
+  to the existing `gym_pins` (`gymPins.js` — upsert ignoreDuplicates / delete, no user_id passed (RLS default),
+  optimistic + revert on error, the app's `{error}` pattern); pinned lifts featured first, then most-trained,
+  then alphabetical; a hand-rolled SVG **top-set climb chart** (`ClimbChart.jsx`, PR point marked) for pinned/
+  expanded lifts. Entry = a "Records →" link by the Archive link; Health `view` state gains 'records'.
+  src/-only (a runtime write, no schema change).
 - ⬜ **G15 — Story headline (code templates, no AI) + polish.** Unit formatting,
   empty states, pins (`gym_pins`).
 
