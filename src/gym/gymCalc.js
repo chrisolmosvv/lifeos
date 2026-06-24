@@ -17,6 +17,8 @@
 // "dropset", "failure", null, or an unrecognised tag — is treated as a WORKING
 // set (counted), never silently dropped.
 
+import { amsYMD, amsTodayYMD, shiftYMD, lastNDaysSet } from "./gymDates.js";
+
 export const WARMUP_SET_TYPE = "warmup";
 
 // A set is a warm-up only on the exact tag; everything else counts as working.
@@ -134,32 +136,31 @@ export function workoutMinutes(workout) {
 }
 
 // ── Streak / consistency ──────────────────────────────────────────────────────
-// Distinct local calendar dates (YYYY-MM-DD) that have a workout.
+// Distinct Amsterdam calendar dates (YYYY-MM-DD) that have a workout (gymDates).
 export function trainingDays(workouts) {
   const days = new Set();
   for (const w of workouts || []) {
-    const d = localDay(w.started_at);
+    const d = amsYMD(w.started_at);
     if (d) days.add(d);
   }
   return days;
 }
-// Current DAILY streak: consecutive calendar days with a session, counting back
-// from today — but only "live" if the most recent session was today or yesterday
-// (otherwise the streak is broken → 0). NOTE: a definition choice, flagged for the
-// owner (weekly consistency below is the gentler alternative).
+// Current DAILY streak: consecutive Amsterdam calendar days with a session,
+// counting back from today — but only "live" if the most recent session was today
+// or yesterday (otherwise the streak is broken → 0). NOTE: a definition choice; the
+// owner-confirmed headline consistency metric is sessions-per-week (below).
 export function currentStreakDays(workouts, now = Date.now()) {
   const days = trainingDays(workouts);
   if (days.size === 0) return 0;
-  const today = startOfLocalDay(now);
-  let cursor = today;
-  if (!days.has(dayStr(cursor))) {
-    cursor -= 86400000; // allow "trained yesterday, not yet today"
-    if (!days.has(dayStr(cursor))) return 0;
+  let cursor = amsTodayYMD(now);
+  if (!days.has(cursor)) {
+    cursor = shiftYMD(cursor, -1); // allow "trained yesterday, not yet today"
+    if (!days.has(cursor)) return 0;
   }
   let streak = 0;
-  while (days.has(dayStr(cursor))) {
+  while (days.has(cursor)) {
     streak++;
-    cursor -= 86400000;
+    cursor = shiftYMD(cursor, -1);
   }
   return streak;
 }
@@ -197,14 +198,16 @@ export function bodyPartSplit(workouts) {
 
 // ── Rolling-7-day box score ─────────────────────────────────────────────────────
 // Volume (all sets), Sessions, Time (minutes), New PRs — for workouts whose
-// started_at is within `days` of `now`. A "new PR" = a lift whose heaviest working
-// set INSIDE the window beats that lift's best working weight from BEFORE the window.
+// Amsterdam CALENDAR DAY falls in the last `days` days (today + the days-1 prior).
+// This is a calendar-day window, NOT a 168-hour instant cutoff, so it doesn't shift
+// with the time of day the page is opened. A "new PR" = a lift whose heaviest
+// working set INSIDE the window beats that lift's best working weight from BEFORE it.
 export function boxScore(workouts, days = 7, now = Date.now()) {
-  const cutoff = now - days * 86400000;
+  const window = lastNDaysSet(days, now);
   const inWin = [], before = [];
   for (const w of workouts || []) {
-    const t = dateMs(w.started_at);
-    (t && t >= cutoff ? inWin : before).push(w);
+    const ymd = amsYMD(w.started_at);
+    (ymd && window.has(ymd) ? inWin : before).push(w);
   }
   let volume = 0, timeMinutes = 0;
   for (const w of inWin) {
@@ -242,23 +245,11 @@ function countNewPRs(inWin, before) {
   return count;
 }
 
-// ── Small date helpers (local time) ───────────────────────────────────────────
+// ── Small date helper ─────────────────────────────────────────────────────────
+// Absolute milliseconds for sorting + durations (timezone-agnostic, so it stays
+// here). All CALENDAR-DAY reasoning lives in gymDates.js (Amsterdam-local).
 function dateMs(v) {
   if (!v) return 0;
   const t = new Date(v).getTime();
   return Number.isFinite(t) ? t : 0;
-}
-function startOfLocalDay(ms) {
-  const d = new Date(ms);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-function dayStr(ms) {
-  const d = new Date(ms);
-  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-function localDay(v) {
-  const t = dateMs(v);
-  return t ? dayStr(t) : null;
 }

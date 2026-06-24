@@ -35,6 +35,34 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G9 — box-score timezone fix (Amsterdam calendar-day window). SRC/ ONLY. (Awaiting owner's re-check Sessions = 6.)
+WHAT CHANGED: fixed a wrong Sessions count (showed 7, real 6). Diagnosed with a throwaway read-only page (now
+deleted): the box score selected sessions by a rolling **168-hour instant cutoff** + bucketed days by the
+**machine clock**, neither tied to the app's Europe/Amsterdam calendar day. Opening the page at 12:14 dragged
+in the 17 June 14:15 session (Legs D) that a proper calendar-day window (18–24 June) excludes.
+- **NEW `src/gym/gymDates.js`** — the ONE front-end Amsterdam date helper (`amsYMD`, `amsTodayYMD`, `shiftYMD`,
+  `lastNDaysSet`), replicating the `Intl … timeZone:"Europe/Amsterdam"` definition the edge functions'
+  `_shared/datetime.ts` uses. NOT imported from the server module (that's Deno/`supabase/functions/`, not
+  importable into `src/` and would cross the two-track line) — same definition, front-end copy.
+- **`src/gym/gymCalc.js` rewired to share it:** `boxScore` now counts sessions whose **Amsterdam calendar day**
+  is in the last 7 days (today + 6 prior) — a calendar-day window, not a 168h instant, so it no longer shifts
+  with the time of day. `trainingDays` + `currentStreakDays` use the SAME `amsYMD`/`shiftYMD` (one date
+  definition across all metrics). Deleted the dead machine-local helpers (`startOfLocalDay`/`dayStr`/`localDay`).
+- **Removed the throwaway diagnostic** (`gymdiag.html` + `src/gym/gymdiag.js`) — no scaffolding left live.
+- **Verified in Node** against the real scenario (now = 24 Jun 12:14 Ams; phantom 17 Jun 14:15; trained
+  18/20/21/22/23/24, skipped 19): **Sessions = 6** (17 Jun excluded), **streak = 5** (breaks at the skipped
+  19th), and a 22:30-UTC session now correctly reads as the next Amsterdam day.
+FILES TOUCHED: **new** `src/gym/gymDates.js`; **edited** `src/gym/gymCalc.js`; **deleted** `gymdiag.*`; doc `04`.
+No `supabase/`, no `db/`. All files < 250 lines. `vite build` passes.
+HOW TO VERIFY (owner, on the Mac): `npm run dev`, log in, tap **Health** → the box-score **Sessions** now reads
+**6** for your real week (hand-count holds regardless of what time of day you open the page); the other three
+stats unchanged; Today/Calendar/Settings unaffected.
+THEN STOP — owner re-checks Sessions = 6 before we build the trend chart.
+KNOWN GAPS / RISKS: `lastNWeeksSessions` (the weekly-consistency series, not shown yet) still uses rolling
+7-day buckets — fine for now; revisit if G10 surfaces it as calendar weeks. Otherwise none.
+NEXT: **G9 Commit B — the switchable trend chart** (hand-rolled SVG, no new dep — owner already leaning yes).
+FOR THE CHECKER: n/a — src/ only, no schema.
+
 ### 2026-06-24 — Health → Gym G9 Commit A — header fix + the rolling-7-day box-score band. SRC/ ONLY. (Awaiting owner's Mac check of the real numbers.)
 WHAT CHANGED: the first DATA zone of the Form Guide, plus a header de-duplication. Reads the already-verified
 calc layer; the UI only displays.
