@@ -35,6 +35,45 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G7 Commit A — the calc layer (pure maths + throwaway check). SRC/ ONLY. (Awaiting owner hand-verify of the numbers BEFORE Commit B.)
+WHAT CHANGED: the compute-on-read maths for the Form Guide — pure functions only, nothing visible in the app
+yet. Verify the numbers by hand, then I build the visible shell (Commit B).
+- **NEW `src/gym/gymCalc.js`** — pure functions (no DB, no React): total **volume** (weight×reps, counts ALL
+  sets incl. warm-ups), **Epley est-1RM** `w×(1+reps/30)` (warm-ups excluded), **PR** = heaviest working-set
+  weight, **top set** (heaviest working set), **streak/consistency** (distinct training days, current daily
+  streak, sessions-per-week last 8 weeks), **body-part split** (volume + set-count by primary muscle via the
+  G6 template join), and the **rolling-7-day box score** (Volume / Sessions / Time / New PRs). Warm-up = the
+  EXACT string `"warmup"`; ANY other `set_type` (incl. null/unknown) counts as a WORKING set, never dropped.
+  Null weight (bodyweight) / null reps (cardio) → 0 weight-volume + no 1RM, never NaN.
+- **NEW `src/gym/gymLoad.js`** — a thin fetch-only loader (paged, RLS-scoped reads of the four gym tables).
+  Fetch and maths kept separate on purpose so the calc stays a pure, testable unit.
+- **NEW (THROWAWAY) `calccheck.html` + `src/gym/calccheck.js`** — a dev-only page that runs the calc against
+  your REAL data and prints the numbers, plus a synthetic hand-computable sanity block. **NOT wired into the
+  app shell, NOT in the production build; REMOVED in Commit B.**
+FILES TOUCHED: **new** `src/gym/gymCalc.js`, `src/gym/gymLoad.js`, `src/gym/calccheck.js`, `calccheck.html`.
+No shell files touched (no LoggedIn/EditionHeader edits — those are Commit B). All files < 250 lines. `vite
+build` passes; synthetic vectors pass in Node (volume 1580, PR 100, top 100×3, 1RM 110).
+HOW TO VERIFY (owner, on the Mac — do this BEFORE I start Commit B):
+  1. `npm run dev`, open the app at the localhost URL, **log in** (establishes your session).
+  2. In the SAME browser, open **`http://localhost:5173/calccheck.html`** (use the port npm prints if not 5173).
+  3. Top "SANITY" block must read: volume 1580, PR 100, top set 100 × 3, est 1RM 110.
+  4. "MOST RECENT WORKOUT" — pick that session in the Hevy app and check by hand: each lift's heaviest
+     working set = the "top set" shown; its est 1RM ≈ weight×(1+reps/30); the total volume adds up (warm-ups
+     marked `(w)` ARE in volume but NOT in top-set/1RM). 
+  5. "LAST 7 DAYS — BOX SCORE": Sessions = how many times you trained in the last 7 days; Volume/Time plausible.
+  6. Streak line: "current daily streak" = consecutive days up to today/yesterday you trained.
+KNOWN GAPS / RISKS:
+  - **"Streak" is a definition choice, NOT locked.** I built a strict *daily* streak (harsh — a rest day
+    breaks it) AND a gentler *sessions-per-week last 8 weeks*. Tell me which to feature on the front page (G9);
+    recommend the weekly consistency view, with the daily streak as a small secondary stat.
+  - Box-score "New PRs" = a lift whose heaviest working weight in the last 7 days beats its best from before
+    the window (heaviest-weight PR, per the locked PR rule). Confirm that matches what you'd expect.
+NEXT: **G7 Commit B — the Health nav entry + empty broadsheet-styled Form Guide shell** (the first visible
+piece; `health` view in LoggedIn.jsx + NAV in EditionHeader.jsx + new `src/Health.jsx`/`src/kit/` gym blocks;
+remove the calc-check scaffolding). Begins only after the owner confirms the numbers above. After B: **G9/G10
+— the front-page zones**.
+FOR THE CHECKER: n/a — src/ only, no schema, no checker gate. (Owner hand-verifies the maths.)
+
 ### 2026-06-24 — Health → Gym G6 — exercise-templates lookup. ⚠️ SCHEMA CHANGE — CHECKER-GATED (awaiting sign-off + run + JOIN).
 WHAT CHANGED: a new additive dictionary table + a fill mode, so a Hevy exercise id resolves to a name +
 muscle group (the input the G7 body-part-balance calc needs). `gym_exercises` already stores

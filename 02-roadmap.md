@@ -672,10 +672,16 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   `"sync_templates"` fill mode built/deployed.** Shape confirmed live (437 templates;
   `primary_muscle_group` + `secondary_muscle_groups[]` + type/equipment/is_custom, raw).
   **Awaiting checker sign-off + owner run + JOIN verify** — not done until all three.
-- ⬜ **G7 — Health nav + empty Form Guide shell (front-end, new files).** Add view
-  `health`, NAV label `Health` (third), a placeholder front page reading a real number.
-- ⬜ **G8 — The metrics calc util (compute-on-read).** Pure `src/` functions (Epley
-  1RM, PR, volume, top-set, warm-up exclusion, rolling-7-day box score) + kit blocks.
+- 🔨 **G7 — calc layer + Health shell (front-end, new files; run as TWO src/ commits).**
+  *(Owner reordered the doc's G7/G8: calc first, shell second.)*
+  **Commit A — the calc util ✅ BUILT (awaiting owner hand-verify of the numbers):** pure
+  `src/gym/gymCalc.js` (Epley 1RM, PR=heaviest, total volume, top-set, warm-up exclusion via
+  exact `"warmup"`, streak/consistency, body-part split, rolling-7-day box score) + a thin
+  `src/gym/gymLoad.js` fetcher + a **throwaway** `calccheck.html` harness (removed in Commit B).
+  Nothing visible in the app. **Commit B — Health nav + empty Form Guide shell (NOT STARTED;
+  begins only after the owner confirms Commit A's numbers):** view `health`, NAV label `Health`
+  (third), an empty broadsheet-dressed Form Guide page; remove the calc-check scaffolding.
+- ➡️ **G8 — (merged into G7 Commit A above — the calc util is built there).**
 - ⬜ **G9 — Front page zones 1–2.** Box-score band + trend chart.
 - ⬜ **G10 — Front page zone 3.** Consistency heatmap.
 - ⬜ **G11 — Front page zones 4–5.** Body-part balance + recent sessions table.
