@@ -51,9 +51,16 @@ async function post(body: unknown): Promise<GeminiResult> {
         body: JSON.stringify(body),
       });
       if (res.status === 429) return { ok: false, reason: "rate_limit" };
+      // Retry only TRANSIENT failures (server overload / gateway: 5xx, or a 408 timeout).
+      // A deterministic error (other 4xx) would just return the same result on a re-ask, so
+      // fail fast instead of burning ~6s of pointless retries. (M10 — keep the "server busy"
+      // retry, drop the wasted re-ask.) Network throws still retry via the catch below.
       if (!res.ok) {
-        await sleep(1000 * (attempt + 1));
-        continue;
+        if (res.status >= 500 || res.status === 408) {
+          await sleep(1000 * (attempt + 1));
+          continue;
+        }
+        return { ok: false, reason: "error" };
       }
       const data = await res.json();
       const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
