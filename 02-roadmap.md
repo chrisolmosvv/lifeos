@@ -641,9 +641,12 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   `GET /v1/workouts/count` with the secret `HEVY_API_KEY`. Deployed Frankfurt;
   **owner-verified — real count `92` came back.** Hevy exposed no rate-limit
   headers on this endpoint (confirm the real ceiling at G3's paginated backfill).
-- ⬜ **G2 — The gym tables (schema, checker-gated, own SQL commit).** `gym_workouts`
+- 🔨 **G2 — The gym tables (schema, checker-gated).** `gym_workouts`
   (`unique(user_id, hevy_id)`), `gym_exercises` (with `exercise_template_id`),
-  `gym_sets`, `gym_sync_state`, `gym_pins` — additive, owner-RLS, no spine FK.
+  `gym_sets`, `gym_sync_state` (PK=user_id), `gym_pins` — additive, owner-RLS, no
+  spine FK; intra-module FKs only. **SQL written (`db/17`–`db/21`, commit `e9238a9`,
+  own SQL commit). AWAITING checker sign-off + owner run on Frankfurt + device-verify**
+  — not done until all three. NEXT after that: G3.
 - ⬜ **G3 — Backfill (one-shot, re-runnable = the recovery net).** Pull full Hevy
   history (paginated `/v1/workouts`) into the tables.
 - ⬜ **G4 — Incremental sync logic.** Read `/v1/workouts/events` since the last sync
@@ -683,6 +686,11 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-24 — Health → Gym G2 — the gym tables written (SQL only; ⚠️ schema change, checker-gated).** Five
+  additive tables (`db/17`–`db/21`, commit `e9238a9`): `gym_workouts` (unique user_id+hevy_id), `gym_exercises`
+  (+exercise_template_id), `gym_sets` (+cardio cols), `gym_sync_state` (one row/owner), `gym_pins`. Owner-RLS
+  on each; no spine FK; intra-module FKs only. **NOT DONE until the checker signs the four points + the owner
+  runs the SQL on Frankfurt + verifies.** NEXT: G3 backfill.**
 - **2026-06-24 — Health → Gym G1 — proved the Hevy connection (plumbing only; no DB, no src/).** New private
   edge function `gym` reads Hevy `/v1/workouts/count` with the secret `HEVY_API_KEY`; deployed Frankfurt and
   **owner-verified — real count `92`.** Hevy sent no rate-limit headers (confirm the ceiling at G3 backfill).

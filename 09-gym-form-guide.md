@@ -99,9 +99,11 @@ later spec — not planned here.
   count as JSON. No DB, no UI, no schedule. **Owner-verified — real count `92`.**
   Hevy returned no rate-limit headers here, so the real ceiling gets confirmed at
   the G3 backfill (watch for `429` / `Retry-After`).
-- ⬜ **G2 — The gym tables (schema, checker-gated).** `gym_workouts`,
+- 🔨 **G2 — The gym tables (schema, checker-gated).** `gym_workouts`,
   `gym_exercises`, `gym_sets`, `gym_sync_state`, `gym_pins` — additive, owner-RLS,
-  no spine FK; `gym_workouts` unique on `(user_id, hevy_id)`. Its own SQL commit.
+  no spine FK; `gym_workouts` unique on `(user_id, hevy_id)`; intra-module FKs only.
+  **SQL written (`db/17`–`db/21`, commit `e9238a9`); awaiting checker sign-off +
+  owner run on Frankfurt + device-verify before it counts done.**
 - ⬜ **G3 — Backfill (one-shot, re-runnable).** Pull the full Hevy workout history
   (paginated `GET /v1/workouts`) into the tables. Re-running it is the recovery net.
 - ⬜ **G4 — Incremental sync logic.** A function that reads

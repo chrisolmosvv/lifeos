@@ -35,6 +35,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Health → Gym G2 — the gym tables. ⚠️ SCHEMA CHANGE — CHECKER-GATED (awaiting sign-off + run).
+WHAT CHANGED: five new **additive** tables for the read-only Hevy cache, each copied from the `marty_*`
+pattern (owner-only RLS, `user_id` keyed to `auth.users`, **no foreign key into the spine**):
+- **`gym_workouts`** — one row per Hevy workout: `hevy_id` (plain text), title, started_at, ended_at.
+  **`unique(user_id, hevy_id)`** so the G3/G4 upsert can never duplicate on a re-run.
+- **`gym_exercises`** — one row per exercise: links to its workout by **internal row id**
+  (`workout_id → gym_workouts.id`, intra-module FK, ON DELETE CASCADE), title, position,
+  **`exercise_template_id`** (captured from the start for the G6 muscle-group lookup).
+- **`gym_sets`** — one row per set: links to its exercise (`exercise_id → gym_exercises.id`, intra-module FK),
+  position, weight_kg, reps, set_type, rpe; **cardio `distance_m` + `duration_seconds` included now (nullable)**.
+- **`gym_sync_state`** — one row per owner (PK = user_id, like `marty_pending`): `last_synced_at`,
+  `last_event_at` (the incremental cursor G4/G5 read + write).
+- **`gym_pins`** — pinned lifts for Records: `exercise_template_id` + `unique(user_id, exercise_template_id)`.
+FILES TOUCHED: **new** `db/17_gym_workouts.sql`, `db/18_gym_exercises.sql`, `db/19_gym_sets.sql`,
+`db/20_gym_sync_state.sql`, `db/21_gym_pins.sql`. SQL only — no `src/`, no function code, spine untouched.
+Committed `e9238a9` (SQL-only commit). **Frankfurt project `cntlptuacsujbdtwvbis` only.**
+THREE DESIGN CHOICES MADE (surfaced, not silently resolved — owner can veto any):
+  1. **Children link by internal row id, not hevy_id** (cascade cleanup; stable Postgres link).
+  2. **Cardio columns kept now, nullable** (so we never re-pull history to add them).
+  3. **`gym_pins` identifies a lift by `exercise_template_id`, not title** (stable across renames; same key
+     G6 + Records use). Also: **`set_type` is free text with NO check constraint** — an external Hevy value
+     must never break the sync; the known tags + warm-up exclusion live in the read-time calc util.
+HOW TO VERIFY (owner — AFTER the checker signs off; nothing here runs until then):
+  1. Supabase SQL editor → Frankfurt project `cntlptuacsujbdtwvbis`. Paste and **Run db/17 → db/21 IN ORDER**
+     (they reference each other). Each → **"Success. No rows returned."**
+  2. Tables exist:  `select table_name from information_schema.tables where table_schema='public'
+     and table_name like 'gym_%' order by 1;`  → lists all five.
+  3. RLS on + 4 policies each:
+     `select tablename, rowsecurity from pg_tables where schemaname='public' and tablename like 'gym_%';`
+     (all `true`), and
+     `select tablename, count(*) from pg_policies where schemaname='public' and tablename like 'gym_%'
+      group by 1;` → **4** each.
+  4. Non-owner row is REFUSED (leaves nothing behind):
+     `begin; set local role anon;
+      insert into public.gym_pins (user_id, exercise_template_id) values (gen_random_uuid(), 'x');
+      rollback;`
+     → it **errors** "new row violates row-level security policy" (that error IS the pass), and `rollback`
+     discards it — no test row remains.
+KNOWN GAPS / RISKS: none structural. Tables are empty until G3 backfills them. Hevy rate-limit ceiling still
+to be confirmed at G3 (G1 saw no limit headers).
+NEXT: **G3 — backfill** (pull full Hevy history into these tables; re-runnable = the recovery net).
+FOR THE CHECKER — please confirm these four (raw SQL is `db/17`–`db/21`):
+  1. The five tables are **ADDITIVE** — nothing about `tasks` / `events` / `categories` is altered.
+  2. **RLS is ON** and rejects non-owner rows on all five (the four owner-only policies are present on each).
+  3. **NO foreign key points into the spine** (tasks/events/categories); spine ids, if any, are plain values.
+     (The only FKs are to `auth.users` for ownership and gym→gym intra-module links.)
+  4. **`gym_workouts` has `unique(user_id, hevy_id)`.**
+
 ### 2026-06-24 — Health → Gym G1 (Commit B) — prove the Hevy connection. PLUMBING ONLY. No DB, no src/.
 WHAT CHANGED:
 - **NEW private edge function `supabase/functions/gym/index.ts`** (110 lines). Calls Hevy
