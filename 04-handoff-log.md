@@ -35,6 +35,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — Marty track M9 — daytime opportunity nudges. ⚠️ SCHEMA CHANGE — CHECKER-GATED. END OF M-TRACK.
+WHAT CHANGED:
+- Marty can proactively offer ONE good use of a free window — calmly, guardrailed. A scan (the brief
+  function's new NUDGE mode, reusing the cron/pg_net + DST-safe local-hour gate) finds a 60+ min free window
+  during 9am–6pm and offers the single MOST-OVERDUE task, or one QUICK-WIN if nothing's overdue. One offer,
+  one task, never a list.
+- **Hard guardrails (the feature):** 9–6 only; MAX 2/day (one morning + one afternoon); NEVER back-to-back
+  (≥2h gap) — all enforced via the new `marty_nudges` table (today's rows).
+- **"yes"** → blocks the task into the slot (sets scheduled_start/end) through M3's edit engine, so it's
+  UNDOABLE ("undo" removes the block). **"no"** → closes the offer for today only — no block, no nagging, no
+  lasting memory (it may come up another day).
+- **"nudge test"** (mirrors "brief test") triggers a scan on demand so you can verify without waiting for
+  cron. `db/16_marty_nudge_cron.sql` is the production cron (owner-run; mirrors your brief cron).
+- Kept the test scaffolding ("brief test", force) per your call.
+FILES TOUCHED: **new** `db/15_marty_nudges.sql`, `db/16_marty_nudge_cron.sql`, `brief/nudge.ts`,
+`telegram/nudge.ts`; edited `brief/index.ts` (nudge mode), `telegram/route.ts` ("nudge test" + yes/no
+routing), `telegram/edit.ts` (export `Change`/`commitReply` so "yes" reuses the edit engine). No `src/`. All
+files <250 (edit.ts 242). Committed `2a15010`; **deployed BOTH functions to Frankfurt**.
+
+⚠️ FOR THE CHECKER — THIS IS A SCHEMA CHANGE; please confirm (all hold):
+  1. **Additive + owner-only RLS** — `marty_nudges` is a brand-new table, same policies as the other Marty
+     tables; nothing existing changed.
+  2. **NO foreign key into tasks/events** — `offered_task_id` is a plain uuid, so a deleted task can't block
+     or cascade through this log (a stale offer → "that task's gone / window passed").
+  3. **Changes nothing about categories/tasks/events** — it only records offers + answered; accepting writes
+     scheduled_start/end through the EXISTING edit engine (undoable). Caps are read per-day, so a "no" leaves
+     no lasting memory.
+  4. The production cron (`db/16`) is owner-run scheduling infra (pg_cron + pg_net, like the brief), NOT a
+     spine change.
+
+OWNER — RUN THIS SQL FIRST (before testing), in the Supabase SQL editor:
+  • Paste the WHOLE of `db/15_marty_nudges.sql` → Run → "Success. No rows returned." (Before this, "nudge
+    test" can't record an offer, so it'll say "no nudge".)
+  • `db/16` (the cron) is OPTIONAL for testing — use "nudge test" instead; run db/16 only when you want the
+    real daily nudges (and match its Vault secret name to your brief cron).
+
+HOW TO VERIFY (owner — phone + Mac; test DURING the day with a clear hour ahead before 6pm):
+  1. **One well-timed offer:** have an OVERDUE task + a free 60+ min window today → text **"nudge test"** →
+     Marty offers exactly ONE: "You've got a free window 2:00pm–3:00pm. Want to use it for 'X'? yes/no."
+  2. **"yes" blocks it (undoable):** reply **"yes"** → "Done — blocked 2:00–3:00pm for 'X'." → check the app:
+     the task now shows as a calendar block at that time → text **"undo"** → the block is removed cleanly.
+  3. **"no" goes quiet:** trigger another offer → reply **"no"** → "No worries — I'll leave it." No block, no
+     nagging.
+  4. **Quick-win fallback:** with a free window but NOTHING overdue → the offer is a short Today/This Week
+     task (a quick-win), not an overdue one.
+  5. **Caps (real cron):** once `db/16` is running, you should never get more than 2/day, never back-to-back,
+     never outside 9–6. (Hard to force-test; the gates are in `brief/nudge.ts`.)
+  6. **No regression:** "done 1" (brief), a normal capture/question, and the M4 follow-up all still work.
+KNOWN GAPS / RISKS:
+- "nudge test" finds a window from NOW to 6pm, so test during the day with a free hour ahead (after ~5pm
+  there's no 60-min window before 6pm → "no nudge").
+- A bare "yes"/"no" with no open offer falls through to normal classification (usually "unclear") — harmless.
+- M10 (deferred) cleanup: retire force/every-3-min + the extra per-capture AI call; split edit.ts (242 lines).
+NEXT: owner runs `db/15` → the verify checks → **checker sign-off**. That completes M0–M9 — the whole
+conversational + proactive Marty. Only the M10 hardening pass remains (deferred, no rush).
+FOR THE CHECKER: see the ⚠️ block above (the four confirmations).
+
 ### 2026-06-24 — Marty track M8 — interactive + smarter 7am brief. ⚠️ SCHEMA CHANGE — CHECKER-GATED, not done yet.
 WHAT CHANGED:
 - **Part A — smarter ordering (reorder, not rebuild):** the brief now LEADS with today's schedule (events +

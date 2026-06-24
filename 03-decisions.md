@@ -9,7 +9,33 @@
 
 ---
 
-## Marty M8 — interactive brief: numbers stored at send-time; replies act via the M3 edit engine (2026-06-24)
+## Marty M9 — daytime nudges: guardrails are the feature; one offer, undoable yes, no-memory no (2026-06-24)
+
+- **[Built as a NUDGE mode of the brief function, reusing its cron/pg_net + DST-safe local-hour gate]** —
+  rather than a new function or a new timezone scheme, the daytime scan is a `{ nudge: true }` mode of the
+  brief function, with its OWN 9–6 gate inside `scanForNudge` (the 7am gate doesn't apply). **Why:** reuse
+  the proven scheduling pattern (the spec said "same cron/pg_net, don't invent a new timezone scheme") and
+  the existing day reads. **Trade-off:** the brief function now has two proactive modes — acceptable, both
+  are "proactive engagement."
+- **[The guardrails ARE the feature — all enforced in code]** — 9am–6pm only; max 2/day (one morning, one
+  afternoon); never back-to-back (≥2h since the last offer); ONE offer, one task (most-overdue, else one
+  quick-win), never a list. Enforced via `marty_nudges` (today's rows). **Why:** "never annoying" matters
+  more than the nudge being clever. **Trade-off:** the scan stays silent most fires — intended.
+- **["yes" writes the calendar block through the M3 edit engine (undoable); "no" keeps NO memory]** — a "yes"
+  sets the task's scheduled_start/end via the exported `commitReply` (logs before-values → "undo" clears the
+  block). A "no" only marks today's offer answered (so the cap holds); yesterday's rows are ignored, so there
+  is no lasting "don't offer X" memory — it may come up again another day. **Why:** the spec exactly. **Trade-off:**
+  none.
+- **[New `marty_nudges` table — caps + open-offer state; additive, owner-only, NO FK to spine — CHECKER-GATED]**
+  — needed because the brief function sends the offer but the yes/no arrives at the telegram function (no
+  shared memory), AND the caps need persistent daily state. `offered_task_id` is a plain uuid (no FK), so a
+  deleted task can't block/cascade. The offer expires when its window passes (a stale "yes" → "that window's
+  gone"). Must be run + checker-reviewed before M9 is done.
+- **[Kept the test scaffolding; added "nudge test"]** — owner's call: leave "brief test" (still used) and the
+  `force`/every-3-min bypass in place; retire them in the deferred M10 hardening pass once the every-3-min
+  cron job is confirmed gone. Added "nudge test" (mirrors "brief test") so the scan is verifiable on demand
+  without waiting for cron. **Why:** don't remove something the owner may still be using. The production cron
+  (`db/16`) is owner-run scheduling infra, not a spine change.
 
 - **[Part A: reorder the existing brief, don't rebuild it]** — the brief now LEADS with today's schedule and
   puts due/overdue under a NEEDS-ATTENTION footer; the one-nudge + one-gap caps are unchanged. Done by

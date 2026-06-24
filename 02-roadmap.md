@@ -597,7 +597,18 @@ its own small, owner-verified piece.
   (owner's choice) in new table **`marty_brief`** (one row/owner, no FK to spine). **Not done
   until `db/14_marty_brief.sql` is run and the checker signs off.** (Numbers only show once the
   map can store — i.e. after the SQL.)
-- ⬜ M9 — daytime nudges · ⬜ M10 — hardening + retire test aids. *(see `08-marty-upgrade.md`.)*
+- 🔨 **M9 — daytime opportunity nudges (built + deployed; AWAITING SQL run + checker).** The
+  highest nag-risk piece — guardrails ARE the feature. The brief function's new NUDGE mode
+  (same cron/pg_net + DST-safe gate) offers ONE calm use of a 60+ min free window: most-overdue
+  task, or one quick-win. Hard caps: 9–6 only, max 2/day (1 morning + 1 afternoon), never
+  back-to-back — via new table **`marty_nudges`**. "yes" blocks the task into the slot via M3's
+  edit engine (undoable); "no" closes it for today (no memory). "nudge test" verifies on demand;
+  `db/16` is the production cron (owner-run). **Not done until `db/15_marty_nudges.sql` is run +
+  checker signs off.**
+- ⬜ M10 — hardening + retire test aids (the deferred cleanup: `force`/every-3-min bypass,
+  `brief test` 0-day, extra AI calls per capture, split `edit.ts`). *(see `08-marty-upgrade.md`.)*
+- **M-track feature phases M0–M9 are all BUILT.** Once M6/M8/M9 clear their SQL+checker gates,
+  the conversational + proactive Marty is complete; only the M10 hardening pass remains.
 
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
@@ -612,6 +623,19 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-24 — Marty track M9 — daytime opportunity nudges (built + deployed; AWAITING SQL + checker). END
+  OF THE M-TRACK FEATURE PHASES.** Highest nag-risk, so guardrails are the feature. Surfaced two decisions
+  first (owner chose: add the `marty_nudges` table; keep all test scaffolding). Built a NUDGE mode into the
+  brief function (`brief/nudge.ts`, reuses cron/pg_net + DST-safe local-hour gate): scans for a 60+ min free
+  window 9–6, offers the most-overdue task or one quick-win, enforces max 2/day (1 morning + 1 afternoon)
+  + never-back-to-back via `marty_nudges`. "yes" → blocks the task into the slot through M3's edit engine
+  (exported `commitReply` — undoable); "no" → closes today's offer (no block, no memory). Telegram:
+  "nudge test" trigger (mirrors "brief test"), yes/no routing that only fires when an offer is open (no
+  regression to done-1 / pending / classify). `db/16` = production cron (owner-run; verify via "nudge test"
+  instead). Kept "brief test" + force per owner. ⚠️ **SCHEMA CHANGE — checker-gated like M2/M4/M6/M8: not
+  done until `db/15_marty_nudges.sql` is run AND the checker reviews.** Committed `2a15010`; deployed BOTH
+  functions to Frankfurt. **NEXT: owner runs SQL → phone checks → checker sign-off. That completes M0–M9;
+  only the M10 hardening cleanup remains (deferred).**
 - **2026-06-24 — Marty track M8 — interactive + smarter brief (built + deployed; AWAITING SQL + checker).**
   Surfaced the state decision first; owner chose to STORE the number-map at send-time (vs fragile
   re-derive). Part A reordered the existing brief (schedule leads; due/overdue → NEEDS ATTENTION footer;

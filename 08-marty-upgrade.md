@@ -137,9 +137,14 @@ verify, and its own decision entry when we actually build it. The order may shif
   telegram function reads when a numbered reply arrives. (Numbers only show once the map can
   be stored, i.e. after the SQL is run.)
 
-- **M9 — Daytime nudges.** A gentle, reserved midday check-in (the same
-  "proactive engagement" idea as the brief, but during the day), built on the same
-  safety rails: never spammy, never invents work.
+- **M9 — Daytime opportunity nudges.** *(built + deployed — awaiting SQL run + checker.)*
+  The highest nag-risk piece, so the guardrails ARE the feature. A scheduled scan (the
+  brief function's new NUDGE mode — same cron/pg_net + DST-safe local-hour gate) offers ONE
+  calm use of a 60+ min free window: the single most-overdue task, or one quick-win. **Hard
+  caps:** 9am–6pm only, max 2/day (one morning, one afternoon), never back-to-back — enforced
+  via a new `marty_nudges` table. **"yes"** blocks the task into the slot via M3's edit engine
+  (undoable); **"no"** closes it for today only (no block, no memory). "nudge test" mirrors
+  "brief test" for on-demand verifying.
 
 - **M10 — Hardening + retire the test scaffolding.** Remove the temporary aids
   ("brief test" 0-day threshold, the brief's `force` gate, the every-3-min test
