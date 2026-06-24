@@ -35,6 +35,22 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-24 — BACKLOG (Marty track — recorded, NOT done) — fix the broken `marty-daytime-nudge` cron (wrong Vault secret).
+RECORDED so we don't lose it (found during Gym G5; do NOT fold into Gym, do NOT fix now).
+THE BUG: the live `marty-daytime-nudge` pg_cron job authenticates with Vault secret **`service_role_key`,
+which does NOT exist** — the only Vault secret is `brief_service_role_key` (confirmed via
+`select name from vault.decrypted_secrets`). So its `Authorization: Bearer` resolves to empty and the private
+`brief` function 401s **every** fire → the hourly daytime nudge has **not** been firing via cron. (On-demand
+"nudge" text still works — that path doesn't go through the cron, which is why this slipped: M9/M10 verified
+the nudge on-demand, never the scheduled path.)
+HOW IT HAPPENED: `db/16_marty_nudge_cron.sql` committed the PLACEHOLDER name `service_role_key`; it was run
+live as-is and never corrected to the real `brief_service_role_key` (the brief cron, by contrast, uses the
+real name and works).
+THE FIX (its own small **checker-gated DB commit**, LATER — Marty track, not Gym): `select
+cron.unschedule('marty-daytime-nudge');` then reschedule the identical job reading
+`name='brief_service_role_key'`, i.e. correct db/16. Verify: a manual fire of that job's body returns 200 and
+a guarded nudge scan runs. (No spine change; reuses the existing secret.)
+
 ### 2026-06-24 — Health → Gym G5 Commit A — twice-daily sync cron. ⚠️ DB CHANGE — CHECKER-GATED (awaiting sign-off + run + manual-fire).
 WHAT CHANGED: one new pg_cron job, **`gym-twice-daily-sync`**, that pokes the PRIVATE `gym` function in
 **"sync" mode twice a day** — modelled EXACTLY on the live `brief_daily_7am_ams` cron (pg_cron → pg_net
