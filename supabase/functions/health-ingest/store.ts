@@ -64,3 +64,34 @@ export async function upsertBodyMetrics(rows: BodyRow[]): Promise<number | null>
     return null;
   }
 }
+
+// One hourly activity bucket, ready to store (user_id stamped here, not by the caller).
+export type ActivityRow = {
+  metric_type: string;
+  day: string; // YYYY-MM-DD, owner's timezone
+  hour: number; // 0-23
+  value: number;
+  unit: string;
+  source: string;
+};
+
+// Upsert a batch of hourly buckets on (user_id, metric_type, day, hour, source).
+// merge-duplicates → a re-send of the same hour REPLACES its bucket (latest POST
+// wins), so re-running is idempotent as long as a POST carries that hour's full set.
+export async function upsertActivityHourly(rows: ActivityRow[]): Promise<number | null> {
+  if (rows.length === 0) return 0;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/activity_hourly?on_conflict=user_id,metric_type,day,hour,source`,
+      {
+        method: "POST",
+        headers: headers({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
+        body: JSON.stringify(rows.map((r) => ({ ...r, user_id: OWNER_USER_ID }))),
+      },
+    );
+    if (!res.ok) return null;
+    return rows.length;
+  } catch (_err) {
+    return null;
+  }
+}

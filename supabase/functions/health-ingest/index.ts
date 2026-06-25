@@ -5,6 +5,9 @@
 // parse + write lives in the per-kind modules.
 //   • kind "body"  (S3a)  → ./body.ts → upsert into body_metrics. GENERIC: any
 //                            metric_type (weight, body_fat, lean_mass, bmi, …).
+//   • kind "activity_hourly" (S3c) → ./activity.ts → bucket raw samples to the
+//                            owner's day+hour and upsert into activity_hourly
+//                            (steps/active_energy summed, heart_rate averaged).
 //   • kind "sleep" (S3b, later) → not handled yet.
 //
 // ONE endpoint for BOTH the one-time backfill (a wide date window) and the 4×/day
@@ -20,6 +23,7 @@
 //                            (see ./store.ts); auto-injected except OWNER_USER_ID.
 
 import { ingestBody } from "./body.ts";
+import { ingestActivity } from "./activity.ts";
 import { missingStoreSecrets, storeConfigured } from "./store.ts";
 
 function json(body: unknown, status = 200): Response {
@@ -42,19 +46,21 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "unauthorized" }, 401);
   }
 
-  let payload: { kind?: unknown; readings?: unknown };
+  let payload: { kind?: unknown; readings?: unknown; samples?: unknown };
   try {
     payload = await req.json();
   } catch {
     return json({ ok: false, error: "bad_json" }, 400);
   }
 
-  if (payload?.kind === "body") {
+  if (payload?.kind === "body" || payload?.kind === "activity_hourly") {
     // Fail closed with the missing names (never a hardcoded id) if a secret is absent.
     if (!storeConfigured) {
       return json({ ok: false, error: "server_misconfigured", missing: missingStoreSecrets() }, 500);
     }
-    const result = await ingestBody(payload);
+    const result = payload.kind === "body"
+      ? await ingestBody(payload)
+      : await ingestActivity(payload);
     if (!result.ok) return json({ ok: false, error: result.error }, result.status);
     return json(
       {
@@ -67,5 +73,5 @@ Deno.serve(async (req) => {
     );
   }
 
-  return json({ ok: false, error: "unknown_kind", hint: "expected kind:'body'" }, 400);
+  return json({ ok: false, error: "unknown_kind", hint: "expected kind:'body' or 'activity_hourly'" }, 400);
 });
