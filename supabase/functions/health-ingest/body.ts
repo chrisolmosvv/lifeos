@@ -14,6 +14,20 @@ import { type BodyRow, upsertBodyMetrics } from "./store.ts";
 
 type Reading = { metric_type?: unknown; value?: unknown; unit?: unknown; at?: unknown };
 
+// Coerce to a finite number, or null if it isn't a real number. A genuine 0 passes
+// (e.g. steps = 0); but null/undefined/empty-string/boolean/object do NOT silently
+// become 0 the way bare Number() would — a missing value is a skip, not a zero.
+function toFiniteNumber(v: unknown): number | null {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (s === "") return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
 // A skipped reading, with the offending raw value echoed back so a bad backfill row
 // is visible in the response ("why was this skipped?") rather than a silent tally.
 export type SkipDetail = { reason: string; metric_type?: unknown; value?: unknown; at?: unknown };
@@ -48,8 +62,8 @@ export async function ingestBody(payload: { readings?: unknown }): Promise<BodyR
     const metric_type = typeof r?.metric_type === "string" ? r.metric_type.trim() : "";
     if (!metric_type) { recordSkip("bad_metric_type", r); continue; }
 
-    const value = Number(r?.value); // accepts a number or a numeric string
-    if (!Number.isFinite(value)) { recordSkip("bad_value", r); continue; }
+    const value = toFiniteNumber(r?.value); // number or numeric string; missing/empty → null
+    if (value === null) { recordSkip("bad_value", r); continue; }
 
     // `at` is any ISO-8601 instant ("…Z" or "…+02:00"); skip ONLY if genuinely unparseable.
     const atRaw = typeof r?.at === "string" ? r.at.trim() : "";
