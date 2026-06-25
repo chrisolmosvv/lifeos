@@ -35,6 +35,20 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S3 pre-step: rotated HEALTH_INGEST_SECRET. ✅ (secret store only; no code/DB/repo change)
+WHAT CHANGED:
+- Regenerated `HEALTH_INGEST_SECRET` on the live project and redeployed `health-ingest` (the function reads
+  the secret at startup, so a redeploy makes a fresh worker pick up the new value). The S1 secret was exposed
+  in plaintext during that session; this kills it before S3 starts guarding real table writes.
+- Verified live: a POST with the OLD secret → **401**; with the NEW secret → **200 ok:true**.
+FILES TOUCHED: none in the repo (secret store only). No function code change, no DB, no src/.
+HOW THE OWNER VERIFIES: in the Shortcut, update the `x-health-secret` header to the NEW value (handed over in
+  chat). Re-run it → still `{ok:true, …}`. The old value now returns 401.
+KNOWN GAPS / RISKS: the new secret value was again shared in chat (unavoidable — the owner needs it for the
+  Shortcut). It guards a no-DB echo until S3 wires writes; rotate again if it leaks further. CLI access used
+  the owner's existing `claude-health` token (the SUPABASE_ACCESS_TOKEN env quirk still applies — see memory).
+NEXT: S3 — real payload parsed + upserted into the S2 tables; backfill from 1 Jan 2026; re-runnable.
+
 ### 2026-06-25 — Track S — S2: the three tables (schema). ⚠️ SCHEMA — CHECKER-GATED. Own commit (`3b01ba0`).
 WHAT CHANGED:
 - New migration `db/24_sleep_body_tables.sql` creating three additive, owner-RLS tables:
