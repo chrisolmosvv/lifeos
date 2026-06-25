@@ -35,6 +35,23 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S3a metrics: generic ingest confirmed + value hardening. BACKEND ONLY. ✅ deployed + verified.
+WHAT CHANGED:
+- Confirmed (live) the body handler upserts ANY metric_type with no per-type code: all 10 canonical strings —
+  body_fat, lean_mass, resting_heart_rate, respiratory_rate, steps, active_energy, resting_energy,
+  stand_minutes, exercise_minutes, heart_rate — inserted verbatim in one batch (`inserted:10, skipped:0`).
+- Hardened value coercion: a new `toFiniteNumber` rejects null/undefined/empty-string/boolean/object (bare
+  `Number()` had turned null/"" into a silent 0); a genuine 0 (e.g. steps) still inserts. Bad value → skip
+  `bad_value`, bad `at` → skip `bad_at`, each with the offending value echoed in `skipped_detail`.
+FILES TOUCHED: supabase/functions/health-ingest/body.ts (the parser). Committed `d466a19`.
+  NOTE: the brief said "index.ts only", but the parse logic is in body.ts (split out in S3a) — change made
+  there, flagged not worked around.
+VERIFIED LIVE (then cleaned up, exact-match on a 2020 test instant): 10/10 canonical metrics inserted
+  (body_fat=18.3, steps=0); null/""/"abc" → `bad_value`; "bad-date" → `bad_at`; test rows deleted, table empty.
+KNOWN GAPS / RISKS: none new. Body ingest is generic + hardened; S3a still closes on the owner's real
+  backfill Shortcut writing real rows.
+NEXT: S3b — sleep ingest ({kind:"sleep"} → sleep_nights, one row per night), same endpoint.
+
 ### 2026-06-25 — Track S — S3a follow-up: ISO-8601 `at` + skip reasons. BACKEND ONLY. ✅ deployed + verified.
 WHAT CHANGED:
 - Confirmed the body parser already accepts an ISO-8601 `at` ("…Z" and "…+02:00") — both insert, with
