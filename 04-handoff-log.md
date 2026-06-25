@@ -35,6 +35,28 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S2: the three tables (schema). ⚠️ SCHEMA — CHECKER-GATED. Own commit (`3b01ba0`).
+WHAT CHANGED:
+- New migration `db/24_sleep_body_tables.sql` creating three additive, owner-RLS tables:
+  `sleep_nights` (one row/night, UNIQUE user_id+night_date), `body_metrics` (one row/reading, UNIQUE
+  user_id+metric_type+reading_at+source), `health_goals` (owner targets, history kept). Same pattern as
+  gym_*/marty_*: `user_id default auth.uid()` → `auth.users`, four owner policies each, RLS on, NO spine FK.
+FILES TOUCHED: db/24_sleep_body_tables.sql (new). NO src/, NO health-ingest, NO spine.
+FOR THE CHECKER — confirm the four points in the file header:
+  1) ADDITIVE — three brand-new tables; tasks/events/categories untouched.
+  2) Owner-only RLS ON for all three (auth.uid() = user_id; four policies each).
+  3) NO foreign key into the spine — only ref is auth.users; metric_type/goal_type/source/night_date
+     are plain values, never spine ids.
+  4) Dedupe: sleep_nights UNIQUE(user_id,night_date); body_metrics UNIQUE(user_id,metric_type,reading_at,
+     source). Confirm these are the right re-push safety nets.
+HOW THE OWNER VERIFIES (live DB, AFTER the checker approves): run the SQL in the Supabase SQL editor
+  (Frankfurt project cntlptuacsujbdtwvbis) → expect "Success. No rows returned." Then: the 3 tables exist;
+  RLS shows enabled on each; insert one test row into each + select returns it; delete it; and a second
+  `body_metrics` insert with the same (metric_type, reading_at, source) is REJECTED by the unique key.
+KNOWN GAPS / RISKS: NOT done until the checker signs the four points AND the owner runs it live. No ingest
+  wiring yet (that's S3). Night-date convention (wake-up date) is now CONFIRMED here, closing the S0 OPEN item.
+NEXT: after checker + live-run → S3 (real payload parsed + upserted; backfill from 1 Jan 2026; re-runnable).
+
 ### 2026-06-25 — Track S — S1: health-ingest DEPLOYED + server-verified. ✅ (awaiting owner's iPhone test to close)
 WHAT CHANGED:
 - Deployed `health-ingest` to the real project `cntlptuacsujbdtwvbis` with `--no-verify-jwt`, and set the

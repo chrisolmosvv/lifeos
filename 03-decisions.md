@@ -9,6 +9,26 @@
 
 ---
 
+## Health → Sleep & Body Stats — S2: the three tables (2026-06-25)
+
+- **[Three additive owner-RLS tables; same pattern as gym_*/marty_*]** — `sleep_nights`,
+  `body_metrics`, `health_goals` in `db/24_sleep_body_tables.sql`. Each has `user_id default
+  auth.uid()` → `auth.users` and four owner policies; RLS on; **no FK into the spine**.
+  **Why:** new module ADDS tables, never touches the task/event/category spine. **Trade-off:** none.
+- **[Night-date convention CONFIRMED: a night belongs to its wake-up date (Amsterdam day).]**
+  `sleep_nights.night_date` is `date`, `UNIQUE (user_id, night_date)`. **Why:** one stable key per
+  night; a re-push UPDATES the row (latest wins), so the 4×/day runs can't duplicate a night.
+  **Trade-off:** none — this was the [OPEN until S2] item from S0, now closed.
+- **[body_metrics dedupe = UNIQUE (user_id, metric_type, reading_at, source).]** **Why:** the four
+  daily runs must not double-log the same scale reading; daily average is derived ON READ, never
+  stored (no drift). **Trade-off:** none. A new stat is a new `metric_type` value, never a migration.
+- **[health_goals keeps history; no unique key.]** Newest `active` row per `goal_type` is the live
+  goal; old ones stay. `direction` is CHECK-constrained to `up`/`down`/`by_time`. **Why:** goals
+  change over time and history is useful; the check keeps the value clean. **Trade-off:** none.
+- **[score column reserved nullable on sleep_nights.]** **Why:** the Watch sleep score isn't
+  readable by a Shortcut in V1; a nullable column now saves a later migration. **Trade-off:** null
+  until the AI/V2 world fills it.
+
 ## Health → Sleep & Body Stats — S0: the locked plan (2026-06-25)
 
 - **Sleep & Body Stats — stance = active coach, logic-only V1.** Tracks Apple
