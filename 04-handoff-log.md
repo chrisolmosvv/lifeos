@@ -35,6 +35,22 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — Sleep & Body Stats — S0: plan locked. DOCS ONLY.
+WHAT CHANGED:
+- Added the full build plan for Health's second module, **Sleep & Body Stats**, as a new brain doc
+  (`10-sleep-body-stats.md`) — its own S-track (S0–S10 + Final), like Gym's G-track.
+- Locked the plan into the two living docs: a Track-S block in the roadmap and the S0 decision set in decisions.
+FILES TOUCHED: 10-sleep-body-stats.md (new), 02-roadmap.md, 03-decisions.md, 04-handoff-log.md. NO src/, NO schema.
+HOW TO VERIFY: open the repo. Confirm `10-sleep-body-stats.md` exists; `02-roadmap.md` shows a "🛌 Track S —
+  Health → Sleep & Body Stats" section (S0–S10); `03-decisions.md` shows "Sleep & Body Stats — S0: the locked
+  plan" near the top.
+KNOWN GAPS / RISKS: paperwork only — nothing runs yet. Two items stay OPEN by design: the Layer-4 Health-banner
+  IA (how Gym/Sleep/Body coexist) and the night-date convention (confirm at the S2 schema gate).
+NEXT: S1 — prove the pipe (a private Edge Function + a test Apple Shortcut that POSTs one real number and gets
+  a 200). No DB, no UI.
+FOR THE CHECKER: confirm the plan is additive-only (three new tables, no spine FK, no AI in V1) and that S0
+  touched no `src/`, `supabase/` or `db/`.
+
 ### 2026-06-25 — Health → Gym G16 — finishing audit + close the module. SRC/ ONLY. 🎉 GYM/HEALTH MODULE COMPLETE.
 WHAT CHANGED: the G16 finishing pass. A full top-to-bottom audit of the Health section (all four screens,
 every empty/edge state, units/dates/type consistency, dead code) found the module **clean and finished** —

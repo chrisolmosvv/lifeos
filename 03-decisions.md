@@ -9,6 +9,34 @@
 
 ---
 
+## Health → Sleep & Body Stats — S0: the locked plan (2026-06-25)
+
+- **Sleep & Body Stats — stance = active coach, logic-only V1.** Tracks Apple
+  Health, measures vs owner-set goals, pushes via Marty. **Why:** owner wants to be
+  pushed, not just shown. **Trade-off:** a logic-only coach is templated rules, not
+  conversational — the paid-AI piece makes it converse later.
+- **Sleep & Body — AI boundary.** No AI in V1; paid no-training key deferred to its
+  own piece. **Why:** sensitive data must never reach a training model; the free
+  Gemini key may train. **Trade-off:** thinner "insights" until the paid key lands.
+- **Sleep & Body — pipeline = push.** Apple Shortcut fires 4×/day (06/12/18/24) →
+  private Edge Function; backfill from 1 Jan 2026; no server cron. **Why:** Apple is
+  push-only; 4 runs self-heal a missed morning. **Trade-off:** relies on the
+  on-device automation staying enabled.
+- **Sleep — no score in V1, lead on duration.** The Watch's score is locked in the
+  Sleep app, unreadable by a Shortcut; only stages + times export. **Why:** avoid a
+  daily manual-copy chore. **Trade-off:** no single sleep number in V1 (a nullable
+  `score` column is reserved). Full REM/Core/Deep/Awake stages ARE kept.
+- **Body — keep every reading, daily headline = average; lead = weight.** **Why:**
+  multiple weigh-ins/day are normal; raw-in/compute-out avoids drift. **Trade-off:**
+  none — cleaner than one-row-per-day.
+- **Sleep coach factors = existing data only (no check-in).** Correlates against gym
+  workouts, day-of-week, bedtime regularity, prior nights. **Why:** zero extra
+  logging burden. **Trade-off:** thin in V1; sharpens free when Food module lands.
+- **Night belongs to its wake-up date (Amsterdam day).** **Why:** one consistent
+  key per night. **Trade-off:** confirm at the S2 schema gate. [OPEN until S2.]
+- **Health-banner IA for three faces (Gym/Sleep/Body).** [OPEN — Layer 4; gates the
+  screen layouts.]
+
 ## Health → Gym "The Form Guide" — G16: module complete; front-page zero-scroll deferred to V2 (2026-06-25)
 
 - **[The Gym/Health module is COMPLETE (G1–G16); front-page zero-scroll is deliberately deferred to a V2

@@ -753,6 +753,30 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
 
 ---
 
+## 🛌 Track S — Health → Sleep & Body Stats   ← NEW (full plan: 10-sleep-body-stats.md)
+
+Health's second sub-section: Sleep + Body Stats. Reads Apple Health (Watch sleep,
+smart-scale body) by PUSH — an Apple Shortcut fires 4×/day → private Edge Function.
+Active coach, LOGIC-ONLY V1 (no AI; paid no-training key is a later piece). Goals
+owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
+
+- 🟦 S0 — Paperwork (this plan + 02/03). No code.  ← IN PROGRESS
+- ⬜ S1 — Prove the pipe (Edge Function + test Shortcut returns 200; no DB/UI).
+- ⬜ S2 — Tables (sleep_nights, body_metrics, health_goals). CHECKER-GATED, own commit.
+- ⬜ S3 — Ingest + backfill from 1 Jan 2026 (re-runnable).
+- ⬜ S4 — 4×/day automation + Settings "last received" line.
+- ⬜ S5 — Calc layer (verified vs real numbers).
+- ⬜ S6 — Sleep front page (read-only).
+- ⬜ S7 — Body front page (read-only).
+- ⬜ S8 — Drill-ins (sleep night, body history).
+- ⬜ S9 — Goals editor (in-app write, with undo).
+- ⬜ S10 — Coach hooks (bedtime reminder + brief lines, logic-only).
+- ⬜ Final — Polish + audit to the design laws.
+
+OPEN (Layer 4): how Gym/Sleep/Body coexist under the Health banner — gates layouts.
+
+---
+
 ## ⬜ Phase 8 — Signals & polish
 Turn on the activity log; smooth rough edges; make it nice to look at.
 **Done when:** V1 done, foundations quietly logging for the future.
