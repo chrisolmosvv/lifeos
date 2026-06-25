@@ -35,6 +35,23 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S3a follow-up: ISO-8601 `at` + skip reasons. BACKEND ONLY. ✅ deployed + verified.
+WHAT CHANGED:
+- Confirmed the body parser already accepts an ISO-8601 `at` ("…Z" and "…+02:00") — both insert, with
+  `reading_at` normalised to UTC and `metric_date` = the Amsterdam day of that instant (proven: a
+  01:15+02:00 reading lands as 23:15Z on the 24th but `metric_date` 2026-06-25, the correct local day).
+- Added per-field SKIP REASONS: a skipped reading now returns `skipped_detail:[{reason, metric_type, value,
+  at}]` (reason ∈ bad_metric_type|bad_value|bad_at), echoing the offending raw value so a bad backfill row is
+  visible — not a silent tally. Capped at 25 entries. `at` is skipped ONLY when genuinely unparseable.
+FILES TOUCHED: supabase/functions/health-ingest/body.ts (parser) + index.ts (pass-through). Committed `587dcfe`.
+  NOTE: the brief said "index.ts only", but the parse logic was split into body.ts in S3a — so the faithful
+  change is in body.ts plus a pass-through in index.ts. Flagged rather than worked around.
+VERIFIED LIVE (then cleaned up): real ISO `…Z` → `{inserted:1, skipped:0}`; bad `at` → `{inserted:0,
+  skipped:1, skipped_detail:[{reason:"bad_at", at:"not-a-date", …}]}`; `+02:00` offset → inserted with the
+  correct Amsterdam `metric_date`.
+KNOWN GAPS / RISKS: none new. Body ingest is solid; S3a still closes on the owner's real backfill Shortcut.
+NEXT: S3b — sleep ingest ({kind:"sleep"} → sleep_nights, one row per night), same endpoint.
+
 ### 2026-06-25 — Track S — S3a: body ingest + backfill (generic). BACKEND ONLY. ✅ deployed + server-verified.
 WHAT CHANGED:
 - Extended `health-ingest` to accept `{kind:"body", readings:[…]}` and UPSERT into body_metrics. Split into
