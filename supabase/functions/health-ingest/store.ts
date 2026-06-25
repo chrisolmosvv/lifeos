@@ -95,3 +95,39 @@ export async function upsertActivityHourly(rows: ActivityRow[]): Promise<number 
     return null;
   }
 }
+
+// One consolidated night, ready to store (user_id stamped here, not by the caller).
+export type SleepRow = {
+  night_date: string; // YYYY-MM-DD, owner's timezone (wake-up date)
+  in_bed_at: string | null;
+  woke_at: string | null;
+  asleep_minutes: number;
+  rem_minutes: number;
+  core_minutes: number;
+  deep_minutes: number;
+  awake_minutes: number;
+  awakenings: number;
+  score: number | null;
+  source: string;
+  updated_at: string;
+};
+
+// Upsert a batch of nights on (user_id, night_date). merge-duplicates → a re-send of
+// the same night REPLACES it (latest POST wins), same pattern as body/activity.
+export async function upsertSleepNights(rows: SleepRow[]): Promise<number | null> {
+  if (rows.length === 0) return 0;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/sleep_nights?on_conflict=user_id,night_date`,
+      {
+        method: "POST",
+        headers: headers({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
+        body: JSON.stringify(rows.map((r) => ({ ...r, user_id: OWNER_USER_ID }))),
+      },
+    );
+    if (!res.ok) return null;
+    return rows.length;
+  } catch (_err) {
+    return null;
+  }
+}

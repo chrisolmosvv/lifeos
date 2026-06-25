@@ -8,7 +8,8 @@
 //   • kind "activity_hourly" (S3c) → ./activity.ts → bucket raw samples to the
 //                            owner's day+hour and upsert into activity_hourly
 //                            (steps/active_energy summed, heart_rate averaged).
-//   • kind "sleep" (S3b, later) → not handled yet.
+//   • kind "sleep" (S3b)  → ./sleep.ts → sessionise per-stage segments into one
+//                            sleep_nights row per night.
 //
 // ONE endpoint for BOTH the one-time backfill (a wide date window) and the 4×/day
 // runs — re-sends dedupe on the table's unique key, so no "mode" flag is needed.
@@ -24,6 +25,7 @@
 
 import { ingestBody } from "./body.ts";
 import { ingestActivity } from "./activity.ts";
+import { ingestSleep } from "./sleep.ts";
 import { missingStoreSecrets, storeConfigured } from "./store.ts";
 
 function json(body: unknown, status = 200): Response {
@@ -46,11 +48,20 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: "unauthorized" }, 401);
   }
 
-  let payload: { kind?: unknown; readings?: unknown; samples?: unknown };
+  let payload: { kind?: unknown; readings?: unknown; samples?: unknown; segments?: unknown };
   try {
     payload = await req.json();
   } catch {
     return json({ ok: false, error: "bad_json" }, 400);
+  }
+
+  // Sleep has its own response shape ({ok,nights[,note]}), so it routes separately.
+  if (payload?.kind === "sleep") {
+    if (!storeConfigured) {
+      return json({ ok: false, error: "server_misconfigured", missing: missingStoreSecrets() }, 500);
+    }
+    const { status, body } = await ingestSleep(payload);
+    return json(body, status);
   }
 
   if (payload?.kind === "body" || payload?.kind === "activity_hourly") {
@@ -73,5 +84,8 @@ Deno.serve(async (req) => {
     );
   }
 
-  return json({ ok: false, error: "unknown_kind", hint: "expected kind:'body' or 'activity_hourly'" }, 400);
+  return json(
+    { ok: false, error: "unknown_kind", hint: "expected kind:'body', 'activity_hourly' or 'sleep'" },
+    400,
+  );
 });
