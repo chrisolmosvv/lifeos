@@ -35,6 +35,30 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S3a: body ingest + backfill (generic). BACKEND ONLY. ✅ deployed + server-verified.
+WHAT CHANGED:
+- Extended `health-ingest` to accept `{kind:"body", readings:[…]}` and UPSERT into body_metrics. Split into
+  a thin front door (`index.ts`, routes on `kind`), a parse/validate layer (`body.ts`), and a service-role
+  write layer (`store.ts`). Generic over `metric_type`; malformed rows skipped+counted; in-payload duplicates
+  collapsed (last wins); `reading_at` normalised to UTC; `metric_date` = Amsterdam day of `at` (shared
+  `localYMD`); `source` = "apple-health". ONE idempotent endpoint for both backfill and the 4×/day runs.
+- Reused the existing project-wide `OWNER_USER_ID` secret (already set by telegram/gym — NOT re-created).
+FILES TOUCHED: supabase/functions/health-ingest/{index.ts (rewritten), body.ts (new), store.ts (new)}.
+  NO src/, NO schema, NO sleep logic, NO spine. Committed `0f9c5a3` (backend, its own commit).
+SERVER-VERIFIED (against the live body_metrics table, then cleaned up): wrong secret → 401; no `kind` → 400
+  `unknown_kind`; 2 valid + 1 malformed → 200 `{inserted:2, skipped:1}`; rows landed (count 0→2); RE-SEND of
+  the same readings kept the count at 2 (DB-level dedupe holds) and applied the latest value (81.9); test rows
+  deleted, count back to 0.
+HOW THE OWNER CLOSES S3a: build the two Shortcuts (steps provided in chat) →
+  • one-time BACKFILL Shortcut: read all body readings since 1 Jan 2026, POST as one `kind:"body"` batch.
+  • recurring Shortcut: POST recent readings. Expect `{ok:true, inserted:N, skipped:M}`. In the Supabase
+    Table Editor, body_metrics shows rows dated back toward 2026-01-01; running the recurring one twice does
+    NOT grow the count.
+KNOWN GAPS / RISKS: closes only when the owner's real Shortcut fills real rows. The `x-health-secret` header
+  must hold the rotated secret. Note: deploys need the owner's token (SUPABASE_ACCESS_TOKEN env quirk — see
+  memory). Verification used the service_role key fetched via `supabase projects api-keys` (never committed).
+NEXT: S3b — sleep ingest ({kind:"sleep"} → sleep_nights, one row per night), same idempotent endpoint.
+
 ### 2026-06-25 — Track S — S3 pre-step: rotated HEALTH_INGEST_SECRET. ✅ (secret store only; no code/DB/repo change)
 WHAT CHANGED:
 - Regenerated `HEALTH_INGEST_SECRET` on the live project and redeployed `health-ingest` (the function reads

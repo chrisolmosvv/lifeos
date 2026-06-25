@@ -9,6 +9,28 @@
 
 ---
 
+## Health → Sleep & Body Stats — S3a: body ingest + backfill (2026-06-25)
+
+- **[ONE idempotent endpoint for backfill AND the recurring runs — no "mode" flag.]** The
+  one-time backfill (a wide date window) and the 4×/day runs POST the SAME
+  `{kind:"body", readings:[…]}` to health-ingest; re-sends dedupe on the table's unique key.
+  **Why:** the unique constraint already makes every write safe to repeat, so a mode flag would
+  be dead weight; re-running IS the recovery net. **Trade-off:** none.
+- **[Generic over metric_type — a new stat is just a new value, never a code/schema change.]**
+  The function never enumerates weight/body_fat/etc.; it stores whatever `metric_type` arrives.
+  **Why:** matches the body_metrics shape (S2) and the "store raw" rule. **Trade-off:** a typo'd
+  metric_type would create a stray series — acceptable; the Shortcut controls the names.
+- **[Malformed readings are SKIPPED + counted, never fatal.]** A bad row (missing metric_type,
+  non-numeric value, unparseable `at`) is dropped and tallied; the response is
+  `{ok:true, inserted:N, skipped:M}`. **Why:** one bad reading in a big backfill must not sink
+  the batch. **Trade-off:** silent-ish skips — the count surfaces them; deeper logging is later.
+- **[reading_at normalised to UTC; metric_date = Amsterdam day of `at`.]** Uses the shared
+  `localYMD` helper, so Sleep/Body/Gym agree on "a day". **Why:** stable dedupe key + one day
+  definition. **Trade-off:** none.
+- **[Server-side write via service-role; user_id stamped = OWNER_USER_ID.]** Same pattern as
+  gym_*/marty_*; the existing project-wide `OWNER_USER_ID` secret is reused (not re-set).
+  **Why:** keeps owner-only RLS intact without a JWT from the Shortcut. **Trade-off:** none.
+
 ## Health → Sleep & Body Stats — S2: the three tables (2026-06-25)
 
 - **[Three additive owner-RLS tables; same pattern as gym_*/marty_*]** — `sleep_nights`,

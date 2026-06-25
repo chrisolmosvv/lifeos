@@ -766,9 +766,13 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
        secret → 401). Secret `HEALTH_INGEST_SECRET` set. Closes when the owner's
        iPhone Shortcut shows `ok:true`.
 - 🟦 S2 — Tables (sleep_nights, body_metrics, health_goals). CHECKER-GATED, own commit.
-       SQL written + committed (`db/24_sleep_body_tables.sql`). AWAITING the checker's
-       sign-off + the owner running it live in the SQL editor. Closes when both are in.
-- ⬜ S3 — Ingest + backfill from 1 Jan 2026 (re-runnable).
+       SQL written + committed (`db/24_sleep_body_tables.sql`); tables CONFIRMED LIVE
+       (verified via API). Closes on the checker's explicit sign-off.
+- 🟦 S3a — Body ingest + backfill (generic). health-ingest accepts {kind:"body",
+       readings:[…]} → upserts body_metrics. DEPLOYED + server-verified (DB-level dedupe,
+       latest-wins, skip-count, auth). Closes when the owner's backfill Shortcut fills
+       real rows back toward 1 Jan 2026.
+- ⬜ S3b — Sleep ingest + backfill ({kind:"sleep"} → sleep_nights, one row/night).
 - ⬜ S4 — 4×/day automation + Settings "last received" line.
 - ⬜ S5 — Calc layer (verified vs real numbers).
 - ⬜ S6 — Sleep front page (read-only).
