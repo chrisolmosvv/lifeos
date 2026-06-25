@@ -3,6 +3,7 @@ import ClimbChart from './kit/ClimbChart'
 import { liftRecords } from './gym/gymRecords'
 import { loadPins, pinLift, unpinLift } from './gym/gymPins'
 import { humanDayShort } from './gym/gymDates'
+import { prettyMuscle } from './gym/gymFormat'
 import './kit/formGuide.css'
 import './kit/gymRecords.css'
 
@@ -12,7 +13,6 @@ import './kit/gymRecords.css'
 // failure. Order: pinned first → most-trained → alphabetical. A pinned/expanded
 // lift shows its top-set climb chart (reused SVG approach).
 
-const pretty = (m) => (!m ? 'Other' : m.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase()))
 const fmtW = (w) => (w == null ? '—' : w % 1 === 0 ? String(w) : w.toFixed(1))
 
 export default function GymRecords({ workouts, onBack }) {
@@ -94,7 +94,7 @@ export default function GymRecords({ workouts, onBack }) {
                     </button>
                     <button className="gr-id" onClick={() => toggleExpand(rec.key)}>
                       <span className="gr-name">{rec.name}</span>
-                      <span className="gr-muscle">{pretty(rec.muscle)}</span>
+                      <span className="gr-muscle">{prettyMuscle(rec.muscle)}</span>
                     </button>
                     <span className="gr-pr tnum">
                       {rec.prWeight != null ? (

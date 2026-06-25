@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { sumVolume, topSet, best1RM, isWarmup } from '../gym/gymCalc'
-import { formatVolume } from '../gym/gymFormat'
+import { formatVolume, prettyMuscle } from '../gym/gymFormat'
 import './sessionReport.css'
 
 // SessionExercise — one exercise inside the session report: a calm summary line
@@ -8,7 +8,6 @@ import './sessionReport.css'
 // table. Sealed gym-kit block: display only, reuses the calc layer. Warm-ups are
 // shown but marked and excluded from the top-set/1RM/PR marks (the G0 rule).
 
-const pretty = (m) => (!m ? 'Other' : m.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase()))
 const fmtW = (w) => (typeof w !== 'number' ? '' : w % 1 === 0 ? String(w) : w.toFixed(1))
 
 // One set's main figure: weight×reps, or bodyweight reps, or duration, or distance.
@@ -46,7 +45,7 @@ export default function SessionExercise({ exercise }) {
         <span className="sx-caret">{open ? '▾' : '▸'}</span>
         <span className="sx-name">
           {exercise.title || 'Exercise'}
-          <span className="sx-muscle">{pretty(exercise.muscle)}</span>
+          <span className="sx-muscle">{prettyMuscle(exercise.muscle)}</span>
         </span>
         <span className="sx-summary tnum">{summary}</span>
       </button>

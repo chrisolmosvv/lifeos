@@ -28,3 +28,12 @@ export function formatDuration(minutes) {
   const m = String(total % 60).padStart(2, "0");
   return { num: `${h}:${m}`, unit: "" };
 }
+
+// A Hevy muscle-group key → a calm, legible label: "lower_back" → "Lower back";
+// a missing muscle or the catch-all "other" → "Other". (G16: the ONE definition,
+// replacing three identical copies in SessionExercise / MuscleBalance / GymRecords —
+// same output for every value they pass.)
+export function prettyMuscle(m) {
+  if (!m || m === "other") return "Other";
+  return m.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+}
