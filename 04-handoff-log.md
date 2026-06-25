@@ -35,6 +35,27 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S3c-fn: health-ingest accepts kind:"activity_hourly". BACKEND ONLY. ✅ deployed + verified.
+WHAT CHANGED:
+- New `health-ingest` branch `kind:"activity_hourly"`. Payload = raw samples
+  `{metric_type, value, at}`. Each sample buckets to the owner's Amsterdam (day, hour); per metric:
+  steps/active_energy SUMMED, heart_rate AVERAGED. Units fixed per metric (steps=count, active_energy=kcal,
+  heart_rate=bpm). Upserts into activity_hourly on (user_id,metric_type,day,hour,source) merge-duplicates.
+- Extracted shared validators into `parse.ts` (toFiniteNumber, parseInstant); body.ts + activity.ts both use
+  them; index.ts routes both kinds. Unknown metric_type / bad value / bad at → skipped with reason + value.
+FILES TOUCHED: supabase/functions/health-ingest/{activity.ts (new), parse.ts (new), store.ts, body.ts,
+  index.ts}. NO src/, NO schema. Committed `52c34ab` (backend, own commit).
+IDEMPOTENCY NOTE: the upsert REPLACES an hour's bucket (latest POST wins). Safe to re-run AS LONG AS a POST
+  carries that hour's full set of samples (backfill = whole window, recurring run = recent window both do). A
+  deliberately partial hour would under-count — the Shortcut should send complete hours.
+VERIFIED LIVE (then cleaned up, day=2020-02-02): steps summed per hour (h10=350, h11=700), heart_rate averaged
+  (h10=70), units correct; unknown "distance" → unknown_metric_type, "oops" → bad_value, "not-a-date" →
+  bad_at; RE-SEND of the same steps kept ONE row at 350 (idempotent, no double-count); body kind still
+  inserts (regression after the parse.ts refactor).
+KNOWN GAPS / RISKS: ingest is proven; closes for real when the owner's activity Shortcut sends real samples.
+  Hourly buckets assume complete-hour POSTs (see idempotency note).
+NEXT: S3b — sleep ingest ({kind:"sleep"} → sleep_nights, one row per night).
+
 ### 2026-06-25 — Track S — S3c: activity_hourly table (schema). ⚠️ SCHEMA — CHECKER-GATED. Own commit (`aaf407d`).
 WHAT CHANGED:
 - New migration `db/25_activity_hourly.sql` — one additive, owner-RLS table for hourly activity buckets
