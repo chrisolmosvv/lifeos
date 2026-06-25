@@ -760,8 +760,11 @@ smart-scale body) by PUSH — an Apple Shortcut fires 4×/day → private Edge F
 Active coach, LOGIC-ONLY V1 (no AI; paid no-training key is a later piece). Goals
 owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
 
-- 🟦 S0 — Paperwork (this plan + 02/03). No code.  ← IN PROGRESS
-- ⬜ S1 — Prove the pipe (Edge Function + test Shortcut returns 200; no DB/UI).
+- ✅ S0 — Paperwork (this plan + 02/03). No code.
+- 🟦 S1 — Prove the pipe (Edge Function + test Shortcut returns 200; no DB/UI).
+       Function written + committed (`health-ingest`). DEPLOY BLOCKED: the CLI
+       login in the build environment can't reach the real project (403) — owner
+       must log in + run the deploy/secret commands. Not done until ok:true on iPhone.
 - ⬜ S2 — Tables (sleep_nights, body_metrics, health_goals). CHECKER-GATED, own commit.
 - ⬜ S3 — Ingest + backfill from 1 Jan 2026 (re-runnable).
 - ⬜ S4 — 4×/day automation + Settings "last received" line.

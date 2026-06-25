@@ -35,6 +35,30 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S1: health-ingest edge function (prove the pipe). BACKEND ONLY. ⚠️ DEPLOY BLOCKED — owner action needed.
+WHAT CHANGED:
+- New private edge function `supabase/functions/health-ingest/index.ts`: authenticates a POST via the
+  `x-health-secret` header (vs the `HEALTH_INGEST_SECRET` secret) and echoes `{ok:true, received:{metric,
+  value,unit}}`. Writes NO table — S1 proves the path only. Committed (`dc9ef47`).
+FILES TOUCHED: supabase/functions/health-ingest/index.ts (new). NO src/, NO db/, NO schema.
+⚠️ BLOCKER (deploy NOT done): the Supabase CLI in the build environment is logged into a DIFFERENT
+  account/org — it returns **403** on the real project `cntlptuacsujbdtwvbis`, so I could not deploy or set
+  the secret from here (and would not deploy to the wrong project). The function code is ready; the remote
+  steps are the owner's to run.
+OWNER TO RUN (in this session, prefix each with `! `, or in a terminal on the Mac):
+  1. `supabase login`  (log in as the real LifeOS Supabase account)
+  2. `supabase secrets set HEALTH_INGEST_SECRET=<the secret handed back in chat> --project-ref cntlptuacsujbdtwvbis`
+  3. `supabase functions deploy health-ingest --no-verify-jwt --project-ref cntlptuacsujbdtwvbis`
+HOW TO VERIFY: build the Apple Shortcut (POST to the function URL, header `x-health-secret` = the secret,
+  JSON body `{"metric":"weight","value":82.5,"unit":"kg"}`), run it on the iPhone → expect a notification
+  showing `{ok:true, received:{metric:"weight", value:82.5, unit:"kg"}}`. A 401 = secret mismatch; any
+  non-200 = pipe not proven.
+KNOWN GAPS / RISKS: deployed ≠ done — S1 is DONE only when the owner sees `ok:true` on the phone. No DB yet
+  (that's S2/S3). The `--no-verify-jwt` flag matters: a later flag-less redeploy would re-lock it.
+NEXT: once ok:true is confirmed → S2 (the three tables, checker-gated, own commit).
+FOR THE CHECKER: confirm the function writes no table, leaks no secret (read from env only), and that S1
+  touched no `src/`, `db/`, or the spine.
+
 ### 2026-06-25 — Track S — Sleep & Body Stats — S0: plan locked. DOCS ONLY.
 WHAT CHANGED:
 - Added the full build plan for Health's second module, **Sleep & Body Stats**, as a new brain doc
