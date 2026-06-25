@@ -35,6 +35,24 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — heart_rate "summing" bug: CODE WAS ALREADY CORRECT; deleted 41 stale rows. NO code change.
+WHAT WAS REPORTED: activity_hourly heart_rate rows held impossible values (0 → 40,432 bpm) — looked summed.
+WHAT I FOUND (read-only diagnosis first):
+- The repo `activity.ts` already AVERAGES heart_rate (line 89: `agg==="avg" ? Math.round((b.sum/b.count)*10)/10
+  : b.sum`, via a per-metric map). It only buckets hours with ≥1 reading, so no 0-count rows and no div-by-0.
+- The DEPLOYED function is byte-identical to the repo (downloaded it + `git diff` = no change) — not stale.
+- Live test: heart_rate 60/70/80 in one hour → stored **70** (average), not 210. So the function is correct now.
+- The 41 bad rows were all written in ONE batch at 2026-06-25 14:09:05 — STALE, from before the averaging
+  build was deployed (8 of them were value 0, mostly night hours).
+UNRESOLVED (can't tell from the backend): whether the bad batch came from an earlier summing build OR from the
+  Shortcut sending one PRE-AGGREGATED value per hour (which the function would store as-is at count=1). To
+  decide, inspect what the activity Shortcut sends for heart rate: many raw samples/hour (correct) vs one
+  number/hour (Shortcut bug). Decimals like 2035.9 can't be averages of real bpm → the numbers are sums.
+ACTION (owner-approved): deleted ONLY `metric_type='heart_rate'` rows from activity_hourly (41 removed); steps
+  (25) and active_energy (41) left untouched. No code change, no deploy, no commit beyond this note.
+NEXT: before re-sending activity data, confirm the Shortcut sends RAW per-reading heart_rate samples (not a
+  pre-summed hourly total), or the bad values will just come back.
+
 ### 2026-06-25 — Track S — S3b: sleep ingest ({kind:"sleep"} → sleep_nights). BACKEND ONLY. ✅ deployed + verified.
 WHAT CHANGED:
 - New `health-ingest` branch `kind:"sleep"`. Payload = `{segments:[{stage,start,end}…]}`. New `sleep.ts`:
