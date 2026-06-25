@@ -1,17 +1,26 @@
-// LifeOS — Health → Sleep & Body Stats: the private ingest edge function (S1).
+// LifeOS — Health → Sleep & Body Stats: the private ingest edge function.
 //
-// THIS PIECE (S1) PROVES THE PIPE ONLY. An on-device Apple Shortcut reads Apple
-// Health and POSTs one number here; this function authenticates the call and
-// echoes the number back as proof the path works end-to-end. It does NOT touch
-// any table — real parsing + upsert lands in S2/S3.
+// An on-device Apple Shortcut reads Apple Health and POSTs here. This file is the
+// THIN FRONT DOOR only: authenticate → route by `kind` → return counts. The real
+// parse + write lives in the per-kind modules.
+//   • kind "body"  (S3a)  → ./body.ts → upsert into body_metrics. GENERIC: any
+//                            metric_type (weight, body_fat, lean_mass, bmi, …).
+//   • kind "sleep" (S3b, later) → not handled yet.
+//
+// ONE endpoint for BOTH the one-time backfill (a wide date window) and the 4×/day
+// runs — re-sends dedupe on the table's unique key, so no "mode" flag is needed.
 //
 // PUBLIC URL, BUT SELF-AUTHENTICATED. Deployed WITHOUT a project JWT
 // (`--no-verify-jwt`, like the `telegram` webhook) because the Shortcut holds no
-// Supabase login. We do our own gate instead: every request must carry the
-// shared secret in the `x-health-secret` header, or it is refused (401).
+// Supabase login. Every request must carry the shared secret in `x-health-secret`.
 //
-// SECRET (read at run time, never in this file / the repo / a response / a log):
+// SECRETS (read at run time, never in this file / the repo / a response / a log):
 //   HEALTH_INGEST_SECRET  — must match the `x-health-secret` request header.
+//   OWNER_USER_ID, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — the server-side write
+//                            (see ./store.ts); auto-injected except OWNER_USER_ID.
+
+import { ingestBody } from "./body.ts";
+import { missingStoreSecrets, storeConfigured } from "./store.ts";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
@@ -23,31 +32,32 @@ function json(body: unknown, status = 200): Response {
 const SECRET = Deno.env.get("HEALTH_INGEST_SECRET");
 
 Deno.serve(async (req) => {
-  // Only POST — the Shortcut POSTs; anything else is not our caller.
   if (req.method !== "POST") {
     return json({ ok: false, error: "method_not_allowed" }, 405);
   }
-
-  // The secret must be configured on the server, or we can't gate safely.
   if (!SECRET) {
     return json({ ok: false, error: "secret_not_configured" }, 500);
   }
-
-  // The gate: the request must present the matching shared secret.
   if (req.headers.get("x-health-secret") !== SECRET) {
     return json({ ok: false, error: "unauthorized" }, 401);
   }
 
-  // Parse the tiny S1 payload: { metric, value, unit }. Bad JSON → 400.
-  let payload: { metric?: unknown; value?: unknown; unit?: unknown };
+  let payload: { kind?: unknown; readings?: unknown };
   try {
     payload = await req.json();
   } catch {
     return json({ ok: false, error: "bad_json" }, 400);
   }
 
-  const { metric, value, unit } = payload ?? {};
+  if (payload?.kind === "body") {
+    // Fail closed with the missing names (never a hardcoded id) if a secret is absent.
+    if (!storeConfigured) {
+      return json({ ok: false, error: "server_misconfigured", missing: missingStoreSecrets() }, 500);
+    }
+    const result = await ingestBody(payload);
+    if (!result.ok) return json({ ok: false, error: result.error }, result.status);
+    return json({ ok: true, inserted: result.inserted, skipped: result.skipped }, 200);
+  }
 
-  // Proof of life: echo exactly what we received. No table is written.
-  return json({ ok: true, received: { metric, value, unit } }, 200);
+  return json({ ok: false, error: "unknown_kind", hint: "expected kind:'body'" }, 400);
 });
