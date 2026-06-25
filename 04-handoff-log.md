@@ -35,6 +35,25 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S1: health-ingest DEPLOYED + server-verified. ✅ (awaiting owner's iPhone test to close)
+WHAT CHANGED:
+- Deployed `health-ingest` to the real project `cntlptuacsujbdtwvbis` with `--no-verify-jwt`, and set the
+  `HEALTH_INGEST_SECRET`. Verified live by curl: correct secret → 200 `{ok:true, received:{…}}`; wrong/no
+  secret → 401. No table written (S1 is pipe-only).
+ROOT CAUSE of the earlier "deploy blocked": the build environment exports a stray `SUPABASE_ACCESS_TOKEN`
+  (a sandbox account that only sees a dead `qupud` project) — and the Supabase CLI **prefers that env var
+  over `supabase login`**, so every login was silently ignored and every call 403'd on the real project.
+FIX / HOW TO RUN THE CLI HERE: prefix EVERY `supabase` command with the owner's own token, e.g.
+  `SUPABASE_ACCESS_TOKEN=<owner_personal_access_token> supabase <cmd> --project-ref cntlptuacsujbdtwvbis`.
+  (Owner generates the token at dashboard → Account → Access Tokens, as account chrisolmosvv@gmail.com.)
+HOW THE OWNER CLOSES S1: build the Apple Shortcut → POST to
+  `https://cntlptuacsujbdtwvbis.supabase.co/functions/v1/health-ingest`, header `x-health-secret` = the
+  secret, JSON body `{"metric":"weight","value":82.5,"unit":"kg"}` → run on iPhone → expect a notification
+  with `{ok:true, received:{…}}`.
+KNOWN GAPS / RISKS: S1 closes only when the owner sees `ok:true` on the phone. The owner pasted access tokens
+  in plain chat — revoke the unused ones (keep only `claude-health` if still needed). No DB yet (S2/S3).
+NEXT: once the phone shows `ok:true` → S2 (the three tables, checker-gated, own commit).
+
 ### 2026-06-25 — Track S — S1: health-ingest edge function (prove the pipe). BACKEND ONLY. ⚠️ DEPLOY BLOCKED — owner action needed.
 WHAT CHANGED:
 - New private edge function `supabase/functions/health-ingest/index.ts`: authenticates a POST via the
