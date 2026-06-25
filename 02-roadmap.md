@@ -618,7 +618,16 @@ its own small, owner-verified piece.
 - **M-track feature phases M0–M9 are all BUILT.** Once M6/M8/M9 clear their SQL+checker gates,
   the conversational + proactive Marty is complete; only the M10 hardening pass remains.
 
-## 🔨 Health → Gym "The Form Guide" — the G-track   ← ACTIVE (parallel module)
+## ✅ Health → Gym "The Form Guide" — the G-track   ← MODULE COMPLETE (G1–G16)
+> **🎉 The Gym/Health module is COMPLETE (G0–G16), owner-verified.** Shipped end to end: the read-only Hevy
+> pipe (G1 connect · G2 tables · G3 backfill · G4 incremental sync · G5 twice-daily cron + Settings status ·
+> G6 exercise-templates dictionary), the on-read calc layer (G7), the Form Guide front page + 5 zones +
+> code-templated headline (G8–G11), the session report (G12), the Archive (G13), Records + pins (G14), the
+> proactive brief line (G15), and the finishing audit + `pretty()` dedupe (G16). **One open item, deliberately
+> deferred to V2:** the front page does **not** hold desktop zero-scroll (it stacks 5 zones in one column and
+> scrolls) — densifying it to one viewport is its own careful later piece (per-zone re-verify), **a chosen
+> deferral, not a bug.** Mobile Health/Gym is also a later spec.
+
 The first **Health-pillar** module: a **read-only** cache of your **Hevy** workouts,
 reported on four **desktop** screens under a new **Health** section
 (nav: Today · Calendar · **Health** · Settings; view id `health`; **Gym is Health's
@@ -731,8 +740,16 @@ RLS owner-only; free tiers; units kg + h:mm; **desktop only — mobile deferred*
   days, heaviest-weight PR, warm-ups excluded) OR a real gap (≥3 days since training); most mornings null.
   `brief/index.ts` appends it AFTER Gemini wrote the prose (gym data never reaches the model). Backend-only
   commit; deploy `brief` WITH jwt. **NEXT: G16 polish + end-to-end.**
+- ✅ **G16 — finishing polish + end-to-end audit. MODULE CLOSED.** Full walkthrough audit (all four screens,
+  every empty/edge state, units/dates/type, dead code): the module is clean. Only code change was a pure
+  refactor — three identical `pretty()` muscle-name helpers merged into one `prettyMuscle()` in
+  `gym/gymFormat` (identical output; `src/`-only commit `a5acc5c`). Chart motion left static by choice.
+  **DEFERRED TO V2 (owner's call, recorded — not a bug, not forgotten):** the front page does not hold
+  **zero-scroll** — it stacks the headline + 5 full-width zones in one ~900px column and scrolls on a laptop.
+  Densifying it (tighter 2-column grid / smaller charts to fit one viewport) is its **own careful later piece**
+  with per-zone re-verification. Everything else is finished + verified.
 
-*(Mobile Health/Gym is a deliberately deferred later spec — not in G0–G15.)*
+*(Mobile Health/Gym is a deliberately deferred later spec — not in G0–G16.)*
 
 ---
 

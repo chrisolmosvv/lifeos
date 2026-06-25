@@ -35,6 +35,38 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Health → Gym G16 — finishing audit + close the module. SRC/ ONLY. 🎉 GYM/HEALTH MODULE COMPLETE.
+WHAT CHANGED: the G16 finishing pass. A full top-to-bottom audit of the Health section (all four screens,
+every empty/edge state, units/dates/type consistency, dead code) found the module **clean and finished** —
+so the only code change is one pure refactor:
+- **`pretty()` dedupe (`src/`-only, commit `a5acc5c`):** three identical local `pretty()` muscle-name helpers
+  (in `SessionExercise`, `MuscleBalance`, `GymRecords`) replaced by ONE `prettyMuscle()` in
+  `gym/gymFormat.js`, imported in all three. Identical output for every value the call sites pass
+  (falsy/"other" → "Other"; else underscores→spaces, first letter capitalised). **No visible change.**
+- **Declined by choice:** chart draw-in motion (static reads calm; motion risked "gaudy").
+FILES TOUCHED (code): `src/gym/gymFormat.js`, `src/kit/SessionExercise.jsx`, `src/kit/MuscleBalance.jsx`,
+`src/GymRecords.jsx`. No backend, no DB, no Phase-7/shared files. `npx vite build` passes.
+⚠️ **DEFERRED TO V2 (owner's call — recorded in `02`/`03`/`09`; NOT a bug, NOT forgotten):** the Form Guide
+**front page does not hold desktop zero-scroll** — it stacks the headline + 5 full-width zones in one ~900px
+single column and scrolls on a normal laptop. Densifying it to one viewport (tighter 2-column grid / smaller
+charts) is its **own careful later piece**, with per-zone re-verification. It is the **one** outstanding Gym item.
+HOW TO VERIFY (owner, on the Mac): open Health → Session report, Body-part balance, and Records still show
+muscle names exactly as before (the dedupe is invisible); `npm run dev` / `vite build` clean; nothing else
+in the app moved.
+🎉 **THE GYM/HEALTH MODULE IS COMPLETE (G1–G16), owner-verified. What shipped:**
+- **Pipe:** G1 connect (private `gym` fn) · G2 tables (`gym_workouts/exercises/sets/sync_state/pins`) · G3
+  backfill · G4 incremental sync (idempotent, explicit-delete-only) · G5 twice-daily cron + Settings "last
+  synced" line · G6 exercise-templates dictionary.
+- **Read side:** G7 on-read calc layer (Epley 1RM, PR=heaviest, warm-ups excluded, rolling-7-day box score,
+  Amsterdam dates) · G8–G11 Form Guide front page + 5 zones + code-templated headline (no AI) · G12 session
+  report · G13 Archive · G14 Records + pins (the one front-end write) · G15 optional Gym line in the brief ·
+  G16 audit + dedupe.
+KNOWN GAPS: the V2 zero-scroll densification (above) is the only open Gym work. (Plus the separately-logged
+Marty-track backlog: the `marty-daytime-nudge` cron's wrong Vault secret — unrelated to Gym.)
+NEXT: no further Gym pieces. Back to the paused **Phase 7** front-end redesign when the owner chooses, or the
+V2 zero-scroll piece. **OWNER: re-upload the brain docs.**
+FOR THE CHECKER: nothing — G16 is `src/`-only look-and-feel + a pure refactor + docs; no schema, no backend.
+
 ### 2026-06-25 — Health → Gym G15 — the proactive hook: an optional Gym line in the morning brief. BACKEND ONLY. (Awaiting owner deploy + brief verify.)
 WHAT CHANGED: the brief can now carry ONE small, optional Gym line. Read-only, AI-free, degrade-safe; touches
 the shared brief as little as possible (a new self-contained module + ~4 lines in index.ts).

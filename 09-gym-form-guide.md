@@ -153,8 +153,20 @@ later spec — not planned here.
 - ⬜ **G15 — Story headline + polish.** The code-picked-template headline (no AI),
   unit formatting (kg thousands separator, h:mm), empty states, and pins
   (`gym_pins`).
+- ✅ **G16 — finishing audit + close the module.** Full walkthrough audit (every
+  screen, empty/edge state, units/dates/type, dead code) — clean. Only code change:
+  a pure `pretty()` → `prettyMuscle()` dedupe into `gym/gymFormat` (identical output).
+  Chart motion left static by choice. **MODULE COMPLETE.**
 
-*(Mobile Health/Gym is a deliberately deferred later spec — not in G0–G15.)*
+> **✅ STATUS: the Gym/Health module is COMPLETE (G0–G16), owner-verified.**
+> **One item DEFERRED TO V2 (owner's call — a chosen deferral, NOT a bug, NOT
+> forgotten):** the Form Guide **front page does not hold desktop zero-scroll** — it
+> stacks the headline + 5 full-width zones in one ~900px column and scrolls on a
+> laptop. Densifying it (a tighter 2-column grid / smaller charts to fit one
+> viewport) is its **own careful later piece**, with per-zone re-verification so it
+> never regresses a finished zone. Everything else in the module is finished.
+
+*(Mobile Health/Gym is a deliberately deferred later spec — not in G0–G16.)*
 
 ## Hevy API reference (read-only)
 - **Base:** `https://api.hevyapp.com`

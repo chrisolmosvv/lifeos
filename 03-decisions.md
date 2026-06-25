@@ -9,6 +9,22 @@
 
 ---
 
+## Health → Gym "The Form Guide" — G16: module complete; front-page zero-scroll deferred to V2 (2026-06-25)
+
+- **[The Gym/Health module is COMPLETE (G1–G16); front-page zero-scroll is deliberately deferred to a V2
+  piece]** — the G16 finishing audit found the whole module clean (every empty/edge state warm, units/dates/
+  type consistent, no dead code) EXCEPT one thing: the Form Guide front page does **not** hold the desktop
+  **zero-scroll** law — it stacks the story headline + 5 full-width zones in one ~900px column and scrolls on
+  a normal laptop. **Why deferred (owner's call):** densifying it to fit one viewport (a tighter 2-column grid
+  / smaller charts, with per-zone re-verification) is a real layout rework, not a finishing-polish nit, and it
+  must not regress the verified zones — so it is its **own careful later (V2) piece**, not a bug and not
+  forgotten. Everything else in the module is finished and verified. **Trade-off:** the front page scrolls for
+  now; accepted deliberately so the module can close without a risky end-of-track layout rework.
+- **[G16 polish was scoped to a pure `pretty()` dedupe; chart motion left static]** — the only code change in
+  G16 was moving three identical `pretty()` muscle-name helpers into one `prettyMuscle()` in `gym/gymFormat`
+  (identical output). **Why:** the audit's other ideas (quiet chart draw-in motion) were declined — static
+  reads calm and motion risked the "gaudy" trap. **Trade-off:** none.
+
 ## Health → Gym — G7: the calc layer + consistency metric (2026-06-24)
 - **[Consistency headline = sessions-per-week; daily streak is a small secondary
   stat only]** — the front page leads on **how many sessions per week** (last 8
