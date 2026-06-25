@@ -9,6 +9,27 @@
 
 ---
 
+## Health → Sleep & Body Stats — S3b: sleep ingest / sessionising (2026-06-25)
+
+- **[Apple's per-stage segments are sessionised into ONE row per night, in the function.]**
+  health-ingest's `kind:"sleep"` branch maps stages (case-insensitive, spaces ignored), clusters
+  segments into sessions, drops naps, and writes one `sleep_nights` row per night. **Why:** Apple
+  emits dozens of segments + the odd nap; the night is the unit the owner cares about. **Trade-off:**
+  the clustering is heuristic (see constants) rather than reading Apple's own session id.
+- **[Session gap = 180 min; nap rule = largest in-bed span per wake-date.]** A gap over
+  `SESSION_GAP_MIN` (180) starts a new session; per wake-date (Amsterdam date of the latest end) only
+  the largest-span session is kept. **Why:** separates a real night from a daytime nap without a
+  check-in. **Trade-off:** an unusually long nap on a no-sleep night would be kept as that night —
+  acceptable; constants are tunable at the top of sleep.ts.
+- **[asleep = REM+Core+Deep+generic-asleep; Awake & In-Bed excluded; awakenings = Awake ≥ 5 min.]**
+  `AWAKENING_MIN_MIN` (5) filters micro-wakes. **Why:** matches how Apple frames asleep-vs-in-bed.
+  **Trade-off:** none. `score` stays null (reserved); `source` = "apple_health".
+- **[Empty window is a success, not an error: {ok:true, nights:0, note:"no_segments"}.]** **Why:** a
+  test/quiet window should be recognisable, not look like a failure. **Trade-off:** none.
+- **[Upsert on (user_id, night_date), latest send wins.]** Same idempotent pattern as body/activity.
+  **Why:** re-running backfill/4×-day is the recovery net. **Trade-off:** a partial re-send of a night
+  replaces it — fine, the Shortcut sends a night's full segment set.
+
 ## Health → Sleep & Body Stats — S3c: activity_hourly table (2026-06-25)
 
 - **[A SEPARATE table for hourly activity, not more body_metrics rows.]** `activity_hourly`

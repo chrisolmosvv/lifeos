@@ -35,6 +35,27 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S3b: sleep ingest ({kind:"sleep"} → sleep_nights). BACKEND ONLY. ✅ deployed + verified.
+WHAT CHANGED:
+- New `health-ingest` branch `kind:"sleep"`. Payload = `{segments:[{stage,start,end}…]}`. New `sleep.ts`:
+  maps stages case-insensitively (rem/asleeprem→REM, core, deep, awake, inbed=boundary, asleep=generic;
+  unknown → skip), clusters segments into sessions (gap > SESSION_GAP_MIN=180 → new session), drops naps
+  (per wake-date keep the largest in-bed span), and writes ONE sleep_nights row/night: summed stage minutes,
+  asleep = REM+Core+Deep+generic (Awake & In-Bed excluded), awakenings = Awake segs ≥ AWAKENING_MIN_MIN=5,
+  score null, source "apple_health". Upsert on (user_id, night_date), latest send wins. Empty window →
+  {ok:true, nights:0, note:"no_segments"}.
+FILES TOUCHED: supabase/functions/health-ingest/{sleep.ts (new), store.ts (+upsertSleepNights), index.ts
+  (routes the kind — its own response shape)}. NO src/, NO schema (sleep_nights already live/checker-approved,
+  so NO checker gate this piece). Committed `edd1760` (backend, own commit).
+VERIFIED LIVE (then cleaned up, night_date=2020-02-02): a full night + an afternoon nap + an unknown stage →
+  `nights:1`; the nap was dropped (core 360, not 400); "asleepREM" mapped to rem 30; asleep 450
+  (=30+360+60), awake 10, awakenings 1, in_bed 22:00Z, woke 06:00Z; empty segments → no_segments;
+  re-send stayed one row (idempotent).
+KNOWN GAPS / RISKS: sessionising is heuristic (constants SESSION_GAP_MIN, AWAKENING_MIN_MIN tunable atop
+  sleep.ts). Closes for real when the owner's sleep Shortcut sends real nights. Note: source is "apple_health"
+  (underscore) per the S3b spec — body/activity use "apple-health" (hyphen); harmless, just be aware.
+NEXT: S4 — the 4×/day Shortcut automation + a Settings "last received" line. (Then S5 calc layer.)
+
 ### 2026-06-25 — Track S — S3c-fn: health-ingest accepts kind:"activity_hourly". BACKEND ONLY. ✅ deployed + verified.
 WHAT CHANGED:
 - New `health-ingest` branch `kind:"activity_hourly"`. Payload = raw samples

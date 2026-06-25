@@ -775,7 +775,9 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
 - 🟦 S3c — activity_hourly table (hourly buckets: steps/active_energy/heart_rate).
        SQL written + committed (`db/25_activity_hourly.sql`). CHECKER-GATED — closes on
        the checker's sign-off + the owner running it live. (Ingest wiring is a later piece.)
-- ⬜ S3b — Sleep ingest + backfill ({kind:"sleep"} → sleep_nights, one row/night).
+- 🟦 S3b — Sleep ingest ({kind:"sleep"} → sleep_nights, one row/night). DEPLOYED +
+       server-verified: sessionises per-stage segments, drops naps, sums stages,
+       idempotent. Closes when the owner's sleep Shortcut sends real nights.
 - ⬜ S4 — 4×/day automation + Settings "last received" line.
 - ⬜ S5 — Calc layer (verified vs real numbers).
 - ⬜ S6 — Sleep front page (read-only).
