@@ -35,6 +35,27 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-25 — Track S — S3c: activity_hourly table (schema). ⚠️ SCHEMA — CHECKER-GATED. Own commit (`aaf407d`).
+WHAT CHANGED:
+- New migration `db/25_activity_hourly.sql` — one additive, owner-RLS table for hourly activity buckets
+  (steps / active_energy / heart_rate): one row per (metric_type, day, hour). Same pattern as body_metrics:
+  user_id default auth.uid() → auth.users, four owner policies, RLS on, NO spine FK.
+FILES TOUCHED: db/25_activity_hourly.sql (new). NO function change, NO src/, NO touch to
+  body_metrics/sleep_nights/health_goals.
+FOR THE CHECKER — confirm the four points in the file header:
+  1) ADDITIVE — brand-new table; spine + the other S tables untouched.
+  2) Owner-only RLS ON (auth.uid() = user_id; four policies).
+  3) NO foreign key into the spine — only ref is auth.users; metric_type/source are plain text.
+  4) Dedupe UNIQUE(user_id, metric_type, day, hour, source). NOTE the deliberate divergence: `source` is
+     NOT NULL DEFAULT 'apple-health' (body_metrics.source is nullable) — because source is IN the unique key
+     and a NULL would make Postgres treat rows as distinct, silently breaking dedupe. Confirm that's sound.
+HOW THE OWNER VERIFIES (live DB, AFTER the checker approves): run the SQL in the Supabase SQL editor →
+  "Success. No rows returned." Then: the table exists; RLS shows enabled; insert a test row + select it back;
+  a second insert with the same (metric_type, day, hour, source) is REJECTED by the unique key; delete it.
+KNOWN GAPS / RISKS: NOT done until the checker signs the four points AND the owner runs it live. This is
+  storage only — the Shortcut/ingest wiring for hourly data is a later piece.
+NEXT: S3b — sleep ingest ({kind:"sleep"} → sleep_nights, one row per night).
+
 ### 2026-06-25 — Track S — S3a metrics: generic ingest confirmed + value hardening. BACKEND ONLY. ✅ deployed + verified.
 WHAT CHANGED:
 - Confirmed (live) the body handler upserts ANY metric_type with no per-type code: all 10 canonical strings —

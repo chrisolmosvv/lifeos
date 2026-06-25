@@ -772,6 +772,9 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
        readings:[…]} → upserts body_metrics. DEPLOYED + server-verified (DB-level dedupe,
        latest-wins, skip-count, auth). Closes when the owner's backfill Shortcut fills
        real rows back toward 1 Jan 2026.
+- 🟦 S3c — activity_hourly table (hourly buckets: steps/active_energy/heart_rate).
+       SQL written + committed (`db/25_activity_hourly.sql`). CHECKER-GATED — closes on
+       the checker's sign-off + the owner running it live. (Ingest wiring is a later piece.)
 - ⬜ S3b — Sleep ingest + backfill ({kind:"sleep"} → sleep_nights, one row/night).
 - ⬜ S4 — 4×/day automation + Settings "last received" line.
 - ⬜ S5 — Calc layer (verified vs real numbers).

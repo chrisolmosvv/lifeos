@@ -9,6 +9,23 @@
 
 ---
 
+## Health → Sleep & Body Stats — S3c: activity_hourly table (2026-06-25)
+
+- **[A SEPARATE table for hourly activity, not more body_metrics rows.]** `activity_hourly`
+  (`db/25`) holds one row per (metric_type, day, hour) for steps / active_energy / heart_rate.
+  **Why:** these are only meaningful bucketed by the hour, a different shape from body_metrics'
+  point-in-time readings (a weigh-in). Mixing them would muddy both. **Trade-off:** a second
+  table to read, but each stays clean and single-purpose.
+- **[Dedupe = UNIQUE (user_id, metric_type, day, hour, source); source NOT NULL DEFAULT
+  'apple-health'.]** **Why:** a re-send of the same hour must upsert, not duplicate. body_metrics'
+  source is nullable (the function always supplies it), but here `source` is in the unique key —
+  and Postgres treats NULLs as DISTINCT, so a NULL source would silently break the dedupe. NOT
+  NULL with a default guarantees the "no dupes" rule actually holds. **Trade-off:** none — a
+  deliberate, documented divergence from body_metrics.
+- **[metric_type stays free text (no CHECK), hour CHECK 0–23.]** **Why:** keep new hourly metrics
+  additive (no migration), same as body_metrics; but hour is a true 0–23 range worth enforcing.
+  **Trade-off:** a typo'd metric_type makes a stray series (acceptable; the Shortcut controls names).
+
 ## Health → Sleep & Body Stats — S3a: body ingest + backfill (2026-06-25)
 
 - **[ONE idempotent endpoint for backfill AND the recurring runs — no "mode" flag.]** The
