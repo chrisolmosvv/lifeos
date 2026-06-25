@@ -14,11 +14,17 @@ import { type BodyRow, upsertBodyMetrics } from "./store.ts";
 
 type Reading = { metric_type?: unknown; value?: unknown; unit?: unknown; at?: unknown };
 
+// A skipped reading, with the offending raw value echoed back so a bad backfill row
+// is visible in the response ("why was this skipped?") rather than a silent tally.
+export type SkipDetail = { reason: string; metric_type?: unknown; value?: unknown; at?: unknown };
+
 export type BodyResult =
-  | { ok: true; inserted: number; skipped: number }
+  | { ok: true; inserted: number; skipped: number; skipped_detail?: SkipDetail[] }
   | { ok: false; error: string; status: number };
 
 const SOURCE = "apple-health";
+// Cap the echoed detail so a huge backfill of bad rows can't bloat the response.
+const MAX_SKIP_DETAIL = 25;
 
 export async function ingestBody(payload: { readings?: unknown }): Promise<BodyResult> {
   const readings = payload?.readings;
@@ -27,19 +33,28 @@ export async function ingestBody(payload: { readings?: unknown }): Promise<BodyR
   }
 
   let skipped = 0;
+  const skippedDetail: SkipDetail[] = [];
+  const recordSkip = (reason: string, r: Reading) => {
+    skipped++;
+    if (skippedDetail.length < MAX_SKIP_DETAIL) {
+      skippedDetail.push({ reason, metric_type: r?.metric_type, value: r?.value, at: r?.at });
+    }
+  };
+
   // Collapse same-key readings within this payload (last wins) before the upsert.
   const byKey = new Map<string, BodyRow>();
 
   for (const r of readings as Reading[]) {
     const metric_type = typeof r?.metric_type === "string" ? r.metric_type.trim() : "";
-    const value = Number(r?.value); // accepts a number or a numeric string
-    const atRaw = typeof r?.at === "string" ? r.at : "";
-    const at = atRaw ? new Date(atRaw) : new Date(NaN);
+    if (!metric_type) { recordSkip("bad_metric_type", r); continue; }
 
-    if (!metric_type || !Number.isFinite(value) || isNaN(at.getTime())) {
-      skipped++;
-      continue;
-    }
+    const value = Number(r?.value); // accepts a number or a numeric string
+    if (!Number.isFinite(value)) { recordSkip("bad_value", r); continue; }
+
+    // `at` is any ISO-8601 instant ("…Z" or "…+02:00"); skip ONLY if genuinely unparseable.
+    const atRaw = typeof r?.at === "string" ? r.at.trim() : "";
+    const at = atRaw ? new Date(atRaw) : new Date(NaN);
+    if (isNaN(at.getTime())) { recordSkip("bad_at", r); continue; }
 
     const reading_at = at.toISOString(); // normalise to UTC so the dedupe key is stable
     const unit = typeof r?.unit === "string" && r.unit.trim() ? r.unit.trim() : null;
@@ -53,11 +68,12 @@ export async function ingestBody(payload: { readings?: unknown }): Promise<BodyR
     });
   }
 
+  const detail = skippedDetail.length ? { skipped_detail: skippedDetail } : {};
   const rows = [...byKey.values()];
-  if (rows.length === 0) return { ok: true, inserted: 0, skipped };
+  if (rows.length === 0) return { ok: true, inserted: 0, skipped, ...detail };
 
   const written = await upsertBodyMetrics(rows);
   if (written === null) return { ok: false, error: "db_write_failed", status: 502 };
 
-  return { ok: true, inserted: written, skipped };
+  return { ok: true, inserted: written, skipped, ...detail };
 }

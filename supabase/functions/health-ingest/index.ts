@@ -56,7 +56,15 @@ Deno.serve(async (req) => {
     }
     const result = await ingestBody(payload);
     if (!result.ok) return json({ ok: false, error: result.error }, result.status);
-    return json({ ok: true, inserted: result.inserted, skipped: result.skipped }, 200);
+    return json(
+      {
+        ok: true,
+        inserted: result.inserted,
+        skipped: result.skipped,
+        ...(result.skipped_detail ? { skipped_detail: result.skipped_detail } : {}),
+      },
+      200,
+    );
   }
 
   return json({ ok: false, error: "unknown_kind", hint: "expected kind:'body'" }, 400);
