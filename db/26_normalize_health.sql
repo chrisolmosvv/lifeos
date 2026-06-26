@@ -12,14 +12,30 @@
 -- second time changes nothing (a no-op). It alters DATA only — no table, column,
 -- policy, RLS, or spine change. Owner-RLS still scopes every row to the owner.
 --
+--
+-- WHAT WE ACTUALLY FOUND (2026-06-26): the inspect/collision queries below surfaced a
+-- single early TEST batch in body_metrics, all stamped 2026-06-24 00:00:00+00 (one POST
+-- from S3a's "handler accepts every metric string" check). It held four junk rows that
+-- block normalization: Title-Case duplicates 'Respiratory Rate'(15) & 'Resting Heart
+-- Rate'(81) — exact twins of the canonical rows we keep — plus 'steps'(190) & 'Steps'(157),
+-- which don't belong in body_metrics at all (steps are an activity metric → activity_hourly).
+-- Step 0 below deletes exactly those four; the canonical respiratory_rate(15) &
+-- resting_heart_rate(81) and all real 25-Jun weight/body_fat/lean_mass rows are untouched.
+--
 -- ⚠️ BEFORE RUNNING — collision check (do this first, read-only):
---   Lowercasing a Title-Case metric_type could, in theory, collide with an existing
---   canonical row on the unique key (body_metrics: metric_type+reading_at+source;
---   activity_hourly: metric_type+day+hour+source). Run the SELECTs at the bottom of
---   this file first. If they return ANY rows, STOP — resolve the duplicates by hand
---   before running the UPDATEs (otherwise the UPDATE hits a unique violation).
+--   Lowercasing a Title-Case metric_type can collide with an existing canonical row on the
+--   unique key (body_metrics: metric_type+reading_at+source). Run the SELECTs at the bottom
+--   first; if collisions appear, resolve them (step 0 here handles the known 24-Jun batch)
+--   before the UPDATEs run.
 
 begin;
+
+-- 0) Remove the 24-Jun-midnight S3a test batch: Title-Case dups (canonical twins kept) +
+--    misrouted step rows (steps belong in activity_hourly, never body_metrics). Precise match.
+delete from public.body_metrics
+ where reading_at = '2026-06-24 00:00:00+00'
+   and source = 'apple-health'
+   and metric_type in ('steps', 'Steps', 'Respiratory Rate', 'Resting Heart Rate');
 
 -- 1) Source label: sleep rows → the canonical hyphen form.
 update public.sleep_nights

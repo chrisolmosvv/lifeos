@@ -46,19 +46,19 @@ WHAT CHANGED:
   schema/RLS/spine change. File also carries read-only INSPECT + COLLISION-CHECK queries to run FIRST.
 FILES TOUCHED: supabase/functions/health-ingest/sleep.ts, db/26_normalize_health.sql, 04-handoff-log.md.
   NO src/. Backend/db own commit.
-⚠️ OWNER STEPS (this session's CLI is shadowed by the wrong-account SUPABASE_ACCESS_TOKEN — see memory):
-  1) REDEPLOY so the sleep source-fix goes live:
-     SUPABASE_ACCESS_TOKEN=<owner_token> supabase functions deploy health-ingest --no-verify-jwt \
-       --project-ref cntlptuacsujbdtwvbis
-     (the --no-verify-jwt flag matters — a flagless redeploy would re-lock the function).
-  2) In the Supabase SQL editor: run the INSPECT/COLLISION queries at the bottom of db/26 FIRST. If the two
-     collision queries return ANY rows, STOP and resolve the dupes by hand. If clean, run the top of db/26
-     (the three UPDATEs) → "Success".
-HOW TO VERIFY: after the SQL, `select distinct source from sleep_nights` → only "apple-health"; no Title-Case
-  metric_type remains in body_metrics/activity_hourly. Re-running db/26 changes 0 rows.
-KNOWN GAPS / RISKS: existing sleep rows stay "apple_health" until step 2 is run; new sleep sends use the hyphen
-  only after step 1 (redeploy). The collision case is unlikely (test rows were mostly cleaned) but checked, not
-  assumed. Closes carried-over items #1 (Title-Case) + #2 (source string).
+DONE THIS SESSION (owner ran the remote steps; verified clean):
+  1) REDEPLOYED health-ingest --no-verify-jwt (owner's token) — sleep source-fix now live.
+  2) The inspect/collision queries DID surface a collision: a single S3a test batch in body_metrics, all
+     stamped 2026-06-24 00:00:00+00 — 'Respiratory Rate'(15)/'Resting Heart Rate'(81) Title-Case dups of the
+     canonical rows, plus misrouted 'steps'(190)/'Steps'(157) (steps don't belong in body_metrics). Resolved
+     with a precise DELETE of exactly those 4 rows (now folded into db/26 as step 0), then the UPDATEs ran.
+  3) VERIFIED clean: body_metrics = weight×3, body_fat, lean_mass, respiratory_rate, resting_heart_rate (no
+     Title-Case, no steps); activity_hourly = active_energy/heart_rate/steps all lowercase; sleep source =
+     apple-health only. Re-running db/26 is now a no-op.
+KNOWN GAPS / RISKS: kept the canonical respiratory_rate(15)/resting_heart_rate(81) 24-Jun rows (sane values,
+  sole copies — harmless even if they were test). NOTE unrelated watch-item: activity_hourly heart_rate now
+  has 42 rows post-fix — still worth confirming the activity Shortcut sends RAW per-sample HR (not pre-summed)
+  per the 06-25 heart_rate handoff. Closes carried-over items #1 (Title-Case) + #2 (source string).
 NEXT: S4 Part B — the Settings "last received" line (src/-only, own commit; build prompt handed over).
 
 ### 2026-06-25 — Track S — heart_rate "summing" bug: CODE WAS ALREADY CORRECT; deleted 41 stale rows. NO code change.
