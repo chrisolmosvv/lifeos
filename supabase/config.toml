@@ -378,6 +378,14 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# health-ingest authenticates via the x-health-secret header (checked in its own
+# code), NOT a Supabase JWT — the Apple Shortcut can't mint a JWT. So JWT
+# verification MUST stay off, or every push is rejected with "missing
+# authorization header" before our code runs. Recorded here so `functions deploy`
+# never silently re-enables it (the CLI defaults verify_jwt = true when unset).
+[functions.health-ingest]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
