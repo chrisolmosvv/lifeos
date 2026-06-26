@@ -9,7 +9,7 @@
 //   3) drop naps — per wake-date keep only the session with the largest in-bed span,
 //   4) emit one row per kept session: summed stage minutes, asleep = REM+Core+Deep+
 //      generic-asleep (Awake & In-Bed excluded), awakenings = Awake segs ≥ AWAKENING
-//      _MIN_MIN, score null, source "apple_health".
+//      _MIN_MIN, score null, source "apple-health".
 // Upsert REPLACES a night on (user_id, night_date) — latest send wins, like body/activity.
 
 import { localYMD } from "../_shared/datetime.ts";
@@ -20,7 +20,7 @@ import { parseInstant } from "./parse.ts";
 const SESSION_GAP_MIN = 180;
 // Tunable: an Awake segment counts as an awakening at/over this length (minutes).
 const AWAKENING_MIN_MIN = 5;
-const SOURCE = "apple_health";
+const SOURCE = "apple-health";
 
 type Segment = { stage?: unknown; start?: unknown; end?: unknown };
 type Stage = "REM" | "Core" | "Deep" | "Awake" | "inbed" | "asleep";

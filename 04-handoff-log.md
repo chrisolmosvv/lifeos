@@ -35,6 +35,32 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-26 — Track S — S4 cleanup: source-label + metric-name normalization. BACKEND/DB. ⚠️ deploy + SQL are OWNER steps.
+WHAT CHANGED:
+- CODE: `sleep.ts` wrote `source="apple_health"` (underscore); body/activity use `"apple-health"` (hyphen).
+  Changed sleep's `SOURCE` const (line 23) + its doc comment to the hyphen. Now all 9 metrics tag one
+  consistent source. No other code touched.
+- SQL: new `db/26_normalize_health.sql` — guarded, re-runnable UPDATEs: sleep_nights source apple_health→
+  apple-health; body_metrics + activity_hourly metric_type → lower(replace(' ','_')) (folds any Title-Case
+  test rows like "Body Fat"→"body_fat"). Every statement WHERE-guarded → re-run is a no-op. DATA only, no
+  schema/RLS/spine change. File also carries read-only INSPECT + COLLISION-CHECK queries to run FIRST.
+FILES TOUCHED: supabase/functions/health-ingest/sleep.ts, db/26_normalize_health.sql, 04-handoff-log.md.
+  NO src/. Backend/db own commit.
+⚠️ OWNER STEPS (this session's CLI is shadowed by the wrong-account SUPABASE_ACCESS_TOKEN — see memory):
+  1) REDEPLOY so the sleep source-fix goes live:
+     SUPABASE_ACCESS_TOKEN=<owner_token> supabase functions deploy health-ingest --no-verify-jwt \
+       --project-ref cntlptuacsujbdtwvbis
+     (the --no-verify-jwt flag matters — a flagless redeploy would re-lock the function).
+  2) In the Supabase SQL editor: run the INSPECT/COLLISION queries at the bottom of db/26 FIRST. If the two
+     collision queries return ANY rows, STOP and resolve the dupes by hand. If clean, run the top of db/26
+     (the three UPDATEs) → "Success".
+HOW TO VERIFY: after the SQL, `select distinct source from sleep_nights` → only "apple-health"; no Title-Case
+  metric_type remains in body_metrics/activity_hourly. Re-running db/26 changes 0 rows.
+KNOWN GAPS / RISKS: existing sleep rows stay "apple_health" until step 2 is run; new sleep sends use the hyphen
+  only after step 1 (redeploy). The collision case is unlikely (test rows were mostly cleaned) but checked, not
+  assumed. Closes carried-over items #1 (Title-Case) + #2 (source string).
+NEXT: S4 Part B — the Settings "last received" line (src/-only, own commit; build prompt handed over).
+
 ### 2026-06-25 — Track S — heart_rate "summing" bug: CODE WAS ALREADY CORRECT; deleted 41 stale rows. NO code change.
 WHAT WAS REPORTED: activity_hourly heart_rate rows held impossible values (0 → 40,432 bpm) — looked summed.
 WHAT I FOUND (read-only diagnosis first):
