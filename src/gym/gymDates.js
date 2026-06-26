@@ -48,6 +48,26 @@ export function lastNDaysSet(n, now = Date.now()) {
   return out;
 }
 
+// Clock time-of-day in MINUTES AFTER MIDNIGHT, Amsterdam local, for a timestamp /
+// ISO string / Date. e.g. an in_bed_at of 23:30 Amsterdam → 1410. null for a
+// missing/unparseable value. The day helpers above answer WHICH day a moment
+// belongs to; this answers the time WITHIN that day (added for Sleep's bedtime
+// reasoning — same single Amsterdam TZ definition, no new timezone helper).
+export function amsClockMinutes(value) {
+  if (value == null || value === "") return null;
+  const d = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(d.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(d);
+  let h = 0, m = 0;
+  for (const p of parts) {
+    if (p.type === "hour") h = Number(p.value);
+    if (p.type === "minute") m = Number(p.value);
+  }
+  return (h % 24) * 60 + m; // hour12:false can render midnight as "24"; fold it to 0
+}
+
 // "2026-06-18" → "18 Jun" (Amsterdam). Noon-UTC avoids any date-shift. For axis labels.
 export function humanDayShort(ymd) {
   const d = new Date(`${ymd}T12:00:00Z`);
