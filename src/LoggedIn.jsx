@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { weekDays } from './dateUtils'
+import HealthDebug from './HealthDebug'
 import CalendarWeek from './CalendarWeek'
 import DayAgenda from './DayAgenda'
 import EditionHeader from './EditionHeader'
@@ -18,6 +19,16 @@ export default function LoggedIn({ email }) {
   const today = new Date()
   const days = weekDays(today)
   const [view, setView] = useState('today')
+
+  // S5 VERIFY HARNESS (temporary): the hidden #health-debug readout, NOT in nav.
+  // Remove this block + the HealthDebug import/file to delete the harness.
+  const [debug, setDebug] = useState(window.location.hash === '#health-debug')
+  useEffect(() => {
+    const onHash = () => setDebug(window.location.hash === '#health-debug')
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+  if (debug) return <HealthDebug />
 
   return (
     <div className="app">
