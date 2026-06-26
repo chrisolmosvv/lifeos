@@ -161,6 +161,18 @@ export default function HealthDebug() {
             <h3>{m} — {v.mode === "sum" ? "summed/day" : "averaged/day"} {v.unit ? `(${v.unit})` : ""}</h3>
             <p>Today so far ({v.today}, EXCLUDED from trend): {v.todaySoFar ? `${n0(v.todaySoFar.value)} over ${v.todaySoFar.hours}h` : "— (no data today)"}</p>
             <p>Latest completed day: {v.latestCompleted ? `${n0(v.latestCompleted.value)} (${v.latestCompleted.ymd})` : "—"} · completed through {v.completedThrough}</p>
+            {v.latestCompleted && (() => {
+              const day = v.latestCompleted.ymd;
+              const hrs = (act[m] || []).filter((r) => r.day === day).sort((a, b) => a.hour - b.hour);
+              const sum = hrs.reduce((a, r) => a + (Number(r.value) || 0), 0);
+              return (
+                <p style={{ margin: "2px 0", color: "#555" }}>
+                  ↳ raw hourly inputs for {day} ({hrs.length} rows): [{hrs.map((r) => `${r.hour}h:${n0(r.value)}`).join(", ")}]
+                  {" "}— {v.mode === "avg" ? `AVG = ${n0(v.latestCompleted.value)}` : `SUM = ${n0(sum)}`}
+                  {v.mode === "avg" ? ` (a SUM of these would be ${n0(sum)})` : ""}
+                </p>
+              );
+            })()}
             {[7, 30, 90].map((d) => (
               <Roll key={d} d={d} r={v.rolling[d]} fmt={n0} label={(x) => `${x.ymd}: ${n0(x.value)}`} />
             ))}
