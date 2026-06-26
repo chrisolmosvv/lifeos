@@ -1,0 +1,115 @@
+/* LifeOS — Health Hub. The calm "section front": a quiet dateline over a row of
+   three equal cards. Broadsheet tokens only (theme.css): paper/ink, Fraunces for
+   the big data numbers, Inter for labels, terracotta sparingly (hover + trends). */
+
+.hub {
+  padding: 28px 24px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Quiet dateline — no wordmark, no masthead. */
+.hub-dateline {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink-muted);
+  margin: 4px 0 4px;
+}
+
+/* "As of" freshness line (wired in piece 2). */
+.hub-asof {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin: 0 0 22px;
+}
+
+/* Three equal cards, left to right; stacks naturally when narrow. */
+.hub-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+@media (max-width: 720px) {
+  .hub-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The card shell — whole card is the tap target. Calm by default; terracotta only
+   on hover (the affordance). Reset the <button> so it reads as paper, not a UI
+   control. */
+.hub-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 22px 22px 24px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+  min-height: 180px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.hub-card:hover,
+.hub-card:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 1px 0 var(--accent);
+  outline: none;
+}
+
+.hub-card-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--ink-muted);
+  margin-bottom: 10px;
+}
+
+.hub-card-headline {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+/* The thin wrapper around the unchanged Gym front page + the stub back link. */
+.hub-wrap {
+  padding-top: 8px;
+}
+.hub-back {
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 8px 24px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.hub-back:hover {
+  color: var(--accent);
+}
+
+/* Coming-soon stub. */
+.hub-stub {
+  padding: 16px 24px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.hub-stub-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 34px;
+  color: var(--ink);
+  margin: 16px 0 8px;
+}
+.hub-stub-soon {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink-muted);
+}
