@@ -13,10 +13,12 @@ import { hm, clockTime, clockFromMin } from "./healthFormat";
 export default function SleepNight({
   detail,
   isLastNight,
+  heading,
   segments,
   goalMinutes,
   bedtimeVsGoal,
   consistency,
+  showConsistency = true,
   weekRows,
   respValue,
   hasGoal,
@@ -25,11 +27,14 @@ export default function SleepNight({
   if (!detail) {
     return (
       <div className="sleep-night">
+        {heading && <h2 className="sleep-night-heading">{heading}</h2>}
         <div className="sleep-empty">
           <p className="sleep-empty-title">No sleep recorded {isLastNight ? "last night" : "for this night"}.</p>
-          <button type="button" className="sleep-link" onClick={onNudgeToWeek}>
-            See the week →
-          </button>
+          {onNudgeToWeek && (
+            <button type="button" className="sleep-link" onClick={onNudgeToWeek}>
+              See the week →
+            </button>
+          )}
         </div>
       </div>
     );
@@ -48,6 +53,7 @@ export default function SleepNight({
 
   return (
     <div className="sleep-night">
+      {heading && <h2 className="sleep-night-heading">{heading}</h2>}
       <section className="sleep-hero">
         <div className="sleep-duration">{hm(detail.asleepMinutes)}</div>
         <Hypnogram
@@ -72,17 +78,19 @@ export default function SleepNight({
             </span>
           )}
         </div>
-        <div className="sleep-consistency">
-          <span className="sleep-label">bedtime consistency</span>
-          {Number.isFinite(consistency?.stdDevMin) ? (
-            <span>
-              ±{Math.round(consistency.stdDevMin)} min{reg ? `, ${reg}` : ""}
-            </span>
-          ) : (
-            <span className="sleep-muted">not enough nights yet</span>
-          )}
-          <BedWakeBand rows={weekRows} />
-        </div>
+        {showConsistency && (
+          <div className="sleep-consistency">
+            <span className="sleep-label">bedtime consistency</span>
+            {Number.isFinite(consistency?.stdDevMin) ? (
+              <span>
+                ±{Math.round(consistency.stdDevMin)} min{reg ? `, ${reg}` : ""}
+              </span>
+            ) : (
+              <span className="sleep-muted">not enough nights yet</span>
+            )}
+            <BedWakeBand rows={weekRows} />
+          </div>
+        )}
       </section>
 
       <section className="sleep-stages">

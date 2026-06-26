@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { amsTodayYMD } from "../gym/gymDates";
+import { amsTodayYMD, humanDayLong } from "../gym/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
-import { sleepView } from "./healthSleep";
+import { sleepView, nightOn } from "./healthSleep";
 import { dailyValueOn } from "./healthBody";
 import SleepNight from "./SleepNight";
+import SleepRange from "./SleepRange";
 import "../kit/sleepPage.css";
 
 // SleepPage — the full Sleep front page, reached from the Health Hub's Sleep card
@@ -71,6 +72,50 @@ export default function SleepPage({ onBack }) {
     );
   }
 
+  // Week (7) / Month (30) range view.
+  function renderRange(days) {
+    const { sv, sleep, goalMap, today } = state;
+    return (
+      <SleepRange
+        days={days}
+        rows={sleep}
+        goal={goalMap.get("sleep_duration") ?? null}
+        today={today}
+        rolling={sv.rolling}
+        streak={sv.streak}
+        onDrill={setDrilledNight}
+      />
+    );
+  }
+
+  // A specific past night opened from a range bar — the full Night view for that
+  // night (consistency hidden: it's a rolling "as of now" metric, not per-night).
+  function renderDrilledNight() {
+    const { sleep, resp, goalMap } = state;
+    const nightRow = (sleep || []).find((r) => r.night_date === drilledNight) || null;
+    return (
+      <div>
+        <button type="button" className="sleep-link" onClick={() => setDrilledNight(null)}>
+          ← Back to {view}
+        </button>
+        <SleepNight
+          detail={nightOn(sleep, drilledNight)}
+          isLastNight={false}
+          heading={humanDayLong(drilledNight)}
+          segments={nightRow?.segments ?? null}
+          goalMinutes={goalMap.get("sleep_duration")?.target_value ?? null}
+          bedtimeVsGoal={null}
+          consistency={null}
+          showConsistency={false}
+          weekRows={sleep}
+          respValue={dailyValueOn(resp, drilledNight)}
+          hasGoal={goalMap.has("sleep_duration") || goalMap.has("bedtime")}
+          onNudgeToWeek={null}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="sleep-page">
       <button type="button" className="hub-back" onClick={onBack}>
@@ -105,9 +150,11 @@ export default function SleepPage({ onBack }) {
       ) : view === "night" ? (
         renderNight()
       ) : view === "week" ? (
-        <div className="sleep-view-stub">Week view — built in piece 3.</div>
+        drilledNight ? renderDrilledNight() : renderRange(7)
+      ) : drilledNight ? (
+        renderDrilledNight()
       ) : (
-        <div className="sleep-view-stub">Month view — built in piece 3.</div>
+        renderRange(30)
       )}
     </div>
   );

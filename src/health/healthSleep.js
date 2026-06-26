@@ -46,8 +46,9 @@ function pct(part, whole) {
 // Last night's detail. REM/Core/Deep % are of time ASLEEP (rem+core+deep). Awake %
 // is of time IN BED (asleep + awake) — being awake isn't part of sleep, so it can't
 // be a slice of "asleep"; the page shows min AND % for all four stages (S6-prep).
-export function lastNight(rows, today) {
-  const r = latestNight(rows, today);
+// The detail view-model for ONE night row (shared by lastNight + nightOn). null row
+// → null. REM/Core/Deep % of asleep; Awake % of time in bed (asleep + awake).
+function nightDetail(r) {
   if (!r) return null;
   const asleep = r.asleep_minutes;
   return {
@@ -63,6 +64,15 @@ export function lastNight(rows, today) {
       awake: { min: r.awake_minutes ?? null, pct: pct(r.awake_minutes, (asleep ?? 0) + (r.awake_minutes ?? 0)) },
     },
   };
+}
+
+export function lastNight(rows, today) {
+  return nightDetail(latestNight(rows, today));
+}
+
+// The detail for an EXACT night_date (the Week/Month bar drill-in). null if no row.
+export function nightOn(rows, ymd) {
+  return nightDetail((rows || []).find((r) => r?.night_date === ymd) || null);
 }
 
 // 7/30/90 avg duration, each with the daily values it averaged (for the debug
