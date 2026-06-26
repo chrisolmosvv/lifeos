@@ -89,6 +89,26 @@
   readable by a Shortcut in V1; a nullable column now saves a later migration. **Trade-off:** null
   until the AI/V2 world fills it.
 
+## Health → Sleep & Body Stats — S4: automation + status line (2026-06-26)
+
+- **Ingest automation = 3 grouped shortcuts under one master.** The 9 per-metric
+  shortcuts are nested into 3 group shortcuts by payload kind (Activity 8h · Body 1d ·
+  Sleep 1d) run by one "Health Sync" master, wired to 4 Time-of-Day automations
+  (06/12/18/00, Amsterdam). **Why:** the 3 kinds have different payload shapes so they
+  can't share one POST, but each kind's metrics share a window → grouping is free; gives
+  4 automations to maintain (not 9×4) while each original stays independently testable.
+  **Trade-off:** 1 extra wrapper layer vs a single mega-shortcut — chosen for debuggability.
+- **Automation gotcha locked:** each Time-of-Day automation runs with **Run Immediately
+  ON** (else it only shows a prompt). **Why:** Apple defaults to ask-before-running.
+- **Source string standardised to `apple-health` (hyphen).** Sleep had written
+  `apple_health`; normalised the code (sleep.ts) + existing rows to the majority hyphen.
+  **Why:** one consistent source label across all 9 metrics. **Trade-off:** none.
+- **Settings "last received" = per-metric, grouped under 3 headers; freshness = newest
+  created_at.** A read-only block mirroring the Gym/Hevy line. **Why:** per-metric (not
+  per-group) catches a single stalled source; created_at is the uniform "we got something"
+  signal. **Trade-off:** busier than 3 lines — acceptable on Settings (a diagnostic, not a
+  calm front page). Body lines lag naturally (sparse weigh-ins) — not a fault.
+
 ## Health → Sleep & Body Stats — S0: the locked plan (2026-06-25)
 
 - **Sleep & Body Stats — stance = active coach, logic-only V1.** Tracks Apple

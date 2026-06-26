@@ -778,8 +778,14 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
 - 🟦 S3b — Sleep ingest ({kind:"sleep"} → sleep_nights, one row/night). DEPLOYED +
        server-verified: sessionises per-stage segments, drops naps, sums stages,
        idempotent. Closes when the owner's sleep Shortcut sends real nights.
-- ⬜ S4 — 4×/day automation + Settings "last received" line.
-- ⬜ S5 — Calc layer (verified vs real numbers).
+- 🟦 S4 — 4×/day automation + Settings "last received" line. DONE (awaiting owner's
+       Mac check of the status line). Part A: owner wired 3 grouped shortcuts (Activity/
+       Body/Sleep) under a "Health Sync" master, 4 Time-of-Day automations 06/12/18/00
+       with Run Immediately ON — pipe now self-feeds. Part B: read-only HealthStatus block
+       in Settings (per-metric "last received"), mirrors HevyStatus. Cleanup done: sleep
+       source normalised to "apple-health"; an S3a test batch (24-Jun) purged; all
+       metric_type now canonical lowercase. (Carried items #1/#2 closed.)
+- ⬜ S5 — Calc layer (verified vs real numbers).  ← NEXT
 - ⬜ S6 — Sleep front page (read-only).
 - ⬜ S7 — Body front page (read-only).
 - ⬜ S8 — Drill-ins (sleep night, body history).
