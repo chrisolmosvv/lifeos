@@ -35,6 +35,15 @@ function bodyPoints(rows) {
     .map((r) => ({ ymd: r.metric_date, value: r.value, at: r.reading_at || r.metric_date }));
 }
 
+// The daily-AVERAGE value of this metric ON a specific Amsterdam date (the locked
+// "daily headline = average" rule applied to one day). null if no reading that day.
+// (S6-prep: lets the Sleep night view show that night's respiratory-rate value —
+// including for a drilled-into PAST night, which latestRaw/today can't give.)
+export function dailyValueOn(rows, ymd) {
+  const day = collapseDaily(bodyPoints(rows)).find((p) => p.ymd === ymd);
+  return day ? day.value : null;
+}
+
 // The single most recent raw reading by reading_at. → { value, at, unit } | null.
 function latestRaw(rows) {
   let best = null;

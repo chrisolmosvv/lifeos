@@ -43,8 +43,9 @@ function pct(part, whole) {
   return whole > 0 && Number.isFinite(part) ? Math.round((part / whole) * 100) : null;
 }
 
-// Last night's detail. Stage % are of time ASLEEP (rem+core+deep); awake is shown
-// as minutes (time awake in bed, not a sleep stage).
+// Last night's detail. REM/Core/Deep % are of time ASLEEP (rem+core+deep). Awake %
+// is of time IN BED (asleep + awake) — being awake isn't part of sleep, so it can't
+// be a slice of "asleep"; the page shows min AND % for all four stages (S6-prep).
 export function lastNight(rows, today) {
   const r = latestNight(rows, today);
   if (!r) return null;
@@ -59,7 +60,7 @@ export function lastNight(rows, today) {
       rem: { min: r.rem_minutes ?? null, pct: pct(r.rem_minutes, asleep) },
       core: { min: r.core_minutes ?? null, pct: pct(r.core_minutes, asleep) },
       deep: { min: r.deep_minutes ?? null, pct: pct(r.deep_minutes, asleep) },
-      awake: { min: r.awake_minutes ?? null }, // minutes only — not "asleep" time
+      awake: { min: r.awake_minutes ?? null, pct: pct(r.awake_minutes, (asleep ?? 0) + (r.awake_minutes ?? 0)) },
     },
   };
 }
@@ -115,6 +116,24 @@ export function goalStreak(rows, goal, today) {
   return { streak, target: goal.target_value, detail };
 }
 
+// Nights that HIT the sleep_duration goal in the last `days` (default 7) — the "4/7"
+// tally for the Week/Month views. Unlike the streak this does NOT stop at the first
+// miss; it counts every night in the window. hit = nights with data meeting the goal
+// (EXACT: asleep ≥ target); total = the window size; withData = nights with any sleep
+// logged. null if there's no sleep_duration goal. (S6-prep.)
+export function nightsHitGoal(rows, goal, today, days = 7) {
+  if (!goal || goal.target_value == null || goal.direction !== "up") return null;
+  const start = shiftYMD(today, -(days - 1));
+  let hit = 0, withData = 0;
+  for (const r of rows || []) {
+    if (!r?.night_date || r.night_date < start || r.night_date > today) continue;
+    if (!Number.isFinite(r.asleep_minutes)) continue;
+    withData += 1;
+    if (r.asleep_minutes >= goal.target_value) hit += 1;
+  }
+  return { hit, total: days, withData };
+}
+
 // Bedtime consistency = population STD-DEV of in_bed_at clock-time over the last 7
 // nights (we picked std-dev over max−min: robust to a single odd night). Times are
 // anchored to minutes-after-noon first so evening/after-midnight bedtimes don't
@@ -134,6 +153,43 @@ export function bedtimeConsistency(rows, today) {
   const mean = mins.reduce((a, b) => a + b, 0) / mins.length;
   const variance = mins.reduce((a, b) => a + (b - mean) ** 2, 0) / mins.length;
   return { stdDevMin: Math.sqrt(variance), nights: mins.length, times };
+}
+
+// CIRCULAR mean of clock times (minutes-after-midnight) → minutes-after-midnight,
+// handling the midnight wrap: 23:50 & 00:10 average to 00:00, not to noon. Each time
+// becomes an angle on the 24h clock; we average the unit vectors and convert back.
+// null for an empty list. (S6-prep — a normal mean can't average around midnight.)
+export function averageClock(minsList) {
+  const xs = (minsList || []).filter((m) => Number.isFinite(m));
+  if (xs.length === 0) return null;
+  let sx = 0, sy = 0;
+  for (const m of xs) {
+    const a = (m / 1440) * 2 * Math.PI;
+    sx += Math.cos(a);
+    sy += Math.sin(a);
+  }
+  let a = Math.atan2(sy / xs.length, sx / xs.length);
+  if (a < 0) a += 2 * Math.PI;
+  return ((a / (2 * Math.PI)) * 1440) % 1440; // fold 24:00 → 00:00, keep in [0,1440)
+}
+
+// Average bedtime + wake clock for nights in [start, end] inclusive, as circular
+// means of in_bed_at / woke_at. → { bedAvgMin, wakeAvgMin, nights } (nulls if none).
+// (S6-prep — the Week/Month summary's average bedtime & wake line.)
+export function rangeBedWakeAverages(rows, start, end) {
+  const beds = [], wakes = [];
+  for (const r of rows || []) {
+    if (!r?.night_date || r.night_date < start || r.night_date > end) continue;
+    const b = amsClockMinutes(r.in_bed_at);
+    if (b != null) beds.push(b);
+    const w = amsClockMinutes(r.woke_at);
+    if (w != null) wakes.push(w);
+  }
+  return {
+    bedAvgMin: averageClock(beds),
+    wakeAvgMin: averageClock(wakes),
+    nights: Math.max(beds.length, wakes.length),
+  };
 }
 
 // Last night's bedtime vs a by_time bedtime goal. null if no goal / no bedtime.
