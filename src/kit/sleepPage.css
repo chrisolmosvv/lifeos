@@ -66,3 +66,253 @@
   color: var(--ink-muted);
   padding: 40px 0;
 }
+
+/* ── NIGHT VIEW ─────────────────────────────────────────────────────────────── */
+.sleep-night {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+/* Hero: big duration + the hypnogram. */
+.sleep-duration {
+  font-family: var(--font-serif);
+  font-size: 52px;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+/* Shared small label + muted text. */
+.sleep-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+.sleep-muted {
+  color: var(--ink-muted);
+}
+
+/* Bed/wake + consistency, side by side. */
+.sleep-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+@media (max-width: 720px) {
+  .sleep-row {
+    grid-template-columns: 1fr;
+  }
+}
+.sleep-bedwake-times {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: var(--ink);
+}
+.sleep-bedtime-goal,
+.sleep-rest-item span:last-child {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.sleep-bedtime-goal {
+  display: block;
+  margin-top: 4px;
+}
+
+/* Stages: one row each, minutes + %. */
+.sleep-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--rule-faint);
+  padding-top: 16px;
+}
+.sleep-stage {
+  display: grid;
+  grid-template-columns: 14px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+}
+.sleep-stage-label {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink);
+}
+.sleep-stage-min {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--ink);
+}
+.sleep-stage-pct {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  min-width: 42px;
+  text-align: right;
+}
+
+/* The rest. */
+.sleep-rest {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  border-top: 1px solid var(--rule-faint);
+  padding-top: 16px;
+}
+@media (max-width: 720px) {
+  .sleep-rest {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Empty + no-goal states. */
+.sleep-empty {
+  padding: 48px 0;
+}
+.sleep-empty-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+.sleep-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--accent);
+  cursor: pointer;
+}
+.sleep-goalprompt {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--rule-faint);
+  padding-top: 14px;
+}
+
+/* ── HYPNOGRAM ──────────────────────────────────────────────────────────────── */
+.hyp {
+  width: 100%;
+}
+.hyp-track {
+  position: relative;
+  height: 64px;
+  background: var(--rule-faint);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.hyp-block {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.hyp-block.is-active {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  z-index: 2;
+}
+/* Proportion-band fallback. */
+.hyp-band {
+  display: flex;
+  width: 100%;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.hyp-seg {
+  border: none;
+  padding: 0;
+  height: 100%;
+  cursor: pointer;
+}
+.hyp-seg.is-active {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.hyp-note {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin: 6px 0 0;
+}
+.hyp-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 6px;
+}
+.hyp-detail {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  margin-top: 10px;
+  min-height: 18px;
+}
+.hyp-detail-hint {
+  color: var(--ink-muted);
+}
+.hyp-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 7px;
+  vertical-align: baseline;
+}
+/* Understated goal marker. */
+.hyp-goal {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 0;
+  border-left: 1px dashed var(--ink-muted);
+  z-index: 3;
+}
+.hyp-goal-label {
+  position: absolute;
+  top: -16px;
+  left: 3px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+
+/* Stage shades: ink across the board, terracotta reserved for Deep. */
+.hyp-deep { background: var(--accent); }
+.hyp-core { background: #5c564c; }
+.hyp-rem { background: #8a8275; }
+.hyp-awake { background: #c9c1b2; }
+.hyp-inbed { background: #e0d9c9; }
+.hyp-asleep { background: #756e62; }
+.hyp-other { background: #b8b0a0; }
+
+/* Week bed/wake band. */
+.bw-band {
+  position: relative;
+  height: 16px;
+  margin-top: 10px;
+  background: var(--rule-faint);
+  border-radius: 8px;
+}
+.bw-dot {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.bw-bed { background: var(--ink); }
+.bw-wake { background: var(--accent); }

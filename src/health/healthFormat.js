@@ -39,6 +39,27 @@ export function ageLabel(value, now = Date.now()) {
   return ymd; // older than 60 days — just show the date
 }
 
+// A timestamp/ISO/Date → "23:14" (Amsterdam clock time). "—" for missing.
+export function clockTime(value) {
+  if (value == null) return "—";
+  const d = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Amsterdam",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(d);
+}
+
+// Minutes-after-midnight → "23:14" (for S5's clock outputs: bedtime spread,
+// circular-mean bedtime/wake, by_time goal targets). "—" for non-finite.
+export function clockFromMin(min) {
+  if (!Number.isFinite(min)) return "—";
+  const m = ((Math.round(min) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+
 // A kg figure → "86.1 kg" (1 dp). null/NaN → "—".
 export function kg(v) {
   return Number.isFinite(v) ? `${v.toFixed(1)} kg` : "—";

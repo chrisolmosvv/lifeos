@@ -3,6 +3,8 @@ import { amsTodayYMD } from "../gym/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
 import { sleepView } from "./healthSleep";
+import { dailyValueOn } from "./healthBody";
+import SleepNight from "./SleepNight";
 import "../kit/sleepPage.css";
 
 // SleepPage — the full Sleep front page, reached from the Health Hub's Sleep card
@@ -46,6 +48,29 @@ export default function SleepPage({ onBack }) {
     };
   }, []);
 
+  // The Night view = last night (today's wake date). We DON'T fall back to an older
+  // night here — no data → the empty state nudges to the Week view.
+  function renderNight() {
+    const { sv, sleep, resp, goalMap, today } = state;
+    const isLN = sv.lastNight && sv.lastNight.nightDate === today;
+    const detail = isLN ? sv.lastNight : null;
+    const nightRow = detail ? sleep.find((r) => r.night_date === detail.nightDate) : null;
+    return (
+      <SleepNight
+        detail={detail}
+        isLastNight={true}
+        segments={nightRow?.segments ?? null}
+        goalMinutes={goalMap.get("sleep_duration")?.target_value ?? null}
+        bedtimeVsGoal={sv.bedtimeVsGoal}
+        consistency={sv.bedtime}
+        weekRows={sleep}
+        respValue={detail ? dailyValueOn(resp, detail.nightDate) : null}
+        hasGoal={goalMap.has("sleep_duration") || goalMap.has("bedtime")}
+        onNudgeToWeek={() => setView("week")}
+      />
+    );
+  }
+
   return (
     <div className="sleep-page">
       <button type="button" className="hub-back" onClick={onBack}>
@@ -78,7 +103,7 @@ export default function SleepPage({ onBack }) {
       ) : state.error ? (
         <p className="sleep-error">Couldn’t load your sleep. {state.error}</p>
       ) : view === "night" ? (
-        <div className="sleep-view-stub">Night view — built next (piece 2).</div>
+        renderNight()
       ) : view === "week" ? (
         <div className="sleep-view-stub">Week view — built in piece 3.</div>
       ) : (
