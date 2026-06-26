@@ -35,6 +35,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-26 — Track S — Health Hub shell (section front + 3 cards). SRC/ ONLY. (Owner-verified on Mac.)
+WHAT CHANGED:
+- The Health nav pillar now opens a new HEALTH HUB — a calm "section front": a quiet dateline ("Friday
+  26 June") + an "as of …" freshness line, over a row of THREE cards (Sleep · Body · Gym). Whole card is
+  the tap target. Recomputes fresh on every open (compute-on-read); spinner while it loads.
+- Gym DEMOTED to a card: it opens the EXISTING Gym front page UNCHANGED, behind a thin "← Health" back
+  link (the hub wraps it; Health.jsx itself untouched). Sleep + Body cards open minimal "coming soon"
+  stubs (S6/S7 replace those). The three cards look identical — only the tap destination differs.
+- Cards consume the S5 calc layer (no new calc): SLEEP — last night's duration + stage split, 7-day avg
+  (only with ≥3 days), goal progress bar (only when a sleep_duration goal exists), "no data" if last
+  night hasn't synced (no fallback to an older night). BODY — latest weight + body-fat headline, weight
+  + body-fat TREND arrows (terracotta when moving, ink "steady" when flat, hidden when a 7-day window
+  lacks data), age label, mini row lean/resting-HR/resp. GYM — this week's volume big + sessions
+  secondary + "age · minutes" (Option A: NO set count — the gym layer doesn't expose one).
+- "As of" = most recent UNDERLYING reading timestamp across the metrics (when data was last received),
+  not when the calc ran. Terracotta used only for non-flat trends + card hover; everything else ink.
+- DELETED the temporary S5 #health-debug readout + its LoggedIn.jsx hook — the hub replaces it as the
+  real surface (recoverable from git history).
+
+FILES TOUCHED: src/health/HealthHub.jsx, HubSleepCard.jsx, HubBodyCard.jsx, HubGymCard.jsx,
+HealthStub.jsx, healthFormat.js (NEW); src/kit/HubCard.jsx, healthHub.css (NEW); src/LoggedIn.jsx
+(routing → hub; debug hook removed); src/HealthDebug.jsx (DELETED). No schema/db/supabase changes.
+Four commits (7d1ff25 scaffold+routing → 6994054 cards → 9225e2b debug delete).
+
+HOW TO VERIFY (already done by owner): npm run dev, log in, tap Health → three cards with real numbers;
+Gym card opens the real Gym page + back link; Sleep/Body open stubs; spinner + "as of" line appear;
+trend arrows terracotta only when moving; cards stack on a narrow window.
+
+KNOWN GAPS / RISKS:
+- Sleep goal bar only shows once a sleep_duration goal row exists; body trend arrows only once both
+  7-day windows have data — both correctly HIDDEN otherwise (not "—").
+- Gym card has NO set count by design (Option A) — the gym calc layer exposes volume + sessions, not
+  sets. Revisit only if a set count is later wanted (would mean a small gym-calc addition).
+- Hub loads full history (from 2026-01-01) on each open to find a stale latest reading; fine for one
+  user, could be range-trimmed later if it ever feels slow.
+
+NEXT: S6 — Sleep front page (read-only), replacing the Sleep stub, consuming the same S5 layer.
+
+FOR THE CHECKER: SRC-ONLY (no schema). Confirm: the Gym front page (Health.jsx) is unmodified — the hub
+only wraps it; cards add NO new calc (they read the S5 view-models + gym boxScore/recentSessions); the
+empty/sparse rules omit lines rather than show "—"; "as of" uses a reading timestamp, not calc time.
+
 ### 2026-06-26 — Track S — S5: Health calc layer (compute-on-read). SRC/ ONLY. (Awaiting owner's Mac verify.)
 WHAT CHANGED:
 - New pure, testable calc layer under `src/health/` that INTERPRETS the raw health rows into view-ready
