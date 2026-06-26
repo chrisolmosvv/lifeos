@@ -96,6 +96,15 @@ export async function upsertActivityHourly(rows: ActivityRow[]): Promise<number 
   }
 }
 
+// One chronological stage segment of the night's kept session (the hypnogram unit).
+// stage = the canonical set REM/Core/Deep/Awake/inbed/asleep; start+end ISO; the
+// page derives duration on read, so it is NOT stored.
+export type SleepSegment = {
+  stage: string;
+  start: string; // ISO timestamptz
+  end: string; // ISO timestamptz
+};
+
 // One consolidated night, ready to store (user_id stamped here, not by the caller).
 export type SleepRow = {
   night_date: string; // YYYY-MM-DD, owner's timezone (wake-up date)
@@ -109,6 +118,9 @@ export type SleepRow = {
   awakenings: number;
   score: number | null;
   source: string;
+  // The kept session's segments, in time order, written to the jsonb `segments`
+  // column (S5b). Replaced wholesale on a latest-wins re-push, like the rest of the row.
+  segments: SleepSegment[];
   updated_at: string;
 };
 

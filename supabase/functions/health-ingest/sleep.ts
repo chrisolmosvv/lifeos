@@ -137,6 +137,14 @@ export async function ingestSleep(payload: { segments?: unknown }): Promise<Slee
       awakenings,
       score: null,
       source: SOURCE,
+      // S5b: persist the kept session's time-ordered segments (the hypnogram source)
+      // exactly as clustered — same canonical stage labels the totals use, ISO
+      // start/end, no derived duration. Aggregation above is unchanged.
+      segments: k.segs.map((s) => ({
+        stage: s.stage,
+        start: s.start.toISOString(),
+        end: s.end.toISOString(),
+      })),
       updated_at: new Date().toISOString(),
     };
   });
