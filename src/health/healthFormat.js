@@ -48,3 +48,19 @@ export function kg(v) {
 export function whole(v) {
   return Number.isFinite(v) ? Math.round(v).toLocaleString("en-GB") : "—";
 }
+
+// A timestamp → "26 Jun, 07:31" (Amsterdam) for the "as of" freshness line. The
+// hub passes the most recent UNDERLYING reading timestamp here (not the calc time).
+export function asOf(value) {
+  if (value == null) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(d.getTime())) return null;
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Amsterdam",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(d);
+}

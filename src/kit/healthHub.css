@@ -77,6 +77,125 @@
   color: var(--ink);
 }
 
+/* Body headline: weight + body-fat side by side. */
+.hub-pair {
+  display: flex;
+  gap: 22px;
+  align-items: baseline;
+}
+.hub-pair-val {
+  white-space: nowrap;
+}
+.hub-unit {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink-muted);
+  margin-left: 4px;
+}
+
+/* Sleep stage split — small, under the duration headline. */
+.hub-stages {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-top: 10px;
+}
+
+/* A quiet support line (7-day avg, sessions-this-week, last-session summary). */
+.hub-support {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  margin-top: 10px;
+}
+.hub-support--quiet {
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+/* Sleep goal progress bar — only rendered when a goal exists. */
+.hub-goalbar {
+  margin-top: 14px;
+  height: 6px;
+  background: var(--rule-faint);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.hub-goalbar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+/* Body trend marks — terracotta only for real movement; flat stays ink. */
+.hub-trends {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  min-height: 18px;
+}
+.hub-trend {
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.hub-trend--move {
+  color: var(--accent);
+}
+.hub-trend--flat {
+  color: var(--ink-muted);
+}
+
+/* Body mini row — three secondary stats. */
+.hub-mini {
+  display: flex;
+  gap: 22px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-faint);
+}
+.hub-mini-num {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--ink);
+}
+.hub-mini-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+/* Loading + error. */
+.hub-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 40px 0;
+}
+.hub-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--rule);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: hub-spin 0.8s linear infinite;
+}
+@keyframes hub-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.hub-error {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--overdue);
+  padding: 24px 0;
+}
+
 /* The thin wrapper around the unchanged Gym front page + the stub back link. */
 .hub-wrap {
   padding-top: 8px;
