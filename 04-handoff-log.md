@@ -35,6 +35,28 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-26 — Track S — S4 Part B: Settings "Health sync — last received" line. SRC/ ONLY. (Awaiting owner's Mac check.)
+WHAT CHANGED:
+- New read-only status block in Settings, directly under the Hevy line, mirroring HevyStatus exactly (same
+  paper/ink/rule tokens, 600px width). Shows, per metric, how long ago we last RECEIVED data — so the owner
+  can glance and confirm the 4×/day push pipe is alive. Grouped: Sleep (1) · Body (Weight/Body fat/Lean mass/
+  Resting HR/Breathing) · Activity (Steps/Active energy/Heart rate).
+- "Last received" = newest created_at per metric (the row-write time = truest uniform "we got something"
+  signal across all three tables). One small parallel query per metric (Promise.all, maybeSingle); a single
+  failure degrades to "unavailable" and never blanks the others. States: checking… / Nh·Nd ago / "— no data
+  yet" / unavailable. No writes, no controls, no secrets; owner-RLS scopes every read.
+FILES TOUCHED: NEW src/kit/HealthStatus.jsx + src/kit/healthStatus.css; EDITED src/Settings.jsx (import +
+  render after <HevyStatus/>). NO db/, NO backend, NO schema. `npx vite build` passes (175 modules).
+HOW TO VERIFY (owner, on the Mac): `npm run dev` → log in → Settings. Under "Hevy · last synced …" you should
+  see a "HEALTH SYNC" block with Sleep / Body / Activity headers and a time-ago per metric (e.g. Heart rate
+  "Nh ago"). Body metrics naturally lag (you weigh in less often) — that's normal, not a dead pipe. After the
+  6pm/midnight automation fires, the Activity/Sleep times should freshen.
+KNOWN GAPS / RISKS: ago() is copied from HevyStatus (kept local to stay isolated from the working Gym line; a
+  later pass can dedupe to one shared helper). Local preview only — not deployed this session.
+NEXT: S4 is complete (Part A automations live + Part B status line). → S5: the calc layer (first derived data).
+FOR THE CHECKER: src/-only, read-only on existing owner-RLS tables; no schema/backend/secret. Confirm it never
+  writes and references no key.
+
 ### 2026-06-26 — Track S — S4 cleanup: source-label + metric-name normalization. BACKEND/DB. ⚠️ deploy + SQL are OWNER steps.
 WHAT CHANGED:
 - CODE: `sleep.ts` wrote `source="apple_health"` (underscore); body/activity use `"apple-health"` (hyphen).

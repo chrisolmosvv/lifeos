@@ -1,0 +1,49 @@
+/* Health → Track S, S4 Part B — the read-only "Health sync — last received" block in
+   Settings. Mirrors hevyStatus.css (same paper/ink/rule tokens, 600px inner width) so it
+   lines up under the Hevy line; adds grouped per-metric rows. Status/freshness only. */
+
+.health-status {
+  flex: none;
+  border-bottom: 1px solid var(--rule);
+  padding: 0.7rem 1.5rem;
+}
+.health-status-inner {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.health-status-title {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  margin-bottom: 0.45rem;
+}
+
+.hs-group { margin-bottom: 0.45rem; }
+.hs-group:last-child { margin-bottom: 0; }
+.hs-group-name {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0.25rem 0 0.1rem;
+}
+
+.hs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.12rem 0 0.12rem 0.85rem;
+}
+.hs-label {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+.hs-val {
+  font-size: 0.82rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.hs-ago { color: var(--ink); }
+.hs-dim { color: var(--ink-muted); }
