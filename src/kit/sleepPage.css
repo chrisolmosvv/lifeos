@@ -1,0 +1,68 @@
+/* LifeOS — Sleep front page. Broadsheet tokens (theme.css): paper/ink, Fraunces for
+   big numbers, Inter for labels, terracotta sparingly. Reuses .hub-back and
+   .hub-spinner from healthHub.css (loaded app-wide by the hub). */
+
+.sleep-page {
+  padding: 8px 24px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Night / Week / Month segmented control. A hairline-bordered row; the active range
+   reads as ink-on-paper, the others muted; hover hints terracotta (an affordance). */
+.sleep-tabs {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 6px 0 22px;
+}
+.sleep-tab {
+  background: var(--paper);
+  border: none;
+  border-left: 1px solid var(--rule);
+  padding: 8px 20px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+.sleep-tab:first-child {
+  border-left: none;
+}
+.sleep-tab:hover {
+  color: var(--accent);
+}
+.sleep-tab.is-active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.sleep-tab.is-active:hover {
+  color: var(--paper); /* selected stays calm — no terracotta on the active fill */
+}
+
+/* Loading + error (mirrors the hub). */
+.sleep-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 40px 0;
+}
+.sleep-error {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--overdue);
+  padding: 24px 0;
+}
+
+/* Placeholder (piece 1 only — replaced by the real views in pieces 2–3). */
+.sleep-view-stub {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-muted);
+  padding: 40px 0;
+}

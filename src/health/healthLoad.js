@@ -37,11 +37,13 @@ async function fetchAll(table, columns, apply = (q) => q) {
 }
 
 // Sleep nights whose wake-up date (night_date) falls in [start, end], inclusive.
-// Ordered oldest-first so the calc layer reads a clean series.
+// Ordered oldest-first so the calc layer reads a clean series. `segments` is the
+// raw per-night hypnogram (jsonb array of {stage,start,end}; null on older rows) —
+// the calc layer ignores it; the Sleep page parses it for the hypnogram (S6).
 export function fetchSleep(start, end) {
   return fetchAll(
     "sleep_nights",
-    "night_date,in_bed_at,woke_at,asleep_minutes,rem_minutes,core_minutes,deep_minutes,awake_minutes,awakenings,score,source",
+    "night_date,in_bed_at,woke_at,asleep_minutes,rem_minutes,core_minutes,deep_minutes,awake_minutes,awakenings,score,source,segments",
     (q) => q.gte("night_date", start).lte("night_date", end).order("night_date", { ascending: true }),
   );
 }
