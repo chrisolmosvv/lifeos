@@ -35,6 +35,59 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-26 — Track S — S5: Health calc layer (compute-on-read). SRC/ ONLY. (Awaiting owner's Mac verify.)
+WHAT CHANGED:
+- New pure, testable calc layer under `src/health/` that INTERPRETS the raw health rows into view-ready
+  numbers, computed fresh on every read — nothing derived is stored. Split exactly like the gym module:
+  a dumb fetch pipe + pure transforms. One core primitive `statsForRange` (count/avg/min/max/latest); 7/30/90
+  are presets of an arbitrary range so a future date-picker drops in free.
+- SLEEP: last night (duration, stage min+%, awakenings, times); duration vs goal (exact, asleep≥target);
+  7/30/90 avg; week-over-week arrow + raw latest; gap-pausing goal streak; bedtime consistency (std-dev,
+  noon-anchored so 23:30 & 00:30 don't wrap); bedtime vs by_time goal.
+- BODY (generic per metric): today's daily-average headline; latest raw + timestamp; 7/30/90 over the
+  DAILY-AVERAGE series (multiple weigh-ins/day count once); arrow; vs-goal + goal-aware good/bad verdict.
+- ACTIVITY: steps/active_energy summed per day, heart_rate averaged; today "so far" reported but EXCLUDED
+  from trend/rolling (windows end yesterday).
+- GOALS are generic + direction-aware (down/up/by_time); newest active row per goal_type wins; NO hardcoded
+  metric list — a new goal lights up automatically. by_time stored as minutes-after-midnight Amsterdam
+  (LOCKED standard: 23:30 = 1410). Dead-band thresholds live in ONE tunable config constant (`DEADBAND`).
+- Reused the shared Amsterdam-day helper (`src/gym/gymDates.js`); added ONE function to it, `amsClockMinutes`
+  (time-within-day, for bedtimes) — same single TZ definition, not a new helper.
+- TEMP VERIFY HARNESS: a throwaway `#health-debug` readout (NOT in nav) that runs the calc on real data and
+  prints every number next to its raw inputs. Its own commit + a one-line hook in LoggedIn.jsx, so it's
+  trivial to delete after we sign off.
+
+FILES TOUCHED: src/health/healthLoad.js, src/health/healthStats.js, src/health/healthGoals.js,
+src/health/healthSleep.js, src/health/healthBody.js, src/health/healthActivity.js (NEW);
+src/HealthDebug.jsx (NEW, throwaway); src/LoggedIn.jsx (one-line hook); src/gym/gymDates.js (+amsClockMinutes).
+No schema/db/supabase changes. Five commits (62b57e9 → b69eebf).
+
+HOW TO VERIFY:
+- `npm run dev`, log in, then open the app URL with `#health-debug` on the end (e.g.
+  http://localhost:5173/#health-debug). You'll see a yellow-banner debug page.
+- Cross-check the numbers against what you know: last night's sleep, your weight, recent steps. Each derived
+  figure lists the raw values it came from, so any wrong number is traceable.
+- To exercise vs-goal + the streak: insert ONE test `sleep_duration` goal row (Planner has the SQL). Reload
+  the debug page — the "Duration vs goal", "Goal streak", and (if you add a bedtime goal) "Bedtime vs goal"
+  sections will fill with real output. Without a goal they correctly read "no goal set".
+- We then tune the dead-bands in `DEADBAND` against what the arrows show.
+
+KNOWN GAPS / RISKS:
+- Could not auto-confirm row counts (RLS needs a logged-in session; service role is banned) — the debug page
+  IS the live confirmation. If a table reads 0 rows there, ingest, not the calc, is the issue.
+- vs-goal / streak unverified until a real goal row exists (goals editor is S9; insert one by hand for now).
+- by_time bedtime decoding assumes minutes-after-midnight Amsterdam — confirm against your first real bedtime
+  goal row.
+- No unit-test runner (matches gym's house style); the debug readout is the verification.
+
+NEXT: Owner verifies on Mac/iPhone; we tune dead-bands; then S6 — Sleep front page (read-only) consuming
+this layer. After sign-off, delete HealthDebug.jsx + the LoggedIn.jsx hook.
+
+FOR THE CHECKER: This is SRC-ONLY (no schema). Confirm: nothing derived is stored (compute-on-read);
+the Amsterdam-day helper is reused not duplicated; goals are generic (no hardcoded metric list); pure
+transforms make no Supabase calls and take "today" as a parameter; activity excludes the partial current day
+from trend/rolling; body rolls over the daily-average series.
+
 ### 2026-06-26 — Track S — S4 Part B: Settings "Health sync — last received" line. SRC/ ONLY. (Awaiting owner's Mac check.)
 WHAT CHANGED:
 - New read-only status block in Settings, directly under the Hevy line, mirroring HevyStatus exactly (same
