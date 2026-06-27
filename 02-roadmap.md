@@ -785,9 +785,19 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
        in Settings (per-metric "last received"), mirrors HevyStatus. Cleanup done: sleep
        source normalised to "apple-health"; an S3a test batch (24-Jun) purged; all
        metric_type now canonical lowercase. (Carried items #1/#2 closed.)
-- ⬜ S5 — Calc layer (verified vs real numbers).  ← NEXT
-- ⬜ S6 — Sleep front page (read-only).
-- ⬜ S7 — Body front page (read-only).
+- 🟦 S5 — Calc layer (compute-on-read, pure). BUILT + owner-verified via a throwaway
+       #health-debug readout (since removed): 7/30/90 presets, trend, goals, gap-pausing
+       streak, bedtime consistency. (heart_rate averages per day — fix verified.)
+- 🟦 S5b — Store sleep SEGMENTS as a nullable jsonb column on sleep_nights (the hypnogram
+       source). CHECKER-APPROVED + run live; function deployed. Per-night ordered
+       {stage,start,end}; older rows stay null (page falls back to a proportion band).
+- 🟦 Health Hub — section front (Sleep · Body · Gym cards) replaces the Gym-only Health
+       landing; real headline numbers + "as of" freshness; Gym page wrapped unchanged.
+       BUILT + owner-verified.
+- 🟦 S6 — Sleep front page (Night/Week/Month; interactive hypnogram + proportion-band
+       fallback; bar→night drill-in; zero-scroll night view). BUILT + owner-verified.
+       Full locked spec in 03-decisions.md.
+- ⬜ S7 — Body front page (read-only).  ← NEXT
 - ⬜ S8 — Drill-ins (sleep night, body history).
 - ⬜ S9 — Goals editor (in-app write, with undo).
 - ⬜ S10 — Coach hooks (bedtime reminder + brief lines, logic-only).

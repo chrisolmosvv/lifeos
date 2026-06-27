@@ -1948,3 +1948,21 @@
 
 - **All guardrails on (CLAUDE.md).** Brain docs, file-size ceiling, one feature
   at a time, commit after each feature, start/end session ritual.
+
+## Sleep front page (S6) — LOCKED & BUILT 2026-06-26
+- Hero: last night duration + interactive time-axis hypnogram (from stored segments)
+  + goal marker (at in-bed + goal-duration). NO composite/sleep-score (V1 deferral held).
+- Segmented Night/Week/Month; opens on Night; compute-on-read; "as of" = data last received.
+- Night view: hero → bed/wake (+ target if by_time goal) → stages (min AND %) → awakenings
+  + awake min + that night's resp rate. Built to desktop zero-scroll.
+- Consistency: 7-night std-dev regularity word + bed/wake dot band. Hidden on past-night drill-ins.
+- Week/Month: per-night stacked stage bars; summary = avg duration + circular-mean bed/wake
+  (≥3 nights); streak + nights-hit-goal (4/7); baseline = 7-day vs 90-day avg; tap a bar →
+  that night's Night view.
+- Fallback: nights without stored segments show a proportion band, not the time-axis graph.
+- Empty: no last-night data → "No sleep recorded" + nudge to Week (no auto-fallback).
+  No goal → display-only "set a goal" prompt (real editor is S9).
+- Trends: arrow + delta; terracotta only on Deep, movement, and tap affordances.
+
+## by_time goal storage — LOCKED 2026-06-26
+Bedtime / by_time goals stored as minutes-after-midnight (0–1439), Amsterdam local.

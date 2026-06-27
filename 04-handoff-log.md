@@ -33,6 +33,27 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+## Hard-won lessons (operational gotchas — read before deploys / schema changes)
+
+These cost real time; don't relearn them.
+
+- **Edge Function deploy — pin `verify_jwt`.** A plain `supabase functions deploy <fn>`
+  defaults `verify_jwt = true`. For header-authed functions (health-ingest uses
+  `x-health-secret`, the Apple Shortcut can't mint a JWT) that REJECTS every push with
+  "missing authorization header" before our code runs. Fixed by pinning
+  `[functions.health-ingest] verify_jwt = false` in `supabase/config.toml`. **Other
+  functions (telegram, brief, gym) carry the same latent risk — pin them in a future
+  cleanup.** Always deploy with `--no-verify-jwt` too for header-authed fns.
+- **PostgREST schema cache after DDL.** After `ALTER TABLE ADD COLUMN`, PostgREST may keep
+  serving its cached schema and SILENTLY DROP the new column from writes (the write
+  "succeeds" but the column stays null). Run `notify pgrst, 'reload schema';` (or the
+  dashboard "Reload schema cache") after the DDL before expecting writes to land.
+- **Verify writes by `updated_at`, not by the value looking right.** A stale row with
+  correct-LOOKING totals nearly sent us debugging the wrong layer. Confirm the row was
+  actually re-written (timestamp moved) before concluding the code is wrong.
+
+---
+
 ## Log
 
 ### 2026-06-27 — Track S — S6: Sleep front page (Night / Week / Month). SRC/ ONLY. (Owner-verified on Mac.)
