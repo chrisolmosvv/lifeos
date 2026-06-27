@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { amsTodayYMD } from "../gym/gymDates";
+import { amsTodayYMD, shiftYMD } from "../gym/gymDates";
 import { ageLabel } from "./healthFormat";
 import { fetchBody, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
 import { metricView as bodyView, BODY_METRICS } from "./healthBody";
-import { composition, goalProgress, baselineBand } from "./healthBodyRange";
+import { DEADBAND } from "./healthStats";
+import { composition, goalProgress, baselineBand, windowDelta } from "./healthBodyRange";
 import { fmtFull } from "./bodyFormat";
 import BodyTile from "./BodyTile";
 import BodyComposition from "./BodyComposition";
@@ -122,14 +123,55 @@ export default function BodyPage({ onBack }) {
     );
   }
 
-  // Week / Month / 90 ranges reframe the page — piece 3. Placeholder until then.
-  function placeholderRange() {
+  // Week (7) / Month (30) / 90-day reframe: every value becomes that range's AVERAGE,
+  // every trend becomes that range's window-over-window DELTA (windowDelta shows "—"
+  // cleanly while no prior window exists), and the sparkline grows into a full line
+  // chart over the window — with the goal line (weight only) or normal-range band
+  // (vitals) overlaid. No composition/goal bar here; those are Latest-view snapshots.
+  function renderRange(days) {
+    const { body, rowsByMetric, goalMap, today } = state;
+    const v = (m) => body[m];
+    const windowStart = shiftYMD(today, -(days - 1));
+    const weightGoalVal = goalMap.get("weight")?.target_value ?? null;
+
+    const tile = (m, opts = {}) => (
+      <BodyTile
+        metric={m}
+        value={v(m).rolling?.[days]?.avg ?? null}
+        subLabel={`${days}-day average`}
+        trend={windowDelta(rowsByMetric[m], days, { end: today, deadband: DEADBAND[m] })}
+        series={v(m).rolling?.[days]?.values || []}
+        chartVariant="full"
+        windowStart={windowStart}
+        windowEnd={today}
+        goalValue={opts.goalValue ?? null}
+        band={opts.band ?? null}
+      />
+    );
+
     return (
-      <section className="body-group">
-        <p className="body-view-stub">Range view — coming next.</p>
-      </section>
+      <>
+        <section className="body-group">
+          <h2 className="body-group-label">Composition · {days}-day</h2>
+          <div className="body-tiles body-tiles--3">
+            {tile("weight", { goalValue: weightGoalVal })}
+            {tile("body_fat")}
+            {tile("lean_mass")}
+          </div>
+        </section>
+
+        <section className="body-group body-group--vitals">
+          <h2 className="body-group-label">Vitals · {days}-day</h2>
+          <div className="body-tiles body-tiles--2">
+            {tile("resting_heart_rate", { band: baselineBand(rowsByMetric.resting_heart_rate, { end: today }) })}
+            {tile("respiratory_rate", { band: baselineBand(rowsByMetric.respiratory_rate, { end: today }) })}
+          </div>
+        </section>
+      </>
     );
   }
+
+  const RANGE_DAYS = { week: 7, month: 30, "90": 90 };
 
   return (
     <div className="body-page">
@@ -162,7 +204,7 @@ export default function BodyPage({ onBack }) {
       ) : range === "latest" ? (
         renderLatest()
       ) : (
-        placeholderRange()
+        renderRange(RANGE_DAYS[range])
       )}
     </div>
   );

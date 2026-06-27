@@ -7,7 +7,7 @@
 // One row per body metric: how it's labelled and rounded for display. `tight` keeps
 // the unit hard against the number (18.2% ), otherwise a space (86.1 kg).
 export const METRIC_META = {
-  weight: { label: "Weight", unit: "kg", decimals: 1 },
+  weight: { label: "Weight", unit: "kg", decimals: 2 }, // 2dp — the 2nd decimal carries goal-tracking signal
   body_fat: { label: "Body fat", unit: "%", decimals: 1, tight: true },
   lean_mass: { label: "Lean mass", unit: "kg", decimals: 1 },
   resting_heart_rate: { label: "Resting HR", unit: "bpm", decimals: 0 },

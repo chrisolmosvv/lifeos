@@ -23,7 +23,10 @@ function Trend({ metric, trend }) {
   );
 }
 
-export default function BodyTile({ metric, value, subLabel, extra, trend, series, band }) {
+export default function BodyTile({
+  metric, value, subLabel, extra, trend, series, band,
+  chartVariant = "spark", windowStart, windowEnd, goalValue,
+}) {
   const meta = metaFor(metric);
   const hasValue = Number.isFinite(value);
   const hasSeries = (series || []).some((p) => Number.isFinite(p?.value));
@@ -49,7 +52,15 @@ export default function BodyTile({ metric, value, subLabel, extra, trend, series
       {subLabel && <span className="body-tile-sub">{subLabel}</span>}
       {extra && <span className="body-tile-extra">{extra}</span>}
       <Trend metric={metric} trend={trend} />
-      <BodyChart series={series} variant="spark" />
+      <BodyChart
+        series={series}
+        variant={chartVariant}
+        metric={metric}
+        windowStart={windowStart}
+        windowEnd={windowEnd}
+        goalValue={goalValue}
+        band={band}
+      />
       {showBand && (
         <span className="body-tile-band">
           typical {fmtNum(metric, band.lo)}–{fmtNum(metric, band.hi)} {meta.unit}
