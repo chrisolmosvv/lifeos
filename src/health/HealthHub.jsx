@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Health from "../Health";
-import HealthStub from "./HealthStub";
 import SleepPage from "./SleepPage";
+import BodyPage from "./BodyPage";
 import HubSleepCard from "./HubSleepCard";
 import HubBodyCard from "./HubBodyCard";
 import HubGymCard from "./HubGymCard";
@@ -88,7 +88,7 @@ export default function HealthHub() {
     );
   }
   if (sub === "sleep") return <SleepPage onBack={() => setSub("hub")} />;
-  if (sub === "body") return <HealthStub title="Body" onBack={() => setSub("hub")} />;
+  if (sub === "body") return <BodyPage onBack={() => setSub("hub")} />;
 
   return (
     <div className="hub">
