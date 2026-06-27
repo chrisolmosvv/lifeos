@@ -17,10 +17,18 @@ export default function BedWakeBand({ rows }) {
   }
   if (pts.length === 0) return null;
   return (
-    <div className="bw-band" aria-hidden="true">
-      {pts.map((p, i) => (
-        <span key={i} className={`bw-dot bw-${p.kind}`} style={{ left: `${p.pos}%` }} />
-      ))}
-    </div>
+    <>
+      <div className="bw-band" aria-hidden="true">
+        {pts.map((p, i) => (
+          <span key={i} className={`bw-dot bw-${p.kind}`} style={{ left: `${p.pos}%` }} />
+        ))}
+      </div>
+      <div className="bw-legend">
+        <span className="bw-key bw-key-bed" />
+        <span>bed</span>
+        <span className="bw-key bw-key-wake" />
+        <span>wake</span>
+      </div>
+    </>
   );
 }
