@@ -75,10 +75,201 @@
   border-bottom: 1px solid var(--rule-faint);
 }
 
-/* Placeholder (piece 1 only — replaced by the real tiles in pieces 2–3). */
+/* Placeholder (range views until piece 3). */
 .body-view-stub {
   font-family: var(--font-sans);
   font-size: 14px;
   color: var(--ink-muted);
   padding: 24px 0;
+}
+.body-muted {
+  color: var(--ink-muted);
+}
+
+/* ── TILES ──────────────────────────────────────────────────────────────────── */
+/* Composition = 3 across, Vitals = 2 across; both stack on a narrow screen. None
+   dominant — equal columns keep the group visually balanced. */
+.body-tiles {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+.body-tiles--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.body-tiles--2 {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 560px;
+}
+@media (max-width: 720px) {
+  .body-tiles--3,
+  .body-tiles--2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.body-tile {
+  display: flex;
+  flex-direction: column;
+}
+.body-tile-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+.body-tile-value {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--ink);
+}
+.body-tile-unit {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink-muted);
+}
+.body-tile-sub {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 5px;
+}
+.body-tile-extra {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink);
+  margin-top: 3px;
+}
+.body-tile-nodata {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-muted);
+  padding: 8px 0 16px;
+}
+.body-tile-band {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 6px;
+}
+
+/* Trend mark: movement = terracotta (house rule), steady/none = ink-muted. */
+.body-trend {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  margin-top: 7px;
+}
+.body-trend--move {
+  color: var(--accent);
+}
+.body-trend--flat,
+.body-trend--none {
+  color: var(--ink-muted);
+}
+
+/* Sparkline: ink line, ink dot — informational, so NO terracotta (reserved for
+   movement/affordances/the goal marker). Fixed height, full tile width. */
+.body-spark {
+  width: 100%;
+  height: 40px;
+  margin-top: 8px;
+  overflow: visible;
+}
+.body-spark-line {
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.body-spark-dot {
+  fill: var(--ink);
+}
+
+/* ── COMPOSITION BAR + GOAL BAR ─────────────────────────────────────────────── */
+.body-composition {
+  margin-top: 4px;
+}
+.body-comp-bar {
+  display: flex;
+  width: 100%;
+  height: 22px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--rule-faint);
+}
+.body-comp-seg {
+  height: 100%;
+  display: block;
+}
+/* Ink shades, not terracotta: fat (warm grey) / lean (dark ink) / remainder (faint). */
+.body-comp-fat { background: #8a8275; }
+.body-comp-lean { background: #5c564c; }
+.body-comp-rest { background: #d8d1c2; }
+.body-comp-note,
+.body-comp-empty {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin: 6px 0 0;
+}
+.body-comp-legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  margin-top: 8px;
+}
+.body-comp-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+
+/* Weight goal bar. The goal MARKER is the one terracotta touch here (a target cue). */
+.body-goal {
+  margin-top: 16px;
+}
+.body-goal-track {
+  position: relative;
+  height: 10px;
+  background: var(--rule-faint);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.body-goal-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #5c564c;
+  border-radius: 6px;
+}
+.body-goal-marker {
+  position: absolute;
+  right: 0;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--accent);
+}
+.body-goal-caption {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 6px;
+}
+.body-goalprompt {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 16px 0 0;
 }

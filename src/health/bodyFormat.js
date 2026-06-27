@@ -1,0 +1,41 @@
+// LifeOS — Health → Body (S7): display formatting (PURE, presentation-only).
+//
+// Per-metric labels / units / decimals + the formatters the Body tiles use. No data
+// logic, no Amsterdam-day bucketing (that's gymDates), no derived numbers (those are
+// the calc layer). Mirrors healthFormat.js / gymFormat.js in spirit.
+
+// One row per body metric: how it's labelled and rounded for display. `tight` keeps
+// the unit hard against the number (18.2% ), otherwise a space (86.1 kg).
+export const METRIC_META = {
+  weight: { label: "Weight", unit: "kg", decimals: 1 },
+  body_fat: { label: "Body fat", unit: "%", decimals: 1, tight: true },
+  lean_mass: { label: "Lean mass", unit: "kg", decimals: 1 },
+  resting_heart_rate: { label: "Resting HR", unit: "bpm", decimals: 0 },
+  respiratory_rate: { label: "Respiratory", unit: "/min", decimals: 1 },
+};
+
+export function metaFor(metric) {
+  return METRIC_META[metric] || { label: metric, unit: "", decimals: 1 };
+}
+
+// A metric value → its rounded number string ("86.1", "74"). null/NaN → "—".
+export function fmtNum(metric, v) {
+  if (!Number.isFinite(v)) return "—";
+  return v.toFixed(metaFor(metric).decimals);
+}
+
+// A metric value → "86.1 kg" / "18.2%" / "74 bpm" (unit spacing per `tight`).
+// null/NaN → "—" with no unit.
+export function fmtFull(metric, v) {
+  if (!Number.isFinite(v)) return "—";
+  const m = metaFor(metric);
+  return `${v.toFixed(m.decimals)}${m.tight ? "" : " "}${m.unit}`;
+}
+
+// A trend's raw gap → an unsigned magnitude string in the metric's units, for the
+// arrow row ("0.4 kg", "2%"). The arrow itself carries the direction. null → "—".
+export function fmtDelta(metric, diff) {
+  if (!Number.isFinite(diff)) return "—";
+  const m = metaFor(metric);
+  return `${Math.abs(diff).toFixed(m.decimals)}${m.tight ? "" : " "}${m.unit}`;
+}

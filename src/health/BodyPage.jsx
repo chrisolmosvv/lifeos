@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { amsTodayYMD } from "../gym/gymDates";
+import { ageLabel } from "./healthFormat";
 import { fetchBody, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
 import { metricView as bodyView, BODY_METRICS } from "./healthBody";
+import { composition, goalProgress, baselineBand } from "./healthBodyRange";
+import { fmtFull } from "./bodyFormat";
+import BodyTile from "./BodyTile";
+import BodyComposition from "./BodyComposition";
 import "../kit/bodyPage.css";
 
 // BodyPage — the full Body front page, reached from the Health Hub's Body card
@@ -23,10 +28,6 @@ const RANGES = [
   { id: "month", label: "Month" },
   { id: "90", label: "90 days" },
 ];
-
-// Which metrics sit in each labelled group (order = display order).
-const COMPOSITION = ["weight", "body_fat", "lean_mass"];
-const VITALS = ["resting_heart_rate", "respiratory_rate"];
 
 export default function BodyPage({ onBack }) {
   const [range, setRange] = useState("latest"); // 'latest' | 'week' | 'month' | '90'
@@ -55,12 +56,77 @@ export default function BodyPage({ onBack }) {
     };
   }, []);
 
-  // Placeholder group (piece 1 only — pieces 2–3 fill in the real tiles).
-  function placeholderGroup(label, metrics) {
+  // The Latest view (piece 2): Composition trio + fat-vs-lean bar + weight goal bar,
+  // and the Vitals pair as 7-day averages + personal bands. "Current value" for
+  // Composition = the latest single READING (deliberate override of the daily-average
+  // headline); Vitals = the smoothed 7-day average (noisy single readings). Trends and
+  // sparklines roll over the daily-average series either way (S5).
+  function renderLatest() {
+    const { body, rowsByMetric, goalMap, today, now } = state;
+    const v = (m) => body[m];
+    const series90 = (m) => v(m).rolling?.[90]?.values || [];
+
+    const comp = composition(
+      v("weight").latestRaw?.value,
+      v("body_fat").latestRaw?.value,
+      v("lean_mass").latestRaw?.value,
+    );
+    const wGoalProg = goalProgress(rowsByMetric.weight, goalMap.get("weight") ?? null, { end: today });
+
+    const compTile = (m, extra) => (
+      <BodyTile
+        metric={m}
+        value={v(m).latestRaw?.value ?? null}
+        subLabel={v(m).latestRaw ? ageLabel(v(m).latestRaw.at, now) : null}
+        extra={extra}
+        trend={v(m).trend}
+        series={series90(m)}
+      />
+    );
+
+    const vitalTile = (m) => (
+      <BodyTile
+        metric={m}
+        value={v(m).rolling?.[7]?.avg ?? null}
+        subLabel="7-day average"
+        trend={v(m).trend}
+        series={series90(m)}
+        band={baselineBand(rowsByMetric[m], { end: today })}
+      />
+    );
+
+    const fatMassExtra = Number.isFinite(comp.fatMassKg)
+      ? `${fmtFull("lean_mass", comp.fatMassKg)} fat`
+      : null;
+
+    return (
+      <>
+        <section className="body-group">
+          <h2 className="body-group-label">Composition</h2>
+          <div className="body-tiles body-tiles--3">
+            {compTile("weight")}
+            {compTile("body_fat", fatMassExtra)}
+            {compTile("lean_mass")}
+          </div>
+          <BodyComposition comp={comp} goalProg={wGoalProg} />
+        </section>
+
+        <section className="body-group body-group--vitals">
+          <h2 className="body-group-label">Vitals</h2>
+          <div className="body-tiles body-tiles--2">
+            {vitalTile("resting_heart_rate")}
+            {vitalTile("respiratory_rate")}
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  // Week / Month / 90 ranges reframe the page — piece 3. Placeholder until then.
+  function placeholderRange() {
     return (
       <section className="body-group">
-        <h2 className="body-group-label">{label}</h2>
-        <p className="body-view-stub">{metrics.join(" · ")} — coming next</p>
+        <p className="body-view-stub">Range view — coming next.</p>
       </section>
     );
   }
@@ -93,11 +159,10 @@ export default function BodyPage({ onBack }) {
         </div>
       ) : state.error ? (
         <p className="body-error">Couldn’t load your body stats. {state.error}</p>
+      ) : range === "latest" ? (
+        renderLatest()
       ) : (
-        <>
-          {placeholderGroup("Composition", COMPOSITION)}
-          {placeholderGroup("Vitals", VITALS)}
-        </>
+        placeholderRange()
       )}
     </div>
   );
