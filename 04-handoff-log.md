@@ -35,6 +35,53 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ## Log
 
+### 2026-06-27 — Track S — S6: Sleep front page (Night / Week / Month). SRC/ ONLY. (Owner-verified on Mac.)
+WHAT CHANGED:
+- The Health Hub's Sleep card now opens a full Sleep page (replacing the stub). A Night / Week / Month
+  segmented control swaps the whole view; opens on Night; loads fresh per open with a spinner; "← Health"
+  back, same pattern as the Gym page.
+- NIGHT view: hero = last night's duration + an INTERACTIVE HYPNOGRAM drawn from the new segments column
+  (ink stage shades, terracotta=Deep; tap/hover a segment → stage/clock/duration) + an understated goal
+  marker at "in-bed + goal-length". Falls back to a single proportion BAND (from stage totals) for older
+  nights with no segments. Then bed/wake times (+ bedtime-vs-goal if a by_time goal exists), bedtime
+  consistency (S5 spread + a tunable regularity word) with a week bed/wake dot band, the stages section
+  (min AND % for all four), and the rest (awakenings + awake min, that night's respiratory rate). No-data
+  → "No sleep recorded" + nudge to Week (no fallback to an older night); no goal → display-only prompt.
+- WEEK (7) / MONTH (30): per-night stacked stage bars; summary = avg duration + circular-mean avg
+  bedtime/wake; goal streak + nights-hit "4/7"; baseline compare vs the 90-day average. Tapping a bar
+  drills into that night's full Night view (band fallback for segmentless nights; consistency hidden as
+  it's a rolling metric). Sparse rule: bars always show; the average/baseline line hides under 3 nights.
+- S6-prep (own commit 66521de): extended the S5 calc layer with awake.pct, nightsHitGoal, averageClock +
+  rangeBedWakeAverages (circular mean), dailyValueOn; later nightOn(rows, ymd) for the drill-in. The page
+  consumes the calc layer only; the sole new "reading" is parsing the segments jsonb (presentation helper).
+- Item 5 (baseline) done as presentation: 7-day (or 30-day) avg vs the 90-day baseline.
+
+FILES TOUCHED (all NEW unless noted): src/health/SleepPage.jsx, SleepNight.jsx, SleepRange.jsx,
+hypnogram.js; src/kit/Hypnogram.jsx, BedWakeBand.jsx, sleepPage.css; src/health/healthFormat.js (+clockTime,
+clockFromMin), healthSleep.js (+awake.pct, nightsHitGoal, averageClock, rangeBedWakeAverages, nightOn),
+healthBody.js (+dailyValueOn), healthLoad.js (fetchSleep now selects segments), HealthHub.jsx (Sleep card →
+SleepPage). No schema/db/supabase changes. Commits 66521de → 182d885.
+
+HOW TO VERIFY (done): npm run dev → Health → Sleep. Night duration/hypnogram/stages/bed-wake match a known
+night; tap a segment shows right times; Week/Month bars + streak + 4/7 + circular-mean times read true;
+tapping a bar drills into that night (real hypnogram on segmented nights, proportion band on older ones);
+empty/sparse/no-goal states behave; Night view fits without scrolling.
+
+KNOWN GAPS / RISKS:
+- Goal marker is an APPROXIMATE reference (in-bed + goal-length), not exact sleep-onset math — owner
+  approved the reading.
+- Regularity word ("steady/fairly steady/variable") thresholds are one tunable constant (REGULARITY_MIN in
+  hypnogram.js); tune on real data later.
+- Goals are read-only everywhere; the "set a goal" prompt is display-only (real editor is S9).
+- Only nights ingested after S5b carry segments; older nights use the proportion-band fallback (by design).
+
+NEXT: S7 — Body front page (read-only), replacing the Body stub, consuming the same S5 layer.
+
+FOR THE CHECKER: SRC-ONLY (no schema). Confirm: the page adds NO new metric calc (all derived numbers come
+from S5 getters; segments parsing is presentation only); the Gym page + Hub are untouched apart from
+repointing the Sleep card; activity/body calc unchanged; terracotta stays reserved (Deep + movement +
+affordances).
+
 ### 2026-06-26 — Track S — Health Hub shell (section front + 3 cards). SRC/ ONLY. (Owner-verified on Mac.)
 WHAT CHANGED:
 - The Health nav pillar now opens a new HEALTH HUB — a calm "section front": a quiet dateline ("Friday
