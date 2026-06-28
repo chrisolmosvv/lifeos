@@ -26,10 +26,21 @@ import { searchSaved } from "./saved.ts";
 import { searchOff } from "./off.ts";
 import { searchUsda, usdaConfigured } from "./usda.ts";
 
+// CORS — food-search is the FIRST browser-called function in LifeOS (telegram/brief/gym/
+// health-ingest are all server-to-server and never needed this). The browser sends a
+// preflight OPTIONS before the POST, and EVERY response (success AND error) must carry
+// these headers or the browser hides the real status behind a CORS error. Origin '*' is
+// safe here: verify_jwt = true means the JWT is the real auth, not the request origin.
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 
@@ -56,6 +67,10 @@ async function safely(p: Promise<FoodCandidate[]>): Promise<{ records: FoodCandi
 }
 
 Deno.serve(async (req) => {
+  // The browser preflight — answer it with the CORS headers, before any auth/work.
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
   if (req.method !== "POST") {
     return json({ ok: false, error: "method_not_allowed" }, 405);
   }
