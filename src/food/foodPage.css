@@ -1,0 +1,82 @@
+/* LifeOS — Food pillar shell (F4). The Log | Cookbook toggle mirrors the BodyPage tabs
+   (its own class, no cross-coupling), the warm empty states follow the G16 warm-edge law
+   (a calm one-line invite, never a cold "no data"), and a self-contained spinner is here
+   for F5's load (F4 shows none). Hairline rules, never boxes; terracotta only on the active
+   tab. Colours/fonts come from theme.css vars, so dark mode follows for free. */
+
+.food-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 8px 16px 24px;
+}
+
+/* The Log | Cookbook toggle — mirrors .body-tabs (an inline hairline-bordered pair). */
+.food-tabs {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 6px 0 18px;
+}
+.food-tab {
+  background: var(--paper);
+  border: none;
+  border-left: 1px solid var(--rule);
+  padding: 8px 22px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+.food-tab:first-child {
+  border-left: none;
+}
+.food-tab:hover {
+  color: var(--accent);
+}
+.food-tab.is-active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.food-tab.is-active:hover {
+  color: var(--paper); /* selected stays calm — no terracotta on the active fill */
+}
+
+/* Warm empty state — Fraunces, generous breathing room, a single inviting line. Kept
+   compact (no forced tall min-height) so the near-empty shell holds desktop zero-scroll. */
+.food-empty {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  max-width: 36ch;
+  margin: 7vh auto 0;
+  text-align: center;
+}
+
+/* Loading state — present for F5 (the day/range load); F4 renders content directly and
+   never shows this. Self-contained so Food doesn't depend on healthHub.css being loaded. */
+.food-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40vh;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+.food-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--rule);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: food-spin 0.8s linear infinite;
+}
+@keyframes food-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

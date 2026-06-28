@@ -8,6 +8,7 @@ import Settings from './Settings'
 import AllTasks from './AllTasks'
 import ArchiveScreen from './ArchiveScreen'
 import HealthHub from './health/HealthHub'
+import FoodPage from './food/FoodPage'
 import './calendar.css'
 
 // The logged-in app frame: the masthead (nameplate + Today/Calendar/Settings
@@ -47,6 +48,10 @@ export default function LoggedIn({ email }) {
       ) : view === 'health' ? (
         <div className="cal-wrap">
           <HealthHub />
+        </div>
+      ) : view === 'food' ? (
+        <div className="cal-wrap">
+          <FoodPage />
         </div>
       ) : (
         <div className="cal-wrap">

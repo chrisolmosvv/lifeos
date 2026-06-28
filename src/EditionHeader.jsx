@@ -18,6 +18,7 @@ const NAV = [
   { id: 'today', label: 'Today' },
   { id: 'calendar', label: 'Calendar' },
   { id: 'health', label: 'Health' },
+  { id: 'food', label: 'Food' },
   { id: 'settings', label: 'Settings' },
 ]
 
