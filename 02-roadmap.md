@@ -802,8 +802,14 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
        fat-vs-lean composition bar with ratio-mode guard, weight goal-progress) + Vitals
        group (resting HR / respiratory as 7-day averages + personal band). Compute-on-read
        via S7-prep getters. BUILT + owner-verified. Full locked spec in 03-decisions.md.
-- ⬜ S8 — Drill-ins (sleep night, body history).  ← NEXT
-- ⬜ S9 — Goals editor (in-app write, with undo).
+- ⬜ S8 — Drill-ins (sleep night, body history).  ← NEXT (built S9 first, owner's order)
+- 🟦 S9 — Goals editor (the first in-app WRITE). Inline popover from the Sleep/Body
+       "set a goal" prompts: weight + body_fat (value + frozen direction), sleep duration
+       + bedtime (combined editor). Append-only health_goals log (newest row wins; clear =
+       active=false marker) — NO schema change needed. Optimistic write + Toast-on-failure;
+       validation blocks nonsense; confirm-on-clear (no explicit undo — append-only history
+       + re-set is the safety net). New Popover kit primitive. BUILT + owner-verified.
+       Full spec in 03-decisions.md.
 - ⬜ S10 — Coach hooks (bedtime reminder + brief lines, logic-only).
 - ⬜ Final — Polish + audit to the design laws.
 

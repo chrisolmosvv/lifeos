@@ -9,6 +9,37 @@
 
 ---
 
+## Goals editor (S9) — LOCKED & BUILT 2026-06-28
+The first in-app WRITE in Track S (S5–S7 were read-only). Inline editor reached by
+tapping the muted "set a goal" prompts on the Sleep + Body pages.
+- **health_goals is an APPEND-ONLY event log — NO schema change was needed.** The S2
+  table already allowed many rows per goal_type (no unique constraint) and has an
+  `active` flag. The reader (resolveGoals) was changed src-only: the SINGLE NEWEST row
+  per goal_type is the verdict — active=true = live goal, active=false = a "cleared
+  marker" meaning no active goal (no fallback to an older row). **Why:** append-only
+  keeps full history + a clean clear, with zero migration. **Verified** identical to the
+  old "first active wins" reader for all existing goals; cleared-marker is new-only.
+- **Writes are inserts only — never update/delete.** set = new active row; change = new
+  active row (old retained); clear = an active=false null-target row. **Why:** drift-free
+  history; the reader decides from the newest row.
+- **Direction is FROZEN at set time** (inferred from the current daily-average reading
+  vs the target for weight/body_fat; implicit up for sleep duration, by_time for
+  bedtime). **Why:** passing the target later must not flip the progress bar.
+- **body_fat promoted to goal-able** (was trend-only in S7): the fat tile gains the SAME
+  goalProgress bar as weight (generic calc, no new maths). **Lean stays trend-only —
+  the asymmetry is intentional.** RHR/respiratory stay monitor-only bands, NEVER goals.
+- **Sleep editor is COMBINED** (duration + bedtime in one popover) with quick presets +
+  custom. **Clear wipes BOTH** sleep goals together (owner-approved for now; per-goal
+  clear is a possible later change).
+- **Optimistic write + Toast on failure** (reused kit/Toast). **Confirm only on clear**
+  (set/change are low-stakes + re-editable); **no explicit undo** — append-only history +
+  re-set is the safety net. Validation blocks nonsense (target = current, fat >100/≤0,
+  non-positive sleep, already-met target) with Save disabled until valid.
+- **New UI primitive: Popover** (kit/Popover) — anchored float, clamps in viewport /
+  flips above, degrades to a centered sheet on narrow screens. None existed before.
+- **Two-track:** this was SRC-ONLY (no schema, no checker gate) precisely because the S2
+  table already fit the append-only model.
+
 ## Body front page (S7) — LOCKED & BUILT 2026-06-28
 - Two groups, range-switchable, zero-scroll on the Latest snapshot. Range switcher only at
   top — NO header/date (freshness lives per-metric as reading-age labels).

@@ -56,6 +56,53 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-28 — Track S — S9: Goals editor (the first in-app WRITE). SRC/ ONLY (no schema). (Owner-verified on Mac + DB rows.)
+WHAT CHANGED:
+- The first WRITE in Track S. Tapping the muted "set a goal" prompts on the Sleep + Body
+  pages now opens an inline POPOVER editor that writes to health_goals.
+- SCHEMA VERDICT (recon piece 0): NO change needed — the S2 health_goals table already
+  allows many rows per goal_type (no unique constraint) + has an `active` flag, so the
+  append-only model fit src-only. No checker gate this round.
+- Goal-reader (piece 1, healthGoals.js): resolveGoals now judges the SINGLE NEWEST row per
+  goal_type — active=true = live goal, active=false = cleared marker (no fallback).
+  Verified byte-identical to the old reader for all existing goals; cleared path is new-only.
+- Editor (pieces 2–3): a new Popover kit primitive (anchored, clamps/flips, sheet on
+  narrow) + GoalEditor (weight/body_fat: number + ±0.1 steppers, inferred FROZEN direction)
+  + SleepGoalEditor (combined duration + bedtime; presets 7/7.5/8/8.5h · 22:30/23:00/23:30 +
+  custom). Append-only writes via healthGoalsWrite (set/clear = inserts). useGoalWrites hook
+  does optimistic Map update + background write, revert + Toast (reused) on failure; shared
+  by both pages. Validation blocks nonsense, Save disabled until valid, confirm-on-clear.
+- body_fat promoted to goal-able (same goalProgress bar as weight; lean stays trend-only).
+  Sleep page recomputes its view-model via useMemo so an edit reflects live (bed-vs-target,
+  streak) without a refetch; the Night view gained a tappable goal footer.
+- POLISH (piece 4): stacked goal-bar gap tightened (zero-scroll headroom), dead .body-muted
+  removed, terracotta confirmed sparing (editor uses none; only the goal marker + tap-
+  affordance hovers do).
+
+FILES TOUCHED (NEW unless noted): src/kit/Popover.jsx, popover.css; src/kit/goalEditor.css;
+src/health/healthGoalsWrite.js, useGoalWrites.js, GoalEditor.jsx, SleepGoalEditor.jsx,
+GoalBar.jsx; src/health/healthGoals.js (reader), BodyPage.jsx, BodyComposition.jsx,
+SleepPage.jsx, SleepNight.jsx (wiring); src/kit/bodyPage.css, sleepPage.css. No schema/db.
+Commits: f831314 (reader) → 004a9b0 (weight end-to-end) → 09072c4 (fat + sleep) → b34d9e9 (polish).
+
+HOW TO VERIFY (done): set/change/clear weight, body_fat, sleep duration + bedtime; each
+write lands the right row in health_goals (NEW active row on set/change, active=false marker
+on clear — confirmed in the table, not just on screen); reloads persist; reopen pre-fills;
+validation + already-met guards block; optimistic revert + toast on a forced (Wi-Fi-off)
+failure; Body Latest holds zero-scroll with both goal bars.
+
+KNOWN GAPS / RISKS:
+- Clear on the sleep editor wipes BOTH duration + bedtime together (owner-approved for now).
+- No explicit undo; append-only history + re-set is the safety net (confirm-on-clear guards
+  the only destructive-feeling action).
+- Goals still don't feed Marty (that's S10).
+
+NEXT: S8 — Drill-ins (sleep night, body history). (S9 was built ahead of S8 by owner's order.)
+
+FOR THE CHECKER: SRC-ONLY, no schema — confirm no db/ or supabase/ change rode along; the
+append-only model reuses the existing health_goals columns (active flag / nullable target);
+RLS unchanged (writes go through the authed client, owner-scoped).
+
 ### 2026-06-28 — Track S — S7: Body front page (Latest / Week / Month / 90-day). SRC/ ONLY. (Owner-verified on Mac.)
 WHAT CHANGED:
 - The Health Hub's Body card now opens a full Body page (replacing the stub). A Latest / Week / Month /
