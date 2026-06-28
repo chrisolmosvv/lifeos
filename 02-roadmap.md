@@ -819,15 +819,35 @@ OPEN (Layer 4): how Gym/Sleep/Body coexist under the Health banner — gates lay
 
 ---
 
-## 🍎 Track F — Food module   ← NEXT (full plan: TBD by the Planner)
+## 🍎 Track F — Food: Cookbook & Nutrition   ← NEXT (full plan: 11-food-nutrition.md)
 
-Health's next module — the one the S-track was designed to absorb later (it sharpens the
-sleep coach for free by feeding caffeine / alcohol / late meals automatically). Chosen
-this session as the next thing to build, ahead of the remaining S-track tail (S10 coach
-hooks + Final, both deferred). Spec, tables and pieces to be designed by the Planner.
-Same laws: additive tables, RLS, free-tier, two-track, logic-only V1.
+The first pillar outside Health. A Nutrition logger (meal-by-meal cal+macro ledger
+vs owner-set goals) + a typographic Cookbook (recipe library, cooking mode, timers),
+joined by a cook→log bridge. Food data from Open Food Facts + USDA by text search
+(barcode deferred to mobile). One AI touch — recipe import — on the FREE Gemini key
+(recipe text isn't sensitive). Intake-reasoning (agentic meal-planner, alcohol
+impact) deferred to a paid no-training key. Additive tables, RLS, free-tier,
+two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-section.
 
-- ⬜ F0 — Paperwork (the plan doc + 02/03 updates). No code.  ← the first piece, once specced.
+- 🔨 F0 — Paperwork (this plan + 02/03). No code.  ← IN PROGRESS
+- ⬜ F1 — Tables: 5 ONLY (food_items, food_log_entries, recipes, recipe_ingredients,
+       recipe_steps) in db/28_food_tables.sql. Goals reuse health_goals; drinks =
+       is_alcohol+alcohol_units flag; favourites = is_favourite flag; recents derived.
+       No new goals/drinks/recents tables. CHECKER-GATED, own commit.
+- ⬜ F2 — food-search Edge Function (OFF + USDA → one shape; verify_jwt=true; cache via food_items).
+- ⬜ F3 — Calc layer (compute-on-read; recipe verified now, day/range at F6).
+- ⬜ F4 — Pillar scaffold: 5th nav pillar + Log|Cookbook tabs + frame + empty states (read-only).
+- ⬜ F5 — Logger front page (read): editorial calorie arc + macro bar + meal ledger + day/week/month.
+- ⬜ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.
+- ⬜ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.
+- ⬜ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.
+- ⬜ F9 — Cook→log bridge: "Cook this" → staged draft (servings/slot/swap) → log snapshot.
+- ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
+- ⬜ F11 — Polish + audit to the design laws.
+
+OPEN: F2 — OFF/USDA rate limits + caching in practice.   F4 — nav order of the five pillars.
+SETTLED AT RECON: 5 tables only; goals/drinks/recents reuse; ±10% on-target band;
+      portion table for ingredient→weight (F7, an F0 amendment); USDA_FDC_API_KEY owner-supplied.
 
 ---
 
@@ -844,6 +864,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-28 — Track F — Food F0 — spec locked into the brain (paperwork only, no code).** Opened the new
+  **F-track** (Food: Cookbook & Nutrition) as its own **top-level pillar** — an AMENDMENT to Gym G0, which had
+  parked nutrition under the Health banner (recorded openly). Created `11-food-nutrition.md` (the full spec);
+  recorded the F0 locked decisions in `03-decisions.md` and this Track-F roadmap block. V1 = Cookbook +
+  Nutrition logger + cook→log bridge + lite alcohol log; one AI touch (recipe import) on the FREE key (recipe
+  text isn't sensitive); agentic meal-planner + barcode + alcohol-impact deferred. F1 recon settled the schema:
+  **5 tables only** (`db/28_food_tables.sql`); nutrition goals reuse `health_goals`, drinks = `is_alcohol`+
+  `alcohol_units` flag on the log, favourites = `is_favourite` flag + recents derived (no new goals/drinks/
+  recents tables). Locked: ±10% on-target band; a curated portion/weight table at F7 (an F0 amendment beyond
+  the skip-or-manual minimum); `USDA_FDC_API_KEY` owner-supplied; food-search `verify_jwt=true` (first-ever
+  app→Edge-Function call). F0 done; F1–F11 not started. **NEXT: F1 — the 5 tables (schema; checker-gated, own
+  SQL commit + "checker approved" + owner runs it on Frankfurt + owner verifies live before any src/).**
 - **2026-06-24 — Health → Gym G2 — the gym tables written (SQL only; ⚠️ schema change, checker-gated).** Five
   additive tables (`db/17`–`db/21`, commit `e9238a9`): `gym_workouts` (unique user_id+hevy_id), `gym_exercises`
   (+exercise_template_id), `gym_sets` (+cardio cols), `gym_sync_state` (one row/owner), `gym_pins`. Owner-RLS

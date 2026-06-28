@@ -9,6 +9,68 @@
 
 ---
 
+## Food — Cookbook & Nutrition — F0: the locked plan (2026-06-28)
+
+- **Food is its own TOP-LEVEL PILLAR (AMENDS Gym G0).** G0 parked nutrition as a
+  future Health sub-section; that is superseded. **Why:** a Cookbook is library
+  content, not health tracking, and the logger stands alone. **Trade-off:** a fifth
+  nav pillar (order set at F4); G0's other decisions are untouched.
+- **V1 scope = Cookbook + Nutrition logger + cook→log bridge + lite alcohol log.**
+  **Why:** the integration (cook a meal → it logs) is the module's soul. **Trade-off:**
+  barcode (→ mobile), the agentic meal-planner, and alcohol impact analysis are deferred.
+- **AI boundary = recipe import only, on the FREE key.** Recipe text/URLs aren't
+  sensitive health data. **Why:** keeps import useful without tripping the
+  "health data → paid AI" rule. **Trade-off:** nothing reasons over intake in V1; the
+  agentic layer waits for a paid no-training key.
+- **Logger lead = calorie arc + macro stacked bar; goals = cal + P/C/F grams.**
+  Fibre/sugar/sodium captured + shown, not targeted. **Why:** one calm glance at the
+  four things that matter. **Trade-off:** the arc renders as a hairline editorial arc,
+  not a chunky ring (stays on-brand; a new kit primitive).
+- **Day = fixed meal ledger (B/L/D/Snacks); history = day/week/month.** Reuses the
+  Body range-switcher UI + windowing, but the day collapse is a NEW sum-per-day
+  primitive (dailyTotals) — nutrition sums where Body averages. **No streak/adherence
+  in V1**, but "all four within a ±10% band" is the locked on-target rule for later.
+  **Why:** familiar, calm, no new pattern; the band is decided once. **Trade-off:** none.
+- **Add food = DB search (OFF + USDA) + saved picks + manual; quick-add recents +
+  favourites.** **Why:** best coverage for NL groceries (OFF branded) + whole foods
+  (USDA) with low repetition. **Trade-off:** the food-search function must normalise
+  two schemas into one shape — the build's centre of gravity. It's the first-ever
+  app→Edge-Function call (verify_jwt=true, called as the owner).
+- **Recipe = ingredients + steps + times + servings; macros computed from ingredients
+  via the food DB, no recipe-level override.** No tags/photos (typographic). **Why:**
+  one source of truth for a recipe's numbers; on-brand overview. **Trade-off:**
+  ingredients are structured {match, amount, unit}; unmatchable ones need a path.
+- **Ingredient→weight = a curated portion table (AMENDMENT to F0).** Common items +
+  unit conversions (cup/tbsp/tsp→g) inside the Food module resolve "1 onion" to grams;
+  off-list items fall back to skip-or-manual. Lands at F7 with the Cookbook. **Why:**
+  most recipes use household measures; pure skip-or-manual would leave too many recipes
+  unestimated. **Trade-off:** a little more work than the F0 minimum — accepted, scoped
+  small + curated.
+- **Cooking mode = full recipe on one page, inline step timers + a free manual timer
+  (concurrent).** Zero-scroll doesn't bind a long-form recipe. **Why:** calm wins;
+  cooking needs >1 timer. **Trade-off:** none.
+- **Cook→log = "Cook this" → staged draft (servings + slot), optional cook-only
+  ingredient swap; logs a macro SNAPSHOT.** **Why:** nothing writes blind; history
+  isn't rewritten by later recipe edits. **Trade-off:** a per-ingredient swap UI in
+  the confirm step.
+- **Recipe import = paste text/URL → Gemini extracts → auto-match confident
+  ingredients, flag the rest → review screen → save; URL fail falls back to paste.**
+  **Why:** accuracy is protected by a confirm step; graceful degradation. **Trade-off:**
+  URL import needs a server-side fetch before Gemini.
+- **Warm sparse states.** No goals → muted "set targets" prompt (S9 pattern);
+  unmatchable ingredient → portion table, then skip-with-note or manual; incomplete
+  recipe → show resolved macros + "N unestimated" flag. **Why:** the warm-edge-state
+  law (Gym G16). **Trade-off:** none.
+- **No coach hooks in V1.** **Why:** intake-reasoning needs the paid key. **Trade-off:**
+  the proactive layer waits for the agentic piece.
+- **Schema = 5 tables only; goals + drinks + favourites/recents REUSE, no new tables
+  (CONFIRMED at recon).** Goals → health_goals (free-text goal_type + generic
+  resolveGoals + the S9 write path, verbatim); drinks → is_alcohol + alcohol_units on
+  food_log_entries (one ledger, one day-total); favourites → is_favourite on
+  food_items; recents → derived from the log. **Why:** a drink is an intake entry like
+  any other; duplicating truth into side tables invites drift; the goals shape already
+  fits. **Trade-off:** none.
+
 ## Sleep & Body drill-ins (S8) — ABSORBED, not built (2026-06-28)
 S8's two deliverables already shipped inside S6/S7, so **no separate S8 piece is built**:
 - **Sleep-night detail** = S6's Week/Month **bar→night drill-in** (taps into the full Night
