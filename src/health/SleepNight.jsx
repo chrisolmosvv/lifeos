@@ -10,18 +10,46 @@ import { hm, clockTime, clockFromMin } from "./healthFormat";
 // detail = the S5 lastNight-shaped object for the night (null = no data). segments =
 // that night's raw jsonb (null → proportion-band fallback). The aggregates
 // (consistency, goal) come straight from S5.
+const hoursLabel = (min) => `${+(min / 60).toFixed(2)}h`;
+
+// The tappable goal footer: a "goal 8h · by 23:30" line when any sleep goal is set,
+// otherwise the prompt to set one. Tappable only where onEdit is given (the main Night
+// view) — on a past-night drill-in it's a static label (or nothing).
+function SleepGoalFooter({ durationGoalMin, bedtimeGoalMin, onEdit }) {
+  const hasGoal = durationGoalMin != null || bedtimeGoalMin != null;
+  if (hasGoal) {
+    const parts = [];
+    if (durationGoalMin != null) parts.push(`goal ${hoursLabel(durationGoalMin)}`);
+    if (bedtimeGoalMin != null) parts.push(`by ${clockFromMin(bedtimeGoalMin)}`);
+    const label = parts.join(" · ");
+    return onEdit ? (
+      <button type="button" className="sleep-goalprompt sleep-goalprompt--btn" onClick={(e) => onEdit(e.currentTarget)}>
+        {label}
+      </button>
+    ) : (
+      <p className="sleep-goalline">{label}</p>
+    );
+  }
+  return onEdit ? (
+    <button type="button" className="sleep-goalprompt sleep-goalprompt--btn" onClick={(e) => onEdit(e.currentTarget)}>
+      Set a sleep goal to track progress.
+    </button>
+  ) : null;
+}
+
 export default function SleepNight({
   detail,
   isLastNight,
   heading,
   segments,
   goalMinutes,
+  bedtimeGoalMin,
   bedtimeVsGoal,
   consistency,
   showConsistency = true,
   weekRows,
   respValue,
-  hasGoal,
+  onEditSleepGoal,
   onNudgeToWeek,
 }) {
   if (!detail) {
@@ -118,11 +146,11 @@ export default function SleepNight({
         </div>
       </section>
 
-      {!hasGoal && (
-        <p className="sleep-goalprompt">
-          Set a sleep goal to track progress. <span className="sleep-muted">(coming soon)</span>
-        </p>
-      )}
+      <SleepGoalFooter
+        durationGoalMin={goalMinutes}
+        bedtimeGoalMin={bedtimeGoalMin}
+        onEdit={onEditSleepGoal}
+      />
     </div>
   );
 }

@@ -18,7 +18,11 @@ export function useGoalWrites(goalMap, setGoalMap) {
 
   const openEditor = (metric, el) => {
     anchorRef.current = el;
-    setEditor({ metric });
+    setEditor({ metric }); // a single value goal (weight / body_fat)
+  };
+  const openSleepEditor = (el) => {
+    anchorRef.current = el;
+    setEditor({ sleep: true }); // the combined sleep duration + bedtime editor
   };
   const closeEditor = () => setEditor(null);
   const dismissToast = () => setToast(null);
@@ -51,5 +55,52 @@ export function useGoalWrites(goalMap, setGoalMap) {
     }
   }
 
-  return { anchorRef, editor, toast, openEditor, closeEditor, dismissToast, submitGoal, clearGoalFor };
+  // Set/change SEVERAL goals at once (the combined sleep editor). list = [{goal_type,
+  // target_value, unit, direction}, …]. Optimistic for all, one write each; any
+  // failure reverts the whole batch and toasts.
+  async function submitGoals(list) {
+    if (!list.length) {
+      setEditor(null);
+      return;
+    }
+    const prev = goalMap;
+    const next = new Map(prev);
+    for (const g of list) {
+      next.set(g.goal_type, { target_value: g.target_value, unit: g.unit, direction: g.direction });
+    }
+    setGoalMap(next);
+    setEditor(null);
+    try {
+      await Promise.all(list.map((g) => setGoal(g)));
+    } catch {
+      setGoalMap(prev);
+      setToast("Couldn’t save — try again.");
+    }
+  }
+
+  // Clear SEVERAL goals at once (the combined sleep editor clears duration + bedtime).
+  async function clearGoals(metrics) {
+    const live = metrics.filter((m) => goalMap.has(m));
+    if (!live.length) {
+      setEditor(null);
+      return;
+    }
+    const prev = goalMap;
+    const next = new Map(prev);
+    live.forEach((m) => next.delete(m));
+    setGoalMap(next);
+    setEditor(null);
+    try {
+      await Promise.all(live.map((m) => clearGoal(m)));
+    } catch {
+      setGoalMap(prev);
+      setToast("Couldn’t clear — try again.");
+    }
+  }
+
+  return {
+    anchorRef, editor, toast,
+    openEditor, openSleepEditor, closeEditor, dismissToast,
+    submitGoal, clearGoalFor, submitGoals, clearGoals,
+  };
 }

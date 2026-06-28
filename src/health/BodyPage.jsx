@@ -15,16 +15,11 @@ import Popover from "../kit/Popover";
 import Toast from "../kit/Toast";
 import "../kit/bodyPage.css";
 
-// BodyPage — the full Body front page, reached from the Health Hub's Body card
-// (replacing the old "coming soon" stub). A Latest / Week / Month / 90-day range
-// switcher reframes the WHOLE page (one range at a time); the page always OPENS on
-// Latest. Data loads ONCE per open (compute-on-read) — switching ranges is
-// client-side, no refetch. The "← Health" back returns to the hub, exactly like the
-// Sleep page.
-//
-// PIECE 1 (scaffold): loads the five body metrics + goals, runs the S5 calc per
-// metric, and renders the range switcher / spinner / back with EMPTY placeholders
-// for the two groups. The real Composition + Vitals tiles land in pieces 2–3.
+// BodyPage — the full Body front page (Health Hub → Body). A Latest / Week / Month /
+// 90-day switcher reframes the WHOLE page; opens on Latest; data loads ONCE per open
+// (compute-on-read), range switching is client-side. Latest shows Composition + Vitals
+// groups with goal bars (weight + body_fat are goal-able via the S9 editor); the range
+// views show line charts. "← Health" returns to the hub, like the Sleep page.
 
 const START = "2026-01-01"; // backfill start — the whole record
 const RANGES = [
@@ -83,7 +78,17 @@ export default function BodyPage({ onBack }) {
       v("body_fat").latestRaw?.value,
       v("lean_mass").latestRaw?.value,
     );
-    const wGoalProg = goalProgress(rowsByMetric.weight, goalMap.get("weight") ?? null, { end: today });
+    // Goal bars below the trio: weight + body_fat are goal-able (S9); lean is not.
+    const goalArea = [
+      { metric: "weight", promptText: "Set a goal weight to track progress." },
+      { metric: "body_fat", promptText: "Set a body-fat goal to track progress." },
+    ].map(({ metric, promptText }) => ({
+      metric,
+      promptText,
+      hasGoal: goalMap.has(metric),
+      goalProg: goalProgress(rowsByMetric[metric], goalMap.get(metric) ?? null, { end: today }),
+      onEdit: (el) => gw.openEditor(metric, el),
+    }));
 
     const compTile = (m, extra) => (
       <BodyTile
@@ -120,11 +125,7 @@ export default function BodyPage({ onBack }) {
             {compTile("body_fat", fatMassExtra)}
             {compTile("lean_mass")}
           </div>
-          <BodyComposition
-            comp={comp}
-            goalProg={wGoalProg}
-            onEditGoal={(el) => gw.openEditor("weight", el)}
-          />
+          <BodyComposition comp={comp} goals={goalArea} />
         </section>
 
         <section className="body-group body-group--vitals">

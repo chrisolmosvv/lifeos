@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
-import { amsTodayYMD, humanDayLong } from "../gym/gymDates";
+import { useEffect, useMemo, useState } from "react";
+import { amsTodayYMD, shiftYMD, humanDayLong } from "../gym/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
-import { sleepView, nightOn } from "./healthSleep";
+import { sleepView, nightOn, rangeBedWakeAverages } from "./healthSleep";
 import { dailyValueOn } from "./healthBody";
+import { useGoalWrites } from "./useGoalWrites";
 import SleepNight from "./SleepNight";
 import SleepRange from "./SleepRange";
+import SleepGoalEditor from "./SleepGoalEditor";
+import Popover from "../kit/Popover";
+import Toast from "../kit/Toast";
 import "../kit/sleepPage.css";
 
 // SleepPage — the full Sleep front page, reached from the Health Hub's Sleep card
@@ -29,6 +33,9 @@ export default function SleepPage({ onBack }) {
   const [view, setView] = useState("night"); // 'night' | 'week' | 'month'
   const [drilledNight, setDrilledNight] = useState(null); // a past night's ymd, or null
   const [state, setState] = useState({ loading: true });
+  // Goals in their own state so an in-app edit (S9) updates without a refetch.
+  const [goalMap, setGoalMap] = useState(new Map());
+  const gw = useGoalWrites(goalMap, setGoalMap);
 
   useEffect(() => {
     let alive = true;
@@ -40,19 +47,27 @@ export default function SleepPage({ onBack }) {
         fetchSleep(START, today),
         fetchBody("respiratory_rate", START, today),
       ]);
-      const goalMap = resolveGoals(goals);
-      const sv = sleepView(sleep, goalMap, now);
-      if (alive) setState({ loading: false, now, today, sleep, resp, goalMap, sv });
+      if (alive) {
+        setGoalMap(resolveGoals(goals));
+        setState({ loading: false, now, today, sleep, resp });
+      }
     })().catch((e) => alive && setState({ loading: false, error: e.message || String(e) }));
     return () => {
       alive = false;
     };
   }, []);
 
+  // Recompute the view-model when the data OR the goals change, so an in-app goal
+  // edit reflects at once (streak, bedtime-vs-target) without a refetch.
+  const sv = useMemo(
+    () => (state.sleep ? sleepView(state.sleep, goalMap, state.now) : null),
+    [state.sleep, state.now, goalMap],
+  );
+
   // The Night view = last night (today's wake date). We DON'T fall back to an older
   // night here — no data → the empty state nudges to the Week view.
   function renderNight() {
-    const { sv, sleep, resp, goalMap, today } = state;
+    const { sleep, resp, today } = state;
     const isLN = sv.lastNight && sv.lastNight.nightDate === today;
     const detail = isLN ? sv.lastNight : null;
     const nightRow = detail ? sleep.find((r) => r.night_date === detail.nightDate) : null;
@@ -62,11 +77,12 @@ export default function SleepPage({ onBack }) {
         isLastNight={true}
         segments={nightRow?.segments ?? null}
         goalMinutes={goalMap.get("sleep_duration")?.target_value ?? null}
+        bedtimeGoalMin={goalMap.get("bedtime")?.target_value ?? null}
         bedtimeVsGoal={sv.bedtimeVsGoal}
         consistency={sv.bedtime}
         weekRows={sleep}
         respValue={detail ? dailyValueOn(resp, detail.nightDate) : null}
-        hasGoal={goalMap.has("sleep_duration") || goalMap.has("bedtime")}
+        onEditSleepGoal={(el) => gw.openSleepEditor(el)}
         onNudgeToWeek={() => setView("week")}
       />
     );
@@ -74,7 +90,7 @@ export default function SleepPage({ onBack }) {
 
   // Week (7) / Month (30) range view.
   function renderRange(days) {
-    const { sv, sleep, goalMap, today } = state;
+    const { sleep, today } = state;
     return (
       <SleepRange
         days={days}
@@ -91,7 +107,7 @@ export default function SleepPage({ onBack }) {
   // A specific past night opened from a range bar — the full Night view for that
   // night (consistency hidden: it's a rolling "as of now" metric, not per-night).
   function renderDrilledNight() {
-    const { sleep, resp, goalMap } = state;
+    const { sleep, resp } = state;
     const nightRow = (sleep || []).find((r) => r.night_date === drilledNight) || null;
     return (
       <div>
@@ -104,12 +120,13 @@ export default function SleepPage({ onBack }) {
           heading={humanDayLong(drilledNight)}
           segments={nightRow?.segments ?? null}
           goalMinutes={goalMap.get("sleep_duration")?.target_value ?? null}
+          bedtimeGoalMin={goalMap.get("bedtime")?.target_value ?? null}
           bedtimeVsGoal={null}
           consistency={null}
           showConsistency={false}
           weekRows={sleep}
           respValue={dailyValueOn(resp, drilledNight)}
-          hasGoal={goalMap.has("sleep_duration") || goalMap.has("bedtime")}
+          onEditSleepGoal={null}
           onNudgeToWeek={null}
         />
       </div>
@@ -156,6 +173,23 @@ export default function SleepPage({ onBack }) {
       ) : (
         renderRange(30)
       )}
+
+      {gw.editor?.sleep && (
+        <Popover anchorRef={gw.anchorRef} title="Sleep goals" onClose={gw.closeEditor}>
+          <SleepGoalEditor
+            durationGoalMin={goalMap.get("sleep_duration")?.target_value ?? null}
+            bedtimeGoalMin={goalMap.get("bedtime")?.target_value ?? null}
+            currentDurationMin={sv?.rolling?.[7]?.avg ?? null}
+            currentBedtimeMin={
+              rangeBedWakeAverages(state.sleep || [], shiftYMD(state.today, -6), state.today)?.bedAvgMin ?? null
+            }
+            onSubmit={(list) => gw.submitGoals(list)}
+            onClearAll={() => gw.clearGoals(["sleep_duration", "bedtime"])}
+            onClose={gw.closeEditor}
+          />
+        </Popover>
+      )}
+      {gw.toast && <Toast text={gw.toast} onDismiss={gw.dismissToast} />}
     </div>
   );
 }

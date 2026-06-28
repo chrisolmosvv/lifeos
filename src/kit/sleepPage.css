@@ -196,6 +196,28 @@
   border-top: 1px solid var(--rule-faint);
   padding-top: 14px;
 }
+/* Static goal line (drill-in: not editable). */
+.sleep-goalline {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--rule-faint);
+  padding-top: 14px;
+  margin: 0;
+}
+/* Tappable goal line/prompt → opens the editor; hover hints terracotta (affordance). */
+.sleep-goalprompt--btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule-faint);
+  cursor: pointer;
+}
+.sleep-goalprompt--btn:hover {
+  color: var(--accent);
+}
 
 /* ── HYPNOGRAM ──────────────────────────────────────────────────────────────── */
 .hyp {
