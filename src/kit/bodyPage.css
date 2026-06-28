@@ -75,9 +75,6 @@
   border-bottom: 1px solid var(--rule-faint);
 }
 
-.body-muted {
-  color: var(--ink-muted);
-}
 
 /* ── TILES ──────────────────────────────────────────────────────────────────── */
 /* Composition = 3 across, Vitals = 2 across; both stack on a narrow screen. None
@@ -272,6 +269,15 @@
 .body-goal {
   margin-top: 16px;
 }
+/* Stacked goal items (weight + body_fat) sit closer to each other than to the legend
+   above — keeps two bars calm and helps the Latest view hold zero-scroll. */
+.body-goal--btn + .body-goal--btn,
+.body-goal--btn + .body-goalprompt--btn,
+.body-goalprompt--btn + .body-goal--btn,
+.body-goalprompt--btn + .body-goalprompt--btn {
+  margin-top: 10px;
+}
+
 /* The goal bar + the "set a goal" prompt are tappable (open the goal editor). Reset
    button chrome; hover hints terracotta — a tap affordance (the sanctioned use). */
 .body-goal--btn,
