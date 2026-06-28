@@ -75,13 +75,6 @@
   border-bottom: 1px solid var(--rule-faint);
 }
 
-/* Placeholder (range views until piece 3). */
-.body-view-stub {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  padding: 24px 0;
-}
 .body-muted {
   color: var(--ink-muted);
 }
