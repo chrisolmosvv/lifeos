@@ -797,8 +797,12 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
 - 🟦 S6 — Sleep front page (Night/Week/Month; interactive hypnogram + proportion-band
        fallback; bar→night drill-in; zero-scroll night view). BUILT + owner-verified.
        Full locked spec in 03-decisions.md.
-- ⬜ S7 — Body front page (read-only).  ← NEXT
-- ⬜ S8 — Drill-ins (sleep night, body history).
+- 🟦 S7 — Body front page (read-only). Latest / Week / Month / 90-day range switcher;
+       Composition group (weight/body_fat/lean — value + age + trend + 90-day sparkline,
+       fat-vs-lean composition bar with ratio-mode guard, weight goal-progress) + Vitals
+       group (resting HR / respiratory as 7-day averages + personal band). Compute-on-read
+       via S7-prep getters. BUILT + owner-verified. Full locked spec in 03-decisions.md.
+- ⬜ S8 — Drill-ins (sleep night, body history).  ← NEXT
 - ⬜ S9 — Goals editor (in-app write, with undo).
 - ⬜ S10 — Coach hooks (bedtime reminder + brief lines, logic-only).
 - ⬜ Final — Polish + audit to the design laws.

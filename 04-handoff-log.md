@@ -56,6 +56,60 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-28 — Track S — S7: Body front page (Latest / Week / Month / 90-day). SRC/ ONLY. (Owner-verified on Mac.)
+WHAT CHANGED:
+- The Health Hub's Body card now opens a full Body page (replacing the stub). A Latest / Week / Month /
+  90-day segmented control reframes the WHOLE page; opens on Latest; loads fresh per open with a spinner;
+  "← Health" back, same pattern as the Sleep/Gym pages.
+- LATEST view: two groups. COMPOSITION (weight / body_fat / lean_mass) — each tile = latest reading value
+  + "as of" age + trend arrow + a 90-day sparkline; body_fat carries its fat-mass kg as an extra line.
+  Below the trio, a fat-vs-lean COMPOSITION BAR with a ratio-mode guard (when fat+lean overrun scale
+  weight it shows them as a proportion of each other, not a negative remainder; renders in ratio mode on
+  owner's real data) and a weight GOAL-PROGRESS bar (display-only "set a goal weight" prompt when no goal,
+  which is the owner's current state). VITALS (resting_heart_rate / respiratory_rate) — 7-day averages +
+  sparkline + an optional personal band (p10–p90 over 90d, ≥14 readings; HIDDEN for owner — too few
+  readings). Weight shows 2dp (the 2nd decimal carries goal signal); body_fat/lean 1dp.
+- WEEK (7) / MONTH (30) / 90-day views: every value reframes to that range's AVERAGE, every trend to that
+  range's window-over-window DELTA ("—" cleanly while no prior window exists), and each sparkline grows
+  into a full line chart plotted by REAL DATE within the window (2 points sit honestly near the right edge,
+  not stretched) with a date axis + y-ticks + optional overlay (terracotta goal line for weight, faint
+  normal-range band for vitals). Composition bar + goal prompt are Latest-only snapshots.
+- S7-prep (own commit 63fc978): added the body range getters to the calc layer — windowDelta /
+  baselineBand / composition (with the negative-remainder → ratio-mode guard) / goalProgress (anchored at
+  first reading). The page is compute-on-read: all derived numbers come from these getters, none inlined.
+- PIECE 4 polish: a spacing pass tightened gaps (tabs/group/heading/tile-row/legend/page padding + the
+  composition bar height 22→18) so the Latest view fits ZERO-SCROLL while staying calm; a design-law tidy
+  dropped the dead .body-view-stub placeholder CSS. Terracotta confirmed sparing (trend arrows + tab hover
+  + the future weight-goal line only — nothing static/decorative). The composition row is intentionally
+  left slightly ragged (body_fat's fat-mass line makes that tile one line taller) — forcing alignment adds
+  dead gaps and reads less calm; calm wins.
+
+DEAD-TERMINAL RECOVERY: the prior terminal died mid-piece-4, leaving UNCOMMITTED work in all four files
+that had silently REMOVED the Latest-view sparklines (an unsanctioned design call). On resume we reverted
+the working tree to the verified piece-3 state (1fda344) and rebuilt piece 4 graduated + reversible — owner
+measured each step on his own screen, sparklines kept.
+
+FILES TOUCHED (all NEW unless noted): src/health/BodyPage.jsx, BodyTile.jsx, BodyComposition.jsx,
+BodyChart.jsx, bodyFormat.js; src/kit/bodyPage.css; src/health/healthBodyRange.js (S7-prep getters),
+HealthHub.jsx (Body card → BodyPage). No schema/db/supabase changes.
+Commits: S7-prep 63fc978; pieces 70c66de → cde3e47 → 1fda344; piece-4 polish bd10892 → 0869251.
+
+HOW TO VERIFY (done): npm run dev → Health → Body. Latest fits zero-scroll and reads calm; values match
+owner's real readings (weight 2dp); composition bar renders in ratio mode; no goal bar (no weight goal set);
+vitals bands hidden (too few readings); range toggle reframes cleanly to averages + window-delta trends with
+real-date line charts; terracotta sparing throughout.
+
+KNOWN GAPS / RISKS:
+- Goals are read-only; the "set a goal weight" prompt is display-only (real editor is S9).
+- Personal vitals bands + window-delta trends need more history to populate — currently "—"/hidden by design.
+- baselineBand needs ≥14 readings over 90d; composition needs both fat + lean present, else a plain note.
+
+NEXT: S8 — Drill-ins (sleep night, body history).
+
+FOR THE CHECKER: SRC-ONLY (no schema). Confirm: NO new metric maths in the page (all derived numbers come
+from the S7-prep getters in healthBodyRange.js); the Gym page + Hub untouched apart from repointing the Body
+card; sleep/activity calc unchanged; terracotta stays reserved (movement + affordances + the weight-goal line).
+
 ### 2026-06-27 — Track S — S6: Sleep front page (Night / Week / Month). SRC/ ONLY. (Owner-verified on Mac.)
 WHAT CHANGED:
 - The Health Hub's Sleep card now opens a full Sleep page (replacing the stub). A Night / Week / Month
