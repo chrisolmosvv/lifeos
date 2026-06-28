@@ -9,6 +9,80 @@
 
 ---
 
+## Body front page (S7) — LOCKED & BUILT 2026-06-28
+- Two groups, range-switchable, zero-scroll on the Latest snapshot. Range switcher only at
+  top — NO header/date (freshness lives per-metric as reading-age labels).
+- Range switcher: latest / week / month / 90-day. Switching reframes the WHOLE page —
+  values → that range's average, trends → that range's delta, sparklines → full line charts
+  with goal-line (weight) or normal-range band (vitals) overlaid. No per-metric drill-in.
+- COMPOSITION group (weight / body_fat / lean_mass — visually balanced, none dominant):
+  · each tile = value + trend arrow + 90-day sparkline + reading-age label.
+  · Current value in Latest = LATEST single reading (deliberate override of the daily-
+    average-headline rule; trends/sparklines/averages still roll over the daily-average
+    series).
+  · body_fat also shown as fat-mass kg (latest weight × fat%).
+  · composition bar = fat mass vs lean mass; never forced to sum to scale weight — if the
+    remainder goes negative (fat+lean slightly exceeds weight, which happens on real data)
+    it drops to a fat:lean ratio. Weight shown 2dp on this page; body_fat/lean 1dp.
+  · ONLY weight carries a goal → progress bar (anchored at first-ever reading, clamped
+    0–1). body_fat/lean are trend-only.
+- VITALS group (resting_heart_rate / respiratory_rate — framed distinct as recovery):
+  · same tile format, but value = smoothed 7-day average (single readings are noisy).
+  · personal-baseline "normal range" band instead of a goal: p10–p90 over a 90-day window,
+    requires ≥14 daily readings to show (percentile over mean±SD for outlier-robustness);
+    hidden until then.
+- Empty/sparse: no recent reading → latest value + age; metric never reported → "no data
+  yet" tile; thin data → show raw lines however thin, but suppress the personal band until
+  ≥14 readings, and trends show "—" when a comparison window is empty.
+- Nothing feeds Marty yet (page only; coach hooks are S10). Replaces the Body stub; desktop-
+  first.
+- Calc layer (S7-prep, src/health/healthBodyRange.js, commit 63fc978): windowDelta (30/90-
+  day deltas; "—" when no prior window), baselineBand, composition (negative-remainder
+  guard), goalProgress. All verified against real data.
+- PARKED tuning: the ≥14-reading band floor + the band definition, once enough history.
+
+## Sleep front page (S6) — LOCKED & BUILT 2026-06-26
+- Segmented Night / Week / Month; opens on Night; compute-on-read; "as of" = data last received.
+- Hero: last-night duration (big serif) + interactive time-axis hypnogram (from stored
+  segments) + understated goal marker at in-bed + goal-duration ("where goal-length lands").
+  NO composite/sleep-score (V1 deferral held).
+- Night view order: hero → bed/wake → stages → the rest. Built to desktop zero-scroll.
+- Bed/wake: in-bed → woke; vs target bedtime only if a by_time bedtime goal exists.
+- Consistency: 7-night std-dev regularity word + bed/wake dot band. Hidden on past-night
+  drill-ins (it's a rolling "as of now" metric, meaningless for one past night).
+- Stages: REM/Core/Deep/Awake, each BOTH minutes and %. Sleep stages % of time-asleep;
+  Awake % of time-in-bed.
+- The rest: awakenings count + awake minutes + that night's respiratory rate.
+- Week/Month: per-night stacked stage bars; summary (avg duration + circular-mean bed/wake,
+  ≥3 nights); goal streak (gap-pausing) + nights-hit-goal (e.g. 4/7); baseline = 7-day vs
+  90-day avg; tap a bar → that night's Night view.
+- Fallback: nights without stored segments show a proportion band, not the time-axis graph.
+- Empty: no last-night data → "No sleep recorded" + nudge to Week (no auto-fallback to an
+  older night). No goal → display-only "set a goal" prompt (real editor is S9).
+- Trends: arrow + delta; terracotta only on Deep, movement, and tap affordances.
+- PARKED tuning (needs ~2 weeks real data): REGULARITY_MIN thresholds + trend dead-bands.
+
+## by_time goal storage — LOCKED 2026-06-26
+Bedtime / by_time goals stored as minutes-after-midnight (0–1439), Amsterdam local.
+Direction-aware goal engine handles down / up / by_time.
+
+## Edge Function deploy lessons (S5b saga) — RECORDED 2026-06-26
+- config.toml MUST pin verify_jwt = false for every header-authed function (e.g.
+  health-ingest, authed via x-health-secret). A plain `supabase functions deploy` defaults
+  verify_jwt = true when the function has no [functions] entry → the function rejects the
+  Apple Shortcut with "missing authorization header" BEFORE any code runs. Fixed via
+  [functions.health-ingest] verify_jwt = false (commit a517eac).
+  → LATENT RISK: telegram, brief, gym are still absent from config.toml — same trap on any
+    redeploy. Backend-track cleanup: pin each (check current value via Management API first).
+- Verify writes by updated_at, NOT by the value looking right — a stale row with correct-
+  looking totals nearly sent us debugging the wrong layer (the "segments null" saga was
+  really an auth-wall + stale-row mirage, not a storage bug).
+- After ALTER TABLE ADD COLUMN, PostgREST may need `notify pgrst, 'reload schema'` before
+  the new column accepts writes (the schema cache lags the DB).
+- Read-only real-data check from the CLI (avoids the stale SUPABASE_ACCESS_TOKEN wrong-
+  account trap): env -u SUPABASE_ACCESS_TOKEN supabase db query --linked "<SQL>".
+- Access tokens pasted into chat must be rotated at session close.
+
 ## Health → Sleep & Body Stats — S3b: sleep ingest / sessionising (2026-06-25)
 
 - **[Apple's per-stage segments are sessionised into ONE row per night, in the function.]**
@@ -1948,21 +2022,3 @@
 
 - **All guardrails on (CLAUDE.md).** Brain docs, file-size ceiling, one feature
   at a time, commit after each feature, start/end session ritual.
-
-## Sleep front page (S6) — LOCKED & BUILT 2026-06-26
-- Hero: last night duration + interactive time-axis hypnogram (from stored segments)
-  + goal marker (at in-bed + goal-duration). NO composite/sleep-score (V1 deferral held).
-- Segmented Night/Week/Month; opens on Night; compute-on-read; "as of" = data last received.
-- Night view: hero → bed/wake (+ target if by_time goal) → stages (min AND %) → awakenings
-  + awake min + that night's resp rate. Built to desktop zero-scroll.
-- Consistency: 7-night std-dev regularity word + bed/wake dot band. Hidden on past-night drill-ins.
-- Week/Month: per-night stacked stage bars; summary = avg duration + circular-mean bed/wake
-  (≥3 nights); streak + nights-hit-goal (4/7); baseline = 7-day vs 90-day avg; tap a bar →
-  that night's Night view.
-- Fallback: nights without stored segments show a proportion band, not the time-axis graph.
-- Empty: no last-night data → "No sleep recorded" + nudge to Week (no auto-fallback).
-  No goal → display-only "set a goal" prompt (real editor is S9).
-- Trends: arrow + delta; terracotta only on Deep, movement, and tap affordances.
-
-## by_time goal storage — LOCKED 2026-06-26
-Bedtime / by_time goals stored as minutes-after-midnight (0–1439), Amsterdam local.
