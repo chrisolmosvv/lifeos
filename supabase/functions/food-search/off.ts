@@ -20,7 +20,7 @@
 // unavailable" and still returns the other sources. "No products matched" is NOT a
 // failure — it returns an empty list (raw 0).
 
-import { type FoodCandidate, fetchWithTimeout, gToMg, num, type SourceResult, str } from "./normalize.ts";
+import { type FoodCandidate, fetchWithTimeout, gToMg, hasMacros, num, type SourceResult, str } from "./normalize.ts";
 
 const SEARCH_URL = "https://search.openfoodfacts.org/search";
 const FIELDS = "code,product_name,brands,serving_size,serving_quantity,nutriments";
@@ -42,7 +42,8 @@ export async function searchOff(query: string): Promise<SourceResult> {
   const hits = Array.isArray(data?.hits) ? data.hits : [];
   const records = hits
     .map(toCandidate)
-    .filter((c: FoodCandidate | null): c is FoodCandidate => c !== null);
+    .filter((c: FoodCandidate | null): c is FoodCandidate => c !== null)
+    .filter(hasMacros); // drop crowd entries with no nutrition (all-null per100g)
   return { raw: hits.length, records };
 }
 

@@ -49,6 +49,14 @@ export function gToMg(grams: number | null): number | null {
   return grams == null ? null : grams * 1000;
 }
 
+// A candidate worth showing: it has at least a calorie figure. Crowd-sourced OFF entries
+// often carry NO nutrition at all (every per100g field null) — those are empty cards the
+// UI shouldn't show, so the API sources filter on this (raw vs kept makes the drop visible
+// in `debug`). The owner's own saved foods are NOT filtered — their data always shows.
+export function hasMacros(c: FoodCandidate): boolean {
+  return c.per100g.kcal != null;
+}
+
 // A non-empty trimmed string, else null (blank brand/name fields come back as "").
 export function str(v: unknown): string | null {
   if (typeof v !== "string") return null;

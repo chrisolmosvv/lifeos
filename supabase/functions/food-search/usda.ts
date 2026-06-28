@@ -14,10 +14,14 @@
 // No key is NOT an error — index.ts reports "not_configured" and the search still returns
 // OFF + saved. A real fetch failure throws → same graceful degrade.
 
-import { type FoodCandidate, fetchWithTimeout, num, type SourceResult, str } from "./normalize.ts";
+import { type FoodCandidate, fetchWithTimeout, hasMacros, num, type SourceResult, str } from "./normalize.ts";
 
 const SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search";
 const DATA_TYPES = "Foundation,SR Legacy,Survey (FNDDS)";
+// USDA is a US endpoint returning a large payload; from Frankfurt's edge a 5s budget is
+// too tight and intermittently aborts (the F2 "reachable:false" symptom). 8s gives
+// headroom over the ~3s observed round-trip while still bounding the whole search.
+const USDA_TIMEOUT_MS = 8000;
 
 // nutrientId → our field. Energy has a few variants; we try 1008 (Energy, kcal) first,
 // then the Atwater kcal rows (2048/2047) as a fallback for foods carrying only those.
@@ -38,13 +42,14 @@ export async function searchUsda(query: string): Promise<SourceResult> {
     `${SEARCH_URL}?api_key=${encodeURIComponent(key)}` +
     `&query=${encodeURIComponent(query)}` +
     `&dataType=${encodeURIComponent(DATA_TYPES)}&pageSize=10`;
-  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } });
+  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } }, USDA_TIMEOUT_MS);
   if (!res.ok) throw new Error(`USDA HTTP ${res.status}`);
   const data = await res.json();
   const foods = Array.isArray(data?.foods) ? data.foods : [];
   const records = foods
     .map(toCandidate)
-    .filter((c: FoodCandidate | null): c is FoodCandidate => c !== null);
+    .filter((c: FoodCandidate | null): c is FoodCandidate => c !== null)
+    .filter(hasMacros); // keep only foods with a real calorie figure (fallback covers all)
   return { raw: foods.length, records };
 }
 
