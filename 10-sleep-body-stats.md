@@ -151,10 +151,14 @@ next, after the schema gate:
 - **S5 — The calc layer.** Verified vs real numbers.
 - **S6 — Sleep front page** (read-only).
 - **S7 — Body front page** (read-only).
-- **S8 — Drill-ins** (sleep night, body history).
-- **S9 — Goals editor** (the one in-app write; with undo).
-- **S10 — Coach hooks** (bedtime reminder + brief lines, logic-only).
-- **Final — Polish + audit** to the three design laws; dedupe helpers.
+- **S8 — Drill-ins** (sleep night, body history). **ABSORBED** into S6 (bar→night
+  drill-in) + S7 (range switcher) — no separate piece built. [2026-06-28]
+- **S9 — Goals editor** (the first in-app write). **BUILT** — append-only goal log,
+  confirm-on-clear (no explicit undo; re-set is the safety net). [2026-06-28]
+- **S10 — Coach hooks** (bedtime reminder + brief lines, logic-only). **DEFERRED** —
+  owner chose the Food module next.
+- **Final — Polish + audit** to the three design laws; dedupe helpers. **DEFERRED.**
+- **→ NEXT module: Food** (own track F; spec TBD by the Planner).
 
 ## Still open (to settle at the right layer — not blocking S0)
 - **Layer 4 IA — how Gym, Sleep and Body coexist under the one Health banner**

@@ -802,7 +802,9 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
        fat-vs-lean composition bar with ratio-mode guard, weight goal-progress) + Vitals
        group (resting HR / respiratory as 7-day averages + personal band). Compute-on-read
        via S7-prep getters. BUILT + owner-verified. Full locked spec in 03-decisions.md.
-- ⬜ S8 — Drill-ins (sleep night, body history).  ← NEXT (built S9 first, owner's order)
+- ✅ S8 — Drill-ins — ABSORBED, no separate piece. S6's Week/Month bar→night drill-in
+       already delivers the sleep-night detail; S7's Latest/Week/Month/90 range switcher
+       delivers the body-history view. Settled this session (see 03-decisions.md).
 - 🟦 S9 — Goals editor (the first in-app WRITE). Inline popover from the Sleep/Body
        "set a goal" prompts: weight + body_fat (value + frozen direction), sleep duration
        + bedtime (combined editor). Append-only health_goals log (newest row wins; clear =
@@ -810,10 +812,22 @@ owner-set; nudges via Marty. Additive tables, RLS, free-tier, two-track.
        validation blocks nonsense; confirm-on-clear (no explicit undo — append-only history
        + re-set is the safety net). New Popover kit primitive. BUILT + owner-verified.
        Full spec in 03-decisions.md.
-- ⬜ S10 — Coach hooks (bedtime reminder + brief lines, logic-only).
-- ⬜ Final — Polish + audit to the design laws.
+- ⬜ S10 — Coach hooks (bedtime reminder + brief lines, logic-only).  [DEFERRED — owner chose the Food module next]
+- ⬜ Final — Polish + audit to the design laws.  [DEFERRED — with S10]
 
 OPEN (Layer 4): how Gym/Sleep/Body coexist under the Health banner — gates layouts.
+
+---
+
+## 🍎 Track F — Food module   ← NEXT (full plan: TBD by the Planner)
+
+Health's next module — the one the S-track was designed to absorb later (it sharpens the
+sleep coach for free by feeding caffeine / alcohol / late meals automatically). Chosen
+this session as the next thing to build, ahead of the remaining S-track tail (S10 coach
+hooks + Final, both deferred). Spec, tables and pieces to be designed by the Planner.
+Same laws: additive tables, RLS, free-tier, two-track, logic-only V1.
+
+- ⬜ F0 — Paperwork (the plan doc + 02/03 updates). No code.  ← the first piece, once specced.
 
 ---
 

@@ -9,6 +9,16 @@
 
 ---
 
+## Sleep & Body drill-ins (S8) — ABSORBED, not built (2026-06-28)
+S8's two deliverables already shipped inside S6/S7, so **no separate S8 piece is built**:
+- **Sleep-night detail** = S6's Week/Month **bar→night drill-in** (taps into the full Night
+  view for any night; proportion-band fallback for segmentless nights).
+- **Body-history view** = S7's **Latest / Week / Month / 90-day range switcher** (reframes
+  every metric to range averages + window-delta trends + real-date line charts).
+**Why:** a separate S8 would duplicate UI already built + owner-verified. **Trade-off:**
+none — it's a recognition that the work is done, not a cut. **Next module = Food** (owner's
+choice), ahead of the S-track tail (S10 coach hooks + Final, both deferred).
+
 ## Goals editor (S9) — LOCKED & BUILT 2026-06-28
 The first in-app WRITE in Track S (S5–S7 were read-only). Inline editor reached by
 tapping the muted "set a goal" prompts on the Sleep + Body pages.
