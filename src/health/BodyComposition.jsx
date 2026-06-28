@@ -26,7 +26,7 @@ function Bar({ segments }) {
   );
 }
 
-export default function BodyComposition({ comp, goalProg }) {
+export default function BodyComposition({ comp, goalProg, onEditGoal }) {
   let bar = null;
   if (comp.mode === "none") {
     bar = <p className="body-comp-empty">Not enough readings yet to split fat and lean.</p>;
@@ -73,7 +73,7 @@ export default function BodyComposition({ comp, goalProg }) {
       )}
 
       {goalProg ? (
-        <div className="body-goal">
+        <button type="button" className="body-goal body-goal--btn" onClick={(e) => onEditGoal?.(e.currentTarget)}>
           <span className="body-tile-label">weight goal</span>
           <div className="body-goal-track">
             <span className="body-goal-fill" style={{ width: `${(goalProg.fraction * 100).toFixed(1)}%` }} />
@@ -84,11 +84,11 @@ export default function BodyComposition({ comp, goalProg }) {
               ? `goal met (${fmtFull("weight", goalProg.target)})`
               : `${fmtDelta("weight", goalProg.remaining)} to goal ${fmtFull("weight", goalProg.target)}`}
           </span>
-        </div>
+        </button>
       ) : (
-        <p className="body-goalprompt">
-          Set a goal weight to track progress. <span className="body-muted">(coming soon)</span>
-        </p>
+        <button type="button" className="body-goalprompt body-goalprompt--btn" onClick={(e) => onEditGoal?.(e.currentTarget)}>
+          Set a goal weight to track progress.
+        </button>
       )}
     </div>
   );

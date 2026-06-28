@@ -6,9 +6,13 @@ import { resolveGoals } from "./healthGoals";
 import { metricView as bodyView, BODY_METRICS } from "./healthBody";
 import { DEADBAND } from "./healthStats";
 import { composition, goalProgress, baselineBand, windowDelta } from "./healthBodyRange";
-import { fmtFull } from "./bodyFormat";
+import { fmtFull, metaFor } from "./bodyFormat";
+import { useGoalWrites } from "./useGoalWrites";
 import BodyTile from "./BodyTile";
 import BodyComposition from "./BodyComposition";
+import GoalEditor from "./GoalEditor";
+import Popover from "../kit/Popover";
+import Toast from "../kit/Toast";
 import "../kit/bodyPage.css";
 
 // BodyPage — the full Body front page, reached from the Health Hub's Body card
@@ -33,6 +37,10 @@ const RANGES = [
 export default function BodyPage({ onBack }) {
   const [range, setRange] = useState("latest"); // 'latest' | 'week' | 'month' | '90'
   const [state, setState] = useState({ loading: true });
+  // Goals live in their own state so an in-app edit (S9) can update them without a
+  // refetch; the write hook updates this Map optimistically.
+  const [goalMap, setGoalMap] = useState(new Map());
+  const gw = useGoalWrites(goalMap, setGoalMap);
 
   useEffect(() => {
     let alive = true;
@@ -43,14 +51,17 @@ export default function BodyPage({ onBack }) {
         fetchGoals(),
         ...BODY_METRICS.map((m) => fetchBody(m, START, today)),
       ]);
-      const goalMap = resolveGoals(goals);
+      const resolved = resolveGoals(goals);
       const rowsByMetric = {};
       const body = {};
       BODY_METRICS.forEach((m, i) => {
         rowsByMetric[m] = bodyRows[i];
-        body[m] = bodyView(m, bodyRows[i], goalMap.get(m), now);
+        body[m] = bodyView(m, bodyRows[i], resolved.get(m), now);
       });
-      if (alive) setState({ loading: false, now, today, goalMap, rowsByMetric, body });
+      if (alive) {
+        setGoalMap(resolved);
+        setState({ loading: false, now, today, rowsByMetric, body });
+      }
     })().catch((e) => alive && setState({ loading: false, error: e.message || String(e) }));
     return () => {
       alive = false;
@@ -63,7 +74,7 @@ export default function BodyPage({ onBack }) {
   // headline); Vitals = the smoothed 7-day average (noisy single readings). Trends and
   // sparklines roll over the daily-average series either way (S5).
   function renderLatest() {
-    const { body, rowsByMetric, goalMap, today, now } = state;
+    const { body, rowsByMetric, today, now } = state;
     const v = (m) => body[m];
     const series90 = (m) => v(m).rolling?.[90]?.values || [];
 
@@ -109,7 +120,11 @@ export default function BodyPage({ onBack }) {
             {compTile("body_fat", fatMassExtra)}
             {compTile("lean_mass")}
           </div>
-          <BodyComposition comp={comp} goalProg={wGoalProg} />
+          <BodyComposition
+            comp={comp}
+            goalProg={wGoalProg}
+            onEditGoal={(el) => gw.openEditor("weight", el)}
+          />
         </section>
 
         <section className="body-group body-group--vitals">
@@ -129,7 +144,7 @@ export default function BodyPage({ onBack }) {
   // chart over the window — with the goal line (weight only) or normal-range band
   // (vitals) overlaid. No composition/goal bar here; those are Latest-view snapshots.
   function renderRange(days) {
-    const { body, rowsByMetric, goalMap, today } = state;
+    const { body, rowsByMetric, today } = state;
     const v = (m) => body[m];
     const windowStart = shiftYMD(today, -(days - 1));
     const weightGoalVal = goalMap.get("weight")?.target_value ?? null;
@@ -206,6 +221,24 @@ export default function BodyPage({ onBack }) {
       ) : (
         renderRange(RANGE_DAYS[range])
       )}
+
+      {gw.editor && (
+        <Popover
+          anchorRef={gw.anchorRef}
+          title={`${metaFor(gw.editor.metric).label} goal`}
+          onClose={gw.closeEditor}
+        >
+          <GoalEditor
+            metric={gw.editor.metric}
+            current={state.body?.[gw.editor.metric]?.latestDaily?.value ?? null}
+            goal={goalMap.get(gw.editor.metric) ?? null}
+            onSubmit={(vals) => gw.submitGoal(gw.editor.metric, vals)}
+            onClear={() => gw.clearGoalFor(gw.editor.metric)}
+            onClose={gw.closeEditor}
+          />
+        </Popover>
+      )}
+      {gw.toast && <Toast text={gw.toast} onDismiss={gw.dismissToast} />}
     </div>
   );
 }

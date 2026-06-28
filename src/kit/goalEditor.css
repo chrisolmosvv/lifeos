@@ -1,0 +1,109 @@
+/* LifeOS — Goal editor (S9), shown inside the Popover. Broadsheet calm: Inter UI,
+   a serif number, ink-filled primary action. Terracotta stays reserved — the editor
+   buttons are ink/muted, never terracotta (the only terracotta in this flow is the
+   tile's tap affordance + the goal-line marker, per the S7 sparing audit). */
+
+.goal-editor {
+  font-family: var(--font-sans);
+}
+
+.goal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.goal-step {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.goal-step:hover {
+  border-color: var(--ink-muted);
+}
+.goal-num {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  color: var(--ink);
+  text-align: center;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  padding: 2px 0;
+}
+.goal-num:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+.goal-unit {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.goal-hint {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin: 8px 0 0;
+}
+.goal-error {
+  font-size: 12px;
+  color: var(--overdue);
+  margin: 8px 0 0;
+}
+
+.goal-actions,
+.goal-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.goal-spacer {
+  flex: 1;
+}
+.goal-confirm-q {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.goal-btn {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.goal-btn--primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+.goal-btn--primary:disabled {
+  background: var(--rule);
+  color: var(--ink-muted);
+  cursor: not-allowed;
+}
+.goal-btn--ghost {
+  background: transparent;
+  color: var(--ink-muted);
+}
+.goal-btn--ghost:hover {
+  color: var(--ink);
+}
+.goal-btn--danger {
+  background: transparent;
+  color: var(--overdue);
+  border-color: var(--rule);
+}
+.goal-btn--danger:hover {
+  border-color: var(--overdue);
+}

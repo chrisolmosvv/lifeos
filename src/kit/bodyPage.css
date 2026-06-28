@@ -272,6 +272,23 @@
 .body-goal {
   margin-top: 16px;
 }
+/* The goal bar + the "set a goal" prompt are tappable (open the goal editor). Reset
+   button chrome; hover hints terracotta — a tap affordance (the sanctioned use). */
+.body-goal--btn,
+.body-goalprompt--btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.body-goalprompt--btn:hover,
+.body-goal--btn:hover .body-goal-caption {
+  color: var(--accent);
+}
 .body-goal-track {
   position: relative;
   height: 10px;
