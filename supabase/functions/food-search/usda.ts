@@ -17,10 +17,11 @@
 import { type FoodCandidate, fetchWithTimeout, hasMacros, num, type SourceResult, str } from "./normalize.ts";
 
 const SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search";
-const DATA_TYPES = "Foundation,SR Legacy,Survey (FNDDS)";
+// Whole-food data types only — OFF covers branded. Sent in the POST BODY (see below).
+const DATA_TYPES = ["Foundation", "SR Legacy", "Survey (FNDDS)"];
 // USDA is a US endpoint returning a large payload; from Frankfurt's edge a 5s budget is
 // too tight and intermittently aborts (the F2 "reachable:false" symptom). 8s gives
-// headroom over the ~3s observed round-trip while still bounding the whole search.
+// headroom over the ~1–3s observed round-trip while still bounding the whole search.
 const USDA_TIMEOUT_MS = 8000;
 
 // nutrientId → our field. Energy has a few variants; we try 1008 (Energy, kcal) first,
@@ -35,14 +36,24 @@ const SODIUM = 1093; // already mg
 
 export const usdaConfigured = !!Deno.env.get("USDA_FDC_API_KEY");
 
+// USDA's nginx rejects (HTTP 400) a dataType with PERCENT-ENCODED parens (Survey
+// %28FNDDS%29) and rejects repeated dataType params — and Deno's fetch re-encodes parens
+// when it parses a URL string, which broke the GET form. So we POST: the dataType ARRAY
+// lives in the JSON body where there's no URL-encoding at all (verified 200). Only the
+// api_key rides the query string (no special characters to mangle).
 export async function searchUsda(query: string): Promise<SourceResult> {
   const key = Deno.env.get("USDA_FDC_API_KEY");
   if (!key) return { raw: 0, records: [] }; // no key → degrade quietly (sources says so)
-  const url =
-    `${SEARCH_URL}?api_key=${encodeURIComponent(key)}` +
-    `&query=${encodeURIComponent(query)}` +
-    `&dataType=${encodeURIComponent(DATA_TYPES)}&pageSize=10`;
-  const res = await fetchWithTimeout(url, { headers: { Accept: "application/json" } }, USDA_TIMEOUT_MS);
+  const url = `${SEARCH_URL}?api_key=${encodeURIComponent(key)}`;
+  const res = await fetchWithTimeout(
+    url,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ query, dataType: DATA_TYPES, pageSize: 10 }),
+    },
+    USDA_TIMEOUT_MS,
+  );
   if (!res.ok) throw new Error(`USDA HTTP ${res.status}`);
   const data = await res.json();
   const foods = Array.isArray(data?.foods) ? data.foods : [];
