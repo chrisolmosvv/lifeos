@@ -56,6 +56,26 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-28 — Track F — F4: pillar scaffold (read-only shell). SRC/ ONLY. (Desktop-verified on Mac.)
+WHAT CHANGED:
+- Food joins the nav as the 5th pillar: TODAY · CALENDAR · HEALTH · FOOD · SETTINGS (additive
+  — the other four untouched). Tapping Food lands on the Log.
+- FoodPage = an inert, navigable shell: a Log | Cookbook toggle (Log default, mirrors the
+  BodyPage tabs as its own `food-tabs` class) over warm one-line empty states (G16 warm-edge).
+  No top-level back (Food's a pillar). The loading branch + a self-contained spinner are present
+  for F5 but inert now (renders content directly — no perpetual spinner). No data/calc/fetch/writes.
+FILES TOUCHED: src/food/FoodPage.jsx, src/food/foodPage.css; src/EditionHeader.jsx (NAV add),
+  src/LoggedIn.jsx (view==='food' branch). (commit 16b11ef)
+HOW TO VERIFY (done on Mac): nav reads TODAY·CALENDAR·HEALTH·FOOD·SETTINGS; Food is 4th, before
+  Settings; tapping it lands on the Log tab; the Log|Cookbook toggle switches cleanly; both empty
+  tabs read warm; the shell holds desktop zero-scroll; Today/Calendar/Health/Settings all behave
+  exactly as before; nothing loads, no spinner shows.
+KNOWN GAPS / RISKS: none open. The five-item nav band may wrap on a ~375px iPhone — DEFERRED to
+  the mobile layer (Food's design laws are desktop-only by design), not an F-track gap. The
+  food-loading/food-spinner markup is intentionally inert until F5's real load.
+NEXT: F5 — the Logger front page (read): calorie arc + macro bar + meal ledger + day/week/month
+  range switcher + the muted set-targets prompt.
+
 ### 2026-06-28 — Track F — F3: the calc layer (compute-on-read, pure). SRC/ ONLY. (Verified in Node vs real records.)
 WHAT CHANGED:
 - The 7 pure getters that turn raw rows into every Food number, mirroring the Body utils

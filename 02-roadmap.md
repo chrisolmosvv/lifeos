@@ -842,8 +842,9 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
 - ✅ F3 — Calc layer (compute-on-read, pure): foodCalc.js + recipeCalc.js + foodFormat.js. The 7
        getters; negative clamp in entryMacros; ±10% inclusive band; sum-per-day; no-goals path.
        Verified in Node vs real OFF/USDA records; full day/range path completes at F6. (commit c1dd0a6)
-- ⬜ F4 — Pillar scaffold: 5th nav pillar + Log|Cookbook tabs + frame + empty states (read-only).  ← NEXT
-- ⬜ F5 — Logger front page (read): editorial calorie arc + macro bar + meal ledger + day/week/month.
+- ✅ F4 — Pillar scaffold: 5th nav pillar (TODAY·CALENDAR·HEALTH·FOOD·SETTINGS) + Log|Cookbook
+       toggle (food-tabs) + warm empty states, read-only. Desktop-verified. (commit 16b11ef)
+- ⬜ F5 — Logger front page (read): editorial calorie arc + macro bar + meal ledger + day/week/month.  ← NEXT
 - ⬜ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.
 - ⬜ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.
 - ⬜ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.
@@ -874,6 +875,18 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-28 — Track F — Food F4 — pillar scaffold (read-only shell; src/ only, commit 16b11ef).** Food is now
+  the 5th top-level pillar (nav order TODAY · CALENDAR · HEALTH · FOOD · SETTINGS — additive; the other four
+  untouched). Tapping Food lands on the Log; a Log | Cookbook toggle (Log default) switches the two faces,
+  mirroring the BodyPage tab pattern as its own `food-tabs` class (no cross-coupling to Body's CSS). No top-level
+  back button (Food's a pillar — you leave via the nav; back arrives with F7's recipe drill-in). The loading
+  branch + a self-contained spinner are present for F5 but inert now — F4 renders content directly (no perpetual
+  spinner). Warm one-line empty states under each tab (G16 warm-edge law), not a cold "no data". READ-ONLY: no
+  calc, no fetch, no writes. Files: `src/food/FoodPage.jsx` + `foodPage.css`, plus the `EditionHeader` NAV add and
+  the `LoggedIn` `view==='food'` branch. Desktop-verified (nav order, lands on Log, toggle, warm tabs, zero-scroll,
+  other pillars unchanged). Phone five-item nav-wrap = DEFERRED to the mobile layer (Food's design laws are
+  desktop-only by design), not an open gap. **NEXT: F5 — the Logger front page (read): the editorial calorie arc
+  + macro stacked bar + meal ledger + day/week/month range switcher + the muted set-targets prompt.**
 - **2026-06-28 — Track F — Food F3 — the calc layer (compute-on-read, pure; src/ only, commit c1dd0a6).** Built
   `src/food/foodCalc.js` + `recipeCalc.js` + `foodFormat.js` — the 7 locked getters that turn raw rows into every
   number the Food screens show, mirroring the Body utils (reuses `presetRange`/`statsForRange` + the shared
