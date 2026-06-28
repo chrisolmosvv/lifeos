@@ -1,5 +1,6 @@
 import { useState } from "react";
 import LogPage from "./LogPage";
+import Cookbook from "./Cookbook";
 import "./foodPage.css";
 
 // FoodPage — the Food pillar shell (F4). Food lands on the Log; a Log | Cookbook toggle
@@ -49,9 +50,7 @@ export default function FoodPage() {
         </section>
       ) : (
         <section className="food-pane" role="tabpanel" aria-label="Cookbook">
-          <p className="food-empty">
-            Your cookbook lives here — recipes set in type, with a cooking mode and timers.
-          </p>
+          <Cookbook />
         </section>
       )}
     </div>
