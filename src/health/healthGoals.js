@@ -24,20 +24,31 @@ function anchorNoon(min) {
   return ((min + 720) % 1440 + 1440) % 1440;
 }
 
-// Newest ACTIVE row per goal_type is the live goal. fetchGoals() already returns
-// rows newest-first (set_at desc), so the first active row we see per type wins.
+// Append-only goal log: the SINGLE NEWEST row per goal_type decides (S9). Setting
+// or changing a goal appends a new row; CLEARING appends a "cleared marker" row with
+// active=false. So the newest row per type is the verdict:
+//   • newest row active=true  → that's the live goal.
+//   • newest row active=false → the goal was cleared → NO active goal (we do NOT fall
+//     back to an older row; a cleared goal stays cleared until re-set).
+// fetchGoals() returns rows newest-first (set_at desc), so the FIRST row we see per
+// type is the newest — we decide on it and ignore the rest of that type's history.
+//
+// NOTE: for all-active data (every goal only ever set, never cleared) this is
+// IDENTICAL to the old "first active row wins" reader — the newest row IS active, so
+// the same goal resolves. The cleared-marker path is new behaviour only S9 creates.
 // → Map<goal_type, { target_value, unit, direction }>.
 export function resolveGoals(goalRows) {
   const live = new Map();
+  const decided = new Set(); // goal_types whose newest row we've already judged
   for (const g of goalRows || []) {
-    if (!g?.active || !g.goal_type) continue;
-    if (!live.has(g.goal_type)) {
-      live.set(g.goal_type, {
-        target_value: finite(g.target_value),
-        unit: g.unit ?? null,
-        direction: g.direction ?? null,
-      });
-    }
+    if (!g?.goal_type || decided.has(g.goal_type)) continue;
+    decided.add(g.goal_type); // this is the newest row for the type — it's the verdict
+    if (g.active === false) continue; // cleared marker → no active goal (no fallback)
+    live.set(g.goal_type, {
+      target_value: finite(g.target_value),
+      unit: g.unit ?? null,
+      direction: g.direction ?? null,
+    });
   }
   return live;
 }
