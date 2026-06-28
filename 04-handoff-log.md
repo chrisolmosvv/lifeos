@@ -56,6 +56,33 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-28 — Track F — F5: Logger front page (read-only). SRC/ ONLY. (Seed-verified vs the F3 math on Mac.)
+WHAT CHANGED:
+- The first Food screen with real content — fills FoodPage's Log tab. Day view: a calorie ARC +
+  macro BAR header, the fibre/sugar/sodium + reserved drinks line, and the meal ledger (4 slots,
+  subtotals, "+N more", tap-row → full 7 numbers + Edit). Week/Month: avg-day arc + a calories
+  trend + a per-day list that drills into a day. No-goals → muted "set targets" prompt replaces
+  the arc; empty day → warm invite + primary add.
+- EVERY number comes from the F3 calc layer (dayLedger/calorieArc/macroSplit/dailyTotals/
+  rangeTotals); components do no macro math. New CalorieArc SVG primitive (dasharray/dashoffset
+  sweep + faint terracotta over-arc). FoodTrend mirrors BodyChart's full chart with foodFormat
+  (Body untouched). Names resolve via food_item_id→food_items.name / recipe_id→recipes.title.
+FILES TOUCHED: src/food/foodLoad.js, LogPage.jsx, CalorieArc.jsx, MacroBar.jsx, MealLedger.jsx,
+  FoodRange.jsx, FoodTrend.jsx, foodLog.css; FoodPage.jsx (Log tab now renders LogPage). (commit 466896e)
+HOW TO VERIFY (done): State A (empty + no-goals) checked live. States B–E via a precise seed (2
+  food_items + 2 food_log_entries for 28 Jun + 4 health_goals, all explicit UUIDs): 150 g chicken +
+  30 g nutella → arc 330 / of 2,200; macro bar P 44/C 21/F 34% + "P 35.6/120 · C 17.3/240 · F 12.2/70";
+  secondary fibre 0.0/sugar 16.9/sodium 112 mg; ledger subtotals + tap-to-expand; over-arc (calorie
+  goal 300); Week/Month avg-arc + trend + per-day drill-in. Day view held desktop zero-scroll. Cleanup
+  by exact id left all three tables at 0.
+REAL-NOW vs SEED-VERIFIED: empty + no-goals = real-now; arc/ledger/macro bar/over-arc/week-month =
+  seed-verified (no real entries/goals exist until F6 — not fake-greened).
+KNOWN GAPS / RISKS: READ-ONLY — the +add / per-slot '+' / Edit / recents-favourites affordances are
+  placed but stubbed (writes are F6). food_log_entries stores no name → a manual entry's name path is
+  F6 (manual-add creates a food_items row; no schema change). The aggregate "may scroll" by design.
+NEXT: F6 — logging WRITES: add-food (search/saved/manual) + the goals editor (reuse the S9 popover) +
+  recents/favourites; wire ONE food end-to-end first (add → display → reload → edit → remove).
+
 ### 2026-06-28 — Track F — F4: pillar scaffold (read-only shell). SRC/ ONLY. (Desktop-verified on Mac.)
 WHAT CHANGED:
 - Food joins the nav as the 5th pillar: TODAY · CALENDAR · HEALTH · FOOD · SETTINGS (additive

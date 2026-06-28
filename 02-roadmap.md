@@ -844,8 +844,10 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
        Verified in Node vs real OFF/USDA records; full day/range path completes at F6. (commit c1dd0a6)
 - ✅ F4 — Pillar scaffold: 5th nav pillar (TODAY·CALENDAR·HEALTH·FOOD·SETTINGS) + Log|Cookbook
        toggle (food-tabs) + warm empty states, read-only. Desktop-verified. (commit 16b11ef)
-- ⬜ F5 — Logger front page (read): editorial calorie arc + macro bar + meal ledger + day/week/month.  ← NEXT
-- ⬜ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.
+- ✅ F5 — Logger front page (read): editorial calorie arc + macro bar + meal ledger + day/week/month.
+       7 files (LogPage + CalorieArc/MacroBar/MealLedger/FoodRange/FoodTrend/foodLoad). Seed-verified
+       vs the F3 math; empty/no-goals real-now. (commit 466896e)
+- ⬜ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.  ← NEXT
 - ⬜ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.
 - ⬜ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.
 - ⬜ F9 — Cook→log bridge: "Cook this" → staged draft (servings/slot/swap) → log snapshot.
@@ -875,6 +877,25 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-28 — Track F — Food F5 — the Logger front page (read-only; src/ only, commit 466896e).** The first Food
+  screen with real content. Fills FoodPage's Log tab via a new 7-file set: `foodLoad.js` (fetch-only entries +
+  name resolution), `LogPage.jsx` (orchestrator — Day/Week/Month switcher + chevron date nav, load-once /
+  slice-client-side), `CalorieArc.jsx` (the NEW 270°-open SVG ring — a faint track + ink value arc filled via
+  `stroke-dasharray`/`stroke-dashoffset` so a single CSS transition animates the sweep; consumed kcal big in
+  Fraunces at centre; a faint concentric terracotta over-arc past goal), `MacroBar.jsx` (day = P/C/F PROPORTION
+  by calories via macroSplit + grams/faint-targets), `MealLedger.jsx` (4 slots + subtotals, CAP rows + "+N more",
+  tap-row → full 7 numbers + an Edit affordance), `FoodRange.jsx` + `FoodTrend.jsx` (Week/Month avg-arc +
+  calories trend + per-day list → drill-in; aggregate macros = AVG-GRAMS-vs-goal, intentionally different from the
+  day proportion). FoodTrend MIRRORS BodyChart's full chart with `foodFormat` (Body left untouched — its chart is
+  metric-coupled and would mis-format kcal). EVERY number comes from the F3 getters; components do no macro math.
+  Names resolve via `food_item_id → food_items.name` / `recipe_id → recipes.title` (the loader joins). Accent only
+  on the over-arc, the today kicker, the active range tab. READ-ONLY — the +add/Edit/recents affordances are placed
+  but stubbed (actions are F6). **Verified:** State A (empty + no-goals) real-now; B–E seed-verified against the F3
+  math (150 g chicken + 30 g nutella → 330 kcal, P 35.6/120 · C 17.3/240 · F 12.2/70, sodium 112 mg; over-arc;
+  week/month reframe); day view held desktop zero-scroll; the precise seed cleanup left all three tables at 0.
+  Carry-forward: a manual entry has no stored name → F6's manual-add creates a food_items row for it (no schema
+  change). **NEXT: F6 — logging WRITES: add-food (search/saved/manual) + the goals editor (reuse the S9 popover) +
+  recents/favourites; wire ONE food end-to-end first.**
 - **2026-06-28 — Track F — Food F4 — pillar scaffold (read-only shell; src/ only, commit 16b11ef).** Food is now
   the 5th top-level pillar (nav order TODAY · CALENDAR · HEALTH · FOOD · SETTINGS — additive; the other four
   untouched). Tapping Food lands on the Log; a Log | Cookbook toggle (Log default) switches the two faces,

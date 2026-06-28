@@ -9,6 +9,41 @@
 
 ---
 
+## Food — F5: the Logger front-page layout (2026-06-28)
+
+- **Lead = a calorie ARC + a macro BAR, side by side.** The arc is a **270°-open ring** (gap at
+  the foot), hairline not chunky, with **consumed kcal big in Fraunces** at centre and "of {goal}"
+  beneath; over goal draws a **faint concentric terracotta over-arc**. Built as an SVG primitive
+  (`stroke-dasharray`/`stroke-dashoffset` + one CSS transition for the sweep). **Why:** one calm
+  glance at calories + composition, on-brand (editorial, not app-ish). **Trade-off:** a genuinely
+  new primitive (the riskiest part of F5) — kept editorial via hairline strokes.
+- **Macro bar = a PROPORTION in the day view, AVG-GRAMS-vs-goal in the aggregate.** Day = P/C/F
+  share of calories (4/4/9 via macroSplit) + grams/faint-targets; Week/Month = avg grams vs goal
+  per macro. **Why:** proportion answers "what's my day made of"; aggregate answers "am I near my
+  targets on average". **Trade-off:** the two views read differently on purpose — labelled "avg/day".
+- **Meal ledger = the 4 fixed slots, dense but calm.** Slot header (name + subtotal kcal + P/C/F);
+  rows capped with **"+N more"** (inline expand — page may scroll on user action); **tap a row →
+  full 7 numbers + Edit**. **Why:** zero-scroll on the overview without dropping data. **Trade-off:**
+  none — restraint via type, not by hiding.
+- **Warm states.** No calorie goal → a muted **"Set your daily targets"** prompt REPLACES the arc
+  (the day total still shows in the ledger/secondary line — logging without a goal isn't a black
+  hole). Empty day → a warm **"nothing logged yet"** invite + the primary add; the 4 slots
+  materialise on first add. **Why:** the G16 warm-edge law. **Trade-off:** none.
+- **Week/Month reframe the whole page:** an **avg-day arc + a calories trend + a per-day list**
+  (date · kcal · P/C/F) that drills into that day's ledger. Aggregate views MAY scroll (zero-scroll
+  governs the day overview only). The trend MIRRORS the Body chart's structure with `foodFormat` —
+  Body's chart is left untouched (metric-coupled). **Why:** familiar range pattern, Body untouched.
+  **Trade-off:** a small `FoodTrend` rather than reusing `BodyChart`.
+- **Chevron `‹ ›` date nav** flanks the date (the calendar house pattern), moving by the ACTIVE unit
+  (day/week/month); a subtle **"today" kicker** marks today; past days are fully usable. **Accent
+  (terracotta) lands ONLY on the over-arc, the today kicker, and the active range tab** — everything
+  else is ink. **Why:** sparing accent is a design law. **Trade-off:** none.
+- **Names resolve via the FKs** (`food_item_id → food_items.name`, `recipe_id → recipes.title`);
+  `food_log_entries` stores no name column. **F6 CARRY-FORWARDS:** the +add / per-slot '+' / Edit /
+  recents-favourites affordances are placed but **stubbed** (their writes are F6); a **manual add
+  creates a `food_items` row** so the entry has a name + is reusable (NO schema change). **Why:**
+  one source of truth for a row's name; keeps F5 read-only. **Trade-off:** none.
+
 ## Food — Cookbook & Nutrition — F0: the locked plan (2026-06-28)
 
 - **Food is its own TOP-LEVEL PILLAR (AMENDS Gym G0).** G0 parked nutrition as a
