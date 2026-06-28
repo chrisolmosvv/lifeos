@@ -56,6 +56,51 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-28 — Track F — F2: food-search Edge Function (OFF + USDA → one record). SUPABASE/ ONLY. (Owner-verified on device.)
+WHAT CHANGED:
+- New private edge function `food-search` — the FIRST app→Edge-Function call in LifeOS:
+  `verify_jwt=true`, called AS the logged-in owner (so it also needed CORS, which the
+  server-to-server functions never did). Read-only.
+- Takes a text query → searches the owner's saved `food_items` (via the caller's JWT under
+  RLS), Open Food Facts, and USDA FoodData Central in parallel → normalises each into ONE
+  per-100g record `{source, source_ref, name, brand, serving{grams,label}, per100g{kcal,
+  protein,carbs,fat,fibre,sugar,sodium}, food_item_id?}` → dedupe + order → returns the list.
+  Missing numbers null (never 0); each source degrades independently (one can't 500 the search).
+FILES TOUCHED: supabase/functions/food-search/{index,normalize,saved,off,usda}.ts;
+  supabase/config.toml ([functions.food-search] verify_jwt=true). (commits a973545, ae12aec,
+  aea2cbb, 7ca63a4, 83b0437)
+HOW TO VERIFY (done): browser console on the logged-in app tab → fetch the function with the
+  session token. `nutella` → OFF branded jar, sodium 42.8 mg (g→mg confirmed), kcal 539.
+  `chicken breast raw` → USDA "Chicken, breast, boneless, skinless, raw", 112 kcal / 22.5 g
+  protein. `sources {off:9, usda:10}`, `debug.usda.reachable:true`. Nonsense query → empty list,
+  HTTP 200. No USDA key → OFF still returns, `sources.usda:"not_configured"`.
+SECRETS (Supabase secret store, never in repo): `USDA_FDC_API_KEY` (USDA search; without it USDA
+  degrades, OFF works); `OFF_CONTACT_EMAIL` (the contact in OFF's User-Agent — built at run time,
+  NOT hardcoded, because supabase/functions/ is the public repo).
+KNOWN GAPS / RISKS: read-only — caching a chosen API food into `food_items` is F6's write, not
+  here. OFF search uses search-a-licious (search.openfoodfacts.org) because world.openfoodfacts.org
+  search 503s. USDA uses a POST body (its nginx 400s on percent-encoded parens in a GET dataType)
+  with an 8s timeout (US latency from Frankfurt). USDA returned carbs −0.428 on one entry (rounding
+  noise) → F3 calc must clamp negative macros to 0. telegram/brief/gym still aren't pinned in
+  config.toml (latent verify_jwt gap) — deliberately left; deploy food-search ALONE.
+NEXT: F3 — the calc layer (compute-on-read, mirror the Body utils).
+
+### 2026-06-28 — Track F — F1: food tables (5 additive tables). DB/ ONLY (schema, checker-gated). (Owner ran live on Frankfurt + verified.)
+WHAT CHANGED:
+- Five new owner-only tables in `db/28_food_tables.sql`: `food_items`, `food_log_entries`,
+  `recipes`, `recipe_ingredients`, `recipe_steps`. Additive — the tasks/events/categories spine
+  is untouched, no FK into it; intra-module FKs only (recipe children CASCADE; the food_item_id
+  + recipe_id refs SET NULL so a logged entry survives its source being deleted).
+- RLS on + 4 owner policies (auth.uid()=user_id) per table. `food_items` UNIQUE (user_id, source,
+  source_ref). The macro-snapshot columns on `food_log_entries` are REAL stored numerics (the one
+  deliberate store-derived exception). No goals/drinks/recents tables: goals reuse `health_goals`,
+  drinks = `is_alcohol`+`alcohol_units` on the log, favourites = `is_favourite`, recents derived.
+FILES TOUCHED: db/28_food_tables.sql. (commit 507188b)
+HOW TO VERIFY (done): Checker said "checker approved"; owner ran the SQL on Frankfurt
+  (cntlptuacsujbdtwvbis) + `notify pgrst, 'reload schema';` and confirmed the five tables exist.
+KNOWN GAPS / RISKS: none — schema only, no writer yet (writes arrive at F6).
+NEXT: F2 — the food-search edge function (done, above).
+
 ### 2026-06-28 — Track S — S9: Goals editor (the first in-app WRITE). SRC/ ONLY (no schema). (Owner-verified on Mac + DB rows.)
 WHAT CHANGED:
 - The first WRITE in Track S. Tapping the muted "set a goal" prompts on the Sleep + Body

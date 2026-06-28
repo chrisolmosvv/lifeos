@@ -829,13 +829,19 @@ joined by a cook→log bridge. Food data from Open Food Facts + USDA by text sea
 impact) deferred to a paid no-training key. Additive tables, RLS, free-tier,
 two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-section.
 
-- 🔨 F0 — Paperwork (this plan + 02/03). No code.  ← IN PROGRESS
-- ⬜ F1 — Tables: 5 ONLY (food_items, food_log_entries, recipes, recipe_ingredients,
+- ✅ F0 — Paperwork (this plan + 02/03). No code.  (commit 7e0000a)
+- ✅ F1 — Tables: 5 ONLY (food_items, food_log_entries, recipes, recipe_ingredients,
        recipe_steps) in db/28_food_tables.sql. Goals reuse health_goals; drinks =
        is_alcohol+alcohol_units flag; favourites = is_favourite flag; recents derived.
-       No new goals/drinks/recents tables. CHECKER-GATED, own commit.
-- ⬜ F2 — food-search Edge Function (OFF + USDA → one shape; verify_jwt=true; cache via food_items).
-- ⬜ F3 — Calc layer (compute-on-read; recipe verified now, day/range at F6).
+       No new goals/drinks/recents tables. Checker-approved, run live on Frankfurt +
+       owner-verified. (commit 507188b)
+- ✅ F2 — food-search Edge Function (OFF search-a-licious + USDA POST → one shape;
+       verify_jwt=true + CORS; owner food_items via caller JWT). Owner-verified: nutella
+       (OFF, sodium 42.8 mg) + chicken breast raw (USDA, 112 kcal/22.5 g). (commits a973545,
+       ae12aec, aea2cbb, 7ca63a4, 83b0437)
+- ⬜ F3 — Calc layer (compute-on-read; recipe verified now, day/range at F6). CARRY-FORWARD:
+       clamp negative macros to 0 (USDA returned carbs −0.428 on one entry — rounding noise;
+       floor so the UI never shows a negative macro).  ← NEXT
 - ⬜ F4 — Pillar scaffold: 5th nav pillar + Log|Cookbook tabs + frame + empty states (read-only).
 - ⬜ F5 — Logger front page (read): editorial calorie arc + macro bar + meal ledger + day/week/month.
 - ⬜ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.
@@ -845,9 +851,13 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
 - ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
 - ⬜ F11 — Polish + audit to the design laws.
 
-OPEN: F2 — OFF/USDA rate limits + caching in practice.   F4 — nav order of the five pillars.
+OPEN: caching live API hits into food_items (the cache-on-select write) lands at F6, not F2
+      (F2 is read-only).   F4 — nav order of the five pillars.
 SETTLED AT RECON: 5 tables only; goals/drinks/recents reuse; ±10% on-target band;
       portion table for ingredient→weight (F7, an F0 amendment); USDA_FDC_API_KEY owner-supplied.
+F2 LIVE NOTES: OFF search = search-a-licious (search.openfoodfacts.org); world.openfoodfacts.org
+      search 503s. USDA = POST body (nginx 400s on percent-encoded parens in a GET dataType).
+      Secrets: USDA_FDC_API_KEY, OFF_CONTACT_EMAIL (User-Agent contact, never hardcoded).
 
 ---
 
@@ -864,6 +874,20 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-28 — Track F — Food F1 + F2 — tables live + food-search shipped (schema + supabase, two-track).** F1:
+  the 5 additive tables (`db/28_food_tables.sql`, commit `507188b`) — checker-approved, run live on Frankfurt,
+  owner-verified. Goals reuse `health_goals`; drinks = `is_alcohol`+`alcohol_units` on the log; favourites =
+  `is_favourite` flag; recents derived (no new goals/drinks/recents tables). F2: the private `food-search` edge
+  function (commits `a973545` → `83b0437`) — the FIRST app→Edge-Function call (`verify_jwt=true`, called as the
+  owner; needed CORS, the second new-ground thing). Read-only text search normalising the owner's saved
+  `food_items` (read via the caller's JWT under RLS), Open Food Facts and USDA FoodData Central into ONE per-100g
+  record; missing numbers null (never 0); each source degrades independently. **Owner-verified on device:** nutella
+  (OFF branded jar, sodium 42.8 mg — g→mg confirmed) + chicken breast raw (USDA, 112 kcal/22.5 g protein);
+  `sources {off:9, usda:10}`. Real-data fixes along the way: USDA macros key on `nutrientId` not `nutrientNumber`;
+  OFF search via search-a-licious (world.openfoodfacts.org 503s); USDA via POST body (nginx 400s on percent-encoded
+  parens in a GET dataType); 8s USDA timeout; drop no-kcal crowd entries. Secrets: `USDA_FDC_API_KEY`,
+  `OFF_CONTACT_EMAIL` (built into the User-Agent at run time, never hardcoded — the functions dir is public).
+  **NEXT: F3 — the calc layer (compute-on-read, mirror the Body utils); carry-forward: clamp negative macros to 0.**
 - **2026-06-28 — Track F — Food F0 — spec locked into the brain (paperwork only, no code).** Opened the new
   **F-track** (Food: Cookbook & Nutrition) as its own **top-level pillar** — an AMENDMENT to Gym G0, which had
   parked nutrition under the Health banner (recorded openly). Created `11-food-nutrition.md` (the full spec);
