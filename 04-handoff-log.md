@@ -56,6 +56,31 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-28 — Track F — F3: the calc layer (compute-on-read, pure). SRC/ ONLY. (Verified in Node vs real records.)
+WHAT CHANGED:
+- The 7 pure getters that turn raw rows into every Food number, mirroring the Body utils
+  (reuses presetRange/statsForRange + the shared Amsterdam-day helper; "today" passed in;
+  no fetch/writes/Date.now()). `entryMacros` (scale a per-100g record by grams),
+  `dailyTotals` (NEW sum-per-day primitive), `dayLedger` (slots + total + alcohol + vs-goal
+  + hasGoals), `macroSplit`, `calorieArc`, `rangeTotals`, and `recipeMacros` (+ unestimatedCount).
+- THE SPLIT: a log entry stores its 7-number snapshot, so entryMacros computes it at WRITE
+  time (F6) and dailyTotals/dayLedger just SUM stored entries. Negative clamp lives in
+  entryMacros (USDA −0.428 carbs → 0); a missing per-100g → null (never faked 0).
+DEFINITIONAL CHOICES: ±10% on-target band with edges INCLUSIVE (135–165 for goal 150 all
+  'on'); 0/null goal target → null (no divide → the muted "set targets" path); macroSplit by
+  CALORIES (4/4/9 Atwater); rangeTotals averages over LOGGED days only.
+FILES TOUCHED: src/food/foodCalc.js, src/food/recipeCalc.js, src/food/foodFormat.js. (commit c1dd0a6)
+HOW TO VERIFY (done): ran the files in Node against real OFF/USDA records. 150 g chicken + 30 g
+  nutella → day total 329.7 kcal / 35.64 g protein / 17.25 carbs / 12.17 fat / 16.89 sugar /
+  111.54 mg sodium; chicken meat+skin carbs −0.428 → 0; recipe 200 g chicken + 100 g rice + 1
+  unmatched, serves 4 → per-serving 88.5 kcal / 11.89 g protein, unestimatedCount 1; band 134
+  under / 135 on / 165 on / 166 over; a null item macro prints "—" but sums as 0 in the day total.
+KNOWN GAPS / RISKS: real-verified NOW = entryMacros, dailyTotals, dayLedger, macroSplit,
+  calorieArc, recipeMacros, the band, the formatters. The full stored-entries → day → range
+  path (and recipes from saved rows) only runs end-to-end once F6 writes exist — NOT fake-greened
+  on invented days. Non-gram units (cup/tbsp/"1 onion") return all-null — the F7 portions.js seam.
+NEXT: F4 — pillar scaffold (5th nav pillar + Log|Cookbook tabs + frame + empty states, read-only).
+
 ### 2026-06-28 — Track F — F2: food-search Edge Function (OFF + USDA → one record). SUPABASE/ ONLY. (Owner-verified on device.)
 WHAT CHANGED:
 - New private edge function `food-search` — the FIRST app→Edge-Function call in LifeOS:

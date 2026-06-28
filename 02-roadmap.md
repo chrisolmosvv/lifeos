@@ -839,10 +839,10 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
        verify_jwt=true + CORS; owner food_items via caller JWT). Owner-verified: nutella
        (OFF, sodium 42.8 mg) + chicken breast raw (USDA, 112 kcal/22.5 g). (commits a973545,
        ae12aec, aea2cbb, 7ca63a4, 83b0437)
-- ⬜ F3 — Calc layer (compute-on-read; recipe verified now, day/range at F6). CARRY-FORWARD:
-       clamp negative macros to 0 (USDA returned carbs −0.428 on one entry — rounding noise;
-       floor so the UI never shows a negative macro).  ← NEXT
-- ⬜ F4 — Pillar scaffold: 5th nav pillar + Log|Cookbook tabs + frame + empty states (read-only).
+- ✅ F3 — Calc layer (compute-on-read, pure): foodCalc.js + recipeCalc.js + foodFormat.js. The 7
+       getters; negative clamp in entryMacros; ±10% inclusive band; sum-per-day; no-goals path.
+       Verified in Node vs real OFF/USDA records; full day/range path completes at F6. (commit c1dd0a6)
+- ⬜ F4 — Pillar scaffold: 5th nav pillar + Log|Cookbook tabs + frame + empty states (read-only).  ← NEXT
 - ⬜ F5 — Logger front page (read): editorial calorie arc + macro bar + meal ledger + day/week/month.
 - ⬜ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.
 - ⬜ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.
@@ -874,6 +874,22 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-28 — Track F — Food F3 — the calc layer (compute-on-read, pure; src/ only, commit c1dd0a6).** Built
+  `src/food/foodCalc.js` + `recipeCalc.js` + `foodFormat.js` — the 7 locked getters that turn raw rows into every
+  number the Food screens show, mirroring the Body utils (reuses `presetRange`/`statsForRange` + the shared
+  Amsterdam-day helper; no new day definition). Key design: a log entry STORES its 7-number macro snapshot, so
+  `entryMacros` computes that snapshot at WRITE time (F6/recipe-cook) while `dailyTotals`/`dayLedger` read entries
+  that already carry the numbers and just SUM — so `dailyTotals` is a NEW sum-per-day primitive (nutrition sums
+  where Body averages; the Body daily-collapse is deliberately NOT reused). The NEGATIVE CLAMP lives in
+  `entryMacros` (USDA's −0.428 carbs → 0). `dayLedger` = 4 meal slots + subtotals + day total + alcohol-lite
+  {units,kcal} + ±10% vs-goal per macro (edges INCLUSIVE; 0/null target → null) + a `hasGoals` flag for the
+  no-goals "set your targets" path (no crash, no fake 0 target). `macroSplit` by CALORIES (4/4/9 Atwater);
+  `calorieArc` (no goal → no arc fill); `rangeTotals` averages over LOGGED days only (reuses the Body windowing);
+  `recipeMacros` → total + per-serving (÷servings) + `unestimatedCount` (never hide). **Verified by running the
+  files in Node against REAL OFF/USDA records** (day total 329.7 kcal / 35.64 g protein / 111.54 mg sodium; clamp;
+  inclusive band; recipe per-serving + unestimatedCount; null shows "—" on an item but adds as 0 in a total). The
+  full stored-entries → day → range path completes end-to-end only once F6 writes exist (not fake-greened).
+  **NEXT: F4 — pillar scaffold (5th nav pillar + Log|Cookbook tabs + frame + empty states, read-only, src/ only).**
 - **2026-06-28 — Track F — Food F1 + F2 — tables live + food-search shipped (schema + supabase, two-track).** F1:
   the 5 additive tables (`db/28_food_tables.sql`, commit `507188b`) — checker-approved, run live on Frankfurt,
   owner-verified. Goals reuse `health_goals`; drinks = `is_alcohol`+`alcohol_units` on the log; favourites =
