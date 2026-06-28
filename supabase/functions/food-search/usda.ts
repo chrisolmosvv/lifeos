@@ -6,32 +6,34 @@
 // branded reports awkward per-serving values). So USDA gives us raw ingredients
 // (chicken breast, oats, banana) with reliable macros.
 //
-// Each result's foodNutrients carry a nutrientNumber we map to our 7 fields. USDA sodium
+// Each result's foodNutrients identify a nutrient by `nutrientId` (1008, 1003, …) — NOT
+// `nutrientNumber`, which is the OLD INFOODS tagname string ("208", "203", …). Matching
+// nutrientNumber was the F2 bug that nulled every macro; we match nutrientId. USDA sodium
 // is ALREADY mg and energy is ALREADY kcal → no conversion. Missing nutrient → null.
 //
-// configured=false (no key) is NOT an error — index.ts notes "usda_unavailable" and the
-// search still returns OFF + saved. A real fetch failure throws → same graceful degrade.
+// No key is NOT an error — index.ts reports "not_configured" and the search still returns
+// OFF + saved. A real fetch failure throws → same graceful degrade.
 
-import { type FoodCandidate, fetchWithTimeout, num, str } from "./normalize.ts";
+import { type FoodCandidate, fetchWithTimeout, num, type SourceResult, str } from "./normalize.ts";
 
 const SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search";
 const DATA_TYPES = "Foundation,SR Legacy,Survey (FNDDS)";
 
-// nutrientNumber → our field. Energy has a few variants; we try 1008 (Energy, kcal)
-// first, then the Atwater kcal rows as a fallback for foods that only carry those.
-const ENERGY_NUMBERS = ["1008", "2048", "2047"];
-const PROTEIN = "1003";
-const CARBS = "1005";
-const FAT = "1004";
-const FIBRE = "1079";
-const SUGAR = "2000";
-const SODIUM = "1093"; // already mg
+// nutrientId → our field. Energy has a few variants; we try 1008 (Energy, kcal) first,
+// then the Atwater kcal rows (2048/2047) as a fallback for foods carrying only those.
+const ENERGY_IDS = [1008, 2048, 2047];
+const PROTEIN = 1003;
+const CARBS = 1005;
+const FAT = 1004;
+const FIBRE = 1079;
+const SUGAR = 2000;
+const SODIUM = 1093; // already mg
 
 export const usdaConfigured = !!Deno.env.get("USDA_FDC_API_KEY");
 
-export async function searchUsda(query: string): Promise<FoodCandidate[]> {
+export async function searchUsda(query: string): Promise<SourceResult> {
   const key = Deno.env.get("USDA_FDC_API_KEY");
-  if (!key) return []; // no key → caller already knows via usdaConfigured; degrade quietly
+  if (!key) return { raw: 0, records: [] }; // no key → degrade quietly (sources says so)
   const url =
     `${SEARCH_URL}?api_key=${encodeURIComponent(key)}` +
     `&query=${encodeURIComponent(query)}` +
@@ -40,15 +42,16 @@ export async function searchUsda(query: string): Promise<FoodCandidate[]> {
   if (!res.ok) throw new Error(`USDA HTTP ${res.status}`);
   const data = await res.json();
   const foods = Array.isArray(data?.foods) ? data.foods : [];
-  return foods
+  const records = foods
     .map(toCandidate)
     .filter((c: FoodCandidate | null): c is FoodCandidate => c !== null);
+  return { raw: foods.length, records };
 }
 
-// Pull the first finite value whose nutrientNumber is in `numbers`, else null.
-function pick(nutrients: Record<string, unknown>[], numbers: string[]): number | null {
-  for (const wanted of numbers) {
-    const hit = nutrients.find((x) => String(x?.nutrientNumber) === wanted);
+// Pull the first finite value whose nutrientId is in `ids`, else null.
+function pick(nutrients: Record<string, unknown>[], ids: number[]): number | null {
+  for (const wanted of ids) {
+    const hit = nutrients.find((x) => Number(x?.nutrientId) === wanted);
     const v = num(hit?.value);
     if (v != null) return v;
   }
@@ -67,7 +70,7 @@ function toCandidate(f: Record<string, unknown>): FoodCandidate | null {
     brand: str(f.brandName) ?? str(f.brandOwner), // usually null for whole foods
     serving: { grams: null, label: null },
     per100g: {
-      kcal: pick(nutrients, ENERGY_NUMBERS),
+      kcal: pick(nutrients, ENERGY_IDS),
       protein: pick(nutrients, [PROTEIN]),
       carbs: pick(nutrients, [CARBS]),
       fat: pick(nutrients, [FAT]),

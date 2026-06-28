@@ -21,7 +21,7 @@
 //   OFF_CONTACT_EMAIL — the contact in OFF's User-Agent (built in off.ts).
 //   SUPABASE_URL / SUPABASE_ANON_KEY — auto-injected; the owner-scoped food_items read.
 
-import { type FoodCandidate, mergeDedupeOrder } from "./normalize.ts";
+import { mergeDedupeOrder, type SourceResult } from "./normalize.ts";
 import { searchSaved } from "./saved.ts";
 import { searchOff } from "./off.ts";
 import { searchUsda, usdaConfigured } from "./usda.ts";
@@ -56,13 +56,13 @@ async function readQuery(req: Request): Promise<string> {
   }
 }
 
-// Run a source, turning ANY rejection into an empty list (the search never fails because
-// one source did). Returns the records plus whether the source was actually reachable.
-async function safely(p: Promise<FoodCandidate[]>): Promise<{ records: FoodCandidate[]; ok: boolean }> {
+// Run a source, turning ANY rejection into an empty result (the search never fails
+// because one source did). Returns the SourceResult plus whether it was reachable.
+async function safely(p: Promise<SourceResult>): Promise<{ result: SourceResult; ok: boolean }> {
   try {
-    return { records: await p, ok: true };
+    return { result: await p, ok: true };
   } catch (_err) {
-    return { records: [], ok: false };
+    return { result: { raw: 0, records: [] }, ok: false };
   }
 }
 
@@ -91,15 +91,24 @@ Deno.serve(async (req) => {
     safely(searchUsda(query)),
   ]);
 
-  const results = mergeDedupeOrder(saved.records, off.records, usda.records);
+  const results = mergeDedupeOrder(saved.result.records, off.result.records, usda.result.records);
 
   // Per-source outcome: a count when reachable, "unavailable" when the API failed/timed
   // out, "not_configured" when the USDA key isn't set (OFF/saved still worked).
   const sources = {
-    saved: saved.ok ? saved.records.length : "unavailable",
-    off: off.ok ? off.records.length : "unavailable",
-    usda: !usdaConfigured ? "not_configured" : usda.ok ? usda.records.length : "unavailable",
+    saved: saved.ok ? saved.result.records.length : "unavailable",
+    off: off.ok ? off.result.records.length : "unavailable",
+    usda: !usdaConfigured ? "not_configured" : usda.ok ? usda.result.records.length : "unavailable",
   };
 
-  return json({ ok: true, query, results, sources });
+  // Diagnostic: per source, RAW hits the API returned vs how many SURVIVED normalisation,
+  // and whether the source was reachable. raw>0 but kept 0 = "came back, got dropped";
+  // raw 0 = "nothing matched / source down". Lets the owner see exactly what each did.
+  const debug = {
+    saved: { raw: saved.result.raw, kept: saved.result.records.length, reachable: saved.ok },
+    off: { raw: off.result.raw, kept: off.result.records.length, reachable: off.ok },
+    usda: { raw: usda.result.raw, kept: usda.result.records.length, reachable: usda.ok, configured: usdaConfigured },
+  };
+
+  return json({ ok: true, query, results, sources, debug });
 });

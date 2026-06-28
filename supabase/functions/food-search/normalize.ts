@@ -28,6 +28,14 @@ export interface FoodCandidate {
   food_item_id?: string;
 }
 
+// What one source returns: its normalised records PLUS how many RAW hits the API gave
+// before normalisation dropped any (no-name rows, etc.). `raw` vs records.length is the
+// diagnostic — it shows "0 hits" apart from "hits came back but got dropped".
+export interface SourceResult {
+  raw: number;
+  records: FoodCandidate[];
+}
+
 // A finite number, else null. The single guard that keeps junk ("", "N/A", NaN, a
 // stray string) out of the macros — callers pass raw source values straight through it.
 export function num(v: unknown): number | null {

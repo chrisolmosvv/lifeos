@@ -9,16 +9,16 @@
 // READ-ONLY: nothing here writes. The "cache a chosen API food into food_items" write is
 // F6's job (when the owner actually picks/logs it), never this function's.
 
-import { type FoodCandidate, num, str } from "./normalize.ts";
+import { type FoodCandidate, num, type SourceResult, str } from "./normalize.ts";
 
 const SB_URL = Deno.env.get("SUPABASE_URL");
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 
 // The owner's saved/cached/manual foods whose name matches the query (case-insensitive),
-// favourites first. Returns [] on anything unusual (no auth header, a bad read) — saved
-// foods are a nice-to-have layer over the API search, never a reason to fail the call.
-export async function searchSaved(query: string, authHeader: string | null): Promise<FoodCandidate[]> {
-  if (!SB_URL || !ANON_KEY || !authHeader) return [];
+// favourites first. Returns empty on anything unusual (no auth header, a bad read) —
+// saved foods are a nice-to-have layer over the API search, never a reason to fail.
+export async function searchSaved(query: string, authHeader: string | null): Promise<SourceResult> {
+  if (!SB_URL || !ANON_KEY || !authHeader) return { raw: 0, records: [] };
   const cols =
     "id,name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite";
   // PostgREST: ilike with *wildcards*; favourites first, then alphabetical; cap at 10.
@@ -30,12 +30,12 @@ export async function searchSaved(query: string, authHeader: string | null): Pro
     const res = await fetch(`${SB_URL}/rest/v1/${q}`, {
       headers: { apikey: ANON_KEY, Authorization: authHeader },
     });
-    if (!res.ok) return [];
+    if (!res.ok) return { raw: 0, records: [] };
     const rows = await res.json();
-    if (!Array.isArray(rows)) return [];
-    return rows.map(toCandidate);
+    if (!Array.isArray(rows)) return { raw: 0, records: [] };
+    return { raw: rows.length, records: rows.map(toCandidate) };
   } catch (_err) {
-    return [];
+    return { raw: 0, records: [] };
   }
 }
 
