@@ -9,6 +9,40 @@
 
 ---
 
+## Food — F6: logging writes (the first Food write track) (2026-06-28)
+
+- **RECONCILE (a): macro goals are now OPTIONAL.** F0 locked "calories + FULL P/C/F". F6 relaxes
+  it: **calories required, protein/carbs/fat optional.** The macro-label faint target (`P 95/120g`)
+  shows ONLY for macros actually set; a calories-only day shows macro grams with no target. The
+  deferred adherence rule becomes **"all SET goals within ±10%."** **Why:** forcing four targets to
+  start is friction; one number (calories) is enough to be useful. **Trade-off:** none — the band
+  rule already keys off whatever goals exist.
+- **RECONCILE (b): mixed write-safety model, intentional.** LOG writes (add/edit/remove) are
+  **optimistic + an UNDO toast** (S9 itself had no undo; a logged row is a real delete, so undo
+  fits and prevents accidental loss). The **goal CLEAR keeps S9's confirm** (append-only, no undo).
+  **Why:** logs are frequent + reversible; clearing a goal is rare + destructive of the live target.
+  **Trade-off:** two interaction patterns in one module — acceptable, each fits its action.
+- **No schema change.** F6 writes only EXISTING tables: `food_log_entries` (the log), `food_items`
+  (manual foods + cache-on-log + is_favourite), `health_goals` (nutrition goal_types). **Why:** the
+  F1 shapes already fit. **Trade-off:** `food_log_entries.updated_at` has no auto-update trigger, so
+  the write layer stamps `updated_at` EXPLICITLY on edits (keeps verify-by-updated_at honest).
+- **Cache-on-log (the F2-deferred write lands here).** Logging a searched OFF/USDA food upserts it
+  into `food_items` on the unique `(user_id, source, source_ref)` — links to the existing row, never
+  duplicates — and the entry FKs to it. A MANUAL add inserts a `food_items` row too. **Why:** every
+  entry gets a `food_item_id`, so names always resolve (closes the F5 manual-name gap) and foods
+  become reusable (recents/favourites). **Trade-off:** manual `source_ref` is null and nulls are
+  distinct in the unique index, so two manual foods of the same name DON'T dedupe — intended for V1.
+- **The stored snapshot stays the source of truth.** `entryMacros` computes the 7 numbers at WRITE
+  time; an amount/food edit RE-RUNS it (per-100g reverse-derived from the existing snapshot, no
+  refetch). **Why:** history never silently shifts when a food's DB numbers change later. **Trade-off:**
+  a clamped-to-0 macro can't be un-clamped on edit (fine — 0 is correct).
+- **Locked seams.** Time-of-day → default slot: 04–11 Breakfast · 11–16 Lunch · 16–22 Dinner · else
+  Snacks (Amsterdam clock, changeable per add). Amount chips: serving (½·1·2) when the food has a
+  serving size, else gram chips (50·100·150); default 1 serving / 100 g; grams always editable.
+  Quick-add / pick always opens the **pre-filled amount step** (no accidental logs). Goals editor
+  reached from the no-goals prompt AND a tap on the arc. **Why:** sensible defaults, one confirm tap.
+  **Trade-off:** none.
+
 ## Food — F5: the Logger front-page layout (2026-06-28)
 
 - **Lead = a calorie ARC + a macro BAR, side by side.** The arc is a **270°-open ring** (gap at

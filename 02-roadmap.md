@@ -847,8 +847,10 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
 - ✅ F5 — Logger front page (read): editorial calorie arc + macro bar + meal ledger + day/week/month.
        7 files (LogPage + CalorieArc/MacroBar/MealLedger/FoodRange/FoodTrend/foodLoad). Seed-verified
        vs the F3 math; empty/no-goals real-now. (commit 466896e)
-- ⬜ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.  ← NEXT
-- ⬜ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.
+- ✅ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.
+       foodWrite + useFoodWrites optimistic orchestration; cache-on-log dedup; edit/swap recompute.
+       No schema change. Dev-server verified. (commit c70d579)
+- ⬜ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.  ← NEXT
 - ⬜ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.
 - ⬜ F9 — Cook→log bridge: "Cook this" → staged draft (servings/slot/swap) → log snapshot.
 - ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
@@ -877,6 +879,23 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-28 — Track F — Food F6 — logging WRITES (the first Food write track; src/ only, commit c70d579).** Turned
+  F5's stubbed affordances into real actions. `foodWrite.js` (logEntry/updateEntry/removeEntry, cacheFoodOnLog
+  upsert, insertManualFood, setFavourite) + `useFoodWrites.js` (optimistic add/edit/delete — the change shows at
+  once, REVERTS + toasts on failure (no silent loss), undo on add & delete). The add-food modal: a DEBOUNCED live
+  search via the food-search Edge Function (the FIRST app→Edge-Function call) + a manual form (per-serving →
+  per-100g normalisation). CACHE-ON-LOG: logging a searched OFF/USDA food upserts it into `food_items` on the
+  unique (user_id,source,source_ref) — links, never duplicates — and the entry FKs to it, so names always resolve
+  (closes the F5 manual-name gap; manual adds also create a `food_items` row). Edit panel: amount/slot/swap/remove,
+  recomputing the snapshot via `entryMacros` (per-100g reverse-derived from the stored snapshot) and stamping
+  `updated_at` EXPLICITLY (no auto-update trigger → keeps verify-by-updated_at honest). Favourite star + a quick-add
+  strip (blended favourites+recents → the pre-filled amount step). Goals editor popover (calories required, P/C/F
+  optional) reusing the S9 `useGoalWrites`/Popover/Toast + append-only set + clear-confirm. Seams: hour→slot
+  04–11/11–16/16–22/else-Snacks; serving-else-gram chips; quick-add opens the pre-filled amount step. NO schema
+  change (existing tables only — src-only, no checker gate). Verified on the dev server (cache reuse + name; manual
+  round-trip; edit/swap recompute + updated_at advance; remove+undo; favourite persists; goals show targets only
+  for set macros; forced-failure reverts). **NEXT: F7 — the Cookbook: cards + recipe page + cooking mode (concurrent
+  timers) + recipe create/edit + the curated portion/weight table (portions.js).**
 - **2026-06-28 — Track F — Food F5 — the Logger front page (read-only; src/ only, commit 466896e).** The first Food
   screen with real content. Fills FoodPage's Log tab via a new 7-file set: `foodLoad.js` (fetch-only entries +
   name resolution), `LogPage.jsx` (orchestrator — Day/Week/Month switcher + chevron date nav, load-once /

@@ -56,6 +56,35 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-28 — Track F — F6: logging writes (the first Food write track). SRC/ ONLY. (Dev-server verified, by-row.)
+WHAT CHANGED:
+- The logger now WRITES. foodWrite.js (logEntry/updateEntry/removeEntry, cacheFoodOnLog upsert,
+  insertManualFood, setFavourite) + useFoodWrites.js (optimistic add/edit/delete — shows at once,
+  REVERTS + toasts on failure, undo on add & delete). Add-food modal: debounced search via the
+  food-search Edge Function (first app→Edge-Function call) + a manual form (per-serving→per-100g).
+- Cache-on-log: a searched food upserts into food_items on unique (user_id,source,source_ref) —
+  links, never duplicates — entry FKs to it (names always resolve; closes the F5 manual-name gap).
+  Edit/swap recompute the snapshot via entryMacros + stamp updated_at explicitly. Favourite star +
+  quick-add strip. Goals editor popover (cal required + P/C/F optional) reusing the S9 path.
+- NO schema change (existing tables only — src-only, no checker gate).
+FILES TOUCHED: src/food/foodWrite.js, useFoodWrites.js, foodShape.js, AddFoodModal.jsx, AmountStep.jsx,
+  ManualForm.jsx, EditEntryPanel.jsx, QuickAddStrip.jsx, NutritionGoalsEditor.jsx, DayView.jsx; edits to
+  LogPage.jsx, MealLedger.jsx, foodCalc.js (recentsFrom), foodLoad.js (searchFoods/fetchMyFoods),
+  foodLog.css, foodModal.css. (commit c70d579)
+HOW TO VERIFY (done, on the dev server, by-row): cache-on-log — log the same searched food twice → ONE
+  food_items row (no dup), two entries FK'd to it, real name shows. Manual per-serving (40 g, 200 kcal…)
+  → food_items stores per-100g (×100/40). Edit amount → snapshot recomputes + updated_at advances past
+  created_at; swap → food_item_id + snapshot change; remove → delete + undo re-inserts. Favourite → flips
+  is_favourite, persists across reload. Goals → cal-only shows the arc; +protein shows only protein's
+  target; clear → confirm → append-only active=false markers → prompt returns. Forced-failure (Network
+  Offline mid-add) reverts the optimistic row + error toast. Queries: select on food_log_entries /
+  food_items / health_goals (goal_type in calories/protein/carbs/fat).
+KNOWN GAPS / NOTES: manual source_ref=null doesn't dedupe (two manual foods same name → two rows —
+  intended V1). Macro goals now OPTIONAL; log-undo vs goal-clear-confirm is a deliberate mixed model
+  (see 03-decisions F6 block). The cooked-recipe log path (recipe_id) is F9.
+NEXT: F7 — the Cookbook (cards + recipe page + cooking mode with concurrent timers + create/edit +
+  the curated portion/weight table portions.js).
+
 ### 2026-06-28 — Track F — F5: Logger front page (read-only). SRC/ ONLY. (Seed-verified vs the F3 math on Mac.)
 WHAT CHANGED:
 - The first Food screen with real content — fills FoodPage's Log tab. Day view: a calorie ARC +
