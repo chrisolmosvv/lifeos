@@ -395,6 +395,12 @@ verify_jwt = false
 [functions.food-search]
 verify_jwt = true
 
+# recipe-import is the F8 AI import: the React app invokes it as the logged-in owner (paste/URL
+# → Gemini → house JSON), so the gateway MUST validate that JWT (like food-search). Pinned true
+# explicitly so a config-aware deploy can't silently flip it. Deploy this function ALONE.
+[functions.recipe-import]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327
