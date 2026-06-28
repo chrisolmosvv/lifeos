@@ -1,0 +1,369 @@
+/* LifeOS — Food add-food modal + amount step (F6). A calm centered sheet over a faint
+   backdrop (the Popover feel), hairline rules, ink + paper, accent only on the primary log
+   action. Vars from theme.css (dark mode follows). */
+
+.afm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 22, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+.afm {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 40px rgba(28, 25, 22, 0.18);
+  padding: 16px 18px 18px;
+}
+.afm-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.afm-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+.afm-close {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.afm-close:hover {
+  color: var(--ink);
+}
+
+.afm-search {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  padding: 8px 2px;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--ink);
+  outline: none;
+}
+.afm-search:focus {
+  border-bottom-color: var(--ink-muted);
+}
+
+.afm-results {
+  flex: 1;
+  overflow-y: auto;
+  margin: 8px 0;
+  min-height: 80px;
+}
+.afm-hint {
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  padding: 14px 2px;
+}
+.afm-row {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule-faint);
+  padding: 9px 2px;
+  text-align: left;
+  cursor: pointer;
+}
+.afm-row:hover {
+  background: var(--rule-faint);
+}
+.afm-name {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+}
+.afm-brand {
+  color: var(--ink-muted);
+}
+.afm-kcal {
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.afm-manual {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  align-self: flex-start;
+}
+.afm-manual:hover {
+  color: var(--ink);
+  border-color: var(--ink-muted);
+}
+
+/* Amount step. */
+.amt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.amt-chips,
+.amt-slots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.amt-chip,
+.amt-slot {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.amt-chip.is-on,
+.amt-slot.is-on {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.amt-chip-g {
+  opacity: 0.6;
+  font-size: 0.72rem;
+}
+.amt-field {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-sans);
+  color: var(--ink-muted);
+  font-size: 0.86rem;
+}
+.amt-field input {
+  width: 90px;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  padding: 6px 2px;
+  font-family: var(--font-sans);
+  font-size: 1.1rem;
+  color: var(--ink);
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.amt-preview {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  padding: 4px 0;
+  border-top: 1px solid var(--rule-faint);
+}
+.amt-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.amt-back {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+.amt-back:hover {
+  color: var(--ink);
+}
+.amt-log {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.amt-log:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Manual entry form. */
+.manf {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.manf-field {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+.manf-field span {
+  min-width: 84px;
+}
+.manf-field input {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  padding: 5px 2px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.manf-name input {
+  font-family: var(--font-serif);
+}
+.manf-basis {
+  display: flex;
+  gap: 8px;
+}
+.manf-seg {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.manf-seg.is-on {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.manf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+/* Edit-entry extra actions. */
+.eep-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+.eep-swap,
+.eep-remove {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  cursor: pointer;
+  color: var(--ink-muted);
+}
+.eep-swap:hover {
+  color: var(--ink);
+  border-color: var(--ink-muted);
+}
+.eep-remove {
+  color: var(--accent);
+  border-color: transparent;
+}
+
+/* Nutrition goals editor (in the Popover). */
+.ngoals {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 220px;
+}
+.ngoals-field {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  color: var(--ink-muted);
+}
+.ngoals-name {
+  min-width: 70px;
+}
+.ngoals-field input {
+  flex: 1;
+  width: 70px;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  padding: 4px 2px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.ngoals-unit {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  min-width: 28px;
+}
+.ngoals-actions,
+.ngoals-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.ngoals-spacer {
+  flex: 1;
+}
+.ngoals-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.ngoals-btn:hover {
+  color: var(--ink);
+}
+.ngoals-save {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 7px;
+  padding: 6px 16px;
+}
+.ngoals-save:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ngoals-danger {
+  color: var(--accent);
+}

@@ -40,6 +40,23 @@ export function fetchEntries(start, end) {
   );
 }
 
+// The owner's saved/cached/manual foods (the My Foods library) — for the quick-add strip,
+// favourite state, and resolving names after a write. Newest first; RLS scopes to the owner.
+export function fetchMyFoods() {
+  return fetchAll("food_items", "id,name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite", (q) =>
+    q.order("created_at", { ascending: false }),
+  );
+}
+
+// Invoke the food-search Edge Function (F6 — the FIRST app→Edge-Function call; the user's JWT
+// is auto-attached by the client). Returns the parsed body { ok, query, results, sources }.
+// Throws on a transport error so the modal can degrade to "no matches / try again".
+export async function searchFoods(query) {
+  const { data, error } = await supabase.functions.invoke("food-search", { body: { query } });
+  if (error) throw new Error(error.message);
+  return data || { results: [] };
+}
+
 // Resolve the display names behind a set of entries: food_item_id → food_items.name (+brand),
 // recipe_id → recipes.title. Returns two id→value maps for the ledger to look names up.
 // (food_log_entries stores no name — a manual entry's name path is decided at F6.)

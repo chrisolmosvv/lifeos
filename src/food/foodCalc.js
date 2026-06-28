@@ -184,6 +184,26 @@ export function calorieArc(kcal, goalKcal) {
   };
 }
 
+// ── recentsFrom (the quick-add layer) ────────────────────────────────────────
+// The most-recently-logged DISTINCT foods, newest first — derived from the log (no recents
+// table). Returns food_item_ids in recency order; the caller maps them to food_items rows.
+// Entries with no food_item_id (legacy/manual-less) are skipped. `limit` caps the list.
+export function recentsFrom(entries, limit = 12) {
+  const seen = new Set();
+  const out = [];
+  const byNewest = [...(entries || [])].sort((a, b) =>
+    (a.created_at || "") < (b.created_at || "") ? 1 : (a.created_at || "") > (b.created_at || "") ? -1 : 0,
+  );
+  for (const e of byNewest) {
+    const id = e?.food_item_id;
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 // ── rangeTotals (REUSES presetRange + statsForRange) ─────────────────────────
 // Week/Month: the AVERAGE daily total per nutrient over the window ending on `end`, averaged
 // over LOGGED days only (statsForRange skips gap days — a day with no entries is NOT a 0).

@@ -21,7 +21,7 @@ function entryName(e, names) {
   return "Food"; // a manual entry with no FK has no stored name — F6 gives manual adds a name
 }
 
-export default function MealLedger({ slots, names, onAddFood, onAddToSlot, onEditEntry }) {
+export default function MealLedger({ slots, names, favSet, onAddFood, onAddToSlot, onEditEntry, onToggleFav }) {
   const [openSlots, setOpenSlots] = useState({}); // slot key → show all rows
   const [openRow, setOpenRow] = useState(null); //   entry id → expanded full nutrition
 
@@ -66,6 +66,16 @@ export default function MealLedger({ slots, names, onAddFood, onAddToSlot, onEdi
                         <span>fibre {fmtFull("fibre", e.fibre)}</span>
                         <span>sugar {fmtFull("sugar", e.sugar)}</span>
                         <span>sodium {fmtFull("sodium", e.sodium)}</span>
+                        {e.food_item_id && onToggleFav && (
+                          <button
+                            type="button"
+                            className={favSet?.has(e.food_item_id) ? "ml-fav is-on" : "ml-fav"}
+                            aria-label="Toggle favourite"
+                            onClick={() => onToggleFav(e.food_item_id)}
+                          >
+                            {favSet?.has(e.food_item_id) ? "★" : "☆"}
+                          </button>
+                        )}
                         <button type="button" className="ml-edit" onClick={() => onEditEntry(e)}>Edit</button>
                       </div>
                     )}

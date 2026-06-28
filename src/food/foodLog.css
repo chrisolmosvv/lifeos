@@ -468,3 +468,61 @@
   text-align: center;
   padding: 4vh 0;
 }
+
+/* The arc is a button (opens the goals editor) — strip the button chrome. */
+.flog-arc-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 200px;
+}
+
+/* Quick-add strip (favourites + recents). */
+.qa {
+  padding: 8px 0 4px;
+}
+.qa-label {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.qa-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.qa-chip {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  padding: 5px 13px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.qa-chip:hover {
+  border-color: var(--ink-muted);
+}
+.qa-star {
+  color: var(--accent);
+  margin-right: 4px;
+}
+
+/* Favourite star in a logged row's detail. */
+.ml-fav {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.ml-fav.is-on {
+  color: var(--accent);
+}
