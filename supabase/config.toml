@@ -386,6 +386,15 @@ deno_version = 2
 [functions.health-ingest]
 verify_jwt = false
 
+# food-search is the FIRST app→Edge-Function call: the React app invokes it with the
+# logged-in owner's session, so the gateway MUST validate that JWT (the opposite of
+# health-ingest). Pinned true explicitly so a future config-aware deploy can't silently
+# flip it — and so the owner-scoped food_items read (saved.ts, via the caller's JWT +
+# RLS) keeps working. Deploy this function ALONE; the other functions aren't pinned here
+# yet, and a blanket deploy could change their effective flag.
+[functions.food-search]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327
