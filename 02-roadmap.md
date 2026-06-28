@@ -850,8 +850,10 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
 - ✅ F6 — Logging WRITES: add-food (search/saved/manual) + goals editor (reuse S9) + recents/favourites.
        foodWrite + useFoodWrites optimistic orchestration; cache-on-log dedup; edit/swap recompute.
        No schema change. Dev-server verified. (commit c70d579)
-- ⬜ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.  ← NEXT
-- ⬜ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.
+- ✅ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.
+       portions.js + cookTimers parser; recipeLoad/Write + useRecipeWrites; edit rewrites children.
+       No schema change. Dev-server verified. (commit 4e31c0a)
+- ⬜ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.  ← NEXT
 - ⬜ F9 — Cook→log bridge: "Cook this" → staged draft (servings/slot/swap) → log snapshot.
 - ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
 - ⬜ F11 — Polish + audit to the design laws.
@@ -879,6 +881,26 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-28 — Track F — Food F7 — the Cookbook (recipe writes; src/ only, commit 4e31c0a).** The other half of the
+  Food pillar. `portions.js` — a curated household→grams table + resolver ("1 onion"→110 g; food-aware
+  cup/tbsp/tsp, generic fallback; off-list → grams-prompt → no-macros) — the F0 amendment. `cookTimers.js` — the
+  step-duration parser (catches min/hour/sec/decimals/bare units; RANGES take the LOWER end; first match; no match
+  → no auto-timer). `recipeLoad.js` / `recipeWrite.js` / `useRecipeWrites.js` — create/edit/delete across recipes +
+  recipe_ingredients + recipe_steps; EDIT rewrites children (delete + re-insert; the recipe row stamps updated_at
+  explicitly), CREATE rolls back its orphan on a mid-save failure (no half-written recipe). The EDITOR adds
+  ingredients via the F6 search + cache-on-log + a portions-aware amount step, with live `recipeMacros`; title-only
+  required (drafts ok). The LIBRARY: a typographic card grid (title · time · servings · kcal/serving) + a sort
+  toggle (added/cooked/A–Z; "cooked" falls back to added-order until F9, not a dead end) + an onboarding empty
+  state (import stubbed → F8). The RECIPE PAGE: breadcrumb (Cookbook ▸ Recipe), the full per-serving macro block,
+  per-ingredient kcal + an unmatched MARK + a ~approximate total signal, a VIEW-ONLY servings stepper (rescales
+  live, never mutates the saved recipe), Cook + Log-this-meal (stub → F9) + Edit + delete (⋯ confirm; history
+  preserved via `food_log_entries.recipe_id` SET NULL). COOKING MODE: a reflow toggle (not a route) — bigger steps,
+  collapsed ingredients, auto-detected step timers + a free manual timer running CONCURRENTLY in a floating
+  summary, tap-step-done, Wake Lock + a keep-awake indicator + release-on-exit (graceful fallback). Cook progress
+  is ephemeral (no DB). NO schema change (existing F1 tables; archive deferred → confirm-delete only). Dev-server
+  verified (recipe rows persist + edit advances updated_at + rewrites children + delete cascades; the parser +
+  portions resolutions; forced-failure leaves no orphan). **NEXT: F8 — recipe import (the one AI touch): paste
+  text/URL → server-side fetch → Gemini extract → auto-match + flag → a review screen → save; URL-fail → paste.**
 - **2026-06-28 — Track F — Food F6 — logging WRITES (the first Food write track; src/ only, commit c70d579).** Turned
   F5's stubbed affordances into real actions. `foodWrite.js` (logEntry/updateEntry/removeEntry, cacheFoodOnLog
   upsert, insertManualFood, setFavourite) + `useFoodWrites.js` (optimistic add/edit/delete — the change shows at

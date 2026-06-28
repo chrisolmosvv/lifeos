@@ -9,6 +9,39 @@
 
 ---
 
+## Food — F7: the Cookbook (recipe library + cooking mode + editor) (2026-06-28)
+
+- **Archive DEFERRED (Option B) → delete is CONFIRM-ONLY.** No archive column; deleting a recipe
+  removes it + cascades its children, but logged history survives because
+  `food_log_entries.recipe_id` is SET NULL (the snapshot already stands alone). **Why:** keeps F7
+  src-only (no schema). **Trade-off:** no "restore a deleted recipe" — acceptable; the confirm guards it.
+- **Unmatched ingredients = per-ingredient MARKS + a ~approximate TOTAL signal** (not the F0 "N
+  unestimated" count line). Each unestimated ingredient shows "· unestimated"; the per-serving total
+  carries a leading `~` + a one-line footnote. **Why:** the total never *looks* complete when it
+  isn't, without a heavy count banner. **Trade-off:** none — `recipeMacros.unestimatedCount` still
+  drives it.
+- **The F0 free MANUAL timer is RETAINED alongside auto-detected step timers.** Cooking mode parses
+  durations from step text (a new parser) AND keeps an ad-hoc manual timer; both run concurrently.
+  **Why:** recipes don't name every wait. **Trade-off:** none.
+- **Timer ranges use the LOWER end** ("8–10 min" → 8:00). **Why:** check sooner, don't overcook; add
+  a quick manual timer for the extra. **Trade-off:** you may re-check; safer than overshooting.
+- **Portions override is PER-INGREDIENT, stored as the resolved grams** (amount + unit='g'), with
+  `raw_text` keeping the human label ("1 onion"). **Why:** no schema; the override is just editing the
+  stored grams. **Trade-off:** none. The curated table (portions.js) is common items + conversions,
+  not exhaustive — off-list → grams prompt → no-macros.
+- **Draft is DERIVED, not stored.** A recipe with no ingredients (+ no steps) reads as a draft; save
+  needs only a title. **Why:** no flag to keep in sync. **Trade-off:** none.
+- **Cook progress is EPHEMERAL** (done steps, running timers live in component state; reset on
+  exit/reload — no DB). **Why:** transient cooking state isn't worth persisting. **Trade-off:** a reload
+  mid-cook loses the checkmarks — acceptable.
+- **EDIT rewrites children** (delete all recipe_ingredients/steps, re-insert the current set; the
+  recipe row stamps updated_at). **Why:** the child tables have no updated_at and re-ordering/removal
+  is common — a full rewrite is simpler + correct than diffing. **Trade-off:** new child row ids each
+  edit (fine — they're not referenced elsewhere). CREATE rolls back its orphan on a mid-save failure.
+- **Stubs:** 'Log this meal' (cook→log) is wired at F9; the "cooked" sort has no data until F9 (falls
+  back to added-order, never a dead end); recipe Import is F8. **Why:** F7 is the cookbook surface;
+  the bridges come next. **Trade-off:** none.
+
 ## Food — F6: logging writes (the first Food write track) (2026-06-28)
 
 - **RECONCILE (a): macro goals are now OPTIONAL.** F0 locked "calories + FULL P/C/F". F6 relaxes

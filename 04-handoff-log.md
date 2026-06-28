@@ -56,6 +56,38 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-28 — Track F — F7: the Cookbook (recipe writes). SRC/ ONLY. (Dev-server verified, by-row.)
+WHAT CHANGED:
+- The cookbook half of the Food pillar (fills FoodPage's Cookbook tab). portions.js (curated
+  household→grams table + resolver, the F0 amendment) + cookTimers.js (step-duration parser; ranges
+  take the lower end). recipeLoad/recipeWrite + useRecipeWrites: create/edit/delete across recipes +
+  recipe_ingredients + recipe_steps; EDIT rewrites children (delete + re-insert; recipe row stamps
+  updated_at); CREATE rolls back its orphan on a mid-save failure.
+- Editor: ingredients via the F6 search + cache-on-log + a portions amount step + live recipeMacros;
+  title-only required. Library: card grid (title·time·servings·kcal/serving) + sort (added/cooked/A–Z,
+  cooked falls back pre-F9) + onboarding empty state (import stub → F8). Recipe page: breadcrumb,
+  full per-serving macro block, per-ingredient kcal + unmatched mark + ~approximate total, a VIEW-ONLY
+  servings stepper, Cook + Log(stub→F9) + Edit + delete(⋯ confirm; history preserved via recipe_id SET
+  NULL). Cooking mode: reflow toggle, auto + manual timers concurrent in a floating summary, tap-step-
+  done, Wake Lock + indicator + release (graceful fallback); cook progress ephemeral.
+- NO schema change (existing F1 tables; archive deferred).
+FILES TOUCHED: src/food/portions.js, cookTimers.js, useWakeLock.js, recipeLoad.js, recipeWrite.js,
+  useRecipeWrites.js, Cookbook.jsx, RecipeCard.jsx, RecipeEditor.jsx, IngredientPicker.jsx,
+  RecipePage.jsx, CookMode.jsx, cookbook.css, cookmode.css; edit FoodPage.jsx (Cookbook tab → Cookbook). (commit 4e31c0a)
+HOW TO VERIFY (done, on the dev server): one-recipe loop — create → save → reload-persists (recipes +
+  recipe_ingredients + recipe_steps rows); edit advances recipes.updated_at + rewrites children (new
+  ids); delete cascades children + leaves any logged history (recipe_id SET NULL); forced-failure leaves
+  no orphan recipe. Recipe page macro block matches recipeMacros; unmatched mark + ~approximate fire;
+  servings stepper rescales live but reverts on reload (DB untouched). Cook mode: "8–10 min" → 8:00
+  timer, no-duration → none, manual timer + concurrency in the floating summary, tap-step-done, keep-
+  awake indicator + release. Library cards/sort/empty-state; "cooked" not a dead end. Pure-util Node
+  checks: portions ("1 onion"→110 g, "1 cup flour"→120 g, off-list→null) + cookTimers (ranges→lower end).
+  Queries: select on recipes / recipe_ingredients / recipe_steps (order by position).
+KNOWN GAPS / NOTES: 'Log this meal' + the "cooked" sort data come at F9 (cook→log bridge); recipe Import
+  at F8. Cook progress is ephemeral (not persisted). Edit gives children new ids each save (intended).
+NEXT: F8 — recipe import (the one AI touch): paste text/URL → server-side fetch → Gemini extract →
+  auto-match + flag → review screen → save; URL-fail falls back to paste.
+
 ### 2026-06-28 — Track F — F6: logging writes (the first Food write track). SRC/ ONLY. (Dev-server verified, by-row.)
 WHAT CHANGED:
 - The logger now WRITES. foodWrite.js (logEntry/updateEntry/removeEntry, cacheFoodOnLog upsert,
