@@ -43,6 +43,13 @@ export default function ItemForm({ kind, item, create, toggle, cats, inboxColor,
   const [endDate, setEndDate] = useState(
     t.all_day && t.end_at ? dateOf(new Date(new Date(t.end_at).getTime() - 1)) : dateOf(t.start_at) || todayStr(),
   )
+  // Progressive disclosure (Piece 3a): "more" is collapsed on CREATE, but on EDIT
+  // it AUTO-EXPANDS when a behind-"more" field already holds data, so populated
+  // fields are never silently hidden. Status + the disabled Repeat don't count
+  // (Status always has a value; Repeat holds none). Pure read of the item.
+  const [expanded, setExpanded] = useState(
+    () => !create && !!(t.scheduled_start || t.priority || t.location || t.notes || (subtasks && subtasks.length)),
+  )
 
   const selectedCat = categoryId ? cats.find((c) => c.id === categoryId) : null
   const catTag = selectedCat
@@ -100,6 +107,18 @@ export default function ItemForm({ kind, item, create, toggle, cats, inboxColor,
   }
 
   const heading = (create ? 'New ' : 'Edit ') + k
+  // Same field props feed both the core and the "more" render of ItemTypeFields —
+  // identical inputs/setters, only the grouping differs (so what-saves is unchanged).
+  const typeProps = {
+    k,
+    isSubtask,
+    create,
+    busy,
+    task: { status, setStatus, priority, setPriority, due, setDue, schStart, setSchStart, schEnd, setSchEnd },
+    event: { allDay, setAllDay, startAt, setStartAt, endAt, setEndAt, startDate, setStartDate, endDate, setEndDate, location, setLocation },
+    subtask: { subtasks, onSubtask },
+    notes: { notes, setNotes },
+  }
 
   return (
     <div className="tk-form-scrim" onClick={onClose}>
@@ -149,24 +168,23 @@ export default function ItemForm({ kind, item, create, toggle, cats, inboxColor,
               </button>
             )}
 
-            <ItemTypeFields
-              k={k}
-              isSubtask={isSubtask}
-              create={create}
-              busy={busy}
-              task={{ status, setStatus, priority, setPriority, due, setDue, schStart, setSchStart, schEnd, setSchEnd }}
-              event={{ allDay, setAllDay, startAt, setStartAt, endAt, setEndAt, startDate, setStartDate, endDate, setEndDate, location, setLocation }}
-              subtask={{ subtasks, onSubtask }}
-            />
+            <ItemTypeFields slot="core" {...typeProps} />
 
-            <textarea
-              className="tk-form-notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Notes (optional)"
-              aria-label="Notes"
-              rows={2}
-            />
+            <button
+              type="button"
+              className="tk-form-moretoggle"
+              aria-expanded={expanded}
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded ? 'Fewer details' : 'More details'}
+              <span className="tk-form-morechev">{expanded ? '▴' : '▾'}</span>
+            </button>
+
+            {expanded && (
+              <div className="tk-form-more">
+                <ItemTypeFields slot="more" {...typeProps} />
+              </div>
+            )}
 
             {err && <p className="tk-form-err">{err}</p>}
 

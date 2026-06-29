@@ -463,3 +463,37 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* --- progressive disclosure (Today V2, Piece 3a) ---------------------------
+   A quiet "More details / Fewer details" toggle between the core fields and the
+   collapsed-by-default "more" group. Calm: a small left-aligned text affordance
+   in the muted ink, terracotta on hover; the chevron flips with the state.
+   Theme tokens only; lives in the shared form, so all three screens get it. */
+.tk-form-moretoggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.1rem 0 0.1rem;
+  padding: 0.2rem 0.1rem;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.tk-form-moretoggle:hover {
+  color: var(--accent);
+}
+.tk-form-morechev {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+/* The "more" group — the same field stack as the core, just revealed. */
+.tk-form-more {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+}
