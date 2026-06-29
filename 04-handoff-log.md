@@ -33,6 +33,38 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Planning view, P2 — time-mode dragging → sets due date. SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–g.) — WRITES (due_date + one chip flip).
+WHAT CHANGED: the four time-lanes are now a **drag target**.
+- Drag a task card between lanes → set a representative `due_date` via the **existing** task-update
+  path → the re-read re-derives placement. Lanes stay derived; nothing stored. No schema.
+- Drop rules (pure `planDrop(task, target, today)` in `planningModel.js`): **Today** → today; **This
+  week** → keep an already-in-week date else the upcoming Sunday; **Later** → keep an already-later
+  date else the Monday after; **same lane = no-op** (no yank); **Overdue is drag-FROM only** (not a
+  drop target).
+- **THE ONE BUCKET TOUCH (owner-approved amendment to "never rewrite `time_bucket` on a drag"):** a
+  Today-chipped task stays pinned to Today for any non-past date, so dragging it to This week/Later
+  also flips `time_bucket 'Today'→'This Week'` so it can't snap back. Strictly that case — never onto
+  Today, never a dated-today / non-chipped task; an in-window date is still preserved.
+- **Write-then-reload** (the app's safe pattern): the card moves only once the DB confirms; on failure
+  nothing moves + the error line shows (no phantom). **Planning-local native HTML5 drag** (mouse-only →
+  phone stays tap-only); the grid hook was the wrong shape for kanban lanes; `TodayTaskRow` untouched.
+FILES TOUCHED: NEW `src/kit/PlanningModes.jsx`; changed `src/Planning.jsx`, `src/planningModel.js`
+(factored a shared pure `laneOf()`; P1 output byte-identical; added `planDrop`), `src/kit/PlanningColumn.jsx`,
+`src/kit/planning.css`.
+HOW TO VERIFY: (done — owner-verified on Mac) query
+`select id,title,due_date,time_bucket,scheduled_start from tasks order by updated_at desc limit 1;`
+after each drag. (a) overdue→Today: row `due_date==today`, bucket UNCHANGED. (b) Today→This week / →Later:
+representative dates persist. (c) mid-week task onto This week: date NOT changed. (d) drop onto Overdue:
+snaps back, no write. (e) bucket unchanged for a dated-today task; a chipped task off Today flips
+'Today'→'This Week'. (f) Wi-Fi off, drag once: fails visibly, nothing moves; reload = the DB's truth.
+(g) Today/Calendar/All Tasks/Settings unchanged; P1 render + row pill/edit still work.
+KNOWN GAPS / RISKS: the chip-flip is the single intended hidden-bucket write (recorded as a decisions
+amendment). The categorised-but-undated P1 gap is unchanged (surfaces in P4). Inbox rail is still
+display-only (drag = P5).
+NEXT: Planning P3 — board mode.
+FOR THE CHECKER: none — no schema, no migration, no checker gate (writes the existing due_date /
+time_bucket columns only). Save point `2439589`.
+
 ### 2026-06-29 — Planning view, P1 — shell + time mode (RENDER-ONLY). SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–f.) — NEW surface, additive.
 WHAT CHANGED: a NEW Planning screen, built fresh on the existing kit, additive — nothing existing
 changes behaviour.

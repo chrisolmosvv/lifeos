@@ -418,6 +418,24 @@ P2 time-drag → P3 board → P4 category → P5 triage → P6 fold/retire All T
   edge + zero regression). Save point `f393c67`. **Known P1 limitation (by design):** a task that
   is **categorised but undated and not `Today`-chipped** appears in no lane and not the rail — it's
   the undated backlog that **board/category mode (P4)** surfaces; intentionally invisible in P1.
+- ✅ **P2 — time-mode dragging → sets due date.** The four time-lanes become a **drag target**: drag a
+  task card between lanes → set a representative `due_date` via the **existing** task-update path → the
+  re-read re-derives placement (lanes stay derived; nothing stored). Rules in a pure
+  `planDrop(task, target, today)`: **Today** → today; **This week** → keep an already-in-week date else
+  the upcoming Sunday; **Later** → keep an already-later date else the Monday after; **same lane = no-op**
+  (no yank); **Overdue is drag-FROM only** (not a drop target — no planning into the past). **One
+  owner-approved bucket touch (amends "never rewrite `time_bucket` on a drag"):** a **Today-chipped**
+  task stays pinned to Today for any non-past date, so dragging it to This week/Later also flips
+  `time_bucket 'Today'→'This Week'` so it can't snap back — strictly that case (never onto Today, never
+  a dated-today / non-chipped task; an in-window date is still preserved). **Write-then-reload** (the
+  app's safe pattern — no phantom on failure, owner-verified by forced Wi-Fi off). **Planning-local
+  native HTML5 drag** (mouse-only → phone stays tap-only); the grid hook was the wrong shape for kanban
+  lanes; `TodayTaskRow` untouched. Refactored `buildPlanning` to share a pure `laneOf()` (P1 output
+  byte-identical); extracted the mode toggle to `kit/PlanningModes.jsx` to keep `Planning.jsx` <250.
+  New: `kit/PlanningModes.jsx`; changed: `Planning.jsx`, `planningModel.js`, `kit/PlanningColumn.jsx`,
+  `kit/planning.css`. **No schema, no event involvement, no Inbox-rail drag (P5), no change to any
+  existing screen.** Owner-verified on Mac (a–g, incl. overdue→Today bucket-unchanged, forced-failure
+  no-phantom, the chipped-off-Today flip). Save point `2439589`.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →

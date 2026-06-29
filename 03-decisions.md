@@ -9,6 +9,45 @@
 
 ---
 
+## Planning view — P2: time-mode dragging sets due date (2026-06-29)
+
+- **[Dragging a task between the four time-lanes SETS its `due_date`; lanes stay derived.]** The drop
+  writes a representative date through the EXISTING task-update path, then the re-read re-derives
+  placement (P1's `buildPlanning`/`laneOf`). Nothing about the lane is stored. **Why:** serves the
+  locked dates-only model (due date = the target day) and keeps one source of truth (the date).
+  **Trade-off:** a representative date is a guess at intent — softened by the "no-yank" rule below.
+- **[Drop-date rules (per lane), in a pure `planDrop(task, target, today)`.]** Today → `due_date` =
+  today. This week → keep the date if already within this week (after today through the upcoming
+  Sunday), else Sunday. Later → keep the date if already beyond Sunday, else the Monday after.
+  **Dropping on the lane a task is already in = a no-op** (no write, no yank). **Why:** never change a
+  date that already lands in the target window; calm beats churn. **Trade-off:** the representative
+  dates (Sunday / next Monday) are conventions, not the user's pick — accepted for P2.
+- **[Overdue is a drag-FROM lane, NOT a drop target.]** Dropping a card on Overdue snaps back, writes
+  nothing. **Why:** you don't plan something into the past; rescuing OUT of Overdue is the real use.
+  **Trade-off:** none meaningful.
+- **[⚠️ AMENDMENT to "a lane drag must not rewrite `time_bucket`" — the surgical chip-clear.]** The P2
+  spec's default is **never touch `time_bucket` on a drag**, and that holds for every dated / non-
+  chipped task. **The one exception:** a **Today-chipped** task (`time_bucket='Today'`) stays pinned to
+  the Today lane for ANY non-past date (the lane precedence is past-date → Today-chip → date), so
+  setting `due_date` alone **cannot move it off Today — it snaps right back.** Therefore, when a chipped
+  task is dropped into **This week or Later**, `planDrop` also flips `time_bucket 'Today' → 'This Week'`.
+  **Strictly that case:** never on a drop onto Today, never for a dated-today task, never for a non-
+  chipped task. **Why:** a chipped task is otherwise un-draggable-off-Today; the visible date and the
+  hidden chip would contradict each other. **Trade-off:** one hidden-bucket write on a drag — owner-
+  approved (2026-06-29) as a deliberate, recorded amendment, not a silent reversal. (An already-in-
+  window date is still preserved in this case — only the chip flips, the date is kept.)
+- **[Write pattern = write-then-reload (the app's established safe pattern), NOT optimistic.]** The card
+  moves only after the DB confirms; on failure nothing moves and the error line shows. **Why:** matches
+  every other Planning/Today/All-Tasks write and kills the "phantom move that wasn't saved" risk
+  (owner-verified by forced Wi-Fi failure). **Trade-off:** a brief beat before the card re-lands —
+  accepted; it's the honest signal that the save landed.
+- **[Planning-LOCAL native HTML5 drag, not the grid hook.]** The shared `useGridDrag` is pixel/time-
+  geometry built for the calendar sheet — the wrong shape for kanban lanes; cloning it would be
+  needless. A small native `draggable`-card + lane-drop-target handler is used instead, leaving
+  `TodayTaskRow` untouched. **Why:** reuse-before-add, but don't force a hook where it doesn't fit.
+  **Trade-off:** HTML5 DnD is mouse-only (no touch) — fine, and consistent with the app's "drag is
+  mouse-only, phone stays tap-only" law. (The Inbox rail is still display-only — rail drag is P5.)
+
 ## Planning view — P1: shell + time mode, render-only (2026-06-29)
 
 - **[The Planning view is a NEW surface, built fresh on the existing kit — additive, never a fork.]**
