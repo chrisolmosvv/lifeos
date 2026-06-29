@@ -853,8 +853,10 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
 - ✅ F7 — Cookbook: cards + recipe page + cooking mode (timers) + editor + portion/weight table.
        portions.js + cookTimers parser; recipeLoad/Write + useRecipeWrites; edit rewrites children.
        No schema change. Dev-server verified. (commit 4e31c0a)
-- ⬜ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.  ← NEXT
-- ⬜ F9 — Cook→log bridge: "Cook this" → staged draft (servings/slot/swap) → log snapshot.
+- ✅ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.
+       recipe-import Edge Function (JSON-LD-first extract + Gemini house-schema); conservative
+       comma-boundary matching; reuses food-search + the F7 editor/write. (commits 904c18e, 0c456c5)
+- ⬜ F9 — Cook→log bridge: "Cook this" → staged draft (servings/slot/swap) → log snapshot.  ← NEXT
 - ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
 - ⬜ F11 — Polish + audit to the design laws.
 
@@ -881,6 +883,23 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-29 — Track F — Food F8 — recipe import, the ONE AI touch (two-track; commits 904c18e fn + 0c456c5 src).**
+  Paste text OR a URL → a recipe pre-fills the F7 editor (the review screen) → spot-check → save via the F7 create
+  path. New private Edge Function `recipe-import` (verify_jwt=true, CORS like food-search): for a URL, server-side
+  fetch + extract (schema.org/Recipe JSON-LD first, else stripped page text) → `callGemini` (FREE key, the shared
+  seam) with a strict house-schema responseSchema → defensive JSON parse. Only recipe text leaves the app (paste /
+  page text) — nothing personal/logged — so the free key is fine. ONE AbortController + timer wrap BOTH `fetch()`
+  AND `res.text()` (a body-read hang was freezing the UI; now aborts at 8s → clean fetch_fail), plus a 25s client
+  backstop so the UI can never hang. Distinct errors: fetch_fail / parse_fail / unreachable (a transport failure
+  never masquerades as "not a recipe"). Ingredient auto-match reuses food-search, CLEAR HITS ONLY via a conservative
+  comma-boundary rule (`recipeMatch`: exact or leads with "<parsed>," → keeps "Garlic, raw" + "chicken breast" →
+  "Chicken, breast…", rejects "Garlic Baguettes"/"Peanut butter"); ambiguous stay flagged text; every match shows
+  its food name + kcal in the editor (the spot-check). Save reuses F7 + stores `source_url`; the recipe page shows a
+  "from <host>" provenance link. NO new write path, NO schema change. Verified on messy inputs (live URL, blog,
+  paywalled→paste, paste, junk→parse_fail, the freeze site). **HAZARD logged: the Edge Function can be evicted on
+  free-tier idle — if import says "couldn't reach the import service," REDEPLOY recipe-import before debugging (cost
+  a full round this session).** **NEXT: F9 — the cook→log bridge: "Cook this" → a staged draft (servings + slot +
+  optional cook-only ingredient swap) → log a macro SNAPSHOT.**
 - **2026-06-28 — Track F — Food F7 — the Cookbook (recipe writes; src/ only, commit 4e31c0a).** The other half of the
   Food pillar. `portions.js` — a curated household→grams table + resolver ("1 onion"→110 g; food-aware
   cup/tbsp/tsp, generic fallback; off-list → grams-prompt → no-macros) — the F0 amendment. `cookTimers.js` — the

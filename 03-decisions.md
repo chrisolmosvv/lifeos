@@ -9,6 +9,40 @@
 
 ---
 
+## Food — F8: recipe import (the one AI touch in V1) (2026-06-29)
+
+- **The Gemini boundary.** Recipe import is the ONLY V1 AI call, on the FREE key (the shared
+  `callGemini` seam — same key/model as Marty). **Only recipe text leaves the app** — the pasted
+  text or the fetched page's text — NOTHING personal, nothing from the user's logs/health/goals.
+  **Why:** recipe text isn't sensitive, so the free (trains-on-input) key is acceptable here; the
+  "health data → paid key" rule is never tripped. **Trade-off:** none for V1; anything reasoning
+  over intake stays deferred to a paid no-training key.
+- **The review screen IS the F7 editor.** The parsed recipe pre-fills the editor as an imported
+  draft; the owner edits inline and saves via the F7 CREATE path (+ `source_url`). **Why:** no
+  separate review surface, no new write path — F8's save == a hand-made recipe. **Trade-off:** none.
+- **Auto-match = CLEAR HITS ONLY (under-match, never mis-match).** Each parsed ingredient runs
+  through food-search; auto-link only via the conservative comma-boundary rule (exact, or the
+  parsed words lead the result ending at a comma/end — "Garlic, raw" ✓, "chicken breast" →
+  "Chicken, breast…" ✓, "Garlic Baguettes"/"Peanut butter" ✗). Ambiguous → flagged text. Every
+  match shows its food NAME + kcal in the editor row (the spot-check) so a wrong match is catchable
+  BEFORE save. **Why:** a wrong match silently corrupts macros; a missing one is fixable in a tap.
+  **Trade-off:** some real foods flag rather than match (e.g. USDA names that don't lead cleanly) —
+  accepted, the owner matches them by hand.
+- **Distinct error types — transport never masquerades as parse.** `fetch_fail` (URL couldn't be
+  fetched → offer paste), `parse_fail` (Gemini gave nothing usable / not a recipe → honest, text
+  kept), `unreachable` (couldn't reach the function — transport/timeout → "try again"). **Why:** a
+  connection problem reading as "couldn't read a recipe" sent us debugging the wrong layer.
+  **Trade-off:** none.
+- **Timeout covers the whole read + a client backstop.** The function's AbortController wraps BOTH
+  `fetch()` AND `res.text()` (a stalled body was freezing the UI forever); a 25s client-side race
+  guarantees the UI never hangs even if the function doesn't respond. **Why:** a frozen "Reading…"
+  with no exit is worse than a clean failure. **Trade-off:** none.
+- **URL import is best-effort; paste is the universal path.** Cooperating sites (clean JSON-LD,
+  no datacenter-IP block) import from a URL; sites that block server-side fetches (many big recipe
+  publishers 402/403 the edge IP) fall back to paste. **Why:** we can't beat IP-based blocks from a
+  datacenter edge; paste always works. **Trade-off:** not every URL imports — by design, with a
+  clear fallback.
+
 ## Food — F7: the Cookbook (recipe library + cooking mode + editor) (2026-06-28)
 
 - **Archive DEFERRED (Option B) → delete is CONFIRM-ONLY.** No archive column; deleting a recipe

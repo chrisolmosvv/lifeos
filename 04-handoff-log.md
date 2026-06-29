@@ -56,6 +56,37 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-29 — Track F — F8: recipe import (the one AI touch). TWO-TRACK (function + src). (Dev-server verified on messy inputs.)
+WHAT CHANGED:
+- New private Edge Function `recipe-import` (verify_jwt=true, CORS like food-search): paste/URL →
+  for a URL, server-side fetch + extract (schema.org/Recipe JSON-LD first, else stripped page text,
+  8s timeout over fetch AND res.text()) → callGemini (free key, shared seam) with a strict house-
+  schema responseSchema → defensive JSON parse. Distinct errors fetch_fail / parse_fail.
+- src import UI: ImportScreen (paste + URL + calm loading + distinct messages incl. "unreachable");
+  importClient (invoke + 25s client backstop + map to editor draft + auto-match via food-search);
+  recipeMatch (conservative comma-boundary clear-hit rule). The F7 editor pre-fills the imported
+  draft, shows each match's food name + kcal (spot-check), flagged rows tap → F6 search pre-filled
+  or keep-as-text. Save reuses the F7 create path + source_url; recipe page shows "from <host>".
+- NO new write path, NO schema change (source_url already existed).
+FILES TOUCHED: supabase/functions/recipe-import/{index,extract}.ts + config.toml (commits 2d1d378
+  initial fn, 904c18e the body-read timeout fix); src/food/ImportScreen.jsx, importClient.js,
+  recipeMatch.js + Cookbook.jsx, IngredientPicker.jsx, RecipeEditor.jsx, RecipePage.jsx,
+  recipeWrite.js, cookbook.css (commit 0c456c5).
+HOW TO VERIFY (done): live URL (cookieandkate / a BBC recipe) → editor pre-fills + provenance +
+  clean matching; a blog with a long preamble → JSON-LD keeps prose out of steps; a paywalled/
+  datacenter-blocked site → fetch_fail → paste-fallback (text kept); the freeze site
+  (loveandlemons) → resolves to fetch_fail within ~8s, NO freeze; junk text → parse_fail (text
+  kept); the garlic mis-match is gone (flags or matches "Garlic, raw", never "Garlic Baguettes").
+  Save → F7 rows match a hand-made recipe with source_url set:
+  select id,title,source_url from recipes; select * from recipe_ingredients/recipe_steps order by position.
+KNOWN HAZARD (cost a full round this session): the Edge Function can be EVICTED on free-tier idle →
+  the gateway then 404s it and the browser preflight fails. If import ever says "couldn't reach the
+  import service," REDEPLOY recipe-import (supabase functions deploy recipe-import --project-ref
+  cntlptuacsujbdtwvbis) and confirm OPTIONS → 200 BEFORE debugging code. "Deployed is not done."
+  Also: URL import is best-effort (datacenter-IP-blocked sites fall to paste — the universal path).
+NEXT: F9 — the cook→log bridge ("Cook this" → staged draft: servings + slot + optional cook-only
+  ingredient swap → log a macro snapshot).
+
 ### 2026-06-28 — Track F — F7: the Cookbook (recipe writes). SRC/ ONLY. (Dev-server verified, by-row.)
 WHAT CHANGED:
 - The cookbook half of the Food pillar (fills FoodPage's Cookbook tab). portions.js (curated
