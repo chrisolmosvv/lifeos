@@ -2,29 +2,21 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
-import { buildPlanning, planDrop } from './planningModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, unarchiveBatch, activeOnly } from './archive'
-import TodayTaskRow from './kit/TodayTaskRow'
-import PlanningColumn from './kit/PlanningColumn'
 import PlanningModes from './kit/PlanningModes'
+import PlanningTime from './kit/PlanningTime'
 import PlanningBoard from './kit/PlanningBoard'
+import PlanningCategory from './kit/PlanningCategory'
 import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
 import './kit/planning.css'
 
-// Planning — the planning view (Phase 7 / T-track). The shell: holds the data + mode
-// toggle and renders one mode's body. TIME (P1/P2) = Inbox rail + four date-derived
-// lanes, drag writes due_date via `planDrop`. BOARD (P3) = delegated to PlanningBoard,
-// a status kanban whose drag writes status. Category is inert. Columns stay DERIVED;
-// writes go through the existing task-update path. No schema.
-const LANES = [
-  { id: 'overdue', label: 'Overdue' },
-  { id: 'today', label: 'Today' },
-  { id: 'thisWeek', label: 'This week' },
-  { id: 'later', label: 'Later' },
-]
-
+// Planning — the planning view (Phase 7 / T-track). A thin SHELL: it holds the data
+// + the writes + the shared form, and renders one of three mode bodies behind the
+// toggle — TIME (P1/P2, `PlanningTime`), BOARD (P3, `PlanningBoard`), CATEGORY (P4,
+// `PlanningCategory`). Each mode is DERIVED at render (compute-on-read); every write
+// goes through the existing task-update / insert paths. No schema.
 export default function Planning({ onBack }) {
   const [tasks, setTasks] = useState(null)
   const [cats, setCats] = useState([])
@@ -33,7 +25,6 @@ export default function Planning({ onBack }) {
   const [mode, setMode] = useState('time')
   const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
-  const [draggingId, setDraggingId] = useState(null)
 
   async function load() {
     const [taskRes, catRes] = await Promise.all([
@@ -132,47 +123,22 @@ export default function Planning({ onBack }) {
   const formParentLabel =
     form && !form.create && form.item.parent_task_id ? parentTitle(form.item, byId) : undefined
 
-  const lanes = buildPlanning(tasks, new Date())
   const openTask = (t) => setForm({ kind: 'task', item: t, create: false })
-
-  // Drop a dragged card on a lane: planDrop decides the patch (or null = no-op /
-  // rejected, e.g. Overdue or the same lane). Write-then-reload via the EXISTING
-  // task path — on failure nothing moves and the error line shows (no phantom).
-  const handleDrop = async (lane) => {
-    const id = draggingId
-    setDraggingId(null)
-    const t = (tasks || []).find((x) => x.id === id)
-    if (!t) return
-    const patch = planDrop(t, lane, new Date())
-    if (!patch) return
-    const msg = await updateTask(id, patch)
-    if (msg) setError(msg)
-  }
-
-  // One time-lane line — reuses Today's row (status pill + tap-to-edit, existing paths).
-  const renderRow = (t) => (
-    <TodayTaskRow
-      key={t.id}
-      task={t}
-      cat={dispCat(t)}
-      inboxColor={inboxColor}
-      busy={busy}
-      progress={progressOf(t.id, byParent)}
-      onSetStatus={(status) => updateTask(t.id, { status })}
-      onOpen={() => openTask(t)}
-    />
-  )
+  // Category mode's per-group "+ add": the existing insert path, prefilled with the
+  // group's category + 'This Week' (matching All Tasks). catId null = Inbox.
+  const openAdd = (catId) =>
+    setForm({ kind: 'task', create: true, item: { category_id: catId, time_bucket: 'This Week' } })
 
   return (
     <div className="pl">
       <div className="pl-top">
         <button className="pl-back" onClick={onBack}>‹ Back to Today</button>
-        <PlanningModes mode={mode} onSelect={setMode} liveModes={['time', 'board']} />
+        <PlanningModes mode={mode} onSelect={setMode} liveModes={['time', 'board', 'category']} />
       </div>
 
       <h2 className="pl-title">Planning</h2>
 
-      <div className={'pl-body' + (mode === 'board' ? ' is-board' : '')}>
+      <div className={'pl-body' + (mode === 'board' ? ' is-board' : '') + (mode === 'category' ? ' is-cat' : '')}>
         {tasks === null ? (
           <p className="pl-empty">Loading…</p>
         ) : mode === 'board' ? (
@@ -187,38 +153,29 @@ export default function Planning({ onBack }) {
             onSetStatus={(id, status) => updateTask(id, { status })}
             onOpenTask={openTask}
           />
+        ) : mode === 'category' ? (
+          <PlanningCategory
+            tasks={tasks}
+            cats={cats}
+            dispCat={dispCat}
+            inboxColor={inboxColor}
+            byParent={byParent}
+            busy={busy}
+            onUpdate={updateTask}
+            onOpenTask={openTask}
+            onAdd={openAdd}
+          />
         ) : (
-          <>
-            <PlanningColumn
-              tag="aside"
-              className="pl-rail"
-              label="Inbox"
-              count={lanes.inbox.length}
-              items={lanes.inbox}
-              emptyText="Nothing waiting."
-              renderRow={renderRow}
-            />
-
-            <div className="pl-lanes">
-              {LANES.map((lane) => (
-                <PlanningColumn
-                  key={lane.id}
-                  className={'pl-lane pl-lane-' + lane.id}
-                  label={lane.label}
-                  count={lanes[lane.id].length}
-                  items={lanes[lane.id]}
-                  emptyText="—"
-                  renderRow={renderRow}
-                  draggable
-                  draggingId={draggingId}
-                  onDragStartTask={(t) => setDraggingId(t.id)}
-                  onDragEndTask={() => setDraggingId(null)}
-                  dropLane={lane.id === 'overdue' ? undefined : lane.id}
-                  onDropTask={handleDrop}
-                />
-              ))}
-            </div>
-          </>
+          <PlanningTime
+            tasks={tasks}
+            dispCat={dispCat}
+            inboxColor={inboxColor}
+            byParent={byParent}
+            busy={busy}
+            onUpdate={updateTask}
+            onOpenTask={openTask}
+            onError={setError}
+          />
         )}
         {error && <p className="pl-error">{error}</p>}
       </div>
