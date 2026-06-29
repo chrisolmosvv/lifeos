@@ -21,7 +21,7 @@ function entryName(e, names) {
   return "Food"; // a manual entry with no FK has no stored name — F6 gives manual adds a name
 }
 
-export default function MealLedger({ slots, names, favSet, onAddFood, onAddToSlot, onEditEntry, onToggleFav }) {
+export default function MealLedger({ slots, names, favSet, onAddFood, onAddToSlot, onEditEntry, onToggleFav, onOpenRecipe }) {
   const [openSlots, setOpenSlots] = useState({}); // slot key → show all rows
   const [openRow, setOpenRow] = useState(null); //   entry id → expanded full nutrition
 
@@ -75,6 +75,9 @@ export default function MealLedger({ slots, names, favSet, onAddFood, onAddToSlo
                           >
                             {favSet?.has(e.food_item_id) ? "★" : "☆"}
                           </button>
+                        )}
+                        {e.recipe_id && onOpenRecipe && (
+                          <button type="button" className="ml-recipe-link" onClick={() => onOpenRecipe(e.recipe_id)}>View recipe</button>
                         )}
                         <button type="button" className="ml-edit" onClick={() => onEditEntry(e)}>Edit</button>
                       </div>

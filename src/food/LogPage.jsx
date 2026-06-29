@@ -3,7 +3,7 @@ import { amsTodayYMD, amsClockMinutes, shiftYMD, humanDayLong, humanDayShort } f
 import { fetchGoals } from "../health/healthLoad";
 import { resolveGoals } from "../health/healthGoals";
 import { useGoalWrites } from "../health/useGoalWrites";
-import { dailyTotals, recentsFrom, entryMacros } from "./foodCalc";
+import { dailyTotals, recentsFrom, entryMacros, slotForHour } from "./foodCalc";
 import { fetchEntries, fetchNames, fetchMyFoods } from "./foodLoad";
 import { cacheFoodOnLog, insertManualFood, setFavourite } from "./foodWrite";
 import { useFoodWrites } from "./useFoodWrites";
@@ -22,15 +22,7 @@ const RANGE_DAYS = { week: 7, month: 30 };
 const GOAL_TYPES = ["calories", "protein", "carbs", "fat"];
 const snap7 = (m) => ({ kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat, fibre: m.fibre, sugar: m.sugar, sodium: m.sodium });
 
-// 04–11 Breakfast · 11–16 Lunch · 16–22 Dinner · else Snacks (Amsterdam clock).
-function slotForHour(h) {
-  if (h >= 4 && h < 11) return "breakfast";
-  if (h >= 11 && h < 16) return "lunch";
-  if (h >= 16 && h < 22) return "dinner";
-  return "snacks";
-}
-
-export default function LogPage() {
+export default function LogPage({ onOpenRecipe }) {
   const [range, setRange] = useState("day");
   const [date, setDate] = useState(null);
   const [state, setState] = useState({ loading: true });
@@ -142,7 +134,7 @@ export default function LogPage() {
 
       {range === "day" ? (
         <DayView entries={entries} goalMap={goalMap} day={date} names={state.names} quickFoods={quickFoods} favSet={favSet}
-          onAdd={openAdd} onQuickAdd={openQuickAdd} onEditEntry={setEditing} onToggleFav={toggleFav}
+          onAdd={openAdd} onQuickAdd={openQuickAdd} onEditEntry={setEditing} onToggleFav={toggleFav} onOpenRecipe={onOpenRecipe}
           onOpenGoals={(el) => { goalAnchor.current = el; setGoalOpen(true); }} />
       ) : (
         <FoodRange daily={daily} days={step} end={date} goalMap={goalMap} onDrillDay={(ymd) => { setRange("day"); setDate(ymd); }} />

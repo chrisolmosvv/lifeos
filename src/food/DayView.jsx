@@ -9,7 +9,7 @@ import QuickAddStrip from "./QuickAddStrip";
 // drinks line, the quick-add strip, and the meal ledger — or the warm states (no calorie goal
 // → a set-targets prompt that opens the goals editor; empty day → invite + primary add). Every
 // number comes from the F3 calc layer. Props carry the handlers; this file holds no write logic.
-export default function DayView({ entries, goalMap, day, names, quickFoods, favSet, onAdd, onQuickAdd, onEditEntry, onToggleFav, onOpenGoals }) {
+export default function DayView({ entries, goalMap, day, names, quickFoods, favSet, onAdd, onQuickAdd, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals }) {
   const ledger = dayLedger(entries, goalMap, { day });
   const calGoal = goalMap.get("calories")?.target_value ?? null;
   const hasEntries = Object.values(ledger.slots).some((s) => s.items.length > 0);
@@ -57,6 +57,7 @@ export default function DayView({ entries, goalMap, day, names, quickFoods, favS
           onAddToSlot={(s) => onAdd(s)}
           onEditEntry={onEditEntry}
           onToggleFav={onToggleFav}
+          onOpenRecipe={onOpenRecipe}
         />
       ) : (
         <div className="flog-empty">

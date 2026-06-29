@@ -18,6 +18,16 @@ import { presetRange, statsForRange } from "../health/healthStats.js";
 // in g; sodium in mg.
 export const NUTRIENTS = ["kcal", "protein", "carbs", "fat", "fibre", "sugar", "sodium"];
 export const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snacks"];
+
+// 04–11 Breakfast · 11–16 Lunch · 16–22 Dinner · else Snacks — the time-of-day slot mapping
+// (pass the Amsterdam-clock HOUR). Shared by the logger's add (F6) and the cook→log panel (F9),
+// so "what meal is it now" has ONE definition.
+export function slotForHour(h) {
+  if (h >= 4 && h < 11) return "breakfast";
+  if (h >= 11 && h < 16) return "lunch";
+  if (h >= 16 && h < 22) return "dinner";
+  return "snacks";
+}
 export const ON_TARGET_BAND = 0.10; // ±10% (edges INCLUSIVE — see vsGoal)
 const MACRO_KCAL = { protein: 4, carbs: 4, fat: 9 }; // Atwater factors for the calorie split
 

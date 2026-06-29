@@ -8,17 +8,23 @@ import { fmtNum } from "./foodFormat";
 // snapshot) so the row's numbers recompute; slot is a plain field change. Swap hands off to the
 // add modal. Remove deletes (with the undo toast). A live preview shows the recomputed macros.
 //
+// RECIPE-SOURCED VARIANT (F9): a cook entry (entry_source==='recipe_cook') edits SERVINGS, not
+// grams, and CANNOT swap (it's a recipe, not a food). The re-scale falls out for free — entryToFood
+// reverse-derives a per-unit rate from the snapshot ÷ amount, and entryMacros rescales it linearly,
+// so editing servings gives new = stored ÷ old_servings × new_servings (unit stays 'serving').
+//
 // Props: entry, name, onApply(patch), onRemove(), onSwap(), onClose().
 
 const SLOT_LABELS = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snacks: "Snacks" };
 const pick7 = (m) => { const o = {}; for (const k of NUTRIENTS) o[k] = m[k]; return o; };
 
 export default function EditEntryPanel({ entry, name, onApply, onRemove, onSwap, onClose }) {
-  const [grams, setGrams] = useState(entry.amount ?? 100);
+  const isCook = entry.entry_source === "recipe_cook";
+  const [grams, setGrams] = useState(entry.amount ?? (isCook ? 1 : 100));
   const [slot, setSlot] = useState(entry.meal_slot);
   const food = entryToFood(entry);
   const g = Number(grams);
-  const preview = entryMacros(food, g || 0, "g");
+  const preview = entryMacros(food, g || 0, "g"); // linear rescale of the stored snapshot (grams OR servings)
   const changed = (g > 0 && g !== Number(entry.amount)) || slot !== entry.meal_slot;
 
   const apply = () => {
@@ -41,7 +47,7 @@ export default function EditEntryPanel({ entry, name, onApply, onRemove, onSwap,
         <div className="amt">
           <label className="amt-field">
             <input type="number" inputMode="decimal" min="0" value={grams} onChange={(e) => setGrams(e.target.value)} />
-            <span>grams</span>
+            <span>{isCook ? "servings" : "grams"}</span>
           </label>
           <div className="amt-slots">
             {MEAL_SLOTS.map((s) => (
@@ -55,7 +61,7 @@ export default function EditEntryPanel({ entry, name, onApply, onRemove, onSwap,
             {fmtNum("fat", preview.fat)}
           </p>
           <div className="eep-row">
-            <button type="button" className="eep-swap" onClick={onSwap}>Swap food</button>
+            {!isCook && <button type="button" className="eep-swap" onClick={onSwap}>Swap food</button>}
             <button type="button" className="eep-remove" onClick={onRemove}>Remove</button>
           </div>
           <div className="amt-actions">

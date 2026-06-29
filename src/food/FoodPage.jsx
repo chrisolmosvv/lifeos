@@ -21,6 +21,8 @@ const TABS = [
 export default function FoodPage() {
   const [tab, setTab] = useState("log"); // 'log' | 'cookbook' — Food lands on the Log
   const [loading] = useState(false); // F5 will drive this during its load; inert in F4
+  const [openRecipeId, setOpenRecipeId] = useState(null); // a Log→Cookbook "View recipe" jump (F9)
+  const openRecipe = (id) => { setOpenRecipeId(id); setTab("cookbook"); };
 
   return (
     <div className="food-page">
@@ -46,11 +48,11 @@ export default function FoodPage() {
         </div>
       ) : tab === "log" ? (
         <section className="food-pane" role="tabpanel" aria-label="Log">
-          <LogPage />
+          <LogPage onOpenRecipe={openRecipe} />
         </section>
       ) : (
         <section className="food-pane" role="tabpanel" aria-label="Cookbook">
-          <Cookbook />
+          <Cookbook openRecipeId={openRecipeId} onConsumeOpen={() => setOpenRecipeId(null)} />
         </section>
       )}
     </div>

@@ -30,7 +30,7 @@ export default function CookMode({ recipe, steps, ingredients, onExit }) {
   return (
     <div className="cm">
       <div className="cm-bar">
-        <button type="button" className="cm-exit" onClick={onExit}>‹ Done cooking</button>
+        <button type="button" className="cm-exit" onClick={() => onExit(true)}>‹ Done cooking</button>
         <span className={wake === "on" ? "cm-wake is-on" : "cm-wake"}>
           {wake === "on" ? "● screen staying on" : wake === "unsupported" ? "keep your screen on" : "screen lock off"}
         </span>

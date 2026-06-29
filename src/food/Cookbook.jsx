@@ -10,19 +10,20 @@ import "./cookbook.css";
 
 // Cookbook — the Cookbook-tab orchestrator (fills FoodPage's Cookbook tab). Holds the view state:
 // the library GRID, a RECIPE PAGE, or the EDITOR. The grid sorts by added / cooked / A–Z (default
-// "added"; "cooked" has no data until the F9 cook→log link, so it falls back to added order, not a
-// dead end). Recipe macros for the cards compute on read via recipeMacros.
+// "added"; "cooked" now reads last_cooked_at — the F9 cook→log link). Recipe macros for the cards
+// compute on read via recipeMacros. A cross-tab Log→Cookbook jump opens a recipe via openRecipeId.
 const SORTS = [
   { id: "added", label: "Added" },
   { id: "cooked", label: "Cooked" },
   { id: "az", label: "A–Z" },
 ];
 
-export default function Cookbook() {
+export default function Cookbook({ openRecipeId, onConsumeOpen }) {
   const [data, setData] = useState({ recipes: [], ingredientsByRecipe: {}, itemsById: {} });
   const [view, setView] = useState({ kind: "grid" }); // grid | {kind:'recipe',id} | {kind:'editor',id|null}
   const [sort, setSort] = useState("added");
   const [loading, setLoading] = useState(true);
+  const [dirty, setDirty] = useState(false); // a cook was logged — refresh the grid on return
   const rw = useRecipeWrites();
 
   const load = async () => {
@@ -32,10 +33,31 @@ export default function Cookbook() {
   };
   useEffect(() => { load().catch(() => setLoading(false)); }, []);
 
+  // Cross-tab deep-link: the Log ledger's "View recipe" sets openRecipeId + switches to this tab;
+  // open that recipe, then clear the parent's pending id so a later re-tap re-fires.
+  useEffect(() => {
+    if (openRecipeId) { setView({ kind: "recipe", id: openRecipeId }); onConsumeOpen?.(); }
+  }, [openRecipeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Returning to the grid: if a cook was logged while away, re-read so the cooked sort + dates are current.
+  const backToGrid = () => { setView({ kind: "grid" }); if (dirty) { setDirty(false); load(); } };
+
   const sorted = useMemo(() => {
     const rs = [...data.recipes];
     if (sort === "az") rs.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-    // "added" = the fetch order (created_at desc); "cooked" falls back to it until F9 has data.
+    else if (sort === "cooked") {
+      // Cooked recipes by last_cooked_at desc; never-cooked AFTER them in added order (the fetch
+      // order — created_at desc). No dead-end: never-cooked are kept + faintly tagged on the card.
+      const ts = (r) => (r.last_cooked_at ? Date.parse(r.last_cooked_at) : null);
+      rs.sort((a, b) => {
+        const ta = ts(a), tb = ts(b);
+        if (ta && tb) return tb - ta;
+        if (ta) return -1;
+        if (tb) return 1;
+        return 0; // both never-cooked: preserve fetch (added) order
+      });
+    }
+    // "added" = the fetch order (created_at desc).
     return rs;
   }, [data.recipes, sort]);
 
@@ -75,7 +97,7 @@ export default function Cookbook() {
   if (view.kind === "recipe") {
     return (
       <>
-        <RecipePage recipeId={view.id} onBack={() => setView({ kind: "grid" })} onEdit={(id) => setView({ kind: "editor", id })} onDelete={onDelete} />
+        <RecipePage recipeId={view.id} onBack={backToGrid} onEdit={(id) => setView({ kind: "editor", id })} onDelete={onDelete} onCooked={() => setDirty(true)} />
         {rw.toast && <Toast text={rw.toast.text} onDismiss={rw.dismiss} />}
       </>
     );
@@ -107,14 +129,12 @@ export default function Cookbook() {
           </div>
         </div>
       ) : (
-        <>
-          {sort === "cooked" && <p className="cb-note">Cook counts appear once you’ve cooked recipes — showing most-recently-added for now.</p>}
-          <div className="cb-grid">
-            {sorted.map((r) => (
-              <RecipeCard key={r.id} recipe={r} ingredients={data.ingredientsByRecipe[r.id]} itemsById={data.itemsById} onOpen={() => setView({ kind: "recipe", id: r.id })} />
-            ))}
-          </div>
-        </>
+        <div className="cb-grid">
+          {sorted.map((r) => (
+            <RecipeCard key={r.id} recipe={r} ingredients={data.ingredientsByRecipe[r.id]} itemsById={data.itemsById}
+              notYetCooked={sort === "cooked" && !r.last_cooked_at} onOpen={() => setView({ kind: "recipe", id: r.id })} />
+          ))}
+        </div>
       )}
     </div>
   );

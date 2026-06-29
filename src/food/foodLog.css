@@ -340,6 +340,17 @@
   cursor: pointer;
   font-size: 0.76rem;
 }
+.ml-recipe-link {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 2px 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+}
+.ml-recipe-link:hover { color: var(--ink); border-color: var(--ink-muted); }
 .ml-more {
   background: none;
   border: none;

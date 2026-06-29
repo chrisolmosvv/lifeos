@@ -4,7 +4,7 @@ import { fmtNum } from "./foodFormat";
 // RecipeCard — a typographic library card (no photos): title over a quiet stat line
 // (time · servings · kcal/serving). kcal/serving is computed on read via recipeMacros from the
 // recipe's ingredients + itemsById; a recipe with unestimated ingredients shows a ~ on the figure.
-export default function RecipeCard({ recipe, ingredients, itemsById, onOpen }) {
+export default function RecipeCard({ recipe, ingredients, itemsById, notYetCooked, onOpen }) {
   const base = recipe.servings || 1;
   const m = recipeMacros(ingredients || [], base, itemsById || {});
   const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
@@ -24,6 +24,7 @@ export default function RecipeCard({ recipe, ingredients, itemsById, onOpen }) {
             <span>{approx ? "~" : ""}{fmtNum("kcal", m.perServing.kcal)} kcal/serv</span>
           </>
         )}
+        {notYetCooked && <span className="rc-uncooked">not yet cooked</span>}
       </span>
     </button>
   );

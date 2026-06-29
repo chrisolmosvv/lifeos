@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
+import { amsTodayYMD, amsClockMinutes } from "../gym/gymDates";
 import { fetchRecipe } from "./recipeLoad";
 import { recipeMacros } from "./recipeCalc";
-import { entryMacros } from "./foodCalc";
+import { entryMacros, slotForHour, NUTRIENTS } from "./foodCalc";
 import { fmtNum, fmtFull } from "./foodFormat";
+import { useCookLog } from "./useCookLog";
 import CookMode from "./CookMode";
+import LogMealPanel from "./LogMealPanel";
+import Toast from "../kit/Toast";
 import "./cookbook.css";
+
+// 28 Jun 2026 — a calm "last cooked" date from a stored timestamp (null → nothing shown).
+const cookedDate = (ts) => (ts ? new Date(ts).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null);
 
 // RecipePage — the long-form recipe (scroll is fine here). Breadcrumb (Cookbook ▸ Recipe), the
 // full per-serving macro block, ingredients with their kcal + an unmatched MARK, and a SUBTLE
@@ -13,17 +20,19 @@ import "./cookbook.css";
 // enters cooking mode (a reflow); 'Log this meal' is stubbed (F9); Edit + delete (⋯, confirm).
 const NUTR = [["protein", "Protein"], ["carbs", "Carbs"], ["fat", "Fat"], ["fibre", "Fibre"], ["sugar", "Sugar"], ["sodium", "Sodium"]];
 
-export default function RecipePage({ recipeId, onBack, onEdit, onDelete }) {
+export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooked }) {
   const [data, setData] = useState(null);
   const [servings, setServings] = useState(1);
   const [cooking, setCooking] = useState(false);
   const [menu, setMenu] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
-  const [logged, setLogged] = useState(false);
+  const [staging, setStaging] = useState(false);
+  const [lastCookedAt, setLastCookedAt] = useState(null);
+  const cl = useCookLog();
 
   useEffect(() => {
     let alive = true;
-    fetchRecipe(recipeId).then((r) => { if (alive) { setData(r); setServings(r.recipe.servings || 1); } }).catch(() => alive && setData({ error: true }));
+    fetchRecipe(recipeId).then((r) => { if (alive) { setData(r); setServings(r.recipe.servings || 1); setLastCookedAt(r.recipe.last_cooked_at || null); } }).catch(() => alive && setData({ error: true }));
     return () => { alive = false; };
   }, [recipeId]);
 
@@ -35,8 +44,37 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete }) {
   const macros = recipeMacros(ingredients, base, itemsById); // per-serving = canonical
   const approx = macros.unestimatedCount > 0;
   const scale = servings / base; // view-only rescale of the ingredient list
+  const cookedLabel = cookedDate(lastCookedAt);
 
-  if (cooking) return <CookMode recipe={recipe} steps={steps} ingredients={ingredients} onExit={() => setCooking(false)} />;
+  // Cook mode's "Done cooking" exits AND offers to log — it opens the SAME staging panel (one panel,
+  // two triggers). offerLog is true only from that button, so a bare exit wouldn't pop the panel.
+  if (cooking) return <CookMode recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging(true); }} />;
+
+  // Cook→log: freeze recipeMacros.perServing × servings into the 7-number snapshot, write it as a
+  // food_log_entries row (recipe_id, entry_source='recipe_cook', amount=servings, unit='serving',
+  // food_item_id null), and stamp last_cooked_at = now. We capture the PRIOR date so undo restores
+  // it; the "last cooked" line updates LIVE (and reverts on undo/failure via setLastCookedAt).
+  const onLogMeal = (eaten, slot) => {
+    setStaging(false);
+    const now = new Date().toISOString();
+    const prior = lastCookedAt;
+    setLastCookedAt(now); // optimistic — the line updates at once
+    const snap = {};
+    for (const k of NUTRIENTS) snap[k] = (macros.perServing[k] || 0) * eaten;
+    const row = {
+      entry_date: amsTodayYMD(Date.now()),
+      meal_slot: slot,
+      food_item_id: null,
+      recipe_id: recipeId,
+      amount: eaten,
+      unit: "serving",
+      ...snap,
+      entry_source: "recipe_cook",
+      is_alcohol: false,
+    };
+    cl.logCook(row, { recipeId, prior, now, onRevert: setLastCookedAt });
+    onCooked?.(); // tell the cookbook to refresh its grid (the cooked sort) on return
+  };
 
   const ingKcal = (ing) => {
     if (ing.no_macros) return null;
@@ -75,6 +113,7 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete }) {
           <> · <a className="rp-source" href={recipe.source_url} target="_blank" rel="noreferrer">{(() => { try { return `from ${new URL(recipe.source_url).hostname}`; } catch { return "source"; } })()}</a></>
         )}
       </p>
+      {cookedLabel && <p className="rp-cooked">Last cooked {cookedLabel}</p>}
 
       <div className="rp-macros">
         <div className="rp-kcal">{approx ? "~" : ""}{fmtNum("kcal", macros.perServing.kcal)} <span>kcal / serving</span></div>
@@ -116,9 +155,20 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete }) {
 
       <div className="rp-actions">
         <button type="button" className="rp-cook" onClick={() => setCooking(true)}>Cook</button>
-        <button type="button" className="rp-log" onClick={() => setLogged(true)} disabled={logged}>{logged ? "Logging comes at F9" : "Log this meal"}</button>
+        <button type="button" className="rp-log" onClick={() => setStaging((v) => !v)}>Log this meal</button>
         <button type="button" className="rp-edit" onClick={() => onEdit(recipeId)}>Edit</button>
       </div>
+
+      {staging && (
+        <LogMealPanel
+          perServing={macros.perServing}
+          unestimatedCount={macros.unestimatedCount}
+          defaultSlot={slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60))}
+          onLog={onLogMeal}
+          onClose={() => setStaging(false)}
+        />
+      )}
+      {cl.toast && <Toast text={cl.toast.text} onUndo={cl.toast.undo} onDismiss={cl.dismiss} />}
     </div>
   );
 }

@@ -21,7 +21,7 @@ async function fetchAll(table, columns, apply = (q) => q) {
 // The recipe library (newest first) — title/servings/times for the cards. The per-serving macros
 // for a card need its ingredients; the card fetches those lazily (or the grid resolves on open).
 export function fetchRecipeList() {
-  return fetchAll("recipes", "id,title,servings,prep_minutes,cook_minutes,created_at,updated_at", (q) =>
+  return fetchAll("recipes", "id,title,servings,prep_minutes,cook_minutes,last_cooked_at,created_at,updated_at", (q) =>
     q.order("created_at", { ascending: false }),
   );
 }
@@ -53,7 +53,7 @@ export async function fetchCookbook() {
 // → { recipe, ingredients, steps, itemsById }.
 export async function fetchRecipe(id) {
   const [recipeRes, ingredients, steps] = await Promise.all([
-    supabase.from("recipes").select("id,title,servings,prep_minutes,cook_minutes,source_url,created_at,updated_at").eq("id", id).single(),
+    supabase.from("recipes").select("id,title,servings,prep_minutes,cook_minutes,source_url,last_cooked_at,created_at,updated_at").eq("id", id).single(),
     fetchAll("recipe_ingredients", "id,food_item_id,raw_text,amount,unit,manual_macros,no_macros,position", (q) => q.eq("recipe_id", id).order("position", { ascending: true })),
     fetchAll("recipe_steps", "id,position,text,timer_seconds", (q) => q.eq("recipe_id", id).order("position", { ascending: true })),
   ]);

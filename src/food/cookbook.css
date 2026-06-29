@@ -145,6 +145,10 @@
 .rc-draft {
   font-style: italic;
 }
+.rc-uncooked {
+  font-style: italic;
+  opacity: 0.7;
+}
 
 /* Recipe page. */
 .rp { max-width: 680px; margin: 0 auto; }
@@ -206,6 +210,23 @@
 .rp-log, .rp-edit { background: none; border: 1px solid var(--rule); border-radius: 8px; padding: 10px 18px; font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink-muted); cursor: pointer; }
 .rp-log:disabled { opacity: 0.5; cursor: default; }
 .rp-edit:hover, .rp-log:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-muted); }
+.rp-cooked { font-family: var(--font-sans); font-size: 0.8rem; color: var(--ink-muted); margin: -8px 0 16px; }
+
+/* LogMealPanel — the inline cook→log staging panel (F9). Calm, expands in place under the actions. */
+.lmp { border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin-top: 16px; background: var(--rule-faint); }
+.lmp-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lmp-label { font-family: var(--font-sans); font-size: 0.88rem; color: var(--ink); }
+.lmp-step { display: flex; align-items: center; gap: 10px; }
+.lmp-step button { background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; width: 28px; height: 28px; color: var(--ink); cursor: pointer; line-height: 1; }
+.lmp-n { font-family: var(--font-serif); font-size: 1.2rem; color: var(--ink); min-width: 1.4em; text-align: center; }
+.lmp-slots { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.lmp-slot { background: var(--paper); border: 1px solid var(--rule); border-radius: 7px; padding: 7px 12px; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-muted); cursor: pointer; }
+.lmp-slot.is-on { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+.lmp-preview { font-family: var(--font-sans); font-size: 0.92rem; color: var(--ink); margin-top: 14px; font-variant-numeric: tabular-nums; }
+.lmp-approx { font-family: var(--font-sans); font-size: 0.76rem; color: var(--ink-muted); margin-top: 6px; }
+.lmp-actions { display: flex; gap: 10px; margin-top: 16px; }
+.lmp-cancel { background: none; border: 1px solid var(--rule); border-radius: 8px; padding: 9px 16px; font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink-muted); cursor: pointer; }
+.lmp-log { background: var(--ink); color: var(--paper); border: none; border-radius: 8px; padding: 9px 20px; font-family: var(--font-sans); font-size: 0.9rem; cursor: pointer; }
 .cb-list {
   list-style: none;
   margin: 0;
