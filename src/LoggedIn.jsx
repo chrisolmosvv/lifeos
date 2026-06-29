@@ -27,10 +27,7 @@ export default function LoggedIn({ email }) {
 
       {view === 'today' ? (
         <div className="cal-wrap">
-          <Today
-            onOpenAllTasks={() => setView('alltasks')}
-            onOpenPlanning={() => setView('planning')}
-          />
+          <Today onOpenPlanning={() => setView('planning')} />
         </div>
       ) : view === 'alltasks' ? (
         <div className="cal-wrap">

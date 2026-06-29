@@ -21,7 +21,7 @@ import './today.css'
 // grid, both modules, the now-line (today only), and every day-dependent write. All
 // reads/writes go through Today's OWN parameterised path; Calendar's shared read
 // hook (useWeekData) is untouched. No schema.
-export default function Today({ onOpenAllTasks, onOpenPlanning }) {
+export default function Today({ onOpenPlanning }) {
   const realToday = new Date()
   const [viewed, setViewed] = useState(() => startOfDay(new Date()))
   const isToday = isSameDay(viewed, realToday)
@@ -447,16 +447,9 @@ export default function Today({ onOpenAllTasks, onOpenPlanning }) {
               </div>
             </section>
 
-            <div className="today-backlog-row">
-              <button className="today-alltasks" onClick={onOpenAllTasks}>
-                All tasks · {activeTotal(tasks)} <span className="today-alltasks-arrow">→</span>
-              </button>
-              {onOpenPlanning && (
-                <button className="today-planning-link" onClick={onOpenPlanning}>
-                  Planning →
-                </button>
-              )}
-            </div>
+            <button className="today-alltasks" onClick={onOpenPlanning}>
+              Planning · {activeTotal(tasks)} <span className="today-alltasks-arrow">→</span>
+            </button>
           </>
         )}
         {error && <p className="today-error">{error}</p>}
