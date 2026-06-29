@@ -318,6 +318,63 @@
   cursor: pointer;
 }
 
+/* --- Triage popover (P5): one-tap date chips + a category step. ---------- */
+.pl-triage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+.pl-triage-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+.pl-triage-chips {
+  display: flex;
+  gap: 0.4rem;
+}
+.pl-triage-chip {
+  flex: 1;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.35rem 0.3rem;
+  cursor: pointer;
+}
+.pl-triage-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pl-triage-cat {
+  text-align: left;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+}
+.pl-triage-cat:hover {
+  border-color: var(--ink);
+}
+.pl-triage-edit {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0.1rem 0;
+  cursor: pointer;
+}
+
 .pl-empty {
   font-family: var(--font-serif);
   font-style: italic;

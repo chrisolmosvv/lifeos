@@ -1,19 +1,22 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { buildPlanning, planDrop } from '../planningModel'
 import { progressOf } from '../subtasks'
 import TodayTaskRow from './TodayTaskRow'
 import PlanningColumn from './PlanningColumn'
+import TriagePopover from './TriagePopover'
 
-// PlanningTime — time mode of the Planning view (P1 render + P2 drag), extracted
-// verbatim from Planning.jsx so the shell can host three modes under the ~250-line
-// rule. Behaviour is unchanged: an Inbox side rail + four date-derived lanes; drag a
-// card between lanes → `planDrop` computes the patch → the parent's existing task
-// update writes → the re-read re-derives placement. Overdue is drag-FROM only; the
-// rail is display-only. Sealed kit block; the parent owns the data + writes.
+// PlanningTime — time mode of the Planning view (P1 render + P2 drag; P5 makes the
+// Inbox rail interactive). An Inbox side rail + four date-derived lanes; dragging a
+// card between lanes → `planDrop` → the parent's existing update → the re-read
+// re-derives placement. P5: the RAIL is now a drag SOURCE (drop onto a lane = the
+// same handleDrop/planDrop, which dates a dump → it leaves the rail) and tapping a
+// rail card opens TriagePopover (one-tap date chips + CategoryPicker). The two triage
+// axes stay independent (date writes due_date, category writes category_id). Overdue
+// is drag-FROM only. Sealed kit block; the parent owns the data + writes.
 //
-// Props: tasks, dispCat (task→cat row), inboxColor, byParent (for x/N), busy,
-//        onUpdate(id, fields) (existing task-update path, returns an error msg | null),
-//        onOpenTask(task), onError(msg).
+// Props: tasks, cats (for the triage category picker), dispCat (task→cat row),
+//        inboxColor, byParent (for x/N), busy, onUpdate(id, fields) (existing
+//        task-update path, returns an error msg | null), onOpenTask(task), onError(msg).
 const LANES = [
   { id: 'overdue', label: 'Overdue' },
   { id: 'today', label: 'Today' },
@@ -21,9 +24,47 @@ const LANES = [
   { id: 'later', label: 'Later' },
 ]
 
-export default function PlanningTime({ tasks, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onError }) {
+export default function PlanningTime({ tasks, cats, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onError }) {
   const [draggingId, setDraggingId] = useState(null)
+  const [triage, setTriage] = useState(null) // the tapped rail task | null
+  const triageAnchor = useRef(null) // the rail card element the popover points at
   const lanes = buildPlanning(tasks, new Date())
+
+  // --- Rail triage (P5) ---------------------------------------------------
+  const closeTriage = () => setTriage(null)
+  // Date axis: reuse planDrop (a rail card is undated → it sets ONLY due_date).
+  const triageDate = async (lane) => {
+    const patch = planDrop(triage, lane, new Date())
+    closeTriage()
+    if (!patch) return
+    const msg = await onUpdate(triage.id, patch)
+    if (msg) onError(msg)
+  }
+  // Category axis: write ONLY category_id (no-op if unchanged).
+  const triageCategory = async (catId) => {
+    const t = triage
+    closeTriage()
+    if (!t || (catId ?? null) === (t.category_id ?? null)) return
+    const msg = await onUpdate(t.id, { category_id: catId })
+    if (msg) onError(msg)
+  }
+  // A rail card tap opens triage, anchored to the tapped element.
+  const openTriage = (t, el) => {
+    triageAnchor.current = el
+    setTriage(t)
+  }
+  const renderRailRow = (t) => (
+    <div key={t.id} onClickCapture={(e) => (triageAnchor.current = e.currentTarget)}>
+      <TodayTaskRow
+        task={t}
+        cat={dispCat(t)}
+        inboxColor={inboxColor}
+        busy={busy}
+        progress={progressOf(t.id, byParent)}
+        onOpen={() => openTriage(t, triageAnchor.current)}
+      />
+    </div>
+  )
 
   // Drop a dragged card on a lane: planDrop decides the patch (or null = no-op /
   // rejected, e.g. Overdue or the same lane). Write-then-reload via the EXISTING
@@ -62,7 +103,11 @@ export default function PlanningTime({ tasks, dispCat, inboxColor, byParent, bus
         count={lanes.inbox.length}
         items={lanes.inbox}
         emptyText="Nothing waiting."
-        renderRow={renderRow}
+        renderRow={renderRailRow}
+        draggable
+        draggingId={draggingId}
+        onDragStartTask={(t) => setDraggingId(t.id)}
+        onDragEndTask={() => setDraggingId(null)}
       />
 
       <div className="pl-lanes">
@@ -84,6 +129,23 @@ export default function PlanningTime({ tasks, dispCat, inboxColor, byParent, bus
           />
         ))}
       </div>
+
+      {triage && (
+        <TriagePopover
+          task={triage}
+          anchorRef={triageAnchor}
+          cats={cats}
+          inboxColor={inboxColor}
+          onSetDate={triageDate}
+          onSetCategory={triageCategory}
+          onOpenEditor={() => {
+            const t = triage
+            closeTriage()
+            onOpenTask(t)
+          }}
+          onClose={closeTriage}
+        />
+      )}
     </>
   )
 }

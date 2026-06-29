@@ -168,6 +168,7 @@ export default function Planning({ onBack }) {
         ) : (
           <PlanningTime
             tasks={tasks}
+            cats={cats}
             dispCat={dispCat}
             inboxColor={inboxColor}
             byParent={byParent}
