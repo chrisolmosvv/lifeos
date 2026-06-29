@@ -9,6 +9,44 @@
 
 ---
 
+## Planning view — P1: shell + time mode, render-only (2026-06-29)
+
+- **[The Planning view is a NEW surface, built fresh on the existing kit — additive, never a fork.]**
+  Nothing existing changes behaviour; it reuses the existing task read path and the
+  `TodayTaskRow`/`StatusPill`/`ItemForm`/`Toast` blocks as-is. **Why:** the backlog needs a real
+  planning home (time / board / category), and building on the kit keeps the two engines one.
+  **Trade-off:** a second screen that reads tasks — accepted; it's the future home All Tasks folds
+  into (P6).
+- **[Entry is a quiet PARALLEL "Planning →" link, not a repoint — All Tasks stays fully intact.]**
+  Today's bottom-left "All tasks · N" box is left byte-for-byte unchanged; a small separate
+  "Planning →" link sits beside it. **Why:** guarantees zero regression on the All Tasks path while
+  Planning is built; All Tasks retires later, deliberately, in P6 — not by being quietly hidden now.
+  **Trade-off:** two backlog entries on Today for a while — accepted as temporary.
+- **[The four lanes are COMPUTE-ON-READ via a pure getter, and MUTUALLY EXCLUSIVE.]**
+  `buildPlanning(tasks, today)` (`src/planningModel.js`) sorts tasks into
+  `{ overdue, today, thisWeek, later, inbox }` at render — nothing stored, no new column. A task's
+  **effective day** = its due date (the target day), else its scheduled day. **Precedence (strict
+  waterfall, exactly one lane each):** Overdue (eff is a real past date — a `Today`-chip does NOT
+  rescue it) → Today (eff is today OR `time_bucket='Today'`) → This week (eff after today through
+  the upcoming Sunday) → Later. **Why mutual exclusivity:** a task in two lanes (or silently
+  dropped) is a planning lie; the owner explicitly asked for one-task-one-lane. **Why Overdue beats
+  the Today-chip:** a real past due date is a harder signal than a casual "today" intention.
+  **End-of-week = the upcoming Sunday** (the app's weeks run Mon→Sun via `startOfWeek`) so Planning
+  stays in step with the Calendar. **Trade-off:** a future-due `Today`-chipped task shows in Today,
+  not This week — accepted, and consistent with the existing Today screen.
+- **[Inbox rail = uncategorised + undated + not `Today`-chipped — the locked Inbox definition.]**
+  Mutually exclusive with the lanes (a `Today`-chipped uncategorised undated task goes to the Today
+  lane, not the rail). **Why:** matches the capture model (quick-add dumps land here, stamped
+  'Someday', null category). **Trade-off / KNOWN P1 LIMITATION:** a task that is **categorised but
+  undated and not `Today`-chipped** lands in **no lane and not the rail** — invisible in P1. This is
+  deliberate: it's the undated backlog that **board / category mode (P4)** surfaces. Flagged so it's
+  not mistaken for a bug.
+- **[P1 is render-only; the one allowed write is the reused row's existing path.]** No drag, no new
+  write path, no triage gestures (those are P2/P5). Reusing `TodayTaskRow` pulls in the status pill
+  and tap-to-edit, which write via the EXISTING task paths — the single sanctioned write this piece.
+  **Why:** reuse-before-add beats cloning a read-only row. **Trade-off:** Planning *can* change a
+  status / edit a task in P1 — owner expects it (verify step f).
+
 ## Today V2 — Piece 3c: two entries / drop the in-form toggle (2026-06-29) — CLOSES the form cluster (3a/3b/3c)
 
 - **[The create-only task/event TOGGLE is replaced by two type-declared entries.]** The shared

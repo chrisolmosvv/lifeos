@@ -33,6 +33,34 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Planning view, P1 — shell + time mode (RENDER-ONLY). SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–f.) — NEW surface, additive.
+WHAT CHANGED: a NEW Planning screen, built fresh on the existing kit, additive — nothing existing
+changes behaviour.
+- Mode toggle (**time** live; **board** + **category** inert, visibly-disabled "soon"); a persistent
+  **Inbox side rail**; time mode's **four date-derived lanes** (Overdue / Today / This week / Later).
+- Lanes are **compute-on-read** via a pure getter `buildPlanning(tasks, today)` — each top-level
+  not-done task lands in **exactly one** lane: Overdue (real past date — a `Today`-chip does NOT
+  rescue it) → Today (due/scheduled today OR `time_bucket='Today'`) → This week (through the upcoming
+  Sunday) → Later. Inbox rail = uncategorised + undated + not `Today`-chipped (mutually exclusive).
+- Reuses the existing task **read path** + `TodayTaskRow`/`StatusPill`/`ItemForm`/`Toast` as-is. The
+  only writes are the reused row's status pill + tap-to-edit (existing paths). No drag, no new write
+  path, no triage, **no schema, no migration**.
+- Entry: a quiet parallel **"Planning →"** link beside Today's bottom-left box — the "All tasks" box
+  is unchanged and **All Tasks stays fully intact** (its retirement is P6).
+FILES TOUCHED: NEW `src/Planning.jsx`, `src/planningModel.js`, `src/kit/PlanningColumn.jsx`,
+`src/kit/planning.css`; additive edits `src/LoggedIn.jsx` (the `planning` route), `src/Today.jsx`
+(Planning link), `src/today.css`.
+HOW TO VERIFY: (done — owner-verified on Mac) Today → "Planning →" opens on Time mode; a recognised
+overdue/today/this-week/next-week task each in the right lane; a due-yesterday + `Today`-chipped task
+in **Overdue** (the precedence edge); a quick-add dump in the Inbox rail and no lane; board/category
+greyed + harmless; Today/Calendar/All Tasks/Settings/masthead all unchanged.
+KNOWN GAPS / RISKS: by design — a task **categorised but undated and not `Today`-chipped** appears in
+no lane and not the rail (the undated backlog, surfaced by board/category mode in P4). The one allowed
+write is the reused row's status/edit (existing path) — expected, not a regression.
+NEXT: Planning P2 — time-drag (drag a task between lanes / onto a day).
+FOR THE CHECKER: none — no schema, no migration, no checker gate (reads existing columns only).
+Save point `f393c67`.
+
 ### 2026-06-29 — Today V2, Piece 3c — two entries / drop the in-form toggle. SRC/ ONLY, TWO COMMITS. (Owner-verified on Mac, three screens.) — CLOSES the form cluster (3a/3b/3c).
 WHAT CHANGED: replaced the shared form's create-only task/event TOGGLE with two type-declared entries —
 the form opens already knowing its type (caller's `kind` on create; the item on edit). Two

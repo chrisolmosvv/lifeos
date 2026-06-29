@@ -395,6 +395,30 @@ Built in small, owner-verified pieces; src/ and schema never share a commit.
   save/validation/edit/chip/disclosure change, no schema. Owner-verified on Mac (Stage 1 (a)–(f) + Stage
   2 (g), all three screens, console clean). Save points `4e86ddd` + `4cc51f1`.
 
+### Planning view — NEW surface, sliced build (T-track, 2026-06-29)
+A NEW Planning screen, built fresh on the existing kit — ADDITIVE, nothing existing changes. The
+backlog gets a real planning home (time / board / category modes). Sliced: P1 shell+time-render →
+P2 time-drag → P3 board → P4 category → P5 triage → P6 fold/retire All Tasks → P7 Marty/brief.
+- ✅ **P1 — shell + time mode (RENDER-ONLY).** The screen shell, a calm mode toggle (**time live**;
+  **board + category** inert, visibly-disabled "soon" placeholders — no dead clicks), a persistent
+  **Inbox side rail**, and time mode's **four date-derived lanes** — render only (no drag, no new
+  writes, no triage). Lanes are **compute-on-read** via a pure getter `buildPlanning(tasks, today)`
+  (`src/planningModel.js`), separate from render: each top-level not-done task lands in **exactly
+  one** lane by a strict precedence — **Overdue** (a real past due/scheduled date — a `Today`-chip
+  does NOT rescue it) → **Today** (due/scheduled today OR `time_bucket='Today'`) → **This week**
+  (through the upcoming Sunday, the app's Mon→Sun week) → **Later**. The **Inbox rail** =
+  uncategorised + undated + not `Today`-chipped (mutually exclusive with the lanes). Reuses the
+  existing task **read path** + `TodayTaskRow`/`StatusPill`/`ItemForm`/`Toast` **as-is**; the only
+  writes are the reused row's status pill + tap-to-edit (existing paths). **Entry:** a quiet
+  parallel **"Planning →"** link beside Today's bottom-left box — the **"All tasks" box is unchanged
+  and All Tasks stays fully intact** (its retirement is P6). New files: `src/Planning.jsx`,
+  `src/planningModel.js`, `src/kit/PlanningColumn.jsx`, `src/kit/planning.css`; additive:
+  `LoggedIn` `planning` route, `Today` Planning link + `today.css`. **NO schema, NO migration, NO
+  change to any existing screen.** Owner-verified on Mac (a–f, incl. the Overdue-beats-Today-chip
+  edge + zero regression). Save point `f393c67`. **Known P1 limitation (by design):** a task that
+  is **categorised but undated and not `Today`-chipped** appears in no lane and not the rail — it's
+  the undated backlog that **board/category mode (P4)** surfaces; intentionally invisible in P1.
+
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →
 Today's shared form; old drag hooks → Today's `useTodayGrid`). Built in small,
