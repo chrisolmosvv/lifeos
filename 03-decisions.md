@@ -9,6 +9,36 @@
 
 ---
 
+## Today V2 — Piece 3b: Today/Park chips on the task form (2026-06-29)
+
+- **[Two plain-language chips — "Today" / "Park" — quietly set the hidden time_bucket; the user never
+  sees "bucket".]** In the task form's core timing area (a quiet "When" label, by Due date):
+  Today→'Today', Park→'Someday'. Mutually exclusive; 'This Week' shows neither active. **Why:** the
+  locked time model is dates-only with buckets as HIDDEN logic — the chips give the two plain actions
+  (put on today / park in the backlog) without exposing the machinery. **Trade-off:** 'This Week' has
+  no chip of its own (it's the silent middle) — fine; it's reachable via dates, and neither-active
+  preserves it.
+- **[Events get NO chips; subtasks get none either.]** Events have no `time_bucket` → no chips on the
+  event form. Subtasks are hidden too (their bucket is inert for Today display, like priority). **Why:**
+  chips only mean something for a top-level task's Today/backlog placement. **Trade-off:** none.
+- **[Save writes a clean `time_bucket: bucket`; the SINGLE `|| 'Someday'` fallback is relocated, not
+  duplicated.]** A `bucket` state in `ItemForm` initialises to `origBucket = t.time_bucket || 'Someday'`
+  — the Piece-1 create fallback **moved** from the save line into the state initialiser. `save()` now
+  writes `time_bucket: bucket` with no fallback of its own. **Why:** NOT NULL spine → `t.time_bucket` is
+  always truthy on edit and the create paths prefill, so there's nothing to fall through; keeping one
+  fallback (at the init) avoids layering a second. **Trade-off:** none — exactly one `|| 'Someday'`
+  remains in the codebase.
+- **[De-selecting an active chip reverts to `origBucket` — never a forced default.]** Tapping the active
+  chip sets the bucket back to the value it had on open (the Piece-1 no-forced-default guarantee
+  restated); tapping the other chip switches. **Why:** editing a task must never silently re-bucket it.
+  **Trade-off:** a task that opened as 'Today' can't be "cleared" to nothing via the chip (there is no
+  nothing — NOT NULL) — to move it off today you tap Park.
+- **[Chips set ONLY `time_bucket`; the date axes stay independent.]** They never touch `due_date` or
+  `scheduled_*`. A task can carry a due date AND be Today or Park at once. **Why:** "when I'll deal with
+  it" (bucket) and "when it's due" (date) are different facts. **Trade-off:** none.
+- **[`ItemForm` kept whole at 247 lines — under the 250 guide, no split.]** Active chip earns the
+  sparing terracotta; inactive chips are the calm hairline shape (matching the priority chips).
+
 ## Today V2 — Piece 3a: progressive disclosure in the shared form (2026-06-29)
 
 - **[The shared form splits into a calm CORE + a "more" expander — layout only, never what-saves.]**

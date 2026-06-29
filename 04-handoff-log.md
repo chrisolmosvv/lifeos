@@ -33,6 +33,40 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Today V2, Piece 3b — Today/Park chips on the task form. SRC/ ONLY. (Owner-verified on Mac, three screens.)
+WHAT CHANGED: two mutually-exclusive plain-language chips — **"Today"** and **"Park"** — added to the
+SHARED task form's core timing area (under a quiet "When" label, by Due date). They quietly set the
+HIDDEN `time_bucket` (Today='Today', Park='Someday') without ever saying "bucket".
+- **`ItemForm`** gains a `bucket` state, init = `origBucket = t.time_bucket || 'Someday'` — the SINGLE
+  Piece-1 create fallback **relocated** from the save line into the state init, so `save()` now writes a
+  clean `time_bucket: bucket` (no second fallback). Active = current bucket ('This Week' → neither);
+  tapping the active chip reverts to `origBucket` (no forced default); tapping the other switches.
+- Chips set **only** `time_bucket` — `due_date`/`scheduled_*` untouched (independent axes).
+- **No chips on events** (no bucket) or **subtasks** (inert bucket, like priority). Active chip earns
+  the sparing terracotta (`ItemTypeFields` renders them; `todayForm.css` `.tk-form-chip`).
+FILES TOUCHED: `src/kit/ItemForm.jsx` (247 lines — under 250, NO split), `src/kit/ItemTypeFields.jsx`
+(160), `src/kit/todayForm.css` (+`.tk-form-chips`/`.tk-form-chip`; now 529, pre-existing-large). Docs
+`02`/`03`/`04`. No `supabase/`, no `db/`. `vite build` passes.
+HOW TO VERIFY (owner, on the Mac — DONE, all seven passed on Today + Calendar + All Tasks; query
+`select id,title,time_bucket,due_date,scheduled_start from tasks order by created_at desc limit 1;`):
+  (a) Today chip → reload → time_bucket 'Today'; in "tasks today" with no due date.
+  (b) Park chip → reload → 'Someday'; absent from "tasks today" AND "next 7 days"; in All Tasks → Inbox.
+  (c) NO FORCED DEFAULT: open a 'This Week' task (neither chip), change only the title → reload → STILL
+      'This Week'. (Piece-1 guarantee — proven held.)
+  (d) De-select: 'Today' task, tap the chip off → reload → original-on-open bucket, not forced 'Today'.
+  (e) Events: open/create an event → NO chips anywhere on the event form.
+  (f) Due + chip independent: due date AND Park → reload → both persisted, uncoupled.
+  (g) Snapshot unchanged: tasks not opened/saved aren't re-bucketed.
+KNOWN GAPS / RISKS: 'This Week' is the silent middle (no chip of its own — reachable via dates;
+neither-active preserves it). A task that opened 'Today' can't be chip-cleared to nothing (NOT NULL
+spine — tap Park to move it off today). `todayForm.css` is 529 lines (pre-existing >250, future
+CSS-split candidate). None otherwise.
+NEXT: Piece 3c (Planner to specify — the spec mentioned the task/event toggle removal lands in 3b/3c).
+FOR THE CHECKER: n/a — src/ only, no schema, no checker gate. (Changes ONE write — time_bucket — owner
+hand-verified the row value on all three screens incl. the no-forced-default + due-independence cases.)
+
+---
+
 ### 2026-06-29 — Today V2, Piece 3a — progressive disclosure in the shared form. SRC/ ONLY. (Owner-verified on Mac, three screens.)
 WHAT CHANGED: the SHARED create/edit form (`kit/ItemForm` + `ItemTypeFields`) reorganised into a calm
 **core** + a collapsed **"more"** expander. Same fields, same writes, same validation — disclosure only.

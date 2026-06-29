@@ -363,6 +363,20 @@ Built in small, owner-verified pieces; src/ and schema never share a commit.
   landed at **238 lines — under the 250 guide, no split needed**. No save/validation/toggle/chip/grid
   change, no schema. Owner-verified on Mac (all five checks across all three screens, incl. the
   auto-expand + advanced-data-survives-a-title-edit case). Save point `8bb3103`.
+- ✅ **Piece 3b — Today/Park chips on the task form.** Two mutually-exclusive plain-language chips —
+  **"Today"** and **"Park"** — in the task form's core timing area (under a quiet **"When"** label, by
+  Due date; terracotta-on-active, sparing). They quietly set the HIDDEN `time_bucket` (Today='Today',
+  Park='Someday') **without ever saying "bucket"** — serving the dates-only/hidden-bucket time model.
+  **Events have no bucket → no chips on the event form; not shown for subtasks either** (inert bucket,
+  like priority). A `bucket` state in `ItemForm`, init = `origBucket = t.time_bucket || 'Someday'` —
+  the SINGLE Piece-1 create fallback **relocated** from the save line to the state initialiser, so
+  `save()` writes a clean `time_bucket: bucket` (no second fallback layered in). Active = the current
+  bucket ('This Week' → neither chip); tapping the active chip **reverts to `origBucket`** (no forced
+  default — the Piece-1 guarantee restated), tapping the other switches. Chips set **only** `time_bucket`
+  — `due_date`/`scheduled_*` are independent (a task can have a due date AND be Today/Park). `ItemForm`
+  at **247 lines — under 250, no split**. No schema. Owner-verified on Mac (all seven checks across the
+  three screens, incl. a 'This Week' task staying 'This Week' on a title-only edit, and due+bucket
+  persisting independently). Save point `aa0e40b`.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →
