@@ -10,6 +10,7 @@ import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive
 import { useGridDrag } from './kit/useGridDrag'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
+import QuickAddInput from './kit/QuickAddInput'
 import TodayTaskRow from './kit/TodayTaskRow'
 import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
@@ -200,6 +201,29 @@ export default function Today({ onOpenAllTasks }) {
       ? { text: clock(t.scheduled_start) }
       : null
 
+  // Quick-add (Piece 2): a title → a task dumped straight to the backlog/Inbox
+  // (Someday + undated + no category), via the EXISTING writeTask path. Not
+  // optimistic — writeTask reloads from the DB, so a failed write leaves nothing
+  // behind. Returns true on success so the box clears + refocuses.
+  async function quickAdd(title) {
+    const msg = await writeTask(
+      supabase.from('tasks').insert({
+        title,
+        time_bucket: 'Someday',
+        category_id: null,
+        due_date: null,
+        scheduled_start: null,
+        scheduled_end: null,
+      }),
+    )
+    if (msg) {
+      setError(msg)
+      return false
+    }
+    setToast({ text: 'Added to Inbox' })
+    return true
+  }
+
   const openTask = (id) => {
     const task = (tasks || []).find((t) => t.id === id)
     if (task) setForm({ kind: 'task', item: task, create: false })
@@ -320,6 +344,7 @@ export default function Today({ onOpenAllTasks }) {
       </section>
 
       <div className="today-right">
+        <QuickAddInput onAdd={quickAdd} busy={busy} />
         {tasks === null ? (
           <p className="today-loading">Loading…</p>
         ) : (

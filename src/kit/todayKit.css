@@ -352,3 +352,33 @@
   font-size: 0.8rem;
   color: var(--ink);
 }
+
+/* --- tk-quickadd: the Today V2 quick-add capture box (Piece 2) --------------
+   A quiet one-line input at the top of the right column: type a title, Enter,
+   and the task is dumped to the backlog/Inbox. Calm — a hairline-framed line
+   that earns a soft terracotta focus ring, nothing more. Theme tokens only. */
+.tk-quickadd {
+  flex: none;
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.tk-quickadd::placeholder {
+  color: var(--ink-muted);
+}
+.tk-quickadd:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.tk-quickadd:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
