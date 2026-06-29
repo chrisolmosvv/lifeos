@@ -377,6 +377,23 @@ Built in small, owner-verified pieces; src/ and schema never share a commit.
   at **247 lines — under 250, no split**. No schema. Owner-verified on Mac (all seven checks across the
   three screens, incl. a 'This Week' task staying 'This Week' on a title-only edit, and due+bucket
   persisting independently). Save point `aa0e40b`.
+- ✅ **Piece 3c — Two entries / drop the in-form toggle** *(closes the form cluster 3a/3b/3c)*.
+  Replace the shared form's create-only **task/event toggle** with **two type-declared entries**: the
+  form opens already knowing its type (caller's `kind` on create; the item on edit). Done in two
+  independently-revertible commits. **Stage 1 (`4e86ddd`)** — stop enabling the toggle: removed
+  `toggle: true` from the 4 create sites (Today grid `onCreate`; WeekView "+ Add event", grid
+  `onCreate`, all-day band `onCreate`). Every entry now opens type-locked — **Today "+add" / All Tasks
+  "+add" → task; Calendar + both grids → event** — and the toggle UI (gated on the now-always-falsy
+  prop) never renders. **Stage 2 (`4cc51f1`)** — delete the proven-dead machinery: the `toggle` prop +
+  the `useState(kind)`→`const k = kind` collapse + the toggle UI block in `ItemForm`; the
+  `.tk-form-toggle`/`.tk-form-tog` CSS; the `toggle={form.toggle}` passthroughs + stale comments in
+  Today/WeekView. A prove-dead grep gated the deletion (only unrelated `toggle` uses + two doc comments
+  remained). `ItemForm` 242 lines. **Retired path (accepted):** the old "grid event → toggle to task"
+  one-click is gone; **a task reaches the Calendar grid via the tray "+ add" → tap to detail / drag to
+  schedule** (the locked model — no new task-on-grid create path built). Grid-create-as-event maps the
+  drawn slot correctly on both screens; the only unmapped path was the retired grid→task one. No
+  save/validation/edit/chip/disclosure change, no schema. Owner-verified on Mac (Stage 1 (a)–(f) + Stage
+  2 (g), all three screens, console clean). Save points `4e86ddd` + `4cc51f1`.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →

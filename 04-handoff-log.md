@@ -33,6 +33,45 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Today V2, Piece 3c — two entries / drop the in-form toggle. SRC/ ONLY, TWO COMMITS. (Owner-verified on Mac, three screens.) — CLOSES the form cluster (3a/3b/3c).
+WHAT CHANGED: replaced the shared form's create-only task/event TOGGLE with two type-declared entries —
+the form opens already knowing its type (caller's `kind` on create; the item on edit). Two
+independently-revertible commits, replacement before deletion.
+- **STAGE 1 (`4e86ddd`) — stop enabling the toggle.** Removed `toggle: true` from the 4 create sites:
+  Today grid `onCreate`; WeekView "+ Add event", grid `onCreate`, all-day band `onCreate`. The form
+  already takes its type via `kind`, so every entry now opens type-locked (Today/All-Tasks "+add" →
+  task; both grids + Calendar → event) and the toggle UI (gated on the now-always-falsy prop) never
+  renders. Files: `Today.jsx`, `WeekView.jsx`.
+- **STAGE 2 (`4cc51f1`) — delete the dead machinery** (after Stage 1 verified). `ItemForm.jsx`: dropped
+  the `toggle` prop, collapsed `useState(kind)` → `const k = kind`, removed the toggle UI block,
+  refreshed the header comment (242 lines). `todayForm.css`: deleted `.tk-form-toggle`/`.tk-form-tog`.
+  `Today.jsx` + `WeekView.jsx`: removed the `toggle={form.toggle}` passthroughs + stale comments.
+  Prove-dead grep gated it — only unrelated `toggle` uses (Week/Month, expanders, gym pins, the 3a
+  `moretoggle`, the all-day checkbox) + two doc comments remained.
+- **RETIRED PATH (owner-accepted):** the one-click grid→task is gone; **a task reaches the Calendar grid
+  via the tray "+ add" (a loose Someday task) → tap to detail / drag its grip to schedule** — the locked
+  model. No new task-on-grid create path built. Grid-create-as-event maps the drawn slot correctly on
+  both screens; the only unmapped path was the retired grid→task one.
+FILES TOUCHED: Stage 1 — `src/Today.jsx`, `src/WeekView.jsx`. Stage 2 — `src/kit/ItemForm.jsx` (242),
+`src/kit/todayForm.css`, `src/Today.jsx`, `src/WeekView.jsx`. Docs `02`/`03`/`04`. No `supabase/`, no
+`db/`. `vite build` passes both stages.
+HOW TO VERIFY (owner, on the Mac — DONE, all passed on Today + Calendar + All Tasks):
+  After Stage 1: (a) new task entries open as task (chips, no toggle); (b) new event entries (grids,
+  "+ Add event", band) open as event (no chips, no toggle); (c) no stranded path — Calendar task via
+  tray "+ add" → detail/schedule end-to-end; (d) edit unchanged (3a/3b intact); (e) validation
+  unchanged; (f) snapshot unchanged.
+  After Stage 2: (g) re-ran (a)/(b)/(d) on all three screens → still correct; toggle gone from the UI;
+  browser console clean (no `toggle`/`setK`/`form.toggle` error); no visual glitch where the toggle was.
+KNOWN GAPS / RISKS: creating a fully-detailed task on Calendar is now two steps (tray-create → tap to
+edit) instead of one — owner confirmed acceptable. `todayForm.css` ~500 lines (pre-existing >250, a
+future CSS-split candidate). None otherwise.
+NEXT: the next Today V2 piece beyond the form cluster (Planner to specify).
+FOR THE CHECKER: n/a — src/ only, no schema, no checker gate. (Changes HOW create is entered, not what
+saves; the two-stage owner verify on three screens confirms saves/validation/edit are identical and the
+deletion touched no live path.)
+
+---
+
 ### 2026-06-29 — Today V2, Piece 3b — Today/Park chips on the task form. SRC/ ONLY. (Owner-verified on Mac, three screens.)
 WHAT CHANGED: two mutually-exclusive plain-language chips — **"Today"** and **"Park"** — added to the
 SHARED task form's core timing area (under a quiet "When" label, by Due date). They quietly set the

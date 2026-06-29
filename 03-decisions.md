@@ -9,6 +9,40 @@
 
 ---
 
+## Today V2 — Piece 3c: two entries / drop the in-form toggle (2026-06-29) — CLOSES the form cluster (3a/3b/3c)
+
+- **[The create-only task/event TOGGLE is replaced by two type-declared entries.]** The shared
+  `kit/ItemForm` no longer flips its field set in-form; the TYPE is fixed by the caller — `kind` on
+  create (each entry declares task or event), the item on edit (unchanged). **Why:** a form that opens
+  already knowing what it is, is calmer and removes a decision; the toggle was the last bit of "pick a
+  mode" friction. **Trade-off:** each entry point must declare its type (it already effectively did).
+- **[Done in TWO independently-revertible commits — replacement before deletion (prove-it's-dead).]**
+  **Stage 1 (`4e86ddd`)** removed `toggle: true` from the 4 create sites so the toggle UI (gated on the
+  prop) stopped rendering — the form opened type-locked, the machinery left dormant. **Stage 2
+  (`4cc51f1`)**, only after owner verify, deleted the dead machinery behind a grep prove-dead gate.
+  **Why:** never delete a shared-form path until the replacement is proven live; each commit reverts in
+  one clean step. **Trade-off:** two commits instead of one — accepted for safety.
+- **[Entry → type map.]** Today "+ add a task" → task. All Tasks "+ add" → task. Today grid / Calendar
+  grid / Calendar "+ Add event" / all-day band → **event, always**. Edit → type from the item.
+- **[RETIRED PATH (owner-accepted): the one-click grid→task is gone; Calendar tasks go via the tray.]**
+  The toggle's only real power was flipping a grid-created event into a task. After 3c the grid makes
+  events only; **a task reaches the Calendar grid by creating it in the tray ("+ add" → a loose Someday
+  task) then tapping it to detail / dragging its grip to schedule** — the locked model (07-ux-flows §3:
+  "drag a task from a module onto the grid = schedule it"). **No new task-on-grid create path was
+  built.** **Why:** keep one way to put a task on time (the schedule gesture); don't reintroduce a
+  second. **Trade-off:** creating a fully-detailed task on Calendar is now two steps (tray-create →
+  tap to edit) instead of one — owner confirmed acceptable.
+- **[Deletion list as executed (Stage 2).]** `ItemForm.jsx`: dropped the `toggle` prop, collapsed
+  `const [k, setK] = useState(kind)` → `const k = kind`, removed the toggle UI block, refreshed the
+  header comment (242 lines). `todayForm.css`: deleted `.tk-form-toggle` + `.tk-form-tog`.
+  `Today.jsx` + `WeekView.jsx`: removed the `toggle={form.toggle}` passthroughs + stale comments.
+  Prove-dead grep confirmed no live `tk-form-toggle`/`setK`/`form.toggle` remained — only unrelated
+  `toggle` uses (Week/Month, expanders, gym pins, the 3a `moretoggle`, the all-day checkbox) + two doc
+  comments.
+- **[Glance result: grid-create-as-event is correctly mapped.]** The drawn slot prefills `start_at`/
+  `end_at` on both Today and Calendar; the only unmapped path was the old grid→task one (Piece-1 note),
+  now retired — nothing to fix.
+
 ## Today V2 — Piece 3b: Today/Park chips on the task form (2026-06-29)
 
 - **[Two plain-language chips — "Today" / "Park" — quietly set the hidden time_bucket; the user never
