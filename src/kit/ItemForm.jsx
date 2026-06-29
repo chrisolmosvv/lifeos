@@ -32,6 +32,15 @@ export default function ItemForm({ kind, item, create, toggle, cats, inboxColor,
   const [due, setDue] = useState(t.due_date || '')
   const [schStart, setSchStart] = useState(toInput(t.scheduled_start))
   const [schEnd, setSchEnd] = useState(toInput(t.scheduled_end))
+  // Today/Park chips (Piece 3b): a plain-language pair that quietly sets the HIDDEN
+  // time_bucket — Today='Today', Park='Someday' — without ever saying "bucket". They
+  // touch ONLY time_bucket (never due_date/scheduled_*). `origBucket` is the value on
+  // open; de-selecting an active chip reverts to it (the Piece-1 no-forced-default
+  // guarantee). NOT NULL spine → t.time_bucket is always truthy on edit; the `||
+  // 'Someday'` here is the SAME create fallback Piece 1 set (relocated from save, not
+  // a second one) — so save writes a clean `time_bucket: bucket`.
+  const origBucket = t.time_bucket || 'Someday'
+  const [bucket, setBucket] = useState(origBucket)
   // event-only
   const [startAt, setStartAt] = useState(toInput(t.start_at))
   const [endAt, setEndAt] = useState(toInput(t.end_at))
@@ -76,7 +85,7 @@ export default function ItemForm({ kind, item, create, toggle, cats, inboxColor,
         due_date: due || null,
         scheduled_start: ss,
         scheduled_end: se,
-        time_bucket: t.time_bucket || 'Someday',
+        time_bucket: bucket, // the chip state (init = origBucket); chips set only this
       }
     } else if (allDay) {
       if (!startDate) return setErr('Pick a date.')
@@ -114,7 +123,7 @@ export default function ItemForm({ kind, item, create, toggle, cats, inboxColor,
     isSubtask,
     create,
     busy,
-    task: { status, setStatus, priority, setPriority, due, setDue, schStart, setSchStart, schEnd, setSchEnd },
+    task: { status, setStatus, priority, setPriority, due, setDue, schStart, setSchStart, schEnd, setSchEnd, bucket, setBucket, origBucket },
     event: { allDay, setAllDay, startAt, setStartAt, endAt, setEndAt, startDate, setStartDate, endDate, setEndDate, location, setLocation },
     subtask: { subtasks, onSubtask },
     notes: { notes, setNotes },

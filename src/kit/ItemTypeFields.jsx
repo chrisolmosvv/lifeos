@@ -36,13 +36,28 @@ export default function ItemTypeFields({ k, slot, isSubtask, create, busy, task,
   const isCore = slot === 'core'
 
   if (k === 'task') {
-    const { status, setStatus, priority, setPriority, due, setDue, schStart, setSchStart, schEnd, setSchEnd } = task
+    const { status, setStatus, priority, setPriority, due, setDue, schStart, setSchStart, schEnd, setSchEnd, bucket, setBucket, origBucket } = task
     if (isCore) {
+      // Today/Park chips set ONLY time_bucket; tapping the active one reverts to the
+      // bucket the task opened with (no forced default). Not shown for subtasks
+      // (whose bucket is inert for Today display, like priority) or events.
+      const pick = (val) => setBucket(bucket === val ? origBucket : val)
       return (
-        <label className="tk-form-field">
-          <span className="tk-form-fieldlabel">Due date</span>
-          <input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
-        </label>
+        <>
+          <label className="tk-form-field">
+            <span className="tk-form-fieldlabel">Due date</span>
+            <input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+          </label>
+          {!isSubtask && (
+            <div className="tk-form-field">
+              <span className="tk-form-fieldlabel">When</span>
+              <div className="tk-form-chips">
+                <button type="button" className={'tk-form-chip' + (bucket === 'Today' ? ' is-on' : '')} aria-pressed={bucket === 'Today'} onClick={() => pick('Today')}>Today</button>
+                <button type="button" className={'tk-form-chip' + (bucket === 'Someday' ? ' is-on' : '')} aria-pressed={bucket === 'Someday'} onClick={() => pick('Someday')}>Park</button>
+              </div>
+            </div>
+          )}
+        </>
       )
     }
     return (

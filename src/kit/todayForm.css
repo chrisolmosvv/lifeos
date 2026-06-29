@@ -497,3 +497,33 @@
   flex-direction: column;
   gap: inherit;
 }
+
+/* --- Today/Park chips (Today V2, Piece 3b) ---------------------------------
+   Two plain-language chips in the task-form timing area that quietly set the
+   hidden time_bucket. Same calm shape as the priority chips, but the ACTIVE
+   chip earns the sparing terracotta (these are a deliberate plan action).
+   Theme tokens only; shared form, so all three screens get them. */
+.tk-form-chips {
+  display: flex;
+  gap: 0.4rem;
+}
+.tk-form-chip {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.32rem 0.7rem;
+  color: var(--ink-muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.tk-form-chip:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.tk-form-chip.is-on {
+  color: var(--paper);
+  background: var(--accent);
+  border-color: var(--accent);
+}
