@@ -6,6 +6,7 @@ import EditionHeader from './EditionHeader'
 import Today from './Today'
 import Settings from './Settings'
 import AllTasks from './AllTasks'
+import Planning from './Planning'
 import ArchiveScreen from './ArchiveScreen'
 import HealthHub from './health/HealthHub'
 import FoodPage from './food/FoodPage'
@@ -26,11 +27,18 @@ export default function LoggedIn({ email }) {
 
       {view === 'today' ? (
         <div className="cal-wrap">
-          <Today onOpenAllTasks={() => setView('alltasks')} />
+          <Today
+            onOpenAllTasks={() => setView('alltasks')}
+            onOpenPlanning={() => setView('planning')}
+          />
         </div>
       ) : view === 'alltasks' ? (
         <div className="cal-wrap">
           <AllTasks onBack={() => setView('today')} />
+        </div>
+      ) : view === 'planning' ? (
+        <div className="cal-wrap">
+          <Planning onBack={() => setView('today')} />
         </div>
       ) : view === 'archive' ? (
         <div className="cal-wrap">

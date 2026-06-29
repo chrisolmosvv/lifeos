@@ -173,6 +173,38 @@
   margin-left: auto;
 }
 
+/* The backlog row at the foot of the right column: the unchanged "All tasks" box
+   plus a quiet parallel "Planning" link (P1 — All Tasks stays fully intact). */
+.today-backlog-row {
+  flex: none;
+  margin-top: auto;
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+.today-backlog-row .today-alltasks {
+  margin-top: 0;
+  flex: 1;
+}
+.today-planning-link {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.today-planning-link:hover {
+  border-color: var(--accent);
+}
+
 /* Phone: stack to one column and let the page scroll; give the grid a real
    height so it doesn't collapse. (The dedicated mobile Today is a later spec.) */
 @media (max-width: 768px) {
