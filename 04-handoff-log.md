@@ -33,6 +33,37 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Planning view, P3 — board mode (status kanban). SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–h.) — WRITES status (trigger owns completed_at).
+WHAT CHANGED: the board toggle goes live — a kanban by **status**.
+- Three columns **To do** (`open`) / **In progress** (`in_progress`) / **Done** (`done`), top-level
+  task cards. Drag a card to a column → write `status` via the **existing** `updateTask(id,{status})`
+  (the status pill's path). The DB trigger `tasks_sync_completed_at` owns `completed_at` (Done stamps,
+  re-open nulls) — board-complete is byte-identical to completing anywhere else. Derived from status at
+  render; nothing stored. No schema.
+- **Card** (new `kit/PlanningCard.jsx`): category dot/tag + due (overdue-tinted) + subtask x/N + title;
+  **no priority, no pill** — a small new card, not a bent `TodayTaskRow`.
+- **Filter** (two calm selects): category (sub-tree via `descendantIds`, + Inbox) and time (reuses P2's
+  `laneOf` — Overdue/Today/This week/Later); default all. **Done shows ALL done, newest first, scrolls
+  internally (no cap).**
+- Write-then-reload (no phantom); native HTML5 drag reusing `PlanningColumn`. **P2's time-drag code
+  UNTOUCHED, gated behind the toggle.** Tasks only (events have no status).
+FILES TOUCHED: NEW `src/kit/PlanningBoard.jsx`, `src/kit/PlanningCard.jsx`; changed `src/Planning.jsx`,
+`src/planningModel.js` (added pure `buildBoard`, reuses `laneOf`), `src/kit/PlanningModes.jsx`
+(generalised to `liveModes`), `src/kit/planning.css`.
+HOW TO VERIFY: (done — owner-verified on Mac) open Planning → Board. Query
+`select id,title,status,completed_at,due_date from tasks order by updated_at desc limit 1;` after each
+drag. (a) To-do→In-progress: status persists. (b) →Done: status=done + completed_at set (trigger). (c)
+Done→To-do: status=open + completed_at null. (d) cards show dot+due+x/N, NO priority. (e) category +
+time filters narrow; "All" returns everything. (f) Wi-Fi off, drag once: fails visibly, nothing moves.
+(g) board-complete shows done in Today + All Tasks next load. (h) time mode (P1+P2) intact; Today/
+Calendar/All Tasks/Settings unchanged.
+KNOWN GAPS / RISKS: Done is uncapped (renders all done; scrolls) — fine for now, add "recent only" later
+if heavy. Category mode still inert (P4). Inbox rail still display-only (P5). Events not on the board (no
+status — by design).
+NEXT: Planning P4 — category mode.
+FOR THE CHECKER: none — no schema, no migration, no checker gate (writes the existing `status` column;
+the trigger sets `completed_at`). Save point `ac1f9a2`.
+
 ### 2026-06-29 — Planning view, P2 — time-mode dragging → sets due date. SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–g.) — WRITES (due_date + one chip flip).
 WHAT CHANGED: the four time-lanes are now a **drag target**.
 - Drag a task card between lanes → set a representative `due_date` via the **existing** task-update

@@ -436,6 +436,24 @@ P2 time-drag → P3 board → P4 category → P5 triage → P6 fold/retire All T
   `kit/planning.css`. **No schema, no event involvement, no Inbox-rail drag (P5), no change to any
   existing screen.** Owner-verified on Mac (a–g, incl. overdue→Today bucket-unchanged, forced-failure
   no-phantom, the chipped-off-Today flip). Save point `2439589`.
+- ✅ **P3 — board mode (status kanban).** The board toggle goes live: a kanban by **status** — three
+  columns **To do** (`open`) / **In progress** (`in_progress`) / **Done** (`done`) of top-level task
+  cards. Drag a card to a column → write `status` via the **existing** `updateTask(id,{status})` (the
+  status pill's path); the DB trigger `tasks_sync_completed_at` owns `completed_at` (Done stamps it,
+  re-open nulls it) — so board-complete is byte-identical to completing anywhere else. Columns derived
+  from status at render; nothing stored. **Card** (`kit/PlanningCard.jsx`, new): category dot/tag + due
+  (overdue-tinted) + subtask x/N + title — **no priority, no pill** (the column is the status); a small
+  new card, not a bent `TodayTaskRow`. **Filter** (two calm selects): category (whole sub-tree, via
+  `descendantIds`, + Inbox) and time (reuses P2's `laneOf` vocab — Overdue/Today/This week/Later);
+  default all. **Done shows ALL done, newest-completed first, scrolling internally (no date cap).**
+  Write-then-reload (no phantom); native HTML5 drag reusing `PlanningColumn`. Pure grouping/filtering in
+  `buildBoard(tasks, today, filter)` (reuses `laneOf`). Board in `kit/PlanningBoard.jsx`; `PlanningModes`
+  generalised to `liveModes=['time','board']` (category still inert). **P2's time-drag code UNTOUCHED,
+  gated behind the toggle.** Tasks only (events have no status). New: `kit/PlanningBoard.jsx`,
+  `kit/PlanningCard.jsx`; changed: `Planning.jsx`, `planningModel.js`, `kit/PlanningModes.jsx`,
+  `kit/planning.css`. **No schema, no migration, no change to any existing screen.** Owner-verified on
+  Mac (a–h, incl. board-complete showing done in Today + All Tasks, the completed_at round-trip,
+  forced-failure no-phantom, time mode intact behind the toggle). Save point `ac1f9a2`.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →

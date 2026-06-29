@@ -9,6 +9,41 @@
 
 ---
 
+## Planning view — P3: board mode (status kanban) (2026-06-29)
+
+- **[Board mode = a kanban by STATUS — three columns To do / In progress / Done.]** Mapped to the
+  existing stored values `'open'` / `'in_progress'` / `'done'` (the status pill's vocabulary). Top-level
+  tasks only (matches the time lanes). Columns are DERIVED from `status` at render; nothing stored.
+  **Why:** status is the one axis the board sorts by; deriving keeps a single source of truth.
+  **Trade-off:** none — it's the natural board.
+- **[Dragging a card to a column writes `status` through the EXISTING task-update path; the DB trigger
+  owns `completed_at`.]** The drag calls the same `updateTask(id, {status})` the status pill uses. The
+  app never writes `completed_at` — the `tasks_sync_completed_at` trigger (db/03_tasks.sql) stamps it
+  when status→'done' and nulls it on re-open. So "complete on the board" is byte-identical to completing
+  anywhere else (Today, All Tasks). **Why:** reuse-before-add; no parallel "complete" can drift.
+  **Trade-off:** none. Owner-verified the round-trip (set on Done, null on re-open, all trigger-driven).
+- **[A small NEW `PlanningCard`, not a bent `TodayTaskRow`.]** The card face = title + category dot/tag +
+  due date (overdue-tinted) + subtask x/N. **No priority, no status pill** (the column IS the status).
+  `TodayTaskRow` shows priority, which the board card must not, so a small new card assembled from the
+  reusable bits (`CategoryTag`, `formatDue`, `progressOf`) was cleaner than adding a hide-priority prop
+  to the shared row. **Why:** don't distort a shared kit block for one screen. **Trade-off:** a second
+  small card component — accepted (sealed, ~30 lines).
+- **[A calm two-select filter: category (subtree) + time (laneOf vocabulary).]** Category filters to a
+  category's whole sub-tree (via `descendantIds`, matching All Tasks), plus an Inbox option; time reuses
+  P2's `laneOf` (All / Overdue / Today / This week / Later) so the words match time mode. Default = all.
+  **Why:** the two axes a board is actually triaged on, in the app's existing vocabulary. **Trade-off:**
+  exact-category (non-subtree) wasn't offered — subtree matches the rest of the app.
+- **[Done shows ALL done, newest-completed first, scrolling internally — no date cap.]** **Why:** nothing
+  ever silently vanishes (calmest), and it's the simplest honest version (no cutoff logic). The column
+  scrolls so the page stays zero-scroll. **Trade-off:** a very old, large Done list renders many cards;
+  if it ever feels heavy we add a "recent only" later (not now — don't over-build). Owner chose this over
+  a 7-day cap.
+- **[Board reuses P2's drag + `PlanningColumn`; P2's time-drag code is UNTOUCHED, gated behind the
+  toggle.]** Native HTML5 drag (mouse-only → phone tap-only); `PlanningColumn`'s draggable-cards + drop-
+  target serve both modes. The board lives in `kit/PlanningBoard.jsx`; `PlanningModes` generalised to a
+  `liveModes` list (`['time','board']`; category still inert). **Why:** build-in-place, never fork; don't
+  move verified code. **Trade-off:** none — (h) re-verified time mode intact.
+
 ## Planning view — P2: time-mode dragging sets due date (2026-06-29)
 
 - **[Dragging a task between the four time-lanes SETS its `due_date`; lanes stay derived.]** The drop
