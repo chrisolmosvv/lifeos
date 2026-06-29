@@ -325,6 +325,20 @@ it rather than dig (see the Piece-1c decision).
   too (intended; confirmed no layout break).** No schema / data-layer / drag-hook change. Save
   point `2cf0810`. (Topline/Folio kit blocks now unused but left in place.)
 
+### Today V2 — evolve-in-place upgrade (T-track resumes, 2026-06-29)
+The Today front page upgraded to V2 **in place** — no parallel copy, the module stays working at
+every commit. Began with a full V1 Map + Behavioural Snapshot (owner-approved) before any change.
+Built in small, owner-verified pieces; src/ and schema never share a commit.
+- ✅ **Piece 1 — Calendar-grid create no longer lands in 'Today'.** The shared `ItemForm` save
+  fallback `t.time_bucket || 'Today'` → `|| 'Someday'` (one line, `src/kit/ItemForm.jsx`). It only
+  ever fires on the ONE create path with no bucket prefill — the **Calendar grid** (draw slot →
+  flip to task) — which was silently parking those on today's list. Recon corrected the premise:
+  `time_bucket` is **NOT NULL DEFAULT 'Today'** on the spine, so there is no bucket-less task to
+  "preserve" and editing never misfires; 'Someday' matches the Calendar C5 "no-context task never
+  lands in Today" rule. Intentional prefills (Today 'Today', All Tasks 'This Week') are truthy and
+  untouched. **No schema, no migration, no row touched** — forward-looking only. Owner-verified on
+  Mac (all four checks incl. the reloaded row value). Save point `9667a73`.
+
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →
 Today's shared form; old drag hooks → Today's `useTodayGrid`). Built in small,

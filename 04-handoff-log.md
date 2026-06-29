@@ -33,6 +33,40 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Today V2, Piece 1 — Calendar-grid create no longer lands in 'Today'. SRC/ ONLY. (Owner-verified on Mac.)
+WHAT CHANGED: a single surgical fix to the SHARED create/edit form's save path.
+- **The fix:** `src/kit/ItemForm.jsx:72` save fallback `t.time_bucket || 'Today'` → `|| 'Someday'`.
+  This fallback only ever fires on the ONE create path with no bucket prefill — the **Calendar grid**
+  (draw a slot → flip the toggle to Task) — which was silently parking those tasks on today's list.
+  Now they fall back to 'Someday' (the backlog), not 'Today'.
+- **Recon corrected the original premise.** `time_bucket` is **NOT NULL DEFAULT 'Today' CHECK (in
+  'Today','This Week','Someday')** on the spine (`db/03_tasks.sql:40`) — there is NO bucket-less task,
+  so "preserve null" was impossible and editing never misfired (a loaded row's bucket is always
+  truthy). The piece was re-scoped (owner-approved) from "preserve null" to "fix the real Calendar
+  leak." 'Someday' matches the Calendar C5 rule (a no-context task must never land in Today).
+- **Untouched:** the intentional prefills (Today "+ add" → 'Today'; All Tasks "+ add" → 'This Week')
+  are truthy and never hit the fallback; the two subtask-insert fallbacks (inherit parent, inert).
+FILES TOUCHED: `src/kit/ItemForm.jsx` (one line). Docs `02`/`03`/`04`. No `supabase/`, no `db/`.
+`vite build` passes. All files < 250 lines except `Today.jsx` (488, pre-existing — untouched, a
+split candidate flagged in the V1 Map).
+HOW TO VERIFY (owner, on the Mac — DONE, all four passed):
+  (a) Calendar → draw a slot → flip to **Task** → title → Save → **reload**: NOT in "tasks today";
+      DB row `time_bucket` = **'Someday'**. (`select id,title,time_bucket from tasks order by
+      created_at desc limit 1;` on Frankfurt `cntlptuacsujbdtwvbis`.)
+  (b) Today "+ add a task" → shows in "tasks today", bucket **'Today'** (unchanged).
+  (c) No row migrated — Today's grid + both lists look exactly as the V1 Snapshot on first load.
+  (d) Create/edit via All Tasks + edit via Calendar/Today: save with no error, edits keep the
+      existing bucket.
+KNOWN GAPS / RISKS: a Calendar-grid-created task lands in the hidden 'Someday' backlog (findable in
+All Tasks), by design. Pre-existing quirk noted, NOT changed: that create path maps the drawn slot to
+`start_at/end_at` but not `scheduled_start/end`, so such a task doesn't render as a grid block — out
+of scope for this piece. `time_bucket` being NOT NULL is now recorded as a load-bearing fact for the
+later time-model amendment (buckets are hidden, never absent — see 03-decisions).
+NEXT: the next Today V2 piece (Planner to specify).
+FOR THE CHECKER: n/a — src/ only, one line, no schema, no checker gate. (Owner hand-verified the row.)
+
+---
+
 ## Hard-won lessons (operational gotchas — read before deploys / schema changes)
 
 These cost real time; don't relearn them.

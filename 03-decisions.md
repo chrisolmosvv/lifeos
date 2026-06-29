@@ -9,6 +9,26 @@
 
 ---
 
+## Today V2 — Piece 1: Calendar-grid create no longer lands in 'Today' (2026-06-29)
+
+- **[ItemForm's save fallback changes 'Today' → 'Someday'.]** A task created from the Calendar grid
+  (draw slot → flip to task), the one create path with no bucket prefill, now falls back to
+  'Someday' instead of 'Today' — so it rests in the backlog, not on today's list. **Why:** recon
+  corrected the original premise. `time_bucket` is NOT NULL DEFAULT 'Today' CHECK (in 'Today','This
+  Week','Someday') on the spine (`db/03_tasks.sql:40`) — there is NO bucket-less task, so "preserve
+  null" was impossible and editing never misfired. The only real leak was the Calendar-grid
+  flip-to-task falling through to 'Today'. 'Someday' matches the existing Calendar C5 rule (a
+  no-context task must never land in Today); `useWeekData`'s loose-add already uses it. **Trade-off:**
+  a Calendar-grid task lands in the hidden backlog rather than a visible list — accepted; it's
+  findable in All Tasks, and not-on-today is the point.
+- **[Scope: src/ only, one line (`ItemForm.jsx:72`).]** No schema, no migration, no row touched;
+  forward-looking. Intentional prefills (Today 'Today', All Tasks 'This Week') untouched — truthy,
+  never hit the fallback. Subtask-insert fallbacks left as-is (inherit parent, inert).
+- **[CORRECTION FOR THE RECORD: buckets are hidden, never absent.]** The dates-only timing model
+  rests on three ALWAYS-PRESENT hidden bucket values (NOT NULL spine), not on a nullable/absent
+  bucket. The full time-model amendment at the upgrade's close must state this — buckets are hidden,
+  never absent. (This supersedes the V1 Map §F "bucket-less task" wording.)
+
 ## Food — F9: the cook→log bridge (2026-06-29)
 
 - **ONE new column: `recipes.last_cooked_at` (timestamptz, nullable) — the only schema change since
