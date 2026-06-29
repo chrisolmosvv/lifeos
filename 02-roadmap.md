@@ -338,6 +338,18 @@ Built in small, owner-verified pieces; src/ and schema never share a commit.
   lands in Today" rule. Intentional prefills (Today 'Today', All Tasks 'This Week') are truthy and
   untouched. **No schema, no migration, no row touched** — forward-looking only. Owner-verified on
   Mac (all four checks incl. the reloaded row value). Save point `9667a73`.
+- ✅ **Piece 2 — Quick-add capture box on Today.** A quiet one-line input at the top of Today's
+  right column ("Add to inbox…"): type a title, press Enter, and a task is dumped straight to the
+  backlog/Inbox — no form, no type, no date. Writes `{ time_bucket:'Someday', category_id:null, no
+  due/schedule }` through the EXISTING `writeTask` path (not optimistic — `writeTask` reloads from
+  the DB, so a failed write leaves nothing behind; forced-failure shows the error line + keeps the
+  text). 'Someday' + undated keeps it off "tasks today" and "next 7 days"; null category = Inbox,
+  findable in All Tasks. Success → a brief "Added to Inbox" toast (reuses the existing `Toast`),
+  clears the box, keeps focus for the next dump; whitespace-only is a no-op. **New sealed kit block
+  `kit/QuickAddInput.jsx`** — wired ONLY on Today this piece, slated for Planning / All-Tasks /
+  Calendar later (one screen at a time). `ItemForm` / grid / Calendar / All-Tasks / the spine
+  untouched. No schema. Owner-verified on Mac (all five checks incl. the reloaded row + forced
+  failure). Save point `2c0ae31`.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →

@@ -9,6 +9,30 @@
 
 ---
 
+## Today V2 — Piece 2: quick-add capture box on Today (2026-06-29)
+
+- **[A lightweight quick-add box on Today, separate from the shared form.]** A one-line input
+  ("Add to inbox…") at the top of Today's right column: Enter dumps a task with no type, no
+  category, no date. It does NOT open or use `kit/ItemForm` — it writes straight through Today's
+  existing `writeTask` insert path. **Why:** capture must cost less than the thought (07-ux-flows §1);
+  the full form is for deliberate filing, not a quick dump. **Trade-off:** a second capture affordance
+  on Today (alongside the form's "+ add a task"), accepted because they serve different intents.
+- **[The dump is stamped `time_bucket:'Someday', category_id:null`, undated.]** Per the Piece-1 fact
+  (time_bucket is NOT NULL — buckets are hidden, never absent), a dump is EXPLICITLY 'Someday' (keeps
+  it off "tasks today" AND off "next 7 days" — `buildToday` excludes Someday from the undated tail
+  too) with null category = Inbox (findable in All Tasks). **Why:** a dump is a backlog thought, not a
+  today commitment. **Trade-off:** the dump is invisible on Today by design — mitigated by a brief
+  "Added to Inbox" toast naming where it went.
+- **[Confirmation = a brief "Added to Inbox" toast; the write is NOT optimistic.]** Reuses the
+  existing `Toast` (auto-dismiss, no Undo — a dump has little to undo). `writeTask` reloads from the
+  DB on success, so nothing renders until the real row is read back; a failed write shows the error
+  line, keeps the typed text, and leaves no phantom row. **Why:** owner's concern was "dump something
+  and not see where it went" — the toast answers it; verify-don't-trust rules out optimistic data loss.
+- **[`QuickAddInput` is a SEALED KIT BLOCK, wired only on Today this piece.]** Presentation-only (the
+  write belongs to the caller via `onAdd`); slated to also sit on Planning, the All-Tasks area, and
+  Calendar later — added one screen at a time, never forked. **Why:** build the reusable furniture
+  once (the Phase-7 kit principle); don't bolt it onto four screens before the first is proven.
+
 ## Today V2 — Piece 1: Calendar-grid create no longer lands in 'Today' (2026-06-29)
 
 - **[ItemForm's save fallback changes 'Today' → 'Someday'.]** A task created from the Calendar grid

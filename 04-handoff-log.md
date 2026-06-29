@@ -33,6 +33,42 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Today V2, Piece 2 — quick-add capture box on Today. SRC/ ONLY. (Owner-verified on Mac.)
+WHAT CHANGED: a new lightweight capture box on the Today screen — type a title, Enter, task dumped to the backlog/Inbox.
+- **NEW sealed kit block `src/kit/QuickAddInput.jsx`** (51 lines): a quiet one-line input
+  ("Add to inbox…"); Enter calls `onAdd(title)`, clears + keeps focus on success, leaves the text on
+  failure, whitespace-only is a no-op. Presentation only — the WRITE belongs to the caller. **Wired
+  ONLY on Today this piece; slated for Planning / All-Tasks / Calendar later** (one screen at a time).
+- **`src/Today.jsx`** gains the box at the top of the right column + a small `quickAdd` handler that
+  reuses the EXISTING `writeTask`: inserts `{ title, time_bucket:'Someday', category_id:null,
+  due_date:null, scheduled_start:null, scheduled_end:null }`. NOT optimistic (`writeTask` reloads from
+  the DB) — a failed write shows the error line, keeps the text, leaves no phantom row. Success → a
+  brief "Added to Inbox" toast (reuses the existing `Toast`). No refactor of Today.jsx.
+- **`src/kit/todayKit.css`** gains a small `.tk-quickadd` rule (theme tokens; soft terracotta focus ring).
+- 'Someday' + undated keeps the dump OFF "tasks today" and "next 7 days" (`buildToday` excludes
+  Someday from the undated tail too); null category = Inbox, so it's findable in All Tasks.
+FILES TOUCHED: **new** `src/kit/QuickAddInput.jsx`; edited `src/Today.jsx`, `src/kit/todayKit.css`.
+Docs `02`/`03`/`04`. No `supabase/`, no `db/`. `vite build` passes. `Today.jsx` is 513 lines (over the
+250 guide, pre-existing — NOT refactored here, just the unavoidable handler + box; a split candidate
+still flagged in the V1 Map). All new/other files < 250.
+HOW TO VERIFY (owner, on the Mac — DONE, all five passed):
+  (a) Type a title → Enter: box clears, "Added to Inbox" toast, focus stays. Reload → row reads
+      `time_bucket 'Someday'`, `category_id null`, dates null; ABSENT from "tasks today" + "next 7
+      days". (`select id,title,time_bucket,category_id,due_date,scheduled_start from tasks order by
+      created_at desc limit 1;` on Frankfurt `cntlptuacsujbdtwvbis`.)
+  (b) All Tasks → Inbox → the dump is there.
+  (c) Enter on a blank/whitespace box → nothing (no row, no toast).
+  (d) First load before dumping: grid + both lists + "All tasks · N" match the V1 snapshot (the box is
+      the only addition; a dump then correctly takes N +1).
+  (e) Wi-Fi off → dump once: fails VISIBLY (error line, text kept, no toast); reload → no phantom row.
+KNOWN GAPS / RISKS: the dump is invisible on Today by design (it's backlog) — mitigated by the toast +
+its presence in All Tasks. `QuickAddInput` is presentation-only and unwired on the other three screens
+until their own pieces. None otherwise.
+NEXT: the next Today V2 piece (Planner to specify).
+FOR THE CHECKER: n/a — src/ only, no schema, no checker gate. (Owner hand-verified the row + forced failure.)
+
+---
+
 ### 2026-06-29 — Today V2, Piece 1 — Calendar-grid create no longer lands in 'Today'. SRC/ ONLY. (Owner-verified on Mac.)
 WHAT CHANGED: a single surgical fix to the SHARED create/edit form's save path.
 - **The fix:** `src/kit/ItemForm.jsx:72` save fallback `t.time_bucket || 'Today'` → `|| 'Someday'`.
