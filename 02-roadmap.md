@@ -472,6 +472,25 @@ P2 time-drag → P3 board → P4 category → P5 triage → P6 fold/retire All T
   regression. New: `kit/PlanningTime.jsx`, `kit/PlanningCategory.jsx`, `kit/PlanningGroup.jsx`; changed:
   `Planning.jsx`, `kit/PlanningModes.jsx` (`liveModes` adds 'category'), `kit/planning.css`. Owner-verified
   on Mac (a–f, incl. side-by-side parity + the post-extraction drag re-check). Save point `4010f7a`.
+- ✅ **P5 — triage: the Inbox rail goes interactive.** The time-mode Inbox rail becomes a triage
+  surface, two gestures, both via existing write paths: **(1) drag** a rail card onto a time lane → the
+  EXISTING `handleDrop → planDrop → updateTask` sets **only `due_date`** (an undated dump) → it leaves
+  the rail into that lane (Overdue still not a target); **(2) tap** a rail card → `TriagePopover` (new, on
+  the existing `Popover` primitive): **one-tap** date chips Today/This week/Later (`planDrop` → due_date
+  only) + a category step (reuses `CategoryPicker` → category_id only) + an "open full editor" link.
+  **Axes independent** (owner-verified on the row): date triage writes only `due_date`, category only
+  `category_id`, never both. Rail membership stays DERIVED; write-then-reload (no phantom on failure).
+  **⚠️ SCOPE CORRECTION at recon (so the wrong premise dies on the record):** the original P5 spec assumed
+  the rail sits beside **all three modes** and could be dragged onto **board columns + category groups**.
+  What shipped has the rail in **time mode ONLY** (P3 board = filter + status columns, no rail; P4
+  category folds Inbox into its first group), so those targets are never co-visible with the rail.
+  Corrected (owner-approved) to **Path A** — triage where the rail lives — rather than re-architecting the
+  shell to a persistent rail (which would change board/category layouts + double the Inbox in category
+  mode). The category **chip** covers the rail→category outcome; the board-column-drop question is moot
+  under Path A. New: `kit/TriagePopover.jsx`; changed: `kit/PlanningTime.jsx` (rail = drag source +
+  tap→triage), `Planning.jsx` (thread `cats`), `kit/planning.css`. **All Tasks untouched; board/category
+  unchanged; no schema.** Owner-verified on Mac (a–h, incl. axes-independent on the row + forced-failure
+  no-phantom). Save point `54ec33a`.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →

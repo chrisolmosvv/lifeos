@@ -33,6 +33,35 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Planning view, P5 — triage: the Inbox rail goes interactive. SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–h.) — WRITES due_date / category_id; Path A.
+WHAT CHANGED: the time-mode Inbox rail becomes a triage surface — two gestures, both existing write paths.
+- **Drag** a rail card onto a time lane → the EXISTING `handleDrop → planDrop → updateTask` sets ONLY
+  `due_date` (an undated dump) → it leaves the rail into that lane. Overdue still not a target.
+- **Tap** a rail card → `TriagePopover` (new, on the existing `Popover` primitive): one-tap date chips
+  Today/This week/Later (`planDrop` → due_date only) + a category step (reuses `CategoryPicker` →
+  category_id only) + an "open full editor" link. Setting either lifts the card from the rail.
+- Axes INDEPENDENT: date triage writes only due_date, category only category_id, never both (verified on
+  the row). Rail membership stays derived; write-then-reload (no phantom on failure). Lanes' own rows
+  still open the edit form unchanged.
+- ⚠️ SCOPE CORRECTION at recon (recorded so the wrong premise dies): the original P5 spec assumed the
+  rail sits beside ALL THREE modes + could be dragged onto board columns + category groups. What shipped
+  has the rail in TIME MODE ONLY (P3 board = filter + columns, no rail; P4 category folds Inbox into its
+  first group), so those targets are never co-visible. Corrected (owner-approved) to PATH A — triage where
+  the rail lives — not a persistent-rail shell re-architecture (which would change board/category layouts
+  + double the Inbox). The category chip covers rail→category; board-column-drop is moot under Path A.
+FILES TOUCHED: NEW `src/kit/TriagePopover.jsx`; changed `src/kit/PlanningTime.jsx` (rail = drag source +
+tap→triage), `src/Planning.jsx` (thread `cats` to PlanningTime), `src/kit/planning.css`.
+HOW TO VERIFY: (done — owner-verified on Mac) time mode; query
+`select id,title,category_id,due_date,time_bucket,status,scheduled_start from tasks order by updated_at desc limit 1;`
+after each. (a/d) tap→category: category_id set, left rail, due null. (b) drag→This week: due_date set,
+left rail, category null. (c) tap→Today (one tap): due==today. (e) board-column drop N/A under Path A.
+(f) axes independent on the row. (g) Wi-Fi off: card stays in rail, no phantom. (h) P2/P3 drags + rail
+display intact; Today/Calendar/All Tasks/Settings unchanged.
+KNOWN GAPS / RISKS: none. Tap-to-triage is time-mode rail only (by Path A); Inbox tasks in board/category
+are triaged via their own gestures + the edit form.
+NEXT: Planning P6 — fold in / retire All Tasks (licensed by P4's coverage parity).
+FOR THE CHECKER: none — no schema, no migration (writes existing due_date / category_id). Save point `54ec33a`.
+
 ### 2026-06-29 — Planning view, P4 — category mode (collapsible groups). SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–f.) — RENDER-FORWARD + the "+add" insert; All Tasks INTACT.
 WHAT CHANGED: the category toggle goes live — the backlog grouped by category as **collapsible groups**.
 - Inbox first, then each top-level category, recursively nested (3-level); expand reveals own tasks

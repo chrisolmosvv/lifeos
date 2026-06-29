@@ -9,6 +9,43 @@
 
 ---
 
+## Planning view — P5: triage — the Inbox rail goes interactive (2026-06-29)
+
+- **[⚠️ SCOPE CORRECTION at recon — the original P5 premise was WRONG; do NOT reintroduce it.]** The P5
+  spec assumed the Inbox rail sits beside **all three modes** and that a rail card could be dragged onto
+  a **board column** or a **category group**. That is **not what shipped**: in P3 the board has a filter
+  row + status columns (no rail; Inbox tasks just sit in the To-do column / are a filter option), and in
+  P4 category mode folds Inbox into its **first collapsible group** (no rail). So the rail lives **only in
+  time mode**, and a board column / category group is **never co-visible** with the rail — those drag
+  targets are impossible without re-architecting the shell. **Corrected (owner-approved) to PATH A:**
+  triage where the rail actually lives. **Why:** Path B (a persistent rail beside every mode) would
+  change the board + category layouts and show Inbox **twice** in category mode (rail + group) —
+  redundant, with a big P3/P4 regression surface. Path A honours both locked gestures' intent with no
+  shell re-architecture. **Trade-off:** no "drag a rail card onto a board column / category group" — but
+  the category **chip** delivers the rail→category outcome, and board's own status-drag (P3) handles
+  Inbox tasks in its To-do column. The board-column-drop "stays in rail" question the spec raised is
+  **moot under Path A**.
+- **[Two triage gestures on the TIME-MODE rail, both via existing write paths.]** (1) The rail is a drag
+  **SOURCE**: a rail card dropped on a lane routes through the EXISTING `handleDrop → planDrop →
+  updateTask`, which for an undated/uncategorised dump sets **only `due_date`** → the card leaves the
+  rail. (2) Tapping a rail card opens `TriagePopover` (on the existing `Popover` primitive): **one-tap**
+  date chips (Today / This week / Later, reusing `planDrop`) + a category step (reuses `CategoryPicker`)
+  + an "open full editor" link. **Why:** reuse-before-add — no new writer, no cloned drag, no new picker.
+  **Trade-off:** none.
+- **[Date chips are ONE TAP each (not a form).]** Dating a dump is the most common triage, so each date
+  chip is a single tap that writes and closes. **Why:** the high-frequency action must feel fast.
+  **Trade-off:** the chips are coarse (lane-grained Today/This week/Later, not a date picker) — the full
+  editor link covers a precise date.
+- **[The two triage axes stay INDEPENDENT (same rule as the form's chips).]** A date triage (drag or
+  chip) writes **only `due_date`**; a category triage (drag-less — the chip/picker) writes **only
+  `category_id`** (and is a no-op if unchanged). Never both in one gesture. **Why:** due date = the target
+  day and category = the project area are orthogonal; triage must not silently entangle them. Owner-
+  verified on the row each time. **Trade-off:** triaging both axes is two taps — accepted (honest).
+- **[Rail membership stays DERIVED; triage WRITES the field, the read re-derives the card out.]** Inbox =
+  uncategorised + undated; setting a date and/or category lifts the card by definition. Write-then-reload
+  (no phantom on failure — the card stays in the rail). The lanes' own rows still open the edit form
+  unchanged. **All Tasks untouched; board/category modes unchanged.** No schema.
+
 ## Planning view — P4: category mode (collapsible groups) (2026-06-29)
 
 - **[Category mode = COLLAPSIBLE GROUPS, not the All Tasks drill-in.]** Inbox first, then each
