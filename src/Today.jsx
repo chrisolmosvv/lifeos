@@ -466,7 +466,6 @@ export default function Today({ onOpenAllTasks }) {
           kind={form.kind}
           item={form.item}
           create={form.create}
-          toggle={form.toggle}
           cats={cats}
           inboxColor={inboxColor}
           busy={busy}

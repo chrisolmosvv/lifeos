@@ -19,7 +19,7 @@ import Toast from './kit/Toast'
 export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
   const { events, scheduled, tray, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask, onAddLooseTask } =
     useWeekData(days)
-  const [form, setForm] = useState(null) // {kind,item,create,toggle}
+  const [form, setForm] = useState(null) // {kind,item,create}
   const [toast, setToast] = useState(null)
   const scrollRef = useRef(null)
   const bodyRef = useRef(null)
@@ -59,8 +59,8 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
     dayStartMsAt,
     offAt: offGrid,
     eventsShowOff: true,
-    // Create from the grid → the shared form, preset to the drawn slot (event;
-    // the task/event toggle is available while creating).
+    // Create from the grid → the shared form, preset to the drawn slot (always an
+    // event — Piece 3c; a task reaches the grid via the tray + schedule gesture).
     onCreate: (startIso, endIso) =>
       setForm({ kind: 'event', item: { start_at: startIso, end_at: endIso }, create: true }),
     onMove: (item, startIso, endIso) =>
@@ -169,7 +169,6 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
           kind={form.kind}
           item={form.item}
           create={form.create}
-          toggle={form.toggle}
           cats={cats}
           inboxColor={inboxColor}
           busy={busy}

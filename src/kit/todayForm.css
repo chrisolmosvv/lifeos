@@ -53,32 +53,6 @@
   gap: 0.8rem;
 }
 
-/* The Task/Event toggle (create-on-grid only). */
-.tk-form-toggle {
-  display: inline-flex;
-  align-self: flex-start;
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-  overflow: hidden;
-}
-.tk-form-tog {
-  font: inherit;
-  font-size: 0.85rem;
-  padding: 0.35rem 0.9rem;
-  color: var(--ink-muted);
-  background: none;
-  border: none;
-  border-left: 1px solid var(--rule);
-  cursor: pointer;
-}
-.tk-form-tog:first-child {
-  border-left: none;
-}
-.tk-form-tog.is-on {
-  color: var(--paper);
-  background: var(--ink);
-}
-
 /* --- Fields --------------------------------------------------------------- */
 .tk-form-input,
 .tk-form-notes,

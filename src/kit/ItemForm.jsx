@@ -7,20 +7,21 @@ import './todayForm.css'
 // ItemForm — the ONE shared create/edit form (Phase 7, C3), used by BOTH Today and
 // Calendar. Promoted from the old Today-only TodayForm: same presentation, same
 // writes (onSave(fields, kind) / onDelete), now canonical for both screens so the
-// two never drift. The task/event toggle shows only while CREATING (`toggle`); on
-// edit the type is locked (no event↔task conversion). New items default to event.
-// Type-specific fields live in ItemTypeFields (incl. the disabled all-day + repeat
-// placeholders). The parent wires onSave/onDelete to the existing write paths.
+// two never drift. The TYPE is fixed by the caller: `kind` on create (each entry
+// declares task or event — Piece 3c, the in-form toggle is gone), the item on edit;
+// either way it's locked (no event↔task conversion). Type-specific fields live in
+// ItemTypeFields (incl. the disabled all-day + repeat placeholders). The parent
+// wires onSave/onDelete to the existing write paths.
 //
-// Props: kind, item, create, toggle, cats, inboxColor, busy,
+// Props: kind, item, create, cats, inboxColor, busy,
 //        onSave(fields,kind)=>msg|null, onDelete()=>void, onClose(),
 //        subtasks?, onSubtask?, parentLabel?  (Today-only subtask wiring; optional).
-export default function ItemForm({ kind, item, create, toggle, cats, inboxColor, busy, onSave, onDelete, onClose, subtasks, onSubtask, parentLabel }) {
+export default function ItemForm({ kind, item, create, cats, inboxColor, busy, onSave, onDelete, onClose, subtasks, onSubtask, parentLabel }) {
   const t = item || {}
   // A subtask's own form: no category (it inherits the parent's), no priority, and
   // no nested-subtasks section. One level — enforced here and in the DB.
   const isSubtask = !!t.parent_task_id
-  const [k, setK] = useState(kind) // the effective kind (a toggle can flip it on create)
+  const k = kind // the type, fixed by the caller (create) / the item (edit)
   const [title, setTitle] = useState(t.title || '')
   const [notes, setNotes] = useState(t.notes || '')
   const [categoryId, setCategoryId] = useState(t.category_id ?? null)
@@ -152,12 +153,6 @@ export default function ItemForm({ kind, item, create, toggle, cats, inboxColor,
           </div>
         ) : (
           <div className="tk-form-body">
-            {toggle && (
-              <div className="tk-form-toggle">
-                <button type="button" className={'tk-form-tog' + (k === 'event' ? ' is-on' : '')} onClick={() => setK('event')}>Event</button>
-                <button type="button" className={'tk-form-tog' + (k === 'task' ? ' is-on' : '')} onClick={() => setK('task')}>Task</button>
-              </div>
-            )}
             {isSubtask && <div className="tk-form-parent">↳ under {parentLabel || 'a task'}</div>}
 
             <input
