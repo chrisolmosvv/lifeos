@@ -284,7 +284,6 @@ export default function Today({ onOpenAllTasks }) {
       setForm({
         kind: 'event',
         create: true,
-        toggle: true,
         item: {
           start_at: startIso,
           end_at: endIso,

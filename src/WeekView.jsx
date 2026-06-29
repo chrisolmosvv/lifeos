@@ -34,7 +34,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
 
   // The toolbar "+ Add event" (in CalendarWeek, outside this remount boundary)
   // opens a blank create form on the current week via this ref bridge.
-  if (requestAdd) requestAdd.current = () => setForm({ kind: 'event', item: {}, create: true, toggle: true })
+  if (requestAdd) requestAdd.current = () => setForm({ kind: 'event', item: {}, create: true })
 
   // Week config for the shared useGridDrag: N columns (the day under x re-days a
   // move), a midnight lane (startMin 0), and "off the grid" = outside the scroll.
@@ -62,7 +62,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
     // Create from the grid → the shared form, preset to the drawn slot (event;
     // the task/event toggle is available while creating).
     onCreate: (startIso, endIso) =>
-      setForm({ kind: 'event', item: { start_at: startIso, end_at: endIso }, create: true, toggle: true }),
+      setForm({ kind: 'event', item: { start_at: startIso, end_at: endIso }, create: true }),
     onMove: (item, startIso, endIso) =>
       item.kind === 'event'
         ? onSaveEvent(item.id, { start_at: startIso, end_at: endIso })
@@ -87,7 +87,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
     bandRef,
     days,
     onCreate: (startIso, endIso) =>
-      setForm({ kind: 'event', create: true, toggle: true, item: { all_day: true, start_at: startIso, end_at: endIso } }),
+      setForm({ kind: 'event', create: true, item: { all_day: true, start_at: startIso, end_at: endIso } }),
     onMove: (event, startIso, endIso) => onSaveEvent(event.id, { start_at: startIso, end_at: endIso }),
     onSelect: (event) => setForm({ kind: 'event', item: event, create: false }),
   })
