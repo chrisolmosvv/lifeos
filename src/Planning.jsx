@@ -8,17 +8,16 @@ import { archiveTask, unarchiveBatch, activeOnly } from './archive'
 import TodayTaskRow from './kit/TodayTaskRow'
 import PlanningColumn from './kit/PlanningColumn'
 import PlanningModes from './kit/PlanningModes'
+import PlanningBoard from './kit/PlanningBoard'
 import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
 import './kit/planning.css'
 
-// Planning — the planning view (Phase 7 / T-track). A NEW surface, built on the
-// existing kit and reading through the existing task path. Time mode: a mode toggle
-// (time live; board + category inert "soon" placeholders), an Inbox side rail, and
-// four date-derived lanes. P2 makes the lanes a DRAG TARGET: drag a task between
-// lanes → `planDrop` computes the due_date (+ the one Today-chip flip) → the existing
-// task-update path writes → the re-read re-derives placement. Lanes stay derived;
-// nothing is stored. No schema. (Overdue is drag-FROM only; the rail is display-only.)
+// Planning — the planning view (Phase 7 / T-track). The shell: holds the data + mode
+// toggle and renders one mode's body. TIME (P1/P2) = Inbox rail + four date-derived
+// lanes, drag writes due_date via `planDrop`. BOARD (P3) = delegated to PlanningBoard,
+// a status kanban whose drag writes status. Category is inert. Columns stay DERIVED;
+// writes go through the existing task-update path. No schema.
 const LANES = [
   { id: 'overdue', label: 'Overdue' },
   { id: 'today', label: 'Today' },
@@ -150,9 +149,7 @@ export default function Planning({ onBack }) {
     if (msg) setError(msg)
   }
 
-  // One task line — reuses Today's row (status pill + tap-to-edit, existing paths).
-  // A parent still shows its "x/N" progress; subtasks aren't expanded inline in P1
-  // (tapping the row opens the form, which lists them).
+  // One time-lane line — reuses Today's row (status pill + tap-to-edit, existing paths).
   const renderRow = (t) => (
     <TodayTaskRow
       key={t.id}
@@ -170,14 +167,26 @@ export default function Planning({ onBack }) {
     <div className="pl">
       <div className="pl-top">
         <button className="pl-back" onClick={onBack}>‹ Back to Today</button>
-        <PlanningModes mode={mode} onSetTime={() => setMode('time')} />
+        <PlanningModes mode={mode} onSelect={setMode} liveModes={['time', 'board']} />
       </div>
 
       <h2 className="pl-title">Planning</h2>
 
-      <div className="pl-body">
+      <div className={'pl-body' + (mode === 'board' ? ' is-board' : '')}>
         {tasks === null ? (
           <p className="pl-empty">Loading…</p>
+        ) : mode === 'board' ? (
+          <PlanningBoard
+            tasks={tasks}
+            cats={cats}
+            dispCat={dispCat}
+            inboxColor={inboxColor}
+            byParent={byParent}
+            progressOf={progressOf}
+            today={new Date()}
+            onSetStatus={(id, status) => updateTask(id, { status })}
+            onOpenTask={openTask}
+          />
         ) : (
           <>
             <PlanningColumn

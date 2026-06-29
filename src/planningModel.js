@@ -169,3 +169,34 @@ function addDays(d, n) {
   x.setDate(x.getDate() + n)
   return x
 }
+
+// Group top-level tasks into the board's three status columns (P3). Pure: derives
+// from `status` at render — nothing stored. Optional filter narrows by category
+// (a Set of category_ids to keep; include `null` for Inbox) and/or by time-lane
+// (the same laneOf vocabulary as time mode). Returns { open, in_progress, done }.
+// open/in_progress sort by due soonest (undated last) then title; done sorts by
+// completed_at newest-first (the Done column shows all done, newest at the top).
+export function buildBoard(tasks, today, filter = {}) {
+  const { catIds = null, lane = null } = filter
+  const cols = { open: [], in_progress: [], done: [] }
+
+  for (const t of tasks || []) {
+    if (t.parent_task_id) continue // top-level only
+    if (catIds && !catIds.has(t.category_id ?? null)) continue
+    if (lane && laneOf(t, today) !== lane) continue
+    const s = t.status === 'in_progress' || t.status === 'done' ? t.status : 'open'
+    cols[s].push(t)
+  }
+
+  const byDue = (a, b) => {
+    const au = a.due_date ? 0 : 1
+    const bu = b.due_date ? 0 : 1
+    if (au !== bu) return au - bu
+    if (a.due_date && b.due_date && a.due_date !== b.due_date) return a.due_date < b.due_date ? -1 : 1
+    return a.title.localeCompare(b.title)
+  }
+  cols.open.sort(byDue)
+  cols.in_progress.sort(byDue)
+  cols.done.sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''))
+  return cols
+}
