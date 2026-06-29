@@ -69,7 +69,7 @@ export default function ItemForm({ kind, item, create, toggle, cats, inboxColor,
         due_date: due || null,
         scheduled_start: ss,
         scheduled_end: se,
-        time_bucket: t.time_bucket || 'Today',
+        time_bucket: t.time_bucket || 'Someday',
       }
     } else if (allDay) {
       if (!startDate) return setErr('Pick a date.')
