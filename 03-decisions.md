@@ -9,6 +9,41 @@
 
 ---
 
+## Planning view — P4: category mode (collapsible groups) (2026-06-29)
+
+- **[Category mode = COLLAPSIBLE GROUPS, not the All Tasks drill-in.]** Inbox first, then each
+  top-level category as a collapsible group, recursively nested (3-level tree); expanding reveals a
+  category's own tasks then its sub-category groups; many open at once. **Why:** a scannable overview
+  beats one-branch-at-a-time navigation, and it's the presentation that replaces All Tasks. **Trade-off:**
+  a deep tree can get tall — the body scrolls (calm wins over zero-scroll), groups collapsed by default.
+- **[COVERAGE PARITY WITH ALL TASKS IS BY CONSTRUCTION — and THIS is the gate that licenses P6.]**
+  `PlanningGroup` reuses `allTasksModel` **verbatim** (`subtreeCount` / `inboxCount` / `ownTasks` /
+  `orderTasks` / `childrenOf`) on the **same task read** Planning already does. So the task SET, the
+  whole-sub-tree active counts, the order (due-soonest, undated at the bottom) and the show-done
+  behaviour are identical to All Tasks — not a re-implementation that could subtly drift. **Why:** P6
+  may only retire All Tasks once category mode is a proven full replacement; reusing the exact functions
+  makes "shows the same thing" true by construction, not by testing luck. Owner-confirmed side-by-side
+  (counts + task set + order identical, incl. Inbox). **Trade-off:** none — this is the safe path.
+  (Bonus: category mode also resolves P1's "categorised-but-undated task is invisible in time mode" gap —
+  those tasks appear here under their category, exactly as in All Tasks.)
+- **[Subtask inline-expand + per-group "+ add" are INCLUDED in P4 (not deferred), to close the only
+  capability gaps.]** Subtasks nest under their parent as expandable rows (reusing `TodayTaskRow`'s
+  `isSub`/`subLabel`); each expanded group has a "+ add a task" that opens the shared form prefilled with
+  that category + `time_bucket:'This Week'` (matching All Tasks), via the EXISTING insert path. **Why:**
+  P6 can't retire All Tasks if a capability is lost; both reuse paths Planning already had, so including
+  them now is cleaner than a coverage gap. **Trade-off:** "+ add" is a create (slightly beyond
+  "render-forward"), accepted because it reuses the existing form/insert path — no new writer.
+- **[Rows reuse `TodayTaskRow`; the one allowed write is the existing status-pill / tap-to-edit path.]**
+  Same as time mode. Show-done off by default; counts always exclude done. No drill-in, no
+  recategorise-drag (that's P5), no time/board/rail change. **All Tasks stays FULLY INTACT** (untouched).
+- **[The verified time-mode body was extracted to `kit/PlanningTime.jsx` as a PURE VERBATIM MOVE.]**
+  Adding a third mode pushed `Planning.jsx` over the ~250 rule, so the P1/P2 time code (lanes render +
+  `planDrop` drag) moved out unchanged, making `Planning.jsx` a thin three-mode shell (206 lines). **Why:**
+  split rather than balloon; a symmetric shell (PlanningTime / PlanningBoard / PlanningCategory) is the
+  honest structure now. **Trade-off:** it touched verified code — mitigated by shipping in the same commit
+  and RE-EXERCISING time-drag + board-drag in verify (f) (owner re-confirmed both still write), so any
+  move regression reverts as one piece.
+
 ## Planning view — P3: board mode (status kanban) (2026-06-29)
 
 - **[Board mode = a kanban by STATUS — three columns To do / In progress / Done.]** Mapped to the

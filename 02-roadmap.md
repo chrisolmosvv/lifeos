@@ -454,6 +454,24 @@ P2 time-drag → P3 board → P4 category → P5 triage → P6 fold/retire All T
   `kit/planning.css`. **No schema, no migration, no change to any existing screen.** Owner-verified on
   Mac (a–h, incl. board-complete showing done in Today + All Tasks, the completed_at round-trip,
   forced-failure no-phantom, time mode intact behind the toggle). Save point `ac1f9a2`.
+- ✅ **P4 — category mode (collapsible groups).** The category toggle goes live: the backlog grouped by
+  category as **collapsible groups** (NOT All Tasks' drill-in) — Inbox first, then each top-level category,
+  recursively nested (3-level); expand reveals a category's own tasks (ordered, subtasks nested +
+  expandable) then its sub-category groups, plus a per-group **"+ add"**; many open at once. **Coverage
+  parity with All Tasks is BY CONSTRUCTION — the gate that licenses P6:** `PlanningGroup` reuses
+  `allTasksModel` **verbatim** (`subtreeCount`/`inboxCount`/`ownTasks`/`orderTasks`/`childrenOf`) on the
+  same read, so the task set, whole-subtree active counts, order (due-soonest, undated bottom) and
+  show-done match All Tasks exactly (owner-confirmed side-by-side). Also resolves P1's "categorised-but-
+  undated invisible in time mode" gap. **Included (not deferred):** subtask inline-expand + per-group
+  "+ add" (existing form/insert path, prefilled category + 'This Week' to match All Tasks). Rows reuse
+  `TodayTaskRow` (status pill + tap-to-edit = the one existing-path write); show-done off by default,
+  counts exclude done. **All Tasks stays FULLY INTACT (untouched);** no drill-in, no recategorise drag
+  (P5), no time/board/rail change, no schema. **Structure:** the verified time-mode body was extracted to
+  `kit/PlanningTime.jsx` as a **pure verbatim move** (zero behaviour change), making `Planning.jsx` a thin
+  three-mode shell (206 lines) — verify (f) re-exercised time-drag + board-drag to catch any move
+  regression. New: `kit/PlanningTime.jsx`, `kit/PlanningCategory.jsx`, `kit/PlanningGroup.jsx`; changed:
+  `Planning.jsx`, `kit/PlanningModes.jsx` (`liveModes` adds 'category'), `kit/planning.css`. Owner-verified
+  on Mac (a–f, incl. side-by-side parity + the post-extraction drag re-check). Save point `4010f7a`.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →

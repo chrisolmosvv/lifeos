@@ -33,6 +33,36 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Planning view, P4 — category mode (collapsible groups). SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–f.) — RENDER-FORWARD + the "+add" insert; All Tasks INTACT.
+WHAT CHANGED: the category toggle goes live — the backlog grouped by category as **collapsible groups**.
+- Inbox first, then each top-level category, recursively nested (3-level); expand reveals own tasks
+  (ordered, subtasks nested + expandable) then sub-category groups; per-group "+ add"; many open at once.
+- **Coverage parity with All Tasks is BY CONSTRUCTION — the gate that licenses P6.** `PlanningGroup`
+  reuses `allTasksModel` VERBATIM (`subtreeCount`/`inboxCount`/`ownTasks`/`orderTasks`/`childrenOf`) on
+  the same read → identical task set, whole-subtree active counts, order, show-done. (Also resolves P1's
+  categorised-but-undated-invisible gap.)
+- Included (not deferred): subtask inline-expand + per-group "+ add" (existing form/insert path,
+  prefilled category + 'This Week' to match All Tasks). Rows reuse `TodayTaskRow` (status pill +
+  tap-to-edit = the one existing-path write). Show-done off by default; counts exclude done.
+- **All Tasks FULLY INTACT (untouched).** No drill-in, no recategorise drag (P5), no time/board/rail
+  change, no schema.
+- STRUCTURE: extracted the verified time-mode body to `kit/PlanningTime.jsx` as a PURE VERBATIM MOVE
+  (zero behaviour change) → `Planning.jsx` is a thin three-mode shell (206 lines).
+FILES TOUCHED: NEW `src/kit/PlanningTime.jsx`, `src/kit/PlanningCategory.jsx`, `src/kit/PlanningGroup.jsx`;
+changed `src/Planning.jsx` (thin shell), `src/kit/PlanningModes.jsx` (liveModes adds 'category'),
+`src/kit/planning.css`.
+HOW TO VERIFY: (done — owner-verified on Mac) open Planning → Category. (a) Inbox first + collapsible
+groups, multiple open. (b) a category's count == its All Tasks count (subtree, excl. done) — spot-check
+2-3 + Inbox. (c) open a category here and in All Tasks: same tasks, same order. (d) show-done off by
+default; on → done greyed, counts unchanged. (e) "+ add" files into the right category (check the row).
+(f) RE-EXERCISED after the time-code move: time-lane drag + board-status drag both still WRITE; All Tasks
+untouched; Today/Calendar/Settings unchanged.
+KNOWN GAPS / RISKS: none for coverage (parity by construction). Recategorise drag + the Inbox rail going
+interactive are P5. The Done-uncapped note is board-only (P3), not category.
+NEXT: Planning P5 — triage gestures (recategorise drag; the Inbox rail goes interactive).
+FOR THE CHECKER: none — no schema, no migration (reads existing columns + reuses existing counts; the
+"+ add" is the existing insert path). Save point `4010f7a`.
+
 ### 2026-06-29 — Planning view, P3 — board mode (status kanban). SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–h.) — WRITES status (trigger owns completed_at).
 WHAT CHANGED: the board toggle goes live — a kanban by **status**.
 - Three columns **To do** (`open`) / **In progress** (`in_progress`) / **Done** (`done`), top-level
