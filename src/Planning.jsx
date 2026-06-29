@@ -2,25 +2,23 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
-import { buildPlanning } from './planningModel'
+import { buildPlanning, planDrop } from './planningModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, unarchiveBatch, activeOnly } from './archive'
 import TodayTaskRow from './kit/TodayTaskRow'
 import PlanningColumn from './kit/PlanningColumn'
+import PlanningModes from './kit/PlanningModes'
 import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
 import './kit/planning.css'
 
-// Planning — the planning view (Phase 7 / T-track, P1). A NEW surface, built on the
-// existing kit and reading through the existing task path. P1 is RENDER-ONLY: a mode
-// toggle (time live; board + category inert "soon" placeholders), an Inbox side rail,
-// and time mode's four date-derived lanes. No drag, no new writes — the only writes
-// are the reused row's status pill + tap-to-edit (the existing task paths). No schema.
-const MODES = [
-  { id: 'time', label: 'Time' },
-  { id: 'board', label: 'Board' },
-  { id: 'category', label: 'Category' },
-]
+// Planning — the planning view (Phase 7 / T-track). A NEW surface, built on the
+// existing kit and reading through the existing task path. Time mode: a mode toggle
+// (time live; board + category inert "soon" placeholders), an Inbox side rail, and
+// four date-derived lanes. P2 makes the lanes a DRAG TARGET: drag a task between
+// lanes → `planDrop` computes the due_date (+ the one Today-chip flip) → the existing
+// task-update path writes → the re-read re-derives placement. Lanes stay derived;
+// nothing is stored. No schema. (Overdue is drag-FROM only; the rail is display-only.)
 const LANES = [
   { id: 'overdue', label: 'Overdue' },
   { id: 'today', label: 'Today' },
@@ -36,6 +34,7 @@ export default function Planning({ onBack }) {
   const [mode, setMode] = useState('time')
   const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
+  const [draggingId, setDraggingId] = useState(null)
 
   async function load() {
     const [taskRes, catRes] = await Promise.all([
@@ -137,6 +136,20 @@ export default function Planning({ onBack }) {
   const lanes = buildPlanning(tasks, new Date())
   const openTask = (t) => setForm({ kind: 'task', item: t, create: false })
 
+  // Drop a dragged card on a lane: planDrop decides the patch (or null = no-op /
+  // rejected, e.g. Overdue or the same lane). Write-then-reload via the EXISTING
+  // task path — on failure nothing moves and the error line shows (no phantom).
+  const handleDrop = async (lane) => {
+    const id = draggingId
+    setDraggingId(null)
+    const t = (tasks || []).find((x) => x.id === id)
+    if (!t) return
+    const patch = planDrop(t, lane, new Date())
+    if (!patch) return
+    const msg = await updateTask(id, patch)
+    if (msg) setError(msg)
+  }
+
   // One task line — reuses Today's row (status pill + tap-to-edit, existing paths).
   // A parent still shows its "x/N" progress; subtasks aren't expanded inline in P1
   // (tapping the row opens the form, which lists them).
@@ -157,20 +170,7 @@ export default function Planning({ onBack }) {
     <div className="pl">
       <div className="pl-top">
         <button className="pl-back" onClick={onBack}>‹ Back to Today</button>
-        <div className="pl-modes" role="tablist">
-          {MODES.map((m) => (
-            <button
-              key={m.id}
-              className={'pl-mode' + (mode === m.id ? ' is-active' : '')}
-              onClick={m.id === 'time' ? () => setMode('time') : undefined}
-              disabled={m.id !== 'time'}
-              title={m.id === 'time' ? undefined : 'Coming soon'}
-            >
-              {m.label}
-              {m.id !== 'time' && <span className="pl-soon">soon</span>}
-            </button>
-          ))}
-        </div>
+        <PlanningModes mode={mode} onSetTime={() => setMode('time')} />
       </div>
 
       <h2 className="pl-title">Planning</h2>
@@ -200,6 +200,12 @@ export default function Planning({ onBack }) {
                   items={lanes[lane.id]}
                   emptyText="—"
                   renderRow={renderRow}
+                  draggable
+                  draggingId={draggingId}
+                  onDragStartTask={(t) => setDraggingId(t.id)}
+                  onDragEndTask={() => setDraggingId(null)}
+                  dropLane={lane.id === 'overdue' ? undefined : lane.id}
+                  onDropTask={handleDrop}
                 />
               ))}
             </div>

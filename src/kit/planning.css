@@ -128,6 +128,20 @@
   color: var(--accent);
 }
 
+/* --- P2 drag: cards are drag sources, lanes (not Overdue) are drop targets. --- */
+.pl-card {
+  cursor: grab;
+}
+.pl-card.is-dragging {
+  opacity: 0.45;
+}
+/* A calm "drop here" wash + accent rule on the hovered lane. */
+.pl-lane.is-drop-over {
+  background: rgba(200, 100, 61, 0.05); /* terracotta, very faint */
+  box-shadow: inset 0 0 0 1px var(--accent);
+  border-radius: 4px;
+}
+
 .pl-empty {
   font-family: var(--font-serif);
   font-style: italic;

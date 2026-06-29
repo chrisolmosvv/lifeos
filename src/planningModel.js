@@ -28,6 +28,31 @@ function scheduledDay(t) {
 function midnight(d) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate())
 }
+// A local Date as a 'YYYY-MM-DD' string (the spine's due_date shape, no tz drift).
+function dateStr(d) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+// The upcoming Sunday (this Mon→Sun week's end) at local midnight.
+function endOfWeek(today) {
+  const sun = startOfWeek(today)
+  sun.setDate(sun.getDate() + 6)
+  return sun
+}
+
+// Which lane a single top-level, not-done task falls in — the strict precedence
+// (see buildPlanning). Returns 'overdue' | 'today' | 'thisWeek' | 'later', or null
+// when it has no date and isn't Today-chipped (off the board → maybe the rail).
+export function laneOf(task, today) {
+  const eff = dueLocal(task.due_date) || scheduledDay(task)
+  const todayMid = midnight(today)
+  const weekEnd = endOfWeek(today)
+  if (eff && eff < todayMid) return 'overdue'
+  if ((eff && isSameDay(eff, today)) || task.time_bucket === 'Today') return 'today'
+  if (eff && eff <= weekEnd) return 'thisWeek'
+  if (eff) return 'later'
+  return null
+}
 
 // Sort by effective day soonest-first, then priority, then title. Tasks with no
 // effective day (a Today-chipped task with no date) sink under the dated ones.
@@ -59,14 +84,7 @@ function byDayThenPriority(a, b) {
 // (the app's weeks run Monday→Sunday via startOfWeek), so Planning stays in step
 // with the Calendar.
 export function buildPlanning(tasks, today) {
-  const todayMid = midnight(today)
-  const weekEnd = startOfWeek(today)
-  weekEnd.setDate(weekEnd.getDate() + 6) // Monday + 6 = the upcoming Sunday (midnight)
-
-  const overdue = []
-  const todayLane = []
-  const thisWeek = []
-  const later = []
+  const lists = { overdue: [], today: [], thisWeek: [], later: [] }
   const inbox = []
 
   for (const t of tasks || []) {
@@ -75,21 +93,17 @@ export function buildPlanning(tasks, today) {
 
     const eff = dueLocal(t.due_date) || scheduledDay(t)
     const entry = { task: t, _eff: eff }
+    const lane = laneOf(t, today)
 
-    if (eff && eff < todayMid) {
-      overdue.push(entry)
-    } else if ((eff && isSameDay(eff, today)) || t.time_bucket === 'Today') {
-      todayLane.push(entry)
-    } else if (eff && eff <= weekEnd) {
-      thisWeek.push(entry)
-    } else if (eff) {
-      later.push(entry)
+    if (lane) {
+      lists[lane].push(entry)
     } else if (t.category_id == null) {
       // No date, not Today-chipped, uncategorised → the Inbox rail.
       inbox.push(entry)
     }
     // else: dated-less but categorised → the undated backlog (P1 shows it nowhere).
   }
+  const { overdue, today: todayLane, thisWeek, later } = lists
 
   const unwrap = (list) => list.sort(byDayThenPriority).map((x) => x.task)
   return {
@@ -101,4 +115,57 @@ export function buildPlanning(tasks, today) {
       .sort((a, b) => a.task.title.localeCompare(b.task.title))
       .map((x) => x.task),
   }
+}
+
+// What a lane-to-lane drag should WRITE (P2). Pure: given the dragged task, the
+// lane it was dropped on, and today, it returns the minimal patch for the existing
+// task-update path — or `null` for a no-op / rejected drop (so the caller writes
+// nothing and the card snaps back). Lanes stay DERIVED: this only writes due_date
+// (and, in one surgical case, the hidden Today-chip — see below); the re-read then
+// re-derives placement.
+//
+// Rules:
+//  - Overdue is NOT a drop target (you don't plan into the past) → null.
+//  - Dropping on the lane the task is already in → null (no yank, no pointless write).
+//  - Today → due_date = today.
+//  - This week → keep the date if it's already within this week (after today through
+//    Sunday); otherwise due_date = the upcoming Sunday.
+//  - Later → keep the date if it's already beyond Sunday; otherwise due_date = the
+//    Monday after this week.
+//  - THE ONE BUCKET TOUCH: a task that is Today-chipped (time_bucket==='Today')
+//    stays pinned to the Today lane for ANY non-past date, so setting due_date alone
+//    can't move it — it would snap back. So when a chipped task is dropped into This
+//    week or Later, also flip time_bucket 'Today' → 'This Week'. Never on a drop onto
+//    Today, never for a dated-today / non-chipped task.
+export function planDrop(task, target, today) {
+  if (target === 'overdue') return null
+  if (laneOf(task, today) === target) return null
+
+  const due = task.due_date || null // 'YYYY-MM-DD' — string compare == date compare
+  const todayStr = dateStr(today)
+  const sundayStr = dateStr(endOfWeek(today))
+  const nextMonStr = dateStr(addDays(endOfWeek(today), 1))
+
+  let newDue = due
+  if (target === 'today') {
+    newDue = todayStr
+  } else if (target === 'thisWeek') {
+    const inWeek = due && due > todayStr && due <= sundayStr
+    if (!inWeek) newDue = sundayStr
+  } else if (target === 'later') {
+    const isLater = due && due > sundayStr
+    if (!isLater) newDue = nextMonStr
+  }
+
+  const patch = {}
+  if (newDue !== due) patch.due_date = newDue
+  if ((target === 'thisWeek' || target === 'later') && task.time_bucket === 'Today')
+    patch.time_bucket = 'This Week'
+  return Object.keys(patch).length ? patch : null
+}
+
+function addDays(d, n) {
+  const x = new Date(d)
+  x.setDate(x.getDate() + n)
+  return x
 }
