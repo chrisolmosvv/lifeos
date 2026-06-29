@@ -819,7 +819,7 @@ OPEN (Layer 4): how Gym/Sleep/Body coexist under the Health banner — gates lay
 
 ---
 
-## 🍎 Track F — Food: Cookbook & Nutrition   ← NEXT (full plan: 11-food-nutrition.md)
+## 🍎 Track F — Food: Cookbook & Nutrition   (full plan: 11-food-nutrition.md)
 
 The first pillar outside Health. A Nutrition logger (meal-by-meal cal+macro ledger
 vs owner-set goals) + a typographic Cookbook (recipe library, cooking mode, timers),
@@ -856,8 +856,13 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
 - ✅ F8 — Recipe import (AI): paste/URL → fetch → Gemini → auto-match + flag → review → save.
        recipe-import Edge Function (JSON-LD-first extract + Gemini house-schema); conservative
        comma-boundary matching; reuses food-search + the F7 editor/write. (commits 904c18e, 0c456c5)
-- ⬜ F9 — Cook→log bridge: "Cook this" → staged draft (servings/slot/swap) → log snapshot.  ← NEXT
-- ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
+- ✅ F9 — Cook→log bridge: "Log this meal" → inline staging (servings + slot + live preview) → a
+       frozen macro snapshot (recipeMacros.perServing × servings) + recipe_id, entry_source
+       'recipe_cook' into food_log_entries; stamps recipes.last_cooked_at (forward-only; undo
+       restores prior). Cook-only swap DROPPED. Lights the ledger cook entry + the "cooked" sort.
+       Two-track: db/29 last_cooked_at (own commit, run live) → src → docs. (commits f20d1fc db,
+       bcf9fc9 src)
+- ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.  ← NEXT
 - ⬜ F11 — Polish + audit to the design laws.
 
 OPEN: caching live API hits into food_items (the cache-on-select write) lands at F6, not F2
@@ -883,6 +888,29 @@ tasks into the core. We do not touch the spine.
 ---
 
 ## Session notes (most recent on top)
+- **2026-06-29 — Track F — Food F9 — the cook→log bridge (two-track; commits f20d1fc db + bcf9fc9 src).** The piece that
+  finally joins the two halves: a cooked recipe → a logged meal in the day's ledger. The FIRST schema change since
+  F1 — checker-gated: `db/29_recipe_last_cooked.sql` adds ONE nullable column `recipes.last_cooked_at` (additive, RLS
+  inherited, no backfill), its own commit, run live on Frankfurt + cache-reloaded + device-verified BEFORE any src.
+  Everything else REUSES existing columns — the cook entry is a `food_log_entries` row with the 7-number snapshot,
+  `recipe_id` set, `entry_source='recipe_cook'` (already allowed by the F1 CHECK), `amount`=servings, `unit`='serving',
+  `food_item_id` null. NEW: `LogMealPanel` (ONE shared inline staging panel — servings stepper + slot defaulting to
+  time-of-day + a live `recipeMacros.perServing × servings` preview + the "~ N unestimated" honesty note; two
+  triggers: the recipe page's "Log this meal" + cook mode's "Done cooking"). `useCookLog` COMPOSES the F6
+  `logEntry`/`removeEntry` primitives + a small `stampLastCooked` with the F6 optimistic/undo/error-toast pattern
+  (NOT a forked write path). THE UNDO RULE: capture the PRIOR `last_cooked_at`, restore it on undo (the earlier real
+  date, NOT null); ALL-OR-NOTHING — entry first, then stamp; a stamp failure rolls the entry back, so a failed log
+  leaves nothing. The snapshot is FROZEN (later recipe edits never rewrite logged history) and stores only MATCHED
+  ingredients (an approximate recipe's logged kcal is a known undercount; the staging note is the honesty). Wired:
+  the ledger cook entry (title + kcal; expand → "View recipe", a cross-tab Log→Cookbook jump via FoodPage); the
+  EditEntryPanel recipe variant (edit SERVINGS not grams, no swap — the arithmetic rescale falls out of
+  entryToFood/entryMacros); the "cooked" sort (last_cooked_at desc, never-cooked after, faintly tagged; grid refreshes
+  on return); the recipe-page "Last cooked <date>" line. `slotForHour` moved to `foodCalc` (one definition).
+  Owner-verified by row on the dev server: snapshot = preview, reload-persists, undo-restores-prior (tested on an
+  already-cooked recipe), forced-failure left no entry + last_cooked_at unchanged, servings-rescale arithmetic, the
+  cooked sort, the cross-tab link. RECONCILES: cook-only ingredient swap DROPPED (log then edit); last_cooked_at
+  FORWARD-ONLY (stored, not derived — undo restores prior, a LATER ledger-delete does NOT roll it back). **NEXT:
+  F10 — alcohol-lite: drinks (units + kcal) via the existing is_alcohol/alcohol_units flags, daily/weekly count.**
 - **2026-06-29 — Track F — Food F8 — recipe import, the ONE AI touch (two-track; commits 904c18e fn + 0c456c5 src).**
   Paste text OR a URL → a recipe pre-fills the F7 editor (the review screen) → spot-check → save via the F7 create
   path. New private Edge Function `recipe-import` (verify_jwt=true, CORS like food-search): for a URL, server-side

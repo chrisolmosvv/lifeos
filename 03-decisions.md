@@ -9,6 +9,38 @@
 
 ---
 
+## Food — F9: the cook→log bridge (2026-06-29)
+
+- **ONE new column: `recipes.last_cooked_at` (timestamptz, nullable) — the only schema change since
+  F1.** Every other field the cook-log row needs already exists on `food_log_entries` (`recipe_id`,
+  `amount`, `unit`, the 7 snapshot numbers, `food_item_id` nullable), and `entry_source='recipe_cook'`
+  was already permitted by the F1 CHECK. Two-track: its own checker-gated `db/29` commit, run live +
+  cache-reloaded + device-verified before any src. **Why:** the cooked-sort + the "last cooked" line
+  need a stored cook signal; everything else reuses the spine of the Food module. **Trade-off:** none.
+- **`last_cooked_at` is FORWARD-ONLY (stored, not derived).** Set when a cook is logged; the immediate
+  undo restores the PRIOR value (the earlier real date, NOT null); a LATER ledger-delete of a cook
+  entry does NOT roll it back. **Why:** deriving `max(entry_date where recipe_cook)` would silently
+  revert on delete and change the meaning; "last cooked" is a forward fact. **Trade-off:** a cook
+  entry deleted long after the fact leaves `last_cooked_at` slightly stale — an accepted soft signal
+  for V1.
+- **The snapshot stores only MATCHED ingredients (unestimated → 0).** An approximate recipe's logged
+  kcal is therefore a known undercount; the honesty lives in the staging note ("~ N unestimated —
+  macros approximate"), NOT a per-entry approximate flag. **Why:** the ledger stays calm; the
+  approximation is surfaced at log-time + on the recipe page, where it's actionable. **Trade-off:**
+  no after-the-fact "this entry was approximate" mark in the ledger.
+- **Cook-only ingredient swap DROPPED (reverses an F0 float).** F0 floated a per-ingredient swap in
+  the cook→log confirm step; F9 omits it — log the meal, then edit the entry (servings/slot/remove)
+  if needed. **Why:** the swap UI added confirm-step weight for a rare case, and a logged cook is a
+  recipe (not a food) so a food-swap doesn't fit. **Trade-off:** a one-off substitution isn't
+  captured per-cook; the recipe itself is the place to change ingredients.
+- **ONE shared inline staging panel, two triggers; the write reuses the F6 seam.** `LogMealPanel`
+  serves both "Log this meal" (recipe page) and "Done cooking" (cook mode). `useCookLog` composes the
+  F6 `logEntry`/`removeEntry` primitives + a small `stampLastCooked` with the F6 optimistic/undo/
+  error-toast pattern, all-or-nothing on failure. **Why:** one staging surface, no forked write path,
+  history never rewritten by later recipe edits (frozen snapshot). **Trade-off:** the cook-log fires
+  from the Cookbook tab (no live ledger to mutate there) — the entry appears when the Log tab
+  refetches; "optimism" is the toast + the live "last cooked" line.
+
 ## Food — F8: recipe import (the one AI touch in V1) (2026-06-29)
 
 - **The Gemini boundary.** Recipe import is the ONLY V1 AI call, on the FREE key (the shared

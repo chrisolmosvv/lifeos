@@ -56,6 +56,46 @@ These cost real time; don't relearn them.
 
 ## Log
 
+### 2026-06-29 — Track F — F9: the cook→log bridge. TWO-TRACK (db column + src). (Dev-server verified, by-row.)
+WHAT CHANGED:
+- The first schema change since F1: `db/29_recipe_last_cooked.sql` adds ONE nullable column
+  `recipes.last_cooked_at` (additive, RLS inherited, no backfill). Checker-approved → run live on
+  Frankfurt + `notify pgrst,'reload schema'` + device-verified, its OWN commit, BEFORE any src.
+- "Log this meal" now writes a real cook entry: a `food_log_entries` row with the FROZEN snapshot
+  (`recipeMacros.perServing × servings`), `recipe_id` set, `entry_source='recipe_cook'`,
+  `amount`=servings, `unit`='serving', `food_item_id` null — and stamps `recipes.last_cooked_at`.
+- ONE shared inline staging panel (servings + slot defaulting to time-of-day + live preview + a
+  "~ N unestimated" note), opened from BOTH the recipe page's "Log this meal" and cook mode's
+  "Done cooking". Optimistic toast + undo (restores the PRIOR last_cooked_at, not null) +
+  error-toast; all-or-nothing on failure (entry first, then stamp; stamp failure rolls the entry back).
+- Wired the rest: the ledger cook entry (title + kcal; expand → "View recipe" cross-tab jump); the
+  EditEntryPanel recipe variant (edit servings not grams, no swap); the "cooked" sort (last_cooked_at
+  desc, never-cooked after, faintly tagged; grid refreshes on return); the recipe-page "Last cooked
+  <date>" line. NO forked write path — reuses the F6 logEntry/removeEntry primitives.
+FILES TOUCHED: db/29_recipe_last_cooked.sql (commit f20d1fc). src/food/ NEW LogMealPanel.jsx,
+  useCookLog.js; recipeWrite.js (+stampLastCooked), recipeLoad.js (+last_cooked_at), foodCalc.js
+  (+slotForHour export), RecipePage.jsx, CookMode.jsx, Cookbook.jsx, RecipeCard.jsx,
+  EditEntryPanel.jsx, LogPage.jsx, DayView.jsx, MealLedger.jsx, FoodPage.jsx, cookbook.css,
+  foodLog.css (commit bcf9fc9).
+HOW TO VERIFY (done, by row): logged a cook → the row's 7 numbers = the panel preview, recipe_id
+  set, entry_source='recipe_cook', amount=servings, unit='serving', food_item_id null; last_cooked_at
+  ≈ now; reload-persists. UNDO on an already-cooked recipe restored the PRIOR date (not null) + the
+  entry gone. Forced-failure (network offline) → error toast, NO entry written, last_cooked_at
+  unchanged (all-or-nothing). Editing servings N→M rescaled the snapshot arithmetically
+  (new = old / N × M), unit stayed 'serving', no swap button. The cooked sort + cross-tab "View
+  recipe" jump confirmed.
+  Queries: select ... from food_log_entries where entry_source='recipe_cook';
+  select id,title,last_cooked_at from recipes order by last_cooked_at desc nulls last, created_at desc;
+KNOWN GAPS / RISKS: `last_cooked_at` is FORWARD-ONLY — a LATER ledger-delete of a cook entry does NOT
+  roll it back (only the immediate undo does); an accepted soft signal for V1. An approximate recipe's
+  logged kcal is a known undercount (snapshot stores only matched ingredients; the staging note is the
+  honesty). Cook-only ingredient swap was DROPPED (log then edit).
+NEXT: F10 — alcohol-lite: drinks (units + kcal) via the existing is_alcohol/alcohol_units flags on
+  food_log_entries, daily/weekly count. No new table.
+FOR THE CHECKER: db/29 was the gated piece (single additive nullable column; reviewed + approved
+  before src). For src, the things to weigh: the all-or-nothing ordering + the undo restoring the
+  prior timestamp in useCookLog; the EditEntryPanel servings-rescale reusing entryToFood/entryMacros.
+
 ### 2026-06-29 — Track F — F8: recipe import (the one AI touch). TWO-TRACK (function + src). (Dev-server verified on messy inputs.)
 WHAT CHANGED:
 - New private Edge Function `recipe-import` (verify_jwt=true, CORS like food-search): paste/URL →
