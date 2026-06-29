@@ -9,6 +9,35 @@
 
 ---
 
+## Planning view — P6: fold in / retire All Tasks (2026-06-29)
+
+- **[All Tasks is RETIRED; Planning's category mode is now the sole backlog home.]** Today's bottom-left
+  box opens Planning ("Planning · N"); the old All Tasks screen + its route are gone. **Why:** P4 made
+  category mode a coverage-identical replacement (it reuses `allTasksModel` verbatim), so two backlog
+  surfaces was redundant. **Trade-off:** the drill-in navigation is gone — replaced by collapsible groups
+  (the deliberate P4 presentation); the same tasks/counts remain reachable.
+- **[Run as STAGED replace-then-delete — never delete a live surface in one step.]** **Stage 1
+  (`18c5498`) — re-point (replace):** Today's box → Planning, the redundant parallel "Planning →" link +
+  its wrapper removed, `onOpenAllTasks` dropped; the `'alltasks'` route + `AllTasks` import were KEPT
+  present-but-unreachable. **Owner ran a live PARITY GATE** here — side-by-side category mode vs the still-
+  present old screen (via a throwaway uncommitted `#alltasks` hash toggle, reverted before Stage 2),
+  across multiple categories + Inbox + show-done. **Stage 2 (`adc6b10`) — prove-dead deletion**, only on
+  the owner's parity OK. **Why:** the first deletion on this surface; the same conservative pattern as the
+  C4 Calendar-cluster retirement — prove the replacement live before removing the original. **Trade-off:**
+  two commits + a gate instead of one — accepted; it's what makes a deletion safe and one-step revertible.
+- **[The dead set was proven a CLOSED ISLAND before deletion.]** `grep` showed the only references to
+  `AllTasks` were `LoggedIn`'s import + the `'alltasks'` route; `CategoryDrillRow.jsx` and
+  `allTasksKit.css` had **zero importers outside the dead set** (each other + `AllTasks`). **Deleted (3):**
+  `src/AllTasks.jsx`, `src/kit/CategoryDrillRow.jsx`, `src/kit/allTasksKit.css`. **Why:** delete only a
+  provably-closed set; no live code path could touch them. **Trade-off:** none.
+- **[`allTasksModel.js` was DELIBERATELY KEPT — the critical boundary.]** It is NOT a screen file: it's the
+  shared backlog logic, still imported by `Today` (`activeTotal`) and by category mode
+  (`PlanningCategory` + `PlanningGroup`, the very reuse that licensed this retirement). Only the All Tasks
+  *screen* + its *screen-specific* kit (`CategoryDrillRow`, `allTasksKit.css`) retired. **Why:** deleting
+  the model would have broken Today and category mode. **Trade-off:** none — this is the spine-protecting
+  call. **🎉 Planning view P1–P6 complete:** three modes + rail triage live, All Tasks retired, its backlog
+  fully served by category mode. (Only P7 — Marty/brief — remains on the Planning track.)
+
 ## Planning view — P5: triage — the Inbox rail goes interactive (2026-06-29)
 
 - **[⚠️ SCOPE CORRECTION at recon — the original P5 premise was WRONG; do NOT reintroduce it.]** The P5

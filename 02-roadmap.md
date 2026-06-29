@@ -491,6 +491,28 @@ P2 time-drag → P3 board → P4 category → P5 triage → P6 fold/retire All T
   tap→triage), `Planning.jsx` (thread `cats`), `kit/planning.css`. **All Tasks untouched; board/category
   unchanged; no schema.** Owner-verified on Mac (a–h, incl. axes-independent on the row + forced-failure
   no-phantom). Save point `54ec33a`.
+- ✅ **P6 — fold in / retire All Tasks** *(the first deletion on this surface; staged replace-then-delete,
+  two commits with a live parity gate between).* Planning's **category mode is now the sole backlog home**;
+  the old All Tasks screen + route are gone. **Stage 1 — re-point (`18c5498`):** Today's bottom-left box
+  → Planning ("Planning · N", N still = `activeTotal`); removed the redundant parallel "Planning →" link +
+  wrapper + `onOpenAllTasks`; the `'alltasks'` route + `AllTasks` import KEPT present-but-unreachable (the
+  replace half). **Owner ran a live PARITY GATE** — side-by-side category mode vs the still-present old
+  screen (via a throwaway uncommitted `#alltasks` hash toggle, reverted before Stage 2) across multiple
+  categories + Inbox + show-done. **Stage 2 — prove-dead deletion (`adc6b10`)**, only on the owner's OK:
+  proved a CLOSED ISLAND (`AllTasks`'s only refs were LoggedIn's import + route; `CategoryDrillRow.jsx` +
+  `allTasksKit.css` had zero importers outside the dead set), then **deleted (3):** `src/AllTasks.jsx`,
+  `src/kit/CategoryDrillRow.jsx`, `src/kit/allTasksKit.css`, and removed the LoggedIn import + `'alltasks'`
+  branch. **`allTasksModel.js` DELIBERATELY KEPT** — shared backlog logic still imported by `Today`
+  (`activeTotal`) + `PlanningCategory` + `PlanningGroup` (only the *screen* + its screen-specific kit
+  retired). Build clean; no surviving reference to the removed screen/route/files; no schema. Owner-verified
+  on Mac (clean build/load, no console errors, no route/link to the old screen, category mode = full
+  backlog, three modes + rail triage + Today/Calendar/Settings intact). Save points `18c5498` + `adc6b10`.
+
+**🎉 Planning view P1–P6 COMPLETE (2026-06-29).** A new broadsheet planning surface, built fresh on the
+existing kit, additive throughout: three modes — **time** (date lanes, drag → due_date), **board** (status
+kanban, drag → status), **category** (collapsible groups, All-Tasks parity by reusing `allTasksModel`
+verbatim) — plus an interactive **Inbox rail** (drag-to-lane + tap-to-triage chips). All Tasks is retired,
+its backlog fully served by category mode. Only **P7 — Marty/brief** remains on the Planning track.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →

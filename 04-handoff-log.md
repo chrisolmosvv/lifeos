@@ -33,6 +33,34 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Planning view, P6 — retire All Tasks. SRC/ ONLY, TWO COMMITS (staged replace-then-delete). (Owner-verified on Mac, Stage 1 parity gate + Stage 2.) — DELETION piece; All Tasks GONE.
+WHAT CHANGED: All Tasks is retired; Planning's category mode is the sole backlog home. Done as a staged
+replace-then-delete (the first deletion on this surface), the conservative C4 way.
+- **Stage 1 — re-point (`18c5498`):** Today's bottom-left box → Planning ("Planning · N", N still =
+  `activeTotal`); removed the redundant parallel "Planning →" link + wrapper + `onOpenAllTasks`; the
+  `'alltasks'` route + `AllTasks` import KEPT present-but-UNREACHABLE (the replace half). Removed the
+  unused `.today-backlog-row`/`.today-planning-link` CSS.
+- **PARITY GATE (owner, live):** side-by-side category mode vs the still-present old screen — reached via a
+  throwaway UNCOMMITTED `#alltasks` hash toggle in LoggedIn, reverted with `git checkout` before Stage 2
+  (tree restored to exactly 18c5498). Checked multiple categories + Inbox + show-done: identical.
+- **Stage 2 — prove-dead deletion (`adc6b10`):** proved a CLOSED ISLAND (only refs to `AllTasks` were
+  LoggedIn's import + route; `CategoryDrillRow` + `allTasksKit.css` had zero importers outside the dead
+  set). DELETED (3): `src/AllTasks.jsx`, `src/kit/CategoryDrillRow.jsx`, `src/kit/allTasksKit.css`; removed
+  the LoggedIn import + `'alltasks'` branch.
+- **`allTasksModel.js` DELIBERATELY KEPT** (the critical boundary) — shared backlog logic, still imported
+  by `Today` (`activeTotal`) + `PlanningCategory` + `PlanningGroup`. Only the screen + screen-specific kit
+  retired.
+FILES TOUCHED: Stage 1 — `src/Today.jsx`, `src/LoggedIn.jsx`, `src/today.css`. Stage 2 — DELETED
+`src/AllTasks.jsx` + `src/kit/CategoryDrillRow.jsx` + `src/kit/allTasksKit.css`; changed `src/LoggedIn.jsx`.
+HOW TO VERIFY: (done — owner-verified on Mac) Stage 1 gate: box opens Planning, one entry, category mode ==
+old All Tasks side-by-side. Stage 2: clean build/load, no console errors, no route/link to the old screen,
+category mode = full backlog (Inbox + categories + counts + show-done), three modes + rail triage +
+Today/Calendar/Settings intact.
+KNOWN GAPS / RISKS: none. 🎉 Planning view P1–P6 complete (three modes + rail triage; All Tasks retired).
+NEXT: Planning P7 — Marty/brief (the last Planning-track piece).
+FOR THE CHECKER: none — no schema, no migration (pure src deletion + re-point; `allTasksModel` kept). Save
+points `18c5498` + `adc6b10`.
+
 ### 2026-06-29 — Planning view, P5 — triage: the Inbox rail goes interactive. SRC/ ONLY, ONE COMMIT. (Owner-verified on Mac, a–h.) — WRITES due_date / category_id; Path A.
 WHAT CHANGED: the time-mode Inbox rail becomes a triage surface — two gestures, both existing write paths.
 - **Drag** a rail card onto a time lane → the EXISTING `handleDrop → planDrop → updateTask` sets ONLY
