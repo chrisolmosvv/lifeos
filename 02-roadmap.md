@@ -350,6 +350,19 @@ Built in small, owner-verified pieces; src/ and schema never share a commit.
   Calendar later (one screen at a time). `ItemForm` / grid / Calendar / All-Tasks / the spine
   untouched. No schema. Owner-verified on Mac (all five checks incl. the reloaded row + forced
   failure). Save point `2c0ae31`.
+- ✅ **Piece 3a — Progressive disclosure in the shared form.** Reorganise the EXISTING `kit/ItemForm`
+  (+ `ItemTypeFields`) fields into a calm **core** + a **"more"** expander (collapsed by default).
+  Same fields, same inputs/setters, same save + validation — layout/disclosure ONLY, so what-saves is
+  provably unchanged across all three screens (Today, Calendar, All Tasks). **Task core:** Title,
+  Category, Due; **more:** Scheduled time, Priority, Subtasks, Notes, Status. **Event core:** Title,
+  Category, All-day, Start/End; **more:** Location, Notes, Repeat (the existing disabled placeholder).
+  `ItemTypeFields` now renders by a `slot` prop ('core'|'more'); Notes moved into it so each kind's
+  "more" order matches the spec. "more" is collapsed on CREATE; on EDIT it **auto-expands** (pure
+  `moreHasData` read of the item: scheduled time / priority / location / notes / subtasks — Status +
+  the disabled Repeat don't trigger it) so populated fields are never silently hidden. `ItemForm`
+  landed at **238 lines — under the 250 guide, no split needed**. No save/validation/toggle/chip/grid
+  change, no schema. Owner-verified on Mac (all five checks across all three screens, incl. the
+  auto-expand + advanced-data-survives-a-title-edit case). Save point `8bb3103`.
 
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →

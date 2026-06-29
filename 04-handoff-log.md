@@ -33,6 +33,39 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-29 — Today V2, Piece 3a — progressive disclosure in the shared form. SRC/ ONLY. (Owner-verified on Mac, three screens.)
+WHAT CHANGED: the SHARED create/edit form (`kit/ItemForm` + `ItemTypeFields`) reorganised into a calm
+**core** + a collapsed **"more"** expander. Same fields, same writes, same validation — disclosure only.
+- **Task core:** Title · Category · Due. **more:** Scheduled time · Priority · Subtasks · Notes · Status.
+- **Event core:** Title · Category · All-day · Start/End. **more:** Location · Notes · Repeat (disabled
+  placeholder, unchanged — recurrence is still T10).
+- **`ItemTypeFields` now renders by a `slot` prop** ('core'|'more'); Notes moved into it so each kind's
+  "more" order matches the spec. Inputs/setters byte-for-byte the same → what-saves provably unchanged
+  (save + validation untouched in `ItemForm`).
+- **CREATE → collapsed; EDIT → auto-expands** via a pure `moreHasData(item)` read (scheduled time /
+  priority / location / notes / subtasks). Status + the disabled Repeat do NOT trigger it. Populated
+  fields are never silently hidden.
+- Event-core order is **Title → Category → All-day → Start/End** (owner-approved tweak — Category 2nd on
+  both forms).
+FILES TOUCHED: `src/kit/ItemForm.jsx` (238 lines — under 250, NO split needed), `src/kit/ItemTypeFields.jsx`
+(145), `src/kit/todayForm.css` (+`.tk-form-moretoggle`/`.tk-form-more`; now 499, pre-existing-large, not
+split this piece). Docs `02`/`03`/`04`. No `supabase/`, no `db/`. `vite build` passes.
+HOW TO VERIFY (owner, on the Mac — DONE, all five passed on Today + Calendar + All Tasks):
+  (a) core-only create (Title + Due / Title + Start-End) → reload → row correct, advanced fields null.
+  (b) expand "more", set Priority/Scheduled/Location → reload → persisted.
+  (c) open an existing item WITH advanced data → "more" auto-expanded showing it → change Title → save →
+      reload → advanced data intact (not wiped). Confirmed on all three screens.
+  (d) validation unchanged: task saves title-only; event without start/end is blocked.
+  (e) snapshot unchanged: every old field still present (core or under "more"); screens otherwise as before.
+KNOWN GAPS / RISKS: the form can be taller once "more" is open (calm-wins over zero-scroll, by design;
+the modal scrolls). `todayForm.css` is 499 lines (pre-existing >250 — a future CSS-split candidate, not
+this piece). None otherwise.
+NEXT: Piece 3b (the today/park chips on the form — Planner to specify).
+FOR THE CHECKER: n/a — src/ only, no schema, no checker gate. (Reorg is layout-only; save + validation
+were not touched — the three-screen verify confirms what-saves is identical.)
+
+---
+
 ### 2026-06-29 — Today V2, Piece 2 — quick-add capture box on Today. SRC/ ONLY. (Owner-verified on Mac.)
 WHAT CHANGED: a new lightweight capture box on the Today screen — type a title, Enter, task dumped to the backlog/Inbox.
 - **NEW sealed kit block `src/kit/QuickAddInput.jsx`** (51 lines): a quiet one-line input

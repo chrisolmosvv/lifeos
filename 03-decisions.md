@@ -9,6 +9,35 @@
 
 ---
 
+## Today V2 — Piece 3a: progressive disclosure in the shared form (2026-06-29)
+
+- **[The shared form splits into a calm CORE + a "more" expander — layout only, never what-saves.]**
+  `kit/ItemForm` (+ `ItemTypeFields`) reorganised so the heavy fields hide behind "more" (collapsed by
+  default). **Task core:** Title · Category · Due — **more:** Scheduled time · Priority · Subtasks ·
+  Notes · Status. **Event core:** Title · Category · All-day · Start/End — **more:** Location · Notes ·
+  Repeat (the existing disabled placeholder; recurrence is still T10). **Why:** the form was too heavy
+  for a quick add; capture should be light, depth on demand. **Trade-off:** advanced fields are one
+  click away — accepted; the core is what most adds need.
+- **[Render is by `slot`; Notes moved into `ItemTypeFields`.]** `ItemTypeFields` now takes
+  `slot='core'|'more'` and renders only that group per kind; Notes moved in so each kind's "more"
+  order matches the spec exactly. The inputs/setters are byte-for-byte the same as before — `save()` +
+  validation live in `ItemForm` and were untouched, so a layout reorg **provably cannot** change what
+  saves or what's validated. **Why:** the only safe way to reorder shared-form fields. **Trade-off:**
+  none.
+- **[EDIT auto-expands "more" when it holds data (chosen over a "more · N set" badge).]** A pure
+  `moreHasData` read of the item (scheduled time / priority / location / notes / subtasks) sets the
+  initial expanded state on edit; CREATE is always collapsed. **Status and the disabled Repeat do NOT
+  trigger auto-expand** (Status always has a value; Repeat holds none) — but Status still lives under
+  "more". **Why:** auto-expand is the safest against a silent-hide regression (the values are on
+  screen, not a click away) and needs no per-kind counting UI. **Trade-off:** opening an item with any
+  advanced data shows a taller form — fine, calm wins over zero-scroll here.
+- **[Event-core order = Title → Category → All-day → Start/End (owner-approved tweak).]** Reordered
+  from the spec's literal "Title, Start/End, Category, All-day" so **Category sits 2nd on BOTH forms**
+  (consistent, calmer) and All-day stays directly above the Start/End it controls. Same fields, tidier
+  order. **Why:** consistency across task/event + cleaner implementation. **Trade-off:** none.
+- **[`ItemForm` kept whole at 238 lines — under the 250 guide, no split.]** The expander body stayed
+  inline; the planned sibling-extraction contingency was not needed.
+
 ## Today V2 — Piece 2: quick-add capture box on Today (2026-06-29)
 
 - **[A lightweight quick-add box on Today, separate from the shared form.]** A one-line input
