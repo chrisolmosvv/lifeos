@@ -31,9 +31,10 @@ The calendar and tasks are the foundation; the morning brief is the point.
 - A **daytime nudge**: a calm, heavily-guardrailed offer (max twice a day, 9–6, never
   back-to-back) to use a real free hour for an overdue task or a quick win.
 - Everything else (gym, meals, people, etc.) comes later as bolt-on modules.
-- *(All of the above — the conversational + proactive Marty — was built as the backend
-  "M-track" (M0–M10), now complete. The app's own look-and-feel redesign, Phase 7, is the
-  remaining front-end work.)*
+- *(Progress since: the conversational + proactive Marty backend ("M-track", M0–M10) and the
+  Phase-7 look-and-feel redesign are complete; the first bolt-on pillars have since shipped —
+  Sleep/Body ("S-track"), Gym ("G-track"), and Food (Cookbook + Nutrition, "F-track", F0–F9 done,
+  F10 next). Live per-piece status is in `02-roadmap.md`.)*
 
 ## Who it's for
 One user. Just the owner. No accounts for other people, ever. This lets us

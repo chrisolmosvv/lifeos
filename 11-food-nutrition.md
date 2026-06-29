@@ -10,6 +10,9 @@
 > **Updated 2026-06-28** after F1 recon: the three schema questions are settled, the
 > ±10% on-target band is locked, and a portion/weight table is recorded as an
 > amendment (see "Settled at recon" + decisions).
+> **Progress (2026-06-29): F0–F9 DONE** — logger (read+write), Cookbook, recipe import,
+> and the cook→log bridge are all built + verified. **NEXT: F10 (alcohol-lite).** Live
+> per-piece status lives in `02-roadmap.md`; this doc stays the locked plan/spec.
 
 ## What this is (one paragraph)
 A NEW **top-level pillar** called **Food**, with **two faces joined by a bridge** —
@@ -251,8 +254,7 @@ db/28_food_tables.sql            — the 5 tables                       [F1]
 ```
 
 ## Build order (`F`-track, risk-ordered — safest first)
-- **F0 — Paperwork.** This doc + `02`/`03` updates. No code. ← *current piece
-  (Planner-authored; the Builder commits it verbatim, does not re-author it).*
+- **F0 — Paperwork.** This doc + `02`/`03` updates. No code.
 - **F1 — The tables.** The 5 tables above, **CHECKER-GATED, own `db/` commit**
   (`db/28_food_tables.sql`): "checker approved" → owner runs the SQL on Frankfurt →
   owner confirms it live, BEFORE any `src/`.
@@ -272,8 +274,9 @@ db/28_food_tables.sql            — the 5 tables                       [F1]
   create/edit + the curated portion/weight table (`portions.js`).
 - **F8 — Recipe import** (the AI piece): paste/URL → server-side fetch → Gemini →
   auto-match + flag → review → save; URL-fail falls back to paste.
-- **F9 — Cook→log bridge**: "Cook this" → staged draft (servings/slot/swap) → log a
-  macro snapshot.
+- **F9 — Cook→log bridge**: "Log this meal" → inline staging (servings/slot + live
+  preview) → log a frozen macro snapshot + `recipes.last_cooked_at`. *(Cook-only swap
+  DROPPED at build — log then edit; see decisions.)*
 - **F10 — Alcohol-lite**: drinks (units + kcal), daily/weekly count.
 - **F11 — Polish + audit** to the three design laws; dead-code sweep.
 
