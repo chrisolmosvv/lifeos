@@ -69,7 +69,12 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete }) {
           )}
         </div>
       </div>
-      <p className="rp-sub">{time ? `${time} min · ` : ""}{base} serving{base === 1 ? "" : "s"}</p>
+      <p className="rp-sub">
+        {time ? `${time} min · ` : ""}{base} serving{base === 1 ? "" : "s"}
+        {recipe.source_url && (
+          <> · <a className="rp-source" href={recipe.source_url} target="_blank" rel="noreferrer">{(() => { try { return `from ${new URL(recipe.source_url).hostname}`; } catch { return "source"; } })()}</a></>
+        )}
+      </p>
 
       <div className="rp-macros">
         <div className="rp-kcal">{approx ? "~" : ""}{fmtNum("kcal", macros.perServing.kcal)} <span>kcal / serving</span></div>

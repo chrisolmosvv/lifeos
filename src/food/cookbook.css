@@ -452,3 +452,105 @@
 .red-danger {
   color: var(--accent);
 }
+
+/* Editor — imported source line + the per-ingredient match row. */
+.red-source {
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  color: var(--ink-muted);
+  font-style: italic;
+  margin: 2px 0 0;
+}
+.red-ing-match {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+.red-ing-flag {
+  color: var(--accent);
+  font-size: 0.82rem;
+}
+.red-ing-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.red-ing-ctl button {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.red-ing-ctl button:hover { color: var(--ink); }
+
+/* Import screen. */
+.imp { max-width: 600px; margin: 0 auto; }
+.imp-loading { padding: 12vh 0; }
+.imp-h {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin: 8px 0 14px;
+}
+.imp-err {
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--accent);
+  background: var(--rule-faint);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.imp-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 14px 0 6px;
+}
+.imp-url-row { display: flex; gap: 8px; }
+.imp-url {
+  flex: 1;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: none;
+  padding: 9px 11px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+}
+.imp-text {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: none;
+  padding: 10px 12px;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  color: var(--ink);
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+}
+.imp-go {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.imp-go:disabled { opacity: 0.4; cursor: default; }
+.imp-go--block { margin-top: 10px; }
+
+/* Recipe-page provenance link. */
+.rp-source { color: var(--ink-muted); text-decoration: underline; }
+.rp-source:hover { color: var(--accent); }

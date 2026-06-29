@@ -12,8 +12,8 @@ import "./foodModal.css";
 
 const DEBOUNCE_MS = 350;
 
-export default function IngredientPicker({ onAdd, onClose }) {
-  const [query, setQuery] = useState("");
+export default function IngredientPicker({ onAdd, onClose, initialQuery = "" }) {
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState(null);

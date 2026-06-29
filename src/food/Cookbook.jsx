@@ -4,6 +4,7 @@ import { useRecipeWrites } from "./useRecipeWrites";
 import RecipeCard from "./RecipeCard";
 import RecipePage from "./RecipePage";
 import RecipeEditor from "./RecipeEditor";
+import ImportScreen from "./ImportScreen";
 import Toast from "../kit/Toast";
 import "./cookbook.css";
 
@@ -47,10 +48,26 @@ export default function Cookbook() {
     if (res.ok) { await load(); setView({ kind: "grid" }); }
   };
 
+  if (view.kind === "import") {
+    return (
+      <ImportScreen
+        onImported={(draft, itemsById) => setView({ kind: "editor", id: null, draft, itemsById })}
+        onCancel={() => setView({ kind: "grid" })}
+      />
+    );
+  }
   if (view.kind === "editor") {
     return (
       <>
-        <RecipeEditor recipeId={view.id ?? null} saving={rw.busy} onSave={onSave} onCancel={() => setView(view.id ? { kind: "recipe", id: view.id } : { kind: "grid" })} onDelete={() => onDelete(view.id)} />
+        <RecipeEditor
+          recipeId={view.id ?? null}
+          initialDraft={view.draft}
+          initialItemsById={view.itemsById}
+          saving={rw.busy}
+          onSave={onSave}
+          onCancel={() => setView(view.id ? { kind: "recipe", id: view.id } : { kind: "grid" })}
+          onDelete={() => onDelete(view.id)}
+        />
         {rw.toast && <Toast text={rw.toast.text} onDismiss={rw.dismiss} />}
       </>
     );
@@ -72,7 +89,10 @@ export default function Cookbook() {
             <button key={s.id} type="button" className={s.id === sort ? "cb-sort is-active" : "cb-sort"} aria-selected={s.id === sort} onClick={() => setSort(s.id)}>{s.label}</button>
           ))}
         </div>
-        <button type="button" className="cb-new" onClick={() => setView({ kind: "editor", id: null })}>+ New</button>
+        <div className="cb-head-actions">
+          <button type="button" className="cb-import-btn" onClick={() => setView({ kind: "import" })}>Import</button>
+          <button type="button" className="cb-new" onClick={() => setView({ kind: "editor", id: null })}>+ New</button>
+        </div>
       </div>
 
       {loading ? (
@@ -83,7 +103,7 @@ export default function Cookbook() {
           <p className="cb-onboard-sub">Recipes are set in type — title, ingredients, steps, times. Macros compute from the ingredients; cooking mode runs timers for you.</p>
           <div className="cb-onboard-actions">
             <button type="button" className="cb-new" onClick={() => setView({ kind: "editor", id: null })}>+ New recipe</button>
-            <button type="button" className="cb-import" disabled title="Recipe import arrives at F8">Import (soon)</button>
+            <button type="button" className="cb-import" onClick={() => setView({ kind: "import" })}>Import from text or a link</button>
           </div>
         </div>
       ) : (

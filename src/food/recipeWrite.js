@@ -18,6 +18,7 @@ const recipeRow = (r) => ({
   servings: r.servings ?? null,
   prep_minutes: r.prep_minutes ?? null,
   cook_minutes: r.cook_minutes ?? null,
+  source_url: r.source_url ?? null, // imported recipes keep their provenance link
 });
 
 // Insert the recipe's ingredient + step rows (positions from array order). user_id defaults to
