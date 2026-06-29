@@ -5,7 +5,6 @@ import DayAgenda from './DayAgenda'
 import EditionHeader from './EditionHeader'
 import Today from './Today'
 import Settings from './Settings'
-import AllTasks from './AllTasks'
 import Planning from './Planning'
 import ArchiveScreen from './ArchiveScreen'
 import HealthHub from './health/HealthHub'
@@ -28,10 +27,6 @@ export default function LoggedIn({ email }) {
       {view === 'today' ? (
         <div className="cal-wrap">
           <Today onOpenPlanning={() => setView('planning')} />
-        </div>
-      ) : view === 'alltasks' ? (
-        <div className="cal-wrap">
-          <AllTasks onBack={() => setView('today')} />
         </div>
       ) : view === 'planning' ? (
         <div className="cal-wrap">
