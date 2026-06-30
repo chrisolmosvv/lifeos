@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { HOUR_HEIGHT, formatHour } from '../dateUtils'
 import { buildDayItems, layoutEvents } from '../eventLayout'
 import { colorHex, INBOX_COLOR } from '../palette'
+import { resolveColor } from '../colorModel'
 import TintedBlock from './TintedBlock'
 import './todayKit.css'
 
@@ -90,7 +91,9 @@ export default function DayGrid({
             {laidOut.map((it) => {
               const ev = it.ev
               const cat = ev.category_id ? catById.get(ev.category_id) : null
-              const hex = colorHex(cat?.color || INBOX_COLOR) || '#6B7280'
+              // V2-1: tint from the shared colour model (resolveColor) — a derived
+              // sub-category shows its shaded branch colour, matching Calendar.
+              const hex = cat ? resolveColor(cat, catById) : colorHex(INBOX_COLOR) || '#6B7280'
               const isDone = ev.status === 'done'
               const open = () => (ev.kind === 'event' ? onOpenEvent(ev.id) : onOpenTask(ev.id))
               // Completed blocks are tap-only (not draggable); everything else drags.

@@ -363,6 +363,7 @@ export default function Today({ onOpenPlanning }) {
                         key={t.id}
                         task={t}
                         cat={dispCat(t)}
+                        catsById={catById}
                         inboxColor={inboxColor}
                         isSub
                         subLabel={parentTitle(t, byId)}
@@ -378,6 +379,7 @@ export default function Today({ onOpenPlanning }) {
                         <TodayTaskRow
                           task={t}
                           cat={dispCat(t)}
+                          catsById={catById}
                           inboxColor={inboxColor}
                           muted={!!scheduledBadge(t)}
                           badge={scheduledBadge(t)}
@@ -397,6 +399,7 @@ export default function Today({ onOpenPlanning }) {
                                 key={s.id}
                                 task={s}
                                 cat={dispCat(s)}
+                                catsById={catById}
                                 inboxColor={inboxColor}
                                 isSub
                                 subLabel={t.title}
@@ -425,6 +428,7 @@ export default function Today({ onOpenPlanning }) {
                         key={t.id}
                         task={t}
                         cat={catFor(t)}
+                        catsById={catById}
                         inboxColor={inboxColor}
                         hideDue
                         onOpen={() => openTask(t.id)}
@@ -436,6 +440,7 @@ export default function Today({ onOpenPlanning }) {
                         key={t.id}
                         task={t}
                         cat={catFor(t)}
+                        catsById={catById}
                         inboxColor={inboxColor}
                         badge={{ text: 'undated' }}
                         onOpen={() => openTask(t.id)}

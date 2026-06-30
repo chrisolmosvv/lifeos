@@ -1,6 +1,8 @@
 import CategoryTag from '../CategoryTag'
 import StatusPill from './StatusPill'
 import { dueStatus, formatDue } from '../dueDate'
+import { resolveColor } from '../colorModel'
+import { colorHex } from '../palette'
 import './todayKit.css'
 
 // TodayTaskRow — one task line for the Today modules: an optional status pill on
@@ -28,12 +30,15 @@ export default function TodayTaskRow({
   onToggleExpand, // present → show an expand caret
   isSub, // a subtask row (indented, marked "↳ under …")
   subLabel, // the parent's title, for the "↳ under" marker
+  catsById, // id → category row, for resolving the shaded branch colour (V2-1)
 }) {
   const done = task.status === 'done'
   const high = !done && task.priority === 'high'
-  const tag = cat
-    ? { name: cat.name, color: cat.color }
-    : { name: 'Inbox', color: inboxColor }
+  // V2-1: the tag's dot uses the shared colour model (resolveColor) so a derived
+  // sub-category shows the SAME shaded branch colour as its grid block. Top-level
+  // / Inbox resolve to the same hex as before → pixel-identical.
+  const tagName = cat ? cat.name : 'Inbox'
+  const tagHex = cat ? resolveColor(cat, catsById) : colorHex(inboxColor)
 
   // The dateline: an explicit badge (a scheduled time, or "undated") wins;
   // otherwise show the due date — unless the module suppresses dates (next-7).
@@ -67,7 +72,7 @@ export default function TodayTaskRow({
           {isSub && subLabel && <span className="tk-sub-under">under {subLabel}</span>}
           {high && <span className="tk-pri is-high">High</span>}
           {!done && task.priority === 'med' && <span className="tk-pri">Med</span>}
-          <CategoryTag name={tag.name} color={tag.color} />
+          <CategoryTag name={tagName} hex={tagHex} />
           {badge && (
             <span className={'tk-when' + (badge.overdue ? ' is-overdue' : '')}>
               {badge.text}
