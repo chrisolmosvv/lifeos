@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { formatRange } from './dateUtils'
-import { navDays, navNext, navPrev, navToDay, isHome, HOME } from './weekNav'
+import { navDays, navNext, navPrev, navToDay, navShift, isHome, HOME } from './weekNav'
 import WeekView from './WeekView'
 import MonthView from './kit/MonthView'
 import './calendarWeek.css'
@@ -57,6 +57,17 @@ export default function CalendarWeek() {
   const weekPrev = () => stepWeek('prev', navPrev(nav, today))
   const weekNext = () => stepWeek('next', navNext(nav, today))
   const backWeek = () => stepWeek('settle', HOME)
+  // V2-5 (free-triggered swipe): on release, shift the window by `dayShift` whole
+  // days to ANY day-aligned window, reusing the V2-4 slide (token + direction) and
+  // the gate's reload-on-weekKey. dayShift = 0 → no-op (a tiny swipe).
+  const swipeWeek = (dayShift) => {
+    if (!dayShift) return
+    setNavigated(true)
+    setNavIntent(dayShift > 0 ? 'next' : 'prev')
+    setNavToken((t) => t + 1)
+    setFocus(null)
+    setNav((n) => navShift(n, today, dayShift))
+  }
   // Month nav — whole-month steps.
   const monthPrev = () => setMonthAnchor(addMonths(monthAnchor, -1))
   const monthNext = () => setMonthAnchor(addMonths(monthAnchor, 1))
@@ -129,6 +140,7 @@ export default function CalendarWeek() {
             staggerLoad={!navigated}
             navToken={navToken}
             navIntent={navIntent}
+            onSwipe={swipeWeek}
           />
         )}
       </div>

@@ -4,6 +4,7 @@ import { INBOX_COLOR } from './palette'
 import { useWeekData } from './useWeekData'
 import { useGridDrag } from './kit/useGridDrag'
 import { useBandDrag } from './kit/useBandDrag'
+import { useSwipe } from './kit/useSwipe'
 import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
 import WeekGrid from './kit/WeekGrid'
 import TrayDrawer from './kit/TrayDrawer'
@@ -18,7 +19,7 @@ import Toast from './kit/Toast'
 // stably mounted (the per-week remount is gone — useWeekData reloads on the week
 // key); so we explicitly clear the open form + toast on a week change, which the
 // remount used to do. No schema; writes via existing paths.
-export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad, navToken, navIntent }) {
+export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad, navToken, navIntent, onSwipe }) {
   const { events, scheduled, tray, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask, onAddLooseTask } =
     useWeekData(days)
   const [form, setForm] = useState(null) // {kind,item,create}
@@ -47,6 +48,21 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
     const t = setTimeout(() => setSqueezing(false), 240)
     return () => clearTimeout(t)
   }, [trayOpen])
+
+  // V2-5 (free-triggered): a two-finger horizontal swipe over the week grid, on
+  // RELEASE, shifts to any day-aligned window (a bigger flick travels further).
+  // No live track — the V2-4 slide animates the commit. Attaches to the grid's
+  // existing scroll element (scrollRef) via the shared detector; vertical scroll
+  // still scrolls the hours (axis-lock). The 7-col render + dayStartMsAt are
+  // unchanged → create/re-day land byte-for-byte on the (free) window's days.
+  const DAY_PX = 90 // accumulated deltaX per day-shift
+  useSwipe(scrollRef, {
+    onEnd: (totalDx) => {
+      let n = Math.round(totalDx / DAY_PX)
+      if (n === 0 && Math.abs(totalDx) > 20) n = totalDx > 0 ? 1 : -1 // a small flick = 1 day
+      onSwipe?.(Math.max(-28, Math.min(28, n)))
+    },
+  })
 
   // All-day events go to the band; only timed events render on the hour grid (so
   // an all-day item never disturbs the timed even-split/overlap below). (C7)
