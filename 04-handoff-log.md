@@ -33,6 +33,30 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-30 — Track S — Health V2 P1 sub-1: Sleep "Last night" broadsheet rework. Owner-verified on 13". 3 commits.
+WHAT CHANGED (commit chain): calc `0dfbf03` → layout `0b62d1c` → deletion `f4b414e`.
+- **SLEEP "Last night" V2** — full-width, full-height broadsheet, ZERO-SCROLL on the MacBook 13" built-in.
+  Numbers byte-identical to V1 (8h 2m; REM 150/31, Core 299/62, Deep 34/7, Awake 16/3; bed 22:28/woke 06:46).
+- Chrome distributed into columns (breadcrumb tops LEFT, RangeSwitcher tops RIGHT, centre clean); full-height
+  hairline rules; skeleton load + inline error/retry; fade-up + cross-fade. LEFT = journey rail + 2×2 footer;
+  CENTRE = lane-per-stage timeline (flex-fills the fold) + 2×2 stage stats; RIGHT = two 12h clock dials
+  (spread band + avg tick + median dot) + a seven-night 18:00→12:00 clock.
+- **THE SLEEP VISUAL LOCK** (Body + Activity inherit this template): distributed chrome, justified full-height
+  columns, full-height hairline column rules, hour-time language, the shared RangeSwitcher position.
+- New shared kit: RangeSwitcher / Breadcrumb / Skeleton / InlineError. Sleep-signature: SleepStageTimeline /
+  SleepClockDial / SleepClockColumns. Calc: circularMedianClock + clockExtent (verified vs real nights),
+  split into healthRhythm.js (healthSleep was 262 → 198). Deleted dead BedWakeBand + V1 CSS.
+HOW TO VERIFY: Health → Sleep → Last night on the 13" — zero vertical scroll, lanes fill, snapshot numbers hold.
+KNOWN GAPS / RISKS:
+- **SNAPSHOT RE-BASELINED:** bed/wake are **22:28 / 06:46** (Amsterdam). The earlier recon snapshot said 20:28/04:46
+  — that was a RECON ERROR (read the CLI's UTC `to_char`, not the app's Amsterdam render). No code bug; the app
+  always showed Amsterdam. Derived stats unchanged (std-dev is shift-invariant; bedtime-vs-goal still "on time").
+- **P1 is no longer strictly presentation-only** — it added two calc getters (rhythm median + envelope).
+- **`--sleep-vh`** (in `.sleep-page`, default `100vh - 220px`) is the one knob if the fold ever mis-fits.
+- **Week / Month / 90-day still render V1-styled** — sub-2 restyles them (per-night stacked bars + summary + ledger).
+NEXT: P1 sub-2 — Week/Month/90 aggregate restyle (mockup-1: per-night stacked bars hero + top stats + right ledger).
+FOR THE CHECKER: presentation + 2 pure getters; confirm snapshot holds at 22:28/06:46 and zero-scroll on a 13".
+
 ### 2026-06-30 — Track S — Health V2 P0a–P0c: pipeline + calc for the new metrics. Owner-verified. 4 commits.
 WHAT CHANGED:
 - **P0a `e7d2f1d` (supabase/)** — extended health-ingest `activity.ts` METRICS allow-list with 7 metrics:
