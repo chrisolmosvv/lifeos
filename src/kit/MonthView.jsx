@@ -1,7 +1,9 @@
+import { useRef } from 'react'
 import { useMonthData } from '../useMonthData'
 import { monthLayout, dayKey } from '../monthLayout'
 import { resolveColor } from '../colorModel'
 import { isSameDay } from '../dateUtils'
+import { useSwipe } from './useSwipe'
 import MonthCell from './MonthCell'
 import './monthView.css'
 
@@ -13,14 +15,27 @@ import './monthView.css'
 const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const STRIP_H = 18 // px per strip lane — keep in sync with .mv-strip height in CSS
 
-export default function MonthView({ monthAnchor, today, focusDay, onJumpDay, onJumpItem }) {
+export default function MonthView({ monthAnchor, today, focusDay, onJumpDay, onJumpItem, onSwipe }) {
   const { events, tasks, cats, loading } = useMonthData(monthAnchor)
   const byId = new Map(cats.map((c) => [c.id, c]))
   const { days, itemsByDay, strips, laneCountByRow } = monthLayout(monthAnchor, events, tasks)
   const month = monthAnchor.getMonth()
 
+  // V2-5 (free-triggered): a two-finger horizontal swipe over the month steps
+  // EXACTLY one month on release — distance-independent (a big flick still moves
+  // only one; big jumps are for arrows / the zoom). Reuses the existing month step
+  // + mv-in fade (no live track). Vertical does nothing (Month doesn't scroll);
+  // axis-lock + the non-passive preventDefault still kill the history-swipe.
+  const mvRef = useRef(null)
+  const SWIPE_MIN = 30 // px of accumulated deltaX to count as a swipe
+  useSwipe(mvRef, {
+    onEnd: (totalDx) => {
+      if (Math.abs(totalDx) > SWIPE_MIN) onSwipe?.(totalDx > 0 ? 1 : -1)
+    },
+  })
+
   return (
-    <div className={'mv' + (loading ? ' is-loading' : '')}>
+    <div className={'mv' + (loading ? ' is-loading' : '')} ref={mvRef}>
       <div className="mv-head">
         {WD.map((d) => (
           <div key={d} className="mv-head-cell">{d}</div>

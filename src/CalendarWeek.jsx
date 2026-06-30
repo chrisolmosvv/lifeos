@@ -72,6 +72,9 @@ export default function CalendarWeek() {
   const monthPrev = () => setMonthAnchor(addMonths(monthAnchor, -1))
   const monthNext = () => setMonthAnchor(addMonths(monthAnchor, 1))
   const backMonth = () => setMonthAnchor(firstOfMonth(today))
+  // V2-5 (free-triggered Month): a swipe steps `shift` whole months on release,
+  // reusing the month step + the existing mv-in fade. shift = 0 → no-op.
+  const swipeMonth = (shift) => { if (shift) setMonthAnchor((m) => addMonths(m, shift)) }
   // View switches + the Month → Week jumps. setViewZoom(true) arms the V2-4
   // centered scale-zoom for this (and every later) toggle — never the first open.
   const toWeek = () => { setViewZoom(true); setFocus(null); setView('week') }
@@ -129,6 +132,7 @@ export default function CalendarWeek() {
             focusDay={focus?.day}
             onJumpDay={jumpToDay}
             onJumpItem={jumpToItem}
+            onSwipe={swipeMonth}
           />
         ) : (
           <WeekView
