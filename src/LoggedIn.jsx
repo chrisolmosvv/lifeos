@@ -9,6 +9,7 @@ import Planning from './Planning'
 import ArchiveScreen from './ArchiveScreen'
 import HealthHub from './health/HealthHub'
 import FoodPage from './food/FoodPage'
+import HealthDebugV2 from './health/HealthDebugV2' // THROWAWAY (V2 P0c verify) — delete with the hook below
 import './calendar.css'
 
 // The logged-in app frame: the masthead (nameplate + Today/Calendar/Settings
@@ -19,6 +20,9 @@ export default function LoggedIn({ email }) {
   const today = new Date()
   const days = weekDays(today)
   const [view, setView] = useState('today')
+
+  // THROWAWAY (V2 P0c verify): open <app>/#health-debug-v2 to read the calc readout. Delete with the import above.
+  if (typeof window !== 'undefined' && window.location.hash === '#health-debug-v2') return <HealthDebugV2 />
 
   return (
     <div className="app">
