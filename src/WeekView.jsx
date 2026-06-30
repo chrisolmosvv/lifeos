@@ -42,8 +42,8 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
 
   const inboxColor = cats.find((c) => isInbox(c))?.color || INBOX_COLOR
 
-  // The toolbar "+ Add event" (in CalendarWeek, outside this remount boundary)
-  // opens a blank create form on the current week via this ref bridge.
+  // The toolbar "+ Add event" (in CalendarWeek, outside WeekView) opens a blank
+  // create form on the current week via this ref bridge.
   if (requestAdd) requestAdd.current = () => setForm({ kind: 'event', item: {}, create: true })
 
   // Week config for the shared useGridDrag: N columns (the day under x re-days a
