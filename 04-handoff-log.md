@@ -33,6 +33,31 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-30 — Track S — Health V2 P0a–P0c: pipeline + calc for the new metrics. Owner-verified. 4 commits.
+WHAT CHANGED:
+- **P0a `e7d2f1d` (supabase/)** — extended health-ingest `activity.ts` METRICS allow-list with 7 metrics:
+  resting_energy/stand_minutes/flights_climbed (sum) + walking_speed/walking_heart_rate_avg/
+  walking_step_length/walking_steadiness (avg). Deployed --no-verify-jwt (config.toml pins it). Verified
+  live: sums/avgs/units correct, idempotent, body path unaffected; test rows cleaned. (walking_steadiness
+  later dropped from the calc/UI — the ingest entry is harmless.)
+- **P0b `2c23353` (db/30)** — purged corrupt activity_hourly.heart_rate (pre-summed Shortcut values,
+  avg ~2277 / max 53392 bpm; shown nowhere). EXACT metric_type='heart_rate' (never LIKE → walking_heart_
+  rate_avg untouched). Guarded + re-runnable. Owner ran in SQL editor. Settings "Heart rate" line now reads
+  "— no data yet" (expected).
+- **P0c `b52817d` + `7f92560` (src/)** — calc-layer getters: healthActivity SUM/AVG metric lists;
+  healthStats DEADBAND for 8 new metrics; healthBodyRange fixedBand() (bmi 18.5–25, blood_oxygen 95–100);
+  bodyFormat META for bmi/blood_oxygen. Plus a THROWAWAY debug readout (#health-debug-v2, commit 7f92560).
+HOW TO VERIFY: open <app>/#health-debug-v2 — daily values tie to raw hours; resting_energy sparse-clean; bands right.
+KNOWN GAPS / RISKS:
+- **AVG path skips zero hours ON PURPOSE** (healthActivity.aggregateDaily): a 0-value hour for a mobility
+  metric means "didn't happen", not rate 0 — averaging over all 24 buried one real reading (walking HR read
+  4.7 vs 113.5). Documented inline. **Do NOT "fix" it back to a plain mean.** Only safe where 0 = "didn't happen".
+- **walking_speed reads ~4 m/s** — likely a UNITS bug at the Shortcut/source. Magnitude-check before P4 builds the Activity tile.
+- **7/30/90 rolling averages are identical** right now because only ~2 days of data exist — correct, will diverge with history, not a bug.
+- **resting_energy has 0 rows** — built but not yet flowing.
+NEXT: P1 — Sleep page rework (presentation-only, no calc/data change).
+FOR THE CHECKER: P0c is src/-only, pure calc; confirm the zero-skip avg rule + fixedBand verdicts against the debug readout.
+
 ### 2026-06-30 — Calendar (Track C) — Calendar V2 COMPLETE. SRC/ ONLY. 8 pieces, all owner-verified on Mac + deployed live. — motion-led upgrade; as-built truth = `calendar-v2-spec.md` (§18 = the swipe arc).
 
 WHAT CHANGED (commit chain, oldest→newest):
