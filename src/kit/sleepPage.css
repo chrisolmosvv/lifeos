@@ -161,81 +161,9 @@
 /* (V1 .bw-band/.bw-dot/.bw-legend bed-wake band removed with the BedWakeBand
    component — superseded by the rhythm clock dials. V2 P1 deletion.) */
 
-/* ── WEEK / MONTH VIEW ──────────────────────────────────────────────────────── */
-.sleep-range {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.sr-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 160px;
-}
-/* One night column = the whole tap target (drills into that night). */
-.sr-col {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-.sr-col:disabled {
-  cursor: default;
-}
-.sr-col:hover:not(:disabled) .sr-bar {
-  outline: 1px solid var(--accent);
-  outline-offset: 1px;
-}
-/* The stacked bar; column-reverse puts Deep (first in the list) at the bottom. */
-.sr-bar {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column-reverse;
-  border-radius: 3px 3px 0 0;
-  overflow: hidden;
-  background: var(--rule-faint); /* shows as an empty slot when a night has no data */
-}
-.sr-seg {
-  width: 100%;
-  display: block;
-}
-.sr-axis {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--ink-muted);
-}
-.sr-summary {
-  border-top: 1px solid var(--rule-faint);
-  padding-top: 14px;
-}
-.sr-summary-line {
-  font-family: var(--font-serif);
-  font-size: 20px;
-  color: var(--ink);
-}
-.sr-baseline {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-  margin-top: 6px;
-}
-.sr-move {
-  color: var(--accent);
-}
-.sr-streak span:last-child {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink);
-}
+/* (V1 aggregate .sleep-range/.sr-bars/.sr-col/.sr-bar/.sr-summary/.sr-baseline/.sr-move/
+   .sr-streak removed — superseded by the mockup-1 .agg-* layout. .sr-sparse kept: still
+   the "not enough nights yet" message. V2 P1 sub-2 deletion.) */
 .sr-sparse {
   font-family: var(--font-sans);
   font-size: 13px;
@@ -838,4 +766,227 @@
     padding: 0;
   }
   .snv-sheet { padding: 0; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   V2 P1 sub-2 — Week / Month / 90-day AGGREGATE (mockup-1): full-width stats row +
+   stacked-bars hero + right ledger, in the --fit zero-scroll model.
+   ════════════════════════════════════════════════════════════════════════════ */
+.sleep-agg {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.agg-chrome {
+  margin: 4px 0 16px;
+  flex: 0 0 auto;
+}
+
+/* TOP STATS ROW — broadsheet cells, vertical hairline separators, no boxes. */
+.agg-stats {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 0;
+}
+.agg-stat {
+  flex: 1;
+  padding: 0 20px;
+  border-left: 1px solid var(--rule);
+}
+.agg-stat:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+.agg-stat--hero {
+  flex: 1.6;
+}
+.agg-stat-val {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 22px;
+  color: var(--ink);
+  margin-top: 3px;
+}
+.agg-stat--hero .agg-stat-val {
+  font-size: 44px;
+  line-height: 1.05;
+}
+.agg-stat-val--accent {
+  color: var(--accent);
+}
+
+/* MAIN — bars chart (flex-fills) beside the right ledger. */
+.agg-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 28px;
+  padding-top: 16px;
+}
+.agg-chart {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.agg-legend {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+.agg-legend-key {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Bars: the flex-grow child that fills to the fold. */
+.agg-bars {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 80px;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+.agg-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.agg-col:disabled {
+  cursor: default;
+}
+.agg-bar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse; /* Deep at the bottom */
+  border-radius: 3px 3px 0 0;
+  overflow: hidden;
+  background: var(--rule-faint); /* empty slot when a night/week has no data */
+}
+.agg-seg {
+  width: 100%;
+  display: block;
+}
+.agg-col:hover:not(:disabled) .agg-bar,
+.agg-col.is-active .agg-bar {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+/* Goal line across the bars (terracotta = the goal cue). */
+.agg-goal-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--accent);
+  z-index: 2;
+  pointer-events: none;
+}
+.agg-goal-label {
+  position: absolute;
+  right: 0;
+  top: -14px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--accent);
+}
+/* Per-bar duration labels (Week only). */
+.agg-labels {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.agg-col-label {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+.agg-axis {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.agg-readout {
+  flex: 1;
+  text-align: center;
+  color: var(--ink);
+}
+
+/* RIGHT LEDGER — stacked, hairline-separated rows. */
+.agg-ledger {
+  flex: 0 0 300px;
+  border-left: 1px solid var(--rule);
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+}
+.agg-ledger-row {
+  padding: 14px 0;
+  border-top: 1px solid var(--rule-faint);
+}
+.agg-ledger-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.agg-ledger-big {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 28px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.agg-ledger-big--accent {
+  color: var(--accent);
+}
+.agg-ledger-sub {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+/* Reflow: drop the ledger under the chart on narrow widths. */
+@media (max-width: 1000px) {
+  .agg-main {
+    flex-direction: column;
+  }
+  .agg-ledger {
+    flex: 0 0 auto;
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0 28px;
+  }
+  .agg-ledger-row:first-child {
+    border-top: none;
+  }
 }
