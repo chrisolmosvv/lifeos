@@ -3,105 +3,15 @@
    .hub-back and .hub-spinner from healthHub.css (loaded app-wide by the hub). */
 
 .body-page {
-  padding: 8px 24px 20px;
-  max-width: 1100px;
+  padding: 8px 32px 20px;
+  max-width: 1340px; /* V2 broadsheet (was 1100) */
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
-/* Latest / Week / Month / 90-day segmented control. Hairline-bordered row; the active
-   range reads ink-on-paper, the others muted; hover hints terracotta (an affordance). */
-.body-tabs {
-  display: inline-flex;
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 6px 0 14px;
-}
-.body-tab {
-  background: var(--paper);
-  border: none;
-  border-left: 1px solid var(--rule);
-  padding: 8px 20px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: color 120ms ease, background 120ms ease;
-}
-.body-tab:first-child {
-  border-left: none;
-}
-.body-tab:hover {
-  color: var(--accent);
-}
-.body-tab.is-active {
-  background: var(--ink);
-  color: var(--paper);
-}
-.body-tab.is-active:hover {
-  color: var(--paper); /* selected stays calm — no terracotta on the active fill */
-}
-
-/* Loading + error (mirrors the hub). */
-.body-loading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--ink-muted);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  padding: 40px 0;
-}
-.body-error {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--overdue);
-  padding: 24px 0;
-}
-
-/* ── GROUPS (Composition / Vitals) ──────────────────────────────────────────── */
-.body-group {
-  margin-bottom: 18px;
-}
-.body-group-label {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-  margin: 0 0 9px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--rule-faint);
-}
-
-
-/* ── TILES ──────────────────────────────────────────────────────────────────── */
-/* Composition = 3 across, Vitals = 2 across; both stack on a narrow screen. None
-   dominant — equal columns keep the group visually balanced. */
-.body-tiles {
-  display: grid;
-  gap: 18px;
-  margin-bottom: 10px;
-}
-.body-tiles--3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-.body-tiles--2 {
-  grid-template-columns: repeat(2, 1fr);
-  max-width: 560px;
-}
-@media (max-width: 720px) {
-  .body-tiles--3,
-  .body-tiles--2 {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.body-tile {
-  display: flex;
-  flex-direction: column;
-}
+/* (V1 .body-tabs/.body-loading/.body-error/.body-group/.body-tiles/.body-tile and
+   .body-trend removed — superseded by the shared RangeSwitcher/Skeleton/InlineError +
+   the .bt-* Scale-Ticket table. V2 P2 deletion. .body-tile-label kept: GoalBar uses it.) */
 .body-tile-label {
   font-family: var(--font-sans);
   font-size: 11px;
@@ -109,55 +19,6 @@
   text-transform: lowercase;
   color: var(--ink-muted);
   margin-bottom: 6px;
-}
-.body-tile-value {
-  font-family: var(--font-serif);
-  font-size: 34px;
-  line-height: 1;
-  color: var(--ink);
-}
-.body-tile-unit {
-  font-family: var(--font-sans);
-  font-size: 15px;
-  color: var(--ink-muted);
-}
-.body-tile-sub {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--ink-muted);
-  margin-top: 5px;
-}
-.body-tile-extra {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--ink);
-  margin-top: 3px;
-}
-.body-tile-nodata {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  padding: 8px 0 16px;
-}
-.body-tile-band {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  color: var(--ink-muted);
-  margin-top: 6px;
-}
-
-/* Trend mark: movement = terracotta (house rule), steady/none = ink-muted. */
-.body-trend {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  margin-top: 7px;
-}
-.body-trend--move {
-  color: var(--accent);
-}
-.body-trend--flat,
-.body-trend--none {
-  color: var(--ink-muted);
 }
 
 /* Sparkline: ink line, ink dot — informational, so NO terracotta (reserved for
@@ -331,4 +192,268 @@
   font-size: 13px;
   color: var(--ink-muted);
   margin: 16px 0 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   V2 P2 STAGE 1 — Body "Scale Ticket": chrome row, Body fade/fit (the carried-forward
+   .sleep-chrome/.sleep-fade equivalents), the 3-group table scaffold, summary bars.
+   Chrome kit (RangeSwitcher/Breadcrumb/Skeleton/InlineError) + .health-fit come from
+   the shared healthChrome.css.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Chrome row — Body's equivalent of .sleep-chrome (breadcrumb left, switcher right). */
+.body-chrome {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 4px 0 14px;
+}
+
+/* Body's fade wrapper — the .health-fit inner flex child + the page-fade motion. */
+.health-fit .body-fade {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.body-fade {
+  animation: body-fade-up 240ms ease both;
+}
+@keyframes body-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .body-fade { animation: none; }
+}
+
+/* Body skeleton: 4 placeholder columns (the shared .skeleton base is 3-col / Sleep). */
+.body-page .skeleton {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* ── THE TABLE: rows flex-fill the fold (zero-scroll) ────────────────────────── */
+.body-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+}
+.bt-head,
+.bt-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.1fr 2.2fr 1.7fr;
+  align-items: center;
+  gap: 16px;
+}
+.bt-head {
+  flex: 0 0 auto;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+/* groups dissolve into the flex column so EVERY metric row gets equal flex height. */
+.bt-group {
+  display: contents;
+}
+.bt-eyebrow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 2px solid var(--ink); /* the 2px group rule */
+}
+.bt-eyebrow-name {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.bt-eyebrow-fresh {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+.bt-row {
+  flex: 1 1 0;
+  min-height: 34px;
+  border-top: 1px solid var(--rule-faint);
+}
+.bt-row--greyed {
+  opacity: 0.45;
+}
+.bt-metric {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--ink);
+}
+.bt-latest {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--ink);
+}
+.bt-move {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.bt-target {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+/* Placeholder trace box (stage 1) — reserves the 90-day chart's height. */
+.bt-trace-ph {
+  display: block;
+  height: 26px;
+  background: var(--rule-faint);
+  border-radius: 3px;
+}
+
+/* ── BOTTOM SUMMARY BARS (scaffold — fat/lean split + weight-to-goal) ─────────── */
+.body-summary {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 28px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+.bsum {
+  flex: 1;
+}
+.bsum-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+/* (.bsum-shell placeholder removed — BodySummary now renders the real composition bar +
+   weight journey. V2 P2 deletion.) */
+
+/* ── P2 STAGE 2 — table cell treatments (Movement / Trace / Journey / Band) ───── */
+.bt-move-none,
+.bt-move-flat,
+.bt-target-none {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.bt-move-on {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--accent); /* real movement = terracotta (house rule) */
+}
+/* keep the 90-day sparkline compact inside the trace cell */
+.bt-trace .body-spark {
+  height: 30px;
+  margin-top: 0;
+}
+
+/* Journey goal bar (weight / body_fat) — tappable to edit. */
+.bt-target-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.bt-target-prompt {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.bt-target-prompt:hover {
+  color: var(--accent);
+}
+.bt-journey-track {
+  position: relative;
+  height: 8px;
+  background: var(--rule-faint);
+  border-radius: 5px;
+}
+.bt-journey-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--ink);
+  border-radius: 5px;
+}
+.bt-journey-mark {
+  position: absolute;
+  right: 0;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--accent); /* the goal cue — the one terracotta touch */
+}
+.bt-journey-cap {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+.bt-journey:hover .bt-journey-cap {
+  color: var(--accent);
+}
+
+/* Band cell — fixed-clinical (terracotta tint) + personal (neutral) share the visual. */
+.bt-band-track {
+  position: relative;
+  height: 8px;
+  border-radius: 5px;
+}
+.bt-band-track--fixed {
+  background: rgba(200, 100, 61, 0.18); /* faint terracotta = a clinical reference band */
+}
+.bt-band-track--personal {
+  background: var(--rule-faint);
+}
+.bt-band-tick {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--ink);
+}
+.bt-band-cap {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+/* P2 STAGE 4 — Energy days-hit cell (the move-goal tally). */
+.bt-target-dayshit {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+/* P2 STAGE 5 — compact range chart inside the trace cell (line + band + goal, no ticks). */
+.bt-trace .body-chart {
+  width: 100%;
+  height: 46px;
+  margin-top: 0;
+  display: block;
 }

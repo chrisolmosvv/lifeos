@@ -15,6 +15,9 @@ export const METRIC_META = {
   // V2 P0c — generic body point readings (no UI yet; config so the numbers format).
   bmi: { label: "BMI", unit: "", decimals: 1 },
   blood_oxygen: { label: "Blood oxygen", unit: "%", decimals: 0, tight: true },
+  // V2 P2 — Energy group (activity_hourly daily totals, kcal).
+  active_energy: { label: "Active energy", unit: "kcal", decimals: 0 },
+  resting_energy: { label: "Resting energy", unit: "kcal", decimals: 0 },
 };
 
 export function metaFor(metric) {

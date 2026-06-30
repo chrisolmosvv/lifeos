@@ -36,8 +36,10 @@ function Spark({ pts }) {
   );
 }
 
-function Full({ pts, metric, windowStart, windowEnd, goalValue, band }) {
-  const { w, h, l, r, t, b } = FULL;
+const FULL_COMPACT = { w: 320, h: 52, l: 4, r: 4, t: 5, b: 5 }; // table-cell thumbnail: line + band + goal, no ticks
+
+function Full({ pts, metric, windowStart, windowEnd, goalValue, band, compact }) {
+  const { w, h, l, r, t, b } = compact ? FULL_COMPACT : FULL;
   const iw = w - l - r;
   const ih = h - t - b;
   const total = Math.max(1, dayIdx(windowEnd, windowStart) + 1); // days across the window
@@ -72,14 +74,16 @@ function Full({ pts, metric, windowStart, windowEnd, goalValue, band }) {
       {showBand && (
         <rect className="body-chart-band" x={l} y={y(band.hi)} width={iw} height={Math.max(0, y(band.lo) - y(band.hi))} />
       )}
-      <line className="body-chart-axis" x1={l} y1={t + ih} x2={l + iw} y2={t + ih} />
-      <text className="body-chart-ytick" x={l - 6} y={t + 4} textAnchor="end">{fmtNum(metric, hi)}</text>
-      <text className="body-chart-ytick" x={l - 6} y={t + ih} textAnchor="end">{fmtNum(metric, lo)}</text>
+      {!compact && <line className="body-chart-axis" x1={l} y1={t + ih} x2={l + iw} y2={t + ih} />}
+      {!compact && <text className="body-chart-ytick" x={l - 6} y={t + 4} textAnchor="end">{fmtNum(metric, hi)}</text>}
+      {!compact && <text className="body-chart-ytick" x={l - 6} y={t + ih} textAnchor="end">{fmtNum(metric, lo)}</text>}
 
       {Number.isFinite(goalValue) && (
         <>
           <line className="body-chart-goal" x1={l} y1={y(goalValue)} x2={l + iw} y2={y(goalValue)} />
-          <text className="body-chart-goal-label" x={l + iw} y={y(goalValue) - 4} textAnchor="end">goal {fmtNum(metric, goalValue)} {unit}</text>
+          {!compact && (
+            <text className="body-chart-goal-label" x={l + iw} y={y(goalValue) - 4} textAnchor="end">goal {fmtNum(metric, goalValue)} {unit}</text>
+          )}
         </>
       )}
 
@@ -92,18 +96,18 @@ function Full({ pts, metric, windowStart, windowEnd, goalValue, band }) {
         ) : null,
       )}
 
-      <text className="body-chart-xtick" x={l} y={h - 6} textAnchor="start">{humanDayShort(windowStart)}</text>
-      <text className="body-chart-xtick" x={l + iw} y={h - 6} textAnchor="end">{humanDayShort(windowEnd)}</text>
+      {!compact && <text className="body-chart-xtick" x={l} y={h - 6} textAnchor="start">{humanDayShort(windowStart)}</text>}
+      {!compact && <text className="body-chart-xtick" x={l + iw} y={h - 6} textAnchor="end">{humanDayShort(windowEnd)}</text>}
     </svg>
   );
 }
 
-export default function BodyChart({ series, variant = "spark", metric, windowStart, windowEnd, goalValue, band }) {
+export default function BodyChart({ series, variant = "spark", metric, windowStart, windowEnd, goalValue, band, compact }) {
   const pts = (series || []).filter((p) => Number.isFinite(p?.value));
   if (variant === "full") {
     // A full chart still frames the window (axis, goal line, band) even with no data.
     if (pts.length === 0 && !(band && band.hasEnoughData) && !Number.isFinite(goalValue)) return null;
-    return <Full pts={pts} metric={metric} windowStart={windowStart} windowEnd={windowEnd} goalValue={goalValue} band={band} />;
+    return <Full pts={pts} metric={metric} windowStart={windowStart} windowEnd={windowEnd} goalValue={goalValue} band={band} compact={compact} />;
   }
   if (pts.length === 0) return null;
   return <Spark pts={pts} />;
