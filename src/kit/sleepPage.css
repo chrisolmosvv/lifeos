@@ -8,18 +8,8 @@
   margin: 0 auto;
   box-sizing: border-box;
 }
-/* The "Last night" view is pinned to the fold so the centre lanes can flex-fill exactly
-   to it with NO scroll. Scoped to --fit (night only); Week/Month keep natural height. */
-.sleep-page--fit {
-  height: var(--sleep-vh, calc(100vh - 220px));
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.sleep-page--fit .sleep-fade {
-  flex: 1 1 auto;
-  min-height: 0; /* critical: lets the column chain shrink instead of scrolling */
-}
+/* (The fit model — .health-fit + .health-fit .sleep-fade, was .sleep-page--fit — moved to
+   the shared healthChrome.css. SleepPage applies .health-fit to the page wrapper.) */
 
 /* (V1 .sleep-tabs / .sleep-loading / .sleep-error / .sleep-view-stub removed — replaced
    by the shared RangeSwitcher, Skeleton and InlineError kit. V2 P1 deletion.) */
@@ -191,126 +181,9 @@
   gap: 16px;
   margin: 4px 0 22px;
 }
-.crumb {
-  font-family: var(--font-sans);
-  font-size: 13px;
-}
-.crumb-item {
-  display: inline-flex;
-  align-items: center;
-}
-.crumb-link {
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: color 120ms ease;
-}
-.crumb-link:hover {
-  color: var(--accent);
-}
-.crumb-here {
-  color: var(--ink);
-}
-.crumb-sep {
-  margin: 0 9px;
-  color: var(--ink-muted);
-}
-
-/* Shared range switcher (top-right). Same feel as the old sleep-tabs. */
-.range-switch {
-  display: inline-flex;
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.range-tab {
-  background: var(--paper);
-  border: none;
-  border-left: 1px solid var(--rule);
-  padding: 8px 18px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: color 120ms ease, background 120ms ease;
-}
-.range-tab:first-child {
-  border-left: none;
-}
-.range-tab:hover {
-  color: var(--accent);
-}
-.range-tab.is-active {
-  background: var(--ink);
-  color: var(--paper);
-}
-.range-tab.is-active:hover {
-  color: var(--paper);
-}
-
-/* ── SKELETON broadsheet (replaces the spinner) ─────────────────────────────── */
-.skeleton {
-  display: grid;
-  grid-template-columns: 260px 1fr 300px;
-  gap: 28px;
-}
-.sk-col {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.sk-line,
-.sk-block {
-  background: var(--rule-faint);
-  border-radius: 4px;
-  animation: sk-pulse 1.3s ease-in-out infinite;
-}
-.sk-line {
-  height: 14px;
-}
-.sk-line--kicker {
-  width: 40%;
-  height: 10px;
-}
-.sk-line--big {
-  height: 48px;
-  width: 72%;
-}
-.sk-line--short {
-  width: 52%;
-}
-.sk-block {
-  height: 120px;
-  border-radius: 6px;
-}
-@keyframes sk-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-
-/* ── INLINE error + retry ───────────────────────────────────────────────────── */
-.inline-error {
-  padding: 40px 0;
-}
-.inline-error-msg {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  margin: 0;
-}
-.inline-error-retry {
-  margin-top: 8px;
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--accent);
-  cursor: pointer;
-}
+/* (Breadcrumb .crumb*, RangeSwitcher .range-*, Skeleton .skeleton/.sk-*, and
+   InlineError .inline-error* moved to the shared healthChrome.css. .sleep-chrome — the
+   chrome ROW container — stays here for now; P3 may share it.) */
 
 /* ── MOTION: page fade-up + cross-fade on range switch ──────────────────────── */
 .sleep-fade {
@@ -322,14 +195,13 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .sleep-fade { animation: none; }
-  .sk-line, .sk-block { animation: none; }
 }
 
 /* ── NIGHT V2: three FULL-HEIGHT columns, full-height hairline rules ──────────
    Zero-scroll target = MacBook Pro 13" built-in. The grid fills the viewport below
    the nav; each column is a flex column that distributes its content top→bottom, with
    capped gaps so a larger external display breathes rather than sprawls. The page
-   itself does not scroll on the 13".  (--sleep-vh tunes the fitted height.) */
+   itself does not scroll on the 13".  (--health-vh tunes the fitted height.) */
 .sleep-night-v2 {
   display: grid;
   grid-template-columns: 184px 1fr 400px; /* left −30% → right (switcher at standard width); centre 1fr unchanged */

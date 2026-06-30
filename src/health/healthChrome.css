@@ -1,0 +1,143 @@
+/* LifeOS — Health shared CHROME + FIT kit (V2 P2.0). Extracted VERBATIM from
+   sleepPage.css so every Health surface (Sleep, Body, Activity) uses one source for the
+   RangeSwitcher, Breadcrumb, Skeleton, InlineError and the zero-scroll fit model. The
+   ONLY change from the original was renaming the fit class .sleep-page--fit → .health-fit
+   (var --sleep-vh → --health-vh). Sleep-specific layout stays in sleepPage.css. */
+
+/* ── FIT MODEL: pin a surface to the fold so its flex-grow child fills with NO scroll. */
+.health-fit {
+  height: var(--health-vh, calc(100vh - 220px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.health-fit .sleep-fade {
+  flex: 1 1 auto;
+  min-height: 0; /* critical: lets the column chain shrink instead of scrolling */
+}
+
+/* ── BREADCRUMB (left of the chrome row) ────────────────────────────────────── */
+.crumb {
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.crumb-item {
+  display: inline-flex;
+  align-items: center;
+}
+.crumb-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.crumb-link:hover {
+  color: var(--accent);
+}
+.crumb-here {
+  color: var(--ink);
+}
+.crumb-sep {
+  margin: 0 9px;
+  color: var(--ink-muted);
+}
+
+/* ── RANGE SWITCHER (top-right) ──────────────────────────────────────────────── */
+.range-switch {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.range-tab {
+  background: var(--paper);
+  border: none;
+  border-left: 1px solid var(--rule);
+  padding: 8px 18px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+.range-tab:first-child {
+  border-left: none;
+}
+.range-tab:hover {
+  color: var(--accent);
+}
+.range-tab.is-active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.range-tab.is-active:hover {
+  color: var(--paper);
+}
+
+/* ── SKELETON broadsheet (replaces the spinner). NOTE: the 3-column grid is Sleep-
+   shaped; Body can override the column template in its own sheet. ─────────────── */
+.skeleton {
+  display: grid;
+  grid-template-columns: 260px 1fr 300px;
+  gap: 28px;
+}
+.sk-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sk-line,
+.sk-block {
+  background: var(--rule-faint);
+  border-radius: 4px;
+  animation: sk-pulse 1.3s ease-in-out infinite;
+}
+.sk-line {
+  height: 14px;
+}
+.sk-line--kicker {
+  width: 40%;
+  height: 10px;
+}
+.sk-line--big {
+  height: 48px;
+  width: 72%;
+}
+.sk-line--short {
+  width: 52%;
+}
+.sk-block {
+  height: 120px;
+  border-radius: 6px;
+}
+@keyframes sk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-line, .sk-block { animation: none; }
+}
+
+/* ── INLINE error + retry ───────────────────────────────────────────────────── */
+.inline-error {
+  padding: 40px 0;
+}
+.inline-error-msg {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin: 0;
+}
+.inline-error-retry {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--accent);
+  cursor: pointer;
+}

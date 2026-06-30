@@ -15,6 +15,7 @@ import Skeleton from "../kit/Skeleton";
 import InlineError from "../kit/InlineError";
 import Popover from "../kit/Popover";
 import Toast from "../kit/Toast";
+import "./healthChrome.css";
 import "../kit/sleepPage.css";
 
 // SleepPage — the full Sleep front page (V2 broadsheet). Reached from the Health Hub's
@@ -186,7 +187,7 @@ export default function SleepPage({ onBack }) {
   const isFitMain = !state.loading && !state.error && !drilledNight && (view === "night" || isAgg);
 
   return (
-    <div className={isFitMain ? "sleep-page sleep-page--fit" : "sleep-page"}>
+    <div className={isFitMain ? "sleep-page health-fit" : "sleep-page"}>
       {!isFitMain && (
         <div className="sleep-chrome">
           {breadcrumbEl}
