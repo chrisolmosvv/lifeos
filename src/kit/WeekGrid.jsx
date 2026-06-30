@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { HOUR_HEIGHT, isSameDay, dayName } from '../dateUtils'
 import { useBlockAppearance } from './useBlockAppearance'
 import WeekColumn from './WeekColumn'
@@ -36,21 +36,43 @@ export default function WeekGrid({
   bandBarBind,
   bandPreview,
   staggerLoad = false,
+  navToken = 0,
+  navIntent = null,
 }) {
   const [now, setNow] = useState(() => new Date())
 
   // V2-2: ONE appearance tracker for the whole week (above the 7 columns), so a
   // re-day drag that moves a block across columns shares the same seen-set and
   // never re-fades. Blocks in start order → the stagger reads top-down.
-  const appearing = useBlockAppearance(
-    [
-      ...events.map((e) => ({ id: 'event:' + e.id, ms: +new Date(e.start_at) })),
-      ...scheduled.map((t) => ({ id: 'task:' + t.id, ms: +new Date(t.scheduled_start) })),
-    ]
-      .sort((a, b) => a.ms - b.ms)
-      .map((x) => x.id),
-    staggerLoad,
-  )
+  const blockIds = [
+    ...events.map((e) => ({ id: 'event:' + e.id, ms: +new Date(e.start_at) })),
+    ...scheduled.map((t) => ({ id: 'task:' + t.id, ms: +new Date(t.scheduled_start) })),
+  ]
+    .sort((a, b) => a.ms - b.ms)
+    .map((x) => x.id)
+  const appearing = useBlockAppearance(blockIds, staggerLoad)
+
+  // V2-4: the content slide. A week arrow bumps navToken (with a direction); when
+  // the NEW week's block data actually lands (blockIds changes), play the slide on
+  // the columns layer only. An edit-reload never bumps the token → never slides.
+  const [slideDir, setSlideDir] = useState(null)
+  const slidePending = useRef(null)
+  const mounted = useRef(false)
+  const idsSig = blockIds.join('|')
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return } // skip the first mount
+    slidePending.current = navIntent || 'settle'
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navToken])
+  useEffect(() => {
+    if (!slidePending.current) return
+    const dir = slidePending.current
+    slidePending.current = null
+    setSlideDir(dir)
+    const t = setTimeout(() => setSlideDir(null), 450)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsSig])
 
   // Tick the now-line as time passes (today's column only).
   useEffect(() => {
@@ -132,29 +154,33 @@ export default function WeekGrid({
             <span className="wk-gutter-end">00</span>
           </div>
 
-          {days.map((d) => {
-            const ds = startOfDay(d).getTime()
-            const wd = d.getDay()
-            return (
-              <WeekColumn
-                key={d.toISOString()}
-                dayStart={ds}
-                isToday={isSameDay(d, today)}
-                isPastDay={ds < todayStart}
-                isWeekend={wd === 0 || wd === 6}
-                events={events.filter((e) => isSameDay(new Date(e.start_at), d))}
-                scheduled={scheduled.filter((t) => isSameDay(new Date(t.scheduled_start), d))}
-                byId={byId}
-                nowH={nowH}
-                selectedId={selectedId}
-                blockPreview={blockPreview}
-                createDraft={createDraft}
-                blockBind={blockBind}
-                backgroundBind={backgroundBind}
-                appearing={appearing}
-              />
-            )
-          })}
+          {/* V2-4: only this columns layer slides on a week arrow; the gutter
+              (sibling) + the sticky head (day-headers, all-day band) stay fixed. */}
+          <div className={'wk-cols' + (slideDir ? ' is-slide-' + slideDir : '')}>
+            {days.map((d) => {
+              const ds = startOfDay(d).getTime()
+              const wd = d.getDay()
+              return (
+                <WeekColumn
+                  key={d.toISOString()}
+                  dayStart={ds}
+                  isToday={isSameDay(d, today)}
+                  isPastDay={ds < todayStart}
+                  isWeekend={wd === 0 || wd === 6}
+                  events={events.filter((e) => isSameDay(new Date(e.start_at), d))}
+                  scheduled={scheduled.filter((t) => isSameDay(new Date(t.scheduled_start), d))}
+                  byId={byId}
+                  nowH={nowH}
+                  selectedId={selectedId}
+                  blockPreview={blockPreview}
+                  createDraft={createDraft}
+                  blockBind={blockBind}
+                  backgroundBind={backgroundBind}
+                  appearing={appearing}
+                />
+              )
+            })}
+          </div>
         </div>
       </div>
 

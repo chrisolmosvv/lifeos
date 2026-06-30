@@ -8,6 +8,35 @@
   flex-direction: column;
 }
 
+/* V2-4: the view wrapper (Week or Month). Passes the flex sizing through so the
+   internal grid scroll still works, and — keyed on `view` in CalendarWeek — replays
+   a centered scale-zoom on a Week↔Month toggle (Month grows out of / Week collapses
+   into the week). Slow/luxe tier. Reduced-motion → a quiet crossfade. */
+.cw-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The zoom plays only on an actual Week↔Month toggle (is-zoom), never on the very
+   first Calendar open — so it doesn't double with the V2-2 first-load stagger. */
+.cw-view.is-zoom {
+  animation: cw-zoom 400ms ease both;
+}
+@keyframes cw-zoom {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes cw-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cw-view.is-zoom {
+    animation: cw-fade 260ms ease both;
+  }
+}
+
 /* The toolbar: arrows · week range · "Back to this week" … then the right cluster
    (Week/Month toggle, tray, "+ Add event"). Full-width with a comfortable frame. */
 .cw-toolbar {

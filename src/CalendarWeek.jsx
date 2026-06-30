@@ -30,26 +30,43 @@ export default function CalendarWeek() {
   // V2-2: the first week shown staggers its blocks in; once you navigate, later
   // weeks load quietly (no re-stagger). Any week-changing action flips this.
   const [navigated, setNavigated] = useState(false)
+  // V2-4: a bump-per-week-arrow token + its direction, so WeekGrid can play the
+  // content slide when the NEW week's data lands (an edit-reload never bumps the
+  // token → never slides). 'next'/'prev' = horizontal slide; 'settle' = a gentle
+  // scale (Back-to-this-week). Month↔Week jumps change `view` instead → the zoom.
+  const [navToken, setNavToken] = useState(0)
+  const [navIntent, setNavIntent] = useState(null)
+  // V2-4: arms the Week↔Month zoom — stays false on the first open (no zoom then).
+  const [viewZoom, setViewZoom] = useState(false)
   const requestAdd = useRef(null)
 
   const days = navDays(nav, today)
   const home = isHome(nav)
   const isMonth = view === 'month'
 
-  // Week nav — clears any Month-jump focus so a later week never mis-marks, and
-  // flips `navigated` so the arrived-at week loads quietly (no re-stagger).
-  const weekPrev = () => { setNavigated(true); setFocus(null); setNav(navPrev(nav, today)) }
-  const weekNext = () => { setNavigated(true); setFocus(null); setNav(navNext(nav, today)) }
-  const backWeek = () => { setNavigated(true); setFocus(null); setNav(HOME) }
+  // Week nav — clears any Month-jump focus so a later week never mis-marks, flips
+  // `navigated` (quiet load, no re-stagger), and arms the V2-4 slide with a token
+  // + direction so WeekGrid plays it when the new week's data lands.
+  const stepWeek = (intent, next) => {
+    setNavigated(true)
+    setNavIntent(intent)
+    setNavToken((t) => t + 1)
+    setFocus(null)
+    setNav(next)
+  }
+  const weekPrev = () => stepWeek('prev', navPrev(nav, today))
+  const weekNext = () => stepWeek('next', navNext(nav, today))
+  const backWeek = () => stepWeek('settle', HOME)
   // Month nav — whole-month steps.
   const monthPrev = () => setMonthAnchor(addMonths(monthAnchor, -1))
   const monthNext = () => setMonthAnchor(addMonths(monthAnchor, 1))
   const backMonth = () => setMonthAnchor(firstOfMonth(today))
-  // View switches + the Month → Week jumps.
-  const toWeek = () => { setFocus(null); setView('week') }
-  const toMonth = () => { setMonthAnchor(firstOfMonth(days[0])); setView('month') }
-  const jumpToDay = (day) => { setNavigated(true); setFocus({ day, itemId: null, ms: null }); setNav(navToDay(day, today)); setView('week') }
-  const jumpToItem = (day, item) => { setNavigated(true); setFocus({ day, itemId: item.id, ms: item.ms }); setNav(navToDay(day, today)); setView('week') }
+  // View switches + the Month → Week jumps. setViewZoom(true) arms the V2-4
+  // centered scale-zoom for this (and every later) toggle — never the first open.
+  const toWeek = () => { setViewZoom(true); setFocus(null); setView('week') }
+  const toMonth = () => { setViewZoom(true); setMonthAnchor(firstOfMonth(days[0])); setView('month') }
+  const jumpToDay = (day) => { setViewZoom(true); setNavigated(true); setFocus({ day, itemId: null, ms: null }); setNav(navToDay(day, today)); setView('week') }
+  const jumpToItem = (day, item) => { setViewZoom(true); setNavigated(true); setFocus({ day, itemId: item.id, ms: item.ms }); setNav(navToDay(day, today)); setView('week') }
 
   return (
     <div className="cw">
@@ -88,25 +105,33 @@ export default function CalendarWeek() {
         </div>
       </div>
 
-      {isMonth ? (
-        <MonthView
-          key={monthAnchor.toISOString()}
-          monthAnchor={monthAnchor}
-          today={today}
-          focusDay={focus?.day}
-          onJumpDay={jumpToDay}
-          onJumpItem={jumpToItem}
-        />
-      ) : (
-        <WeekView
-          days={days}
-          today={today}
-          requestAdd={requestAdd}
-          trayOpen={trayOpen}
-          focus={focus}
-          staggerLoad={!navigated}
-        />
-      )}
+      {/* V2-4: keyed on `view` so a Week↔Month toggle replays the centered
+          scale-zoom (Month grows out of / Week collapses into the week). The key
+          is `view`, NOT the week, so arrowing weeks does NOT remount WeekView —
+          the gate's stable mount holds. */}
+      <div className={'cw-view' + (viewZoom ? ' is-zoom' : '')} key={view}>
+        {isMonth ? (
+          <MonthView
+            key={monthAnchor.toISOString()}
+            monthAnchor={monthAnchor}
+            today={today}
+            focusDay={focus?.day}
+            onJumpDay={jumpToDay}
+            onJumpItem={jumpToItem}
+          />
+        ) : (
+          <WeekView
+            days={days}
+            today={today}
+            requestAdd={requestAdd}
+            trayOpen={trayOpen}
+            focus={focus}
+            staggerLoad={!navigated}
+            navToken={navToken}
+            navIntent={navIntent}
+          />
+        )}
+      </div>
     </div>
   )
 }

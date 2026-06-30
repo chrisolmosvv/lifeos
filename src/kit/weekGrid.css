@@ -78,6 +78,48 @@
   display: flex;
 }
 
+/* V2-4: the columns layer — the ONLY thing that slides on a week arrow. It fills
+   the body after the fixed gutter; the 7 .wk-col children keep their equal flex. */
+.wk-cols {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+.wk-cols.is-slide-next {
+  animation: wk-cols-next 360ms ease both;
+}
+.wk-cols.is-slide-prev {
+  animation: wk-cols-prev 360ms ease both;
+}
+.wk-cols.is-slide-settle {
+  animation: wk-cols-settle 360ms ease both;
+}
+/* next = the content slides in from the right, settling leftward into place. */
+@keyframes wk-cols-next {
+  from { opacity: 0; transform: translateX(6%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes wk-cols-prev {
+  from { opacity: 0; transform: translateX(-6%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes wk-cols-settle {
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes wk-cols-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Quiet crossfade — no slide or scale. */
+  .wk-cols.is-slide-next,
+  .wk-cols.is-slide-prev,
+  .wk-cols.is-slide-settle {
+    animation: wk-cols-fade 240ms ease both;
+  }
+}
+
 /* The 24-hour gutter, two-digit labels (00..23) + a trailing 00 at midnight. */
 .wk-gutter {
   width: 52px;

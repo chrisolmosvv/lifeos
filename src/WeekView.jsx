@@ -18,7 +18,7 @@ import Toast from './kit/Toast'
 // stably mounted (the per-week remount is gone — useWeekData reloads on the week
 // key); so we explicitly clear the open form + toast on a week change, which the
 // remount used to do. No schema; writes via existing paths.
-export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad }) {
+export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad, navToken, navIntent }) {
   const { events, scheduled, tray, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask, onAddLooseTask } =
     useWeekData(days)
   const [form, setForm] = useState(null) // {kind,item,create}
@@ -156,6 +156,8 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
           bandBarBind={band.barBind}
           bandPreview={band.preview}
           staggerLoad={staggerLoad}
+          navToken={navToken}
+          navIntent={navIntent}
         />
         {trayOpen && (
           <TrayDrawer
