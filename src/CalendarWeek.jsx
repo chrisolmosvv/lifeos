@@ -99,7 +99,6 @@ export default function CalendarWeek() {
         />
       ) : (
         <WeekView
-          key={days[0].toISOString()}
           days={days}
           today={today}
           requestAdd={requestAdd}

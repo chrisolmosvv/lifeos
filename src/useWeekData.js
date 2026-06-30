@@ -61,10 +61,16 @@ export function useWeekData(days) {
     setCats(catRes.data || [])
   }
 
+  // V2-4 (gate): reload when the WEEK changes, not just on mount. WeekView is now
+  // stably mounted (no per-week remount), so this effect is what re-provides the
+  // per-week reload — load() closes over the current `days`, so keying on the
+  // week's first day refetches the new week. (Was `[]` = mount-only, which relied
+  // on the remount.)
+  const weekKey = days[0].toISOString()
   useEffect(() => {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [weekKey])
 
   // One write, reload after; returns a plain message on error (for the panel).
   async function write(query) {

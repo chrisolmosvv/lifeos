@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { useWeekData } from './useWeekData'
@@ -14,8 +14,10 @@ import Toast from './kit/Toast'
 // opens the one canonical ItemForm (same form Today uses) for both create and
 // edit — the old EventPanel/TaskPanel are retired here (files deleted with the old
 // cluster in C4). Delete = ARCHIVE + Undo toast via the existing archive path
-// (matching Today; replaces Calendar's old hard delete). Mounted with a key per
-// week so useWeekData reloads on navigation. No schema; writes via existing paths.
+// (matching Today; replaces Calendar's old hard delete). V2-4: WeekView is now
+// stably mounted (the per-week remount is gone — useWeekData reloads on the week
+// key); so we explicitly clear the open form + toast on a week change, which the
+// remount used to do. No schema; writes via existing paths.
 export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad }) {
   const { events, scheduled, tray, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask, onAddLooseTask } =
     useWeekData(days)
@@ -24,6 +26,14 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
   const scrollRef = useRef(null)
   const bodyRef = useRef(null)
   const bandRef = useRef(null)
+
+  // V2-4: on a week change, drop any open form / toast so you can't edit an item
+  // from the week you just left (the remount used to reset these for free).
+  const weekKey = days[0].toISOString()
+  useEffect(() => {
+    setForm(null)
+    setToast(null)
+  }, [weekKey])
 
   // All-day events go to the band; only timed events render on the hour grid (so
   // an all-day item never disturbs the timed even-split/overlap below). (C7)
