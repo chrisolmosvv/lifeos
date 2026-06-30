@@ -2,10 +2,13 @@
 //
 // Turns raw Apple-Health samples into hourly buckets and upserts them into
 // activity_hourly. Each sample is { metric_type, value, at }; we bucket it to the
-// owner's-timezone (day, hour) and aggregate per metric:
-//   • steps, active_energy → SUM the hour's samples (a total).
-//   • heart_rate          → AVERAGE the hour's samples (a rate).
-// Units are fixed per metric (steps=count, active_energy=kcal, heart_rate=bpm).
+// owner's-timezone (day, hour) and aggregate per metric, per the METRICS map below:
+//   • totals (steps, active_energy, resting_energy, stand_minutes, flights_climbed)
+//     → SUM the hour's samples.
+//   • rates (heart_rate, walking_speed, walking_heart_rate_avg, walking_step_length,
+//     walking_steadiness) → AVERAGE the hour's samples.
+// Units are fixed per metric by the map (not taken from the payload). An unlisted
+// metric_type is SKIPPED (we'd not know whether to sum or average it).
 //
 // IDEMPOTENT, with one assumption: the upsert REPLACES an hour's bucket (latest POST
 // wins), so a re-send is safe AS LONG AS a POST carries that hour's full set of
@@ -34,6 +37,14 @@ const METRICS: Record<string, { agg: "sum" | "avg"; unit: string }> = {
   steps: { agg: "sum", unit: "count" },
   active_energy: { agg: "sum", unit: "kcal" },
   heart_rate: { agg: "avg", unit: "bpm" },
+  // Health V2 (P0a): activity + mobility metrics — same bucket-and-aggregate path.
+  resting_energy: { agg: "sum", unit: "kcal" },
+  stand_minutes: { agg: "sum", unit: "min" },
+  flights_climbed: { agg: "sum", unit: "count" },
+  walking_speed: { agg: "avg", unit: "m/s" },
+  walking_heart_rate_avg: { agg: "avg", unit: "bpm" },
+  walking_step_length: { agg: "avg", unit: "cm" },
+  walking_steadiness: { agg: "avg", unit: "%" },
 };
 
 // Hour (0-23) of an instant in the owner's timezone, via the shared HH:MM helper.
