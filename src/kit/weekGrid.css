@@ -162,6 +162,10 @@
   border-top: 2px solid var(--accent);
   z-index: 5;
   pointer-events: none;
+  transition: top 500ms ease; /* V2-2: glide to the new spot at the minute tick */
+}
+@media (prefers-reduced-motion: reduce) {
+  .wk-now { transition: none; }
 }
 .wk-now::before {
   content: '';

@@ -16,7 +16,7 @@ import Toast from './kit/Toast'
 // cluster in C4). Delete = ARCHIVE + Undo toast via the existing archive path
 // (matching Today; replaces Calendar's old hard delete). Mounted with a key per
 // week so useWeekData reloads on navigation. No schema; writes via existing paths.
-export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
+export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad }) {
   const { events, scheduled, tray, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask, onAddLooseTask } =
     useWeekData(days)
   const [form, setForm] = useState(null) // {kind,item,create}
@@ -145,6 +145,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus }) {
           bandCreateBind={band.createBind}
           bandBarBind={band.barBind}
           bandPreview={band.preview}
+          staggerLoad={staggerLoad}
         />
         {trayOpen && (
           <TrayDrawer

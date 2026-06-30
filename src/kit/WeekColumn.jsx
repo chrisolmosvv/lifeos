@@ -25,6 +25,7 @@ export default function WeekColumn({
   createDraft,
   blockBind,
   backgroundBind,
+  appearing,
 }) {
   // This column's own blocks, adjusted live for a drag: the dragged block leaves
   // its source column and joins whichever column it's currently over, so the
@@ -72,6 +73,7 @@ export default function WeekColumn({
             dragging={blockPreview?.id === ev.id}
             removing={blockPreview?.id === ev.id && !!blockPreview.off}
             selected={ev.id === selectedId}
+            appearDelay={appearing?.get(ev.kind + ':' + ev.id)}
           />
         )
       })}

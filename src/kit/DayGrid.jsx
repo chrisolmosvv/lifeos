@@ -3,6 +3,7 @@ import { HOUR_HEIGHT, formatHour } from '../dateUtils'
 import { buildDayItems, layoutEvents } from '../eventLayout'
 import { colorHex, INBOX_COLOR } from '../palette'
 import { resolveColor } from '../colorModel'
+import { useBlockAppearance } from './useBlockAppearance'
 import TintedBlock from './TintedBlock'
 import './todayKit.css'
 
@@ -32,6 +33,7 @@ export default function DayGrid({
   blockBind,
   blockPreview,
   createDraft,
+  staggerLoad = false,
 }) {
   const [now, setNow] = useState(() => new Date())
 
@@ -61,6 +63,12 @@ export default function DayGrid({
     )
   }
   const laidOut = layoutEvents(items, dayStart).filter((it) => it.top + it.height > OFFSET)
+
+  // V2-2: which blocks fade in this render (load stagger / create), shared logic.
+  const appearing = useBlockAppearance(
+    laidOut.map((it) => it.ev.kind + ':' + it.ev.id),
+    staggerLoad,
+  )
 
   const nowH = now.getHours() + now.getMinutes() / 60
   const showNow = isToday && nowH >= START && nowH < END // now-line only on the real today
@@ -113,6 +121,7 @@ export default function DayGrid({
                   dragging={blockPreview?.id === ev.id}
                   removing={blockPreview?.id === ev.id && !!blockPreview.off}
                   selected={ev.id === selectedId}
+                  appearDelay={appearing.get(ev.kind + ':' + ev.id)}
                 />
               )
             })}

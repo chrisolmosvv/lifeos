@@ -34,6 +34,9 @@ export default function Today({ onOpenPlanning }) {
   const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
   const [expandedToday, setExpandedToday] = useState(new Set()) // parent ids expanded in tasks-today
+  // V2-2: the first day shown staggers its blocks in; once you step days, later
+  // days load quietly (no re-stagger). The day arrows / "back to today" flip this.
+  const [dayNavigated, setDayNavigated] = useState(false)
 
   const scrollRef = useRef(null)
   const laneRef = useRef(null)
@@ -313,13 +316,13 @@ export default function Today({ onOpenPlanning }) {
       <section className="today-day">
         <div className="today-daybar">
           <span className="today-stepper">
-            <button className="today-nav" onClick={() => setViewed(addDays(viewed, -1))} aria-label="Previous day">‹</button>
-            <button className="today-nav" onClick={() => setViewed(addDays(viewed, 1))} aria-label="Next day">›</button>
+            <button className="today-nav" onClick={() => { setDayNavigated(true); setViewed(addDays(viewed, -1)) }} aria-label="Previous day">‹</button>
+            <button className="today-nav" onClick={() => { setDayNavigated(true); setViewed(addDays(viewed, 1)) }} aria-label="Next day">›</button>
           </span>
           <h2 className="today-day-title">{isToday ? 'The Day' : dayNameFull(viewed)}</h2>
           <span className="today-viewdate">{formatMastheadDate(viewed)}</span>
           {!isToday && (
-            <button className="today-back" onClick={() => setViewed(startOfDay(new Date()))}>
+            <button className="today-back" onClick={() => { setDayNavigated(true); setViewed(startOfDay(new Date())) }}>
               Back to today
             </button>
           )}
@@ -339,6 +342,7 @@ export default function Today({ onOpenPlanning }) {
           blockBind={grid.blockBind}
           blockPreview={grid.blockPreview}
           createDraft={grid.createDraft}
+          staggerLoad={!dayNavigated}
         />
       </section>
 

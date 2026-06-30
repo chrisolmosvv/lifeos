@@ -27,16 +27,20 @@ export default function CalendarWeek() {
   const [monthAnchor, setMonthAnchor] = useState(() => firstOfMonth(today))
   const [focus, setFocus] = useState(null) // {day, itemId, ms} from a Month click
   const [trayOpen, setTrayOpen] = useState(false)
+  // V2-2: the first week shown staggers its blocks in; once you navigate, later
+  // weeks load quietly (no re-stagger). Any week-changing action flips this.
+  const [navigated, setNavigated] = useState(false)
   const requestAdd = useRef(null)
 
   const days = navDays(nav, today)
   const home = isHome(nav)
   const isMonth = view === 'month'
 
-  // Week nav — clears any Month-jump focus so a later week never mis-marks.
-  const weekPrev = () => { setFocus(null); setNav(navPrev(nav, today)) }
-  const weekNext = () => { setFocus(null); setNav(navNext(nav, today)) }
-  const backWeek = () => { setFocus(null); setNav(HOME) }
+  // Week nav — clears any Month-jump focus so a later week never mis-marks, and
+  // flips `navigated` so the arrived-at week loads quietly (no re-stagger).
+  const weekPrev = () => { setNavigated(true); setFocus(null); setNav(navPrev(nav, today)) }
+  const weekNext = () => { setNavigated(true); setFocus(null); setNav(navNext(nav, today)) }
+  const backWeek = () => { setNavigated(true); setFocus(null); setNav(HOME) }
   // Month nav — whole-month steps.
   const monthPrev = () => setMonthAnchor(addMonths(monthAnchor, -1))
   const monthNext = () => setMonthAnchor(addMonths(monthAnchor, 1))
@@ -44,8 +48,8 @@ export default function CalendarWeek() {
   // View switches + the Month → Week jumps.
   const toWeek = () => { setFocus(null); setView('week') }
   const toMonth = () => { setMonthAnchor(firstOfMonth(days[0])); setView('month') }
-  const jumpToDay = (day) => { setFocus({ day, itemId: null, ms: null }); setNav(navToDay(day, today)); setView('week') }
-  const jumpToItem = (day, item) => { setFocus({ day, itemId: item.id, ms: item.ms }); setNav(navToDay(day, today)); setView('week') }
+  const jumpToDay = (day) => { setNavigated(true); setFocus({ day, itemId: null, ms: null }); setNav(navToDay(day, today)); setView('week') }
+  const jumpToItem = (day, item) => { setNavigated(true); setFocus({ day, itemId: item.id, ms: item.ms }); setNav(navToDay(day, today)); setView('week') }
 
   return (
     <div className="cw">
@@ -101,6 +105,7 @@ export default function CalendarWeek() {
           requestAdd={requestAdd}
           trayOpen={trayOpen}
           focus={focus}
+          staggerLoad={!navigated}
         />
       )}
     </div>

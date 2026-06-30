@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HOUR_HEIGHT, isSameDay, dayName } from '../dateUtils'
+import { useBlockAppearance } from './useBlockAppearance'
 import WeekColumn from './WeekColumn'
 import AllDayBand from './AllDayBand'
 import './weekGrid.css'
@@ -34,8 +35,22 @@ export default function WeekGrid({
   bandCreateBind,
   bandBarBind,
   bandPreview,
+  staggerLoad = false,
 }) {
   const [now, setNow] = useState(() => new Date())
+
+  // V2-2: ONE appearance tracker for the whole week (above the 7 columns), so a
+  // re-day drag that moves a block across columns shares the same seen-set and
+  // never re-fades. Blocks in start order → the stagger reads top-down.
+  const appearing = useBlockAppearance(
+    [
+      ...events.map((e) => ({ id: 'event:' + e.id, ms: +new Date(e.start_at) })),
+      ...scheduled.map((t) => ({ id: 'task:' + t.id, ms: +new Date(t.scheduled_start) })),
+    ]
+      .sort((a, b) => a.ms - b.ms)
+      .map((x) => x.id),
+    staggerLoad,
+  )
 
   // Tick the now-line as time passes (today's column only).
   useEffect(() => {
@@ -124,6 +139,7 @@ export default function WeekGrid({
                 createDraft={createDraft}
                 blockBind={blockBind}
                 backgroundBind={backgroundBind}
+                appearing={appearing}
               />
             )
           })}

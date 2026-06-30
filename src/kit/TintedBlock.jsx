@@ -8,7 +8,9 @@ import './todayKit.css'
 // visual states during a drag.
 //
 // Props: title, time, hex, done, top, height, col, cols, bind, dragging, removing,
-//        selected (a quiet outline while this block's form is open).
+//        selected (a quiet outline while this block's form is open),
+//        appearDelay (V2-2: a number of ms → this block fades in with that stagger
+//        delay; undefined → no appear animation. Decided by useBlockAppearance).
 // V2-0b: a short block keeps a minimum GRAB area without inflating what you see.
 // The interactive element (the one `bind` is spread onto, so useGridDrag reads its
 // rect for move/resize edges) is a transparent wrapper at least HIT_MIN tall; the
@@ -19,11 +21,12 @@ import './todayKit.css'
 // collides with the drag-lift scale() on the week.
 const HIT_MIN = 24
 
-export default function TintedBlock({ title, time, hex, done, top, height, col, cols, bind, dragging, removing, selected }) {
+export default function TintedBlock({ title, time, hex, done, top, height, col, cols, bind, dragging, removing, selected, appearDelay }) {
   const width = `calc(${100 / cols}% - 4px)`
   const left = `calc(${(col * 100) / cols}% + 2px)`
   const hitH = Math.max(height, HIT_MIN)
   const inset = (hitH - height) / 2 // visual's offset inside the (taller) hit box
+  const appearing = appearDelay != null
   return (
     <div
       className="tk-block-hit"
@@ -36,7 +39,8 @@ export default function TintedBlock({ title, time, hex, done, top, height, col, 
           (done ? ' is-done' : '') +
           (dragging ? ' is-dragging' : '') +
           (removing ? ' is-removing' : '') +
-          (selected ? ' is-selected' : '')
+          (selected ? ' is-selected' : '') +
+          (appearing ? ' is-appearing' : '')
         }
         style={{
           position: 'absolute',
@@ -46,6 +50,7 @@ export default function TintedBlock({ title, time, hex, done, top, height, col, 
           right: 0,
           background: tint(hex, 0.14),
           borderLeft: `3px solid ${hex}`,
+          ...(appearing ? { animationDelay: `${appearDelay}ms` } : null),
         }}
       >
         {height >= 30 && time && <div className="tk-block-time">{time}</div>}

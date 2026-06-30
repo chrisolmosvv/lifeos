@@ -199,18 +199,22 @@
   overflow: hidden;
   cursor: pointer;
   pointer-events: none; /* the wrapper handles all input; this is just the visual */
+  /* V2-2: completion eases to grey (opacity, fast tier); hover deepens the tint. */
+  transition: opacity 300ms ease, filter 120ms ease;
   /* the tinted fill + coloured left bar are set inline (per category colour) */
 }
 .tk-block.is-done {
   opacity: 0.6;
 }
+/* V2-2 hover tint-deepen — on the hit WRAPPER, since the inner block is
+   pointer-events:none (V2-0b). A faint deepen, both screens. */
+.tk-block-hit:hover .tk-block {
+  filter: brightness(0.96);
+}
 /* Selected — a quiet ink outline while this block's form is open (both screens). */
 .tk-block.is-selected {
   outline: 1.5px solid var(--ink);
   outline-offset: -1px;
-}
-.tk-block.is-done .tk-block-title {
-  text-decoration: line-through;
 }
 .tk-block-time {
   font-size: 0.6rem;
@@ -218,11 +222,48 @@
   white-space: nowrap;
 }
 .tk-block-title {
+  position: relative; /* anchors the V2-2 strike line */
   font-size: 0.78rem;
   line-height: 1.2;
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* V2-2 completion strike — a drawn line that sweeps left→right when a task is
+   completed in place (text-decoration can't animate). A freshly-loaded done block
+   mounts at scaleX(1) → instant strike, no sweep. */
+.tk-block-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 300ms ease;
+}
+.tk-block.is-done .tk-block-title::after {
+  transform: scaleX(1);
+}
+/* V2-2 appear — soft fade + 2px rise, on load-stagger / create only (the stagger
+   delay is set inline by useBlockAppearance). */
+@keyframes tk-appear {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tk-appear-rm {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.tk-block.is-appearing {
+  animation: tk-appear 280ms ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Quiet crossfade / instant — no rise, sweep, or glide. */
+  .tk-block.is-appearing { animation-name: tk-appear-rm; }
+  .tk-block-title::after { transition: none; }
 }
 
 /* --- DayGrid: the 7am–midnight day sheet, scrolling inside its column ------ */
@@ -284,6 +325,10 @@
   height: 0;
   border-top: 2px solid var(--accent);
   z-index: 3;
+  transition: top 500ms ease; /* V2-2: glide to the new spot at the minute tick */
+}
+@media (prefers-reduced-motion: reduce) {
+  .tk-grid-now { transition: none; }
 }
 .tk-grid-now::before {
   content: '';
