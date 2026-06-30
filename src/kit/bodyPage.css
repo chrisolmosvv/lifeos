@@ -7,6 +7,7 @@
   max-width: 1340px; /* V2 broadsheet (was 1100) */
   margin: 0 auto;
   box-sizing: border-box;
+  --skeleton-cols: repeat(4, 1fr); /* Body's loading skeleton = 4 columns (shared base is 3) */
 }
 
 /* (V1 .body-tabs/.body-loading/.body-error/.body-group/.body-tiles/.body-tile and
@@ -229,10 +230,7 @@
   .body-fade { animation: none; }
 }
 
-/* Body skeleton: 4 placeholder columns (the shared .skeleton base is 3-col / Sleep). */
-.body-page .skeleton {
-  grid-template-columns: repeat(4, 1fr);
-}
+/* (Body skeleton's 4-col override replaced by --skeleton-cols set on .body-page. P3.) */
 
 /* ── THE TABLE: rows flex-fill the fold (zero-scroll) ────────────────────────── */
 .body-table {

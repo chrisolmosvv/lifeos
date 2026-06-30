@@ -81,7 +81,7 @@
    shaped; Body can override the column template in its own sheet. ─────────────── */
 .skeleton {
   display: grid;
-  grid-template-columns: 260px 1fr 300px;
+  grid-template-columns: var(--skeleton-cols, 260px 1fr 300px); /* each page sets its own cols off this base */
   gap: 28px;
 }
 .sk-col {
