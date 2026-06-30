@@ -1,5 +1,6 @@
 import { shiftYMD, humanDayShort } from "../gym/gymDates";
-import { rangeBedWakeAverages, nightsHitGoal } from "./healthSleep";
+import { nightsHitGoal } from "./healthSleep";
+import { rangeBedWakeAverages } from "./healthRhythm";
 import { hm, clockFromMin } from "./healthFormat";
 
 // SleepRange — the Week (days=7) / Month (days=30) view. One bar per night across the

@@ -165,42 +165,9 @@ export function bedtimeConsistency(rows, today) {
   return { stdDevMin: Math.sqrt(variance), nights: mins.length, times };
 }
 
-// CIRCULAR mean of clock times (minutes-after-midnight) → minutes-after-midnight,
-// handling the midnight wrap: 23:50 & 00:10 average to 00:00, not to noon. Each time
-// becomes an angle on the 24h clock; we average the unit vectors and convert back.
-// null for an empty list. (S6-prep — a normal mean can't average around midnight.)
-export function averageClock(minsList) {
-  const xs = (minsList || []).filter((m) => Number.isFinite(m));
-  if (xs.length === 0) return null;
-  let sx = 0, sy = 0;
-  for (const m of xs) {
-    const a = (m / 1440) * 2 * Math.PI;
-    sx += Math.cos(a);
-    sy += Math.sin(a);
-  }
-  let a = Math.atan2(sy / xs.length, sx / xs.length);
-  if (a < 0) a += 2 * Math.PI;
-  return ((a / (2 * Math.PI)) * 1440) % 1440; // fold 24:00 → 00:00, keep in [0,1440)
-}
-
-// Average bedtime + wake clock for nights in [start, end] inclusive, as circular
-// means of in_bed_at / woke_at. → { bedAvgMin, wakeAvgMin, nights } (nulls if none).
-// (S6-prep — the Week/Month summary's average bedtime & wake line.)
-export function rangeBedWakeAverages(rows, start, end) {
-  const beds = [], wakes = [];
-  for (const r of rows || []) {
-    if (!r?.night_date || r.night_date < start || r.night_date > end) continue;
-    const b = amsClockMinutes(r.in_bed_at);
-    if (b != null) beds.push(b);
-    const w = amsClockMinutes(r.woke_at);
-    if (w != null) wakes.push(w);
-  }
-  return {
-    bedAvgMin: averageClock(beds),
-    wakeAvgMin: averageClock(wakes),
-    nights: Math.max(beds.length, wakes.length),
-  };
-}
+// (Bed/wake clock math — averageClock, circularMedianClock, clockExtent,
+// rangeBedWakeAverages — moved to ./healthRhythm.js to keep this file under the size
+// guard. They reason on the same noon-anchor convention bedtimeConsistency uses.)
 
 // Last night's bedtime vs a by_time bedtime goal. null if no goal / no bedtime.
 export function bedtimeVsGoal(rows, goal, today) {
