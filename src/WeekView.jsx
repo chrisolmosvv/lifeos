@@ -49,18 +49,16 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
     return () => clearTimeout(t)
   }, [trayOpen])
 
-  // V2-5 (free-triggered): a two-finger horizontal swipe over the week grid, on
-  // RELEASE, shifts to any day-aligned window (a bigger flick travels further).
+  // V2-5: a two-finger horizontal swipe over the week grid steps EXACTLY one
+  // Mon–Sun week on release — the SAME next/prev-week step the arrows use (swipe
+  // and arrows are one path), distance-independent (a big flick still moves one).
   // No live track — the V2-4 slide animates the commit. Attaches to the grid's
-  // existing scroll element (scrollRef) via the shared detector; vertical scroll
-  // still scrolls the hours (axis-lock). The 7-col render + dayStartMsAt are
-  // unchanged → create/re-day land byte-for-byte on the (free) window's days.
-  const DAY_PX = 90 // accumulated deltaX per day-shift
+  // existing scroll element (scrollRef); vertical scroll still scrolls the hours
+  // (axis-lock); the non-passive preventDefault kills the macOS history-swipe.
+  const SWIPE_MIN = 30 // px of accumulated deltaX to count as a swipe
   useSwipe(scrollRef, {
     onEnd: (totalDx) => {
-      let n = Math.round(totalDx / DAY_PX)
-      if (n === 0 && Math.abs(totalDx) > 20) n = totalDx > 0 ? 1 : -1 // a small flick = 1 day
-      onSwipe?.(Math.max(-28, Math.min(28, n)))
+      if (Math.abs(totalDx) > SWIPE_MIN) onSwipe?.(totalDx > 0 ? 1 : -1)
     },
   })
 
