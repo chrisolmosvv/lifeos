@@ -35,6 +35,19 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
     setToast(null)
   }, [weekKey])
 
+  // V2-6: while the tray squeeze animates (~220ms), gate the grid's pointer-events
+  // off so a drag can't start/drop while the x→day geometry is mid-transition. The
+  // live-rect read already self-corrects; this is cheap belt-and-suspenders. Skips
+  // the first run so opening Calendar never gates the grid.
+  const [squeezing, setSqueezing] = useState(false)
+  const trayMounted = useRef(false)
+  useEffect(() => {
+    if (!trayMounted.current) { trayMounted.current = true; return }
+    setSqueezing(true)
+    const t = setTimeout(() => setSqueezing(false), 240)
+    return () => clearTimeout(t)
+  }, [trayOpen])
+
   // All-day events go to the band; only timed events render on the hour grid (so
   // an all-day item never disturbs the timed even-split/overlap below). (C7)
   const timedEvents = events.filter((e) => !e.all_day)
@@ -133,7 +146,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
 
   return (
     <>
-      <div className="wv-row">
+      <div className={'wv-row' + (squeezing ? ' is-squeezing' : '')}>
         <WeekGrid
           days={days}
           today={today}
@@ -159,16 +172,16 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
           navToken={navToken}
           navIntent={navIntent}
         />
-        {trayOpen && (
-          <TrayDrawer
-            tasks={tray}
-            cats={cats}
-            busy={busy}
-            onAdd={onAddLooseTask}
-            onComplete={(id, done) => onUpdateTask(id, { status: done ? 'open' : 'done' })}
-            trayBind={grid.trayBind}
-          />
-        )}
+        {/* V2-6: always mounted (so close animates too); `open` drives the squeeze. */}
+        <TrayDrawer
+          open={trayOpen}
+          tasks={tray}
+          cats={cats}
+          busy={busy}
+          onAdd={onAddLooseTask}
+          onComplete={(id, done) => onUpdateTask(id, { status: done ? 'open' : 'done' })}
+          trayBind={grid.trayBind}
+        />
       </div>
 
       {grid.ghost && (

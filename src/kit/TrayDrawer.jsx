@@ -11,7 +11,7 @@ import './trayDrawer.css'
 // trayBind's onClick handles click-vs-drag). Empty = blank (spec §15). Sealed kit.
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export default function TrayDrawer({ tasks, cats, busy, onAdd, onComplete, trayBind }) {
+export default function TrayDrawer({ open, tasks, cats, busy, onAdd, onComplete, trayBind }) {
   const [adding, setAdding] = useState(false)
   const [title, setTitle] = useState('')
   const byId = new Map(cats.map((c) => [c.id, c]))
@@ -23,8 +23,12 @@ export default function TrayDrawer({ tasks, cats, busy, onAdd, onComplete, trayB
     setAdding(false)
   }
 
+  // V2-6: always mounted; the squeeze animates the outer width 0↔280 (driving the
+  // grid's narrowing as one motion). The inner stays a fixed 280px so the contents
+  // don't reflow mid-glide — the outer just clips/reveals them. Closed → hidden.
   return (
-    <aside className="wv-tray">
+    <aside className={'wv-tray' + (open ? ' is-open' : '')} aria-hidden={!open}>
+     <div className="wv-tray-inner">
       <div className="wv-tray-head">
         <span className="wv-tray-title">Unscheduled</span>
         <button className="wv-tray-add" onClick={() => setAdding(true)}>+ add</button>
@@ -70,6 +74,7 @@ export default function TrayDrawer({ tasks, cats, busy, onAdd, onComplete, trayB
           )
         })}
       </div>
+     </div>
     </aside>
   )
 }
