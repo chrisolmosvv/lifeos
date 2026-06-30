@@ -33,6 +33,28 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-30 — Calendar (Track C) — Calendar V2 COMPLETE. SRC/ ONLY. 8 pieces, all owner-verified on Mac + deployed live. — motion-led upgrade; as-built truth = `calendar-v2-spec.md` (§18 = the swipe arc).
+
+WHAT CHANGED (commit chain, oldest→newest):
+- **V2-0 `511ef7e`** — grid alignment fix (hour rows `box-sizing:border-box`; the lines were drifting 1px/hour, so click-drag landed on the wrong time). Both screens.
+- **V2-0b `f0bf2f7`** — true block heights + a 24px min GRAB area (shared `TintedBlock` wrapper): a 15-min block looks 15 min and stays grabbable.
+- **V2-1 `c5f22e3`** — colour unify: Today's grid blocks AND row-tag dots → `resolveColor` (shaded sub-branch), matching Calendar.
+- **V2-2 `8ca0a7b`** — shared block motion: load-stagger + create-fade (new `kit/useBlockAppearance`, anti-flicker seen-ids signal), completion cross-fade + drawn strike, hover tint-deepen, eased now-line. Each reduced-motion guarded.
+- **V2-3 `e563949`** — drag feel: faint drag-lift elevation (Amendment 1, dragged block ONLY), asymmetric pickup/drop ease, full-span gutter highlight (read from live drag state — no drag-math change).
+- **V2-4 `bc0df68` (gate: reload-on-weekKey + drop the per-week remount) → `a444cd6` (content slide + Week↔Month zoom) → `70756b5` (prove-dead sweep — nothing orphaned; one stale comment tidied).**
+- **V2-6 `ecdb17e`** — tray squeeze: synchronized width glide (always-mounted tray, fixed inner; grid pointer-gated during the ~220ms).
+- **V2-5 `94fa792` (shared `useSwipe` + Today day-swipe) → `750d4f6` (Week free-triggered, the §18 fallback) → `e9a3ad3` (Month = one month/swipe) → Mon-lock change of decision: `0b29b10` (Week swipe = the arrow step) + `0216340` (prove-dead removal of `weekNav` FREE state) + `0392665` (spec records the arc).** Close: build-plan committed + 03/04/roadmap updated (this entry).
+
+HOW TO VERIFY (Calendar + Today — the shared oracle): grid lines flush under labels + click-to-time exact at top/mid/bottom hours; 15-min blocks true height + grabbable; a nested sub-category block is shaded, SAME colour on both screens (+ its Today row-dot matches); blocks stagger on first open, fade on create, **NO flicker on drag/re-day/complete**; the drag-lift shadow shows on the dragged block ONLY (not hover/selected); a week arrow AND a swipe both step exactly one Mon–Sun week with the slide (header always a Monday start); Week↔Month zoom; the tray glides in as the week narrows; a horizontal swipe NEVER history-navigates the browser; Today's pointer create/drag/resize/complete byte-for-byte; Reduce Motion degrades everything to crossfade/instant.
+
+KNOWN GAPS / RISKS: none outstanding — all 8 verified + deployed. (The swipe shipped Mon-locked; the free-live day-strip was reserved, not built — see 03-decisions / spec §18, "do not rebuild as free.")
+
+DEFERRED (NOT built, untouched — confirmed): **V2-7** keyboard nav (Esc + ←/→); **V2-8** brief all-day awareness (its OWN `supabase/` commit track — the brief still reads an all-day event at 00:00); standalone **`onDeleteEvent`** removal (dead in `useWeekData`, left per the deferral).
+
+NEXT: a deferred V2 item (V2-7 / V2-8) or another track — owner's call. No schema / no spine touch in the whole upgrade.
+
+FOR THE CHECKER: no schema this upgrade (front-end only). If/when V2-8 runs, it's a separate `supabase/` track (re-pin `verify_jwt = false`).
+
 ### 2026-06-29 — Planning view, P6 — retire All Tasks. SRC/ ONLY, TWO COMMITS (staged replace-then-delete). (Owner-verified on Mac, Stage 1 parity gate + Stage 2.) — DELETION piece; All Tasks GONE.
 WHAT CHANGED: All Tasks is retired; Planning's category mode is the sole backlog home. Done as a staged
 replace-then-delete (the first deletion on this surface), the conservative C4 way.

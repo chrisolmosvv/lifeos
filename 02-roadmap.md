@@ -514,6 +514,21 @@ kanban, drag → status), **category** (collapsible groups, All-Tasks parity by 
 verbatim) — plus an interactive **Inbox rail** (drag-to-lane + tap-to-triage chips). All Tasks is retired,
 its backlog fully served by category mode. Only **P7 — Marty/brief** remains on the Planning track.
 
+### Calendar V2 — motion-led upgrade ✅ COMPLETE (2026-06-30) — spec: `calendar-v2-spec.md`
+The desktop Calendar (and Today, via the shared kit) given a premium motion pass + a correctness fix,
+evolved in place — pure front-end, **no schema**, owner-verified on Mac + deployed at every piece.
+8 pieces: **V2-0** grid alignment fix (`511ef7e`), **V2-0b** true block heights + min grab area
+(`f0bf2f7`), **V2-1** colour unify → `resolveColor` (`c5f22e3`), **V2-2** shared block motion —
+stagger / create-fade / completion / hover / now-line (`8ca0a7b`), **V2-3** drag feel — lift elevation
++ gutter highlight (`e563949`), **V2-4** nav transitions — reload-gate + content slide + Week↔Month
+zoom (`bc0df68` / `a444cd6` / `70756b5`), **V2-6** tray squeeze (`ecdb17e`), **V2-5** swipe (`94fa792`
+/ `750d4f6` / `e9a3ad3`, then the Mon-lock cleanup `0b29b10` / `0216340` / `0392665`). **The swipe
+shipped MON-LOCKED** — one Mon-week per swipe via the arrow path (Today = one day, Month = one month);
+the free-live day-strip was **reserved, not built** (the full arc + reasoning live in 03-decisions.md
+and spec §18 — **do not rebuild as free**). **Deferred (not built):** V2-7 keyboard nav (Esc + ←/→),
+V2-8 brief all-day awareness (its own `supabase/` track), standalone `onDeleteEvent` removal.
+**The historical V1 Calendar rebuild (C1→C7) is recorded below.**
+
 ### Phase 7 — Calendar rebuild-and-converge (C1→C6) — spec: `calendar-uiux-spec.md`
 The Calendar screen rebuilt on Today's kit so the two become ONE engine (panels →
 Today's shared form; old drag hooks → Today's `useTodayGrid`). Built in small,

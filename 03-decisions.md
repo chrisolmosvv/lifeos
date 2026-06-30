@@ -9,6 +9,52 @@
 
 ---
 
+## Calendar V2 — motion-led upgrade, COMPLETE (2026-06-30)
+
+> Full as-built contract: `calendar-v2-spec.md` (§18 has the swipe arc). 8 pieces, each its own
+> small commit, owner-verified on Mac + deployed live (V2-0, V2-0b, V2-1, V2-2, V2-3, V2-4, V2-6,
+> V2-5). Pure front-end, no schema; shared-kit changes surface on Today + Calendar identically.
+
+- **[Three amendments to prior V1 locks — recorded openly; do NOT "fix" back.]**
+  (1) **No-shadow / paper-true → a faint elevation on the ACTIVELY-DRAGGED block only** (V2-3) —
+  scoped to the drag moment; the still frame stays pure paper; hover/selected carry no shadow.
+  (2) **"Arrows only / no date picker" → arrows + a MON-LOCKED trackpad swipe** (still no date
+  picker; arrows unchanged + primary). (3) **"Today stays byte-for-byte" → Today's LOOK/MOTION comes
+  along (shared kit), BEHAVIOUR stays a frozen oracle** (convergence): a changed Today colour/animation
+  = success, a changed Today WRITE = regression. Sub-record: Today's block tint + row-tag dot moved
+  raw → shaded `resolveColor` (V2-1, closes the colour-drift flag). **Why:** V2 was a motion-led
+  premium pass — these were deliberate, owner-approved loosenings, each small. **Trade-off:** the V1
+  locks must be read WITH these three.
+
+- **[The swipe arc — locked free-live → built free-triggered → simplified to MON-LOCKED. DO NOT
+  REBUILD AS FREE.]** The swipe (trackpad two-finger horizontal; wheel ≠ pointer → no collision with
+  create/re-day; shared `kit/useSwipe` with axis-lock + a NON-PASSIVE `preventDefault` to kill the
+  macOS history-swipe) went through three states:
+  (1) **Locked FREE-LIVE** at recon — continuous finger-track, Week landing on any day via a pannable
+  day-strip.
+  (2) **Built FREE-TRIGGERED** — at the Week build the day-strip proved to be a large, multi-file,
+  un-self-testable (blind) rebuild (synced header/band/column strips, a pan/momentum/snap/rebase
+  state machine, skeleton buffers, `weekNav` free-offset) landing as ONE commit on the hardest-
+  verified screen. Per the doom-loop / "fall back rather than dig" rule, took the spec's sanctioned
+  fallback: commit on release (no live track), reusing the verified V2-4 slide; the fixed 7-col
+  render stayed, so `dayStartMsAt` + the whole drag geometry were byte-for-byte. **The geometry GATE
+  itself PASSED** (transform-aware `getBoundingClientRect` self-corrects) — the risk was the
+  surrounding blind rebuild, not the rect math.
+  (3) **Simplified to MON-LOCKED (owner decision)** — the free/any-day window was dropped; the Week
+  swipe now behaves EXACTLY like the arrows (one Mon–Sun week per swipe, distance-independent, via the
+  SAME `navNext`/`navPrev` — swipe + arrows are one path). `weekNav`'s FREE state + `navShift` + the
+  arrow-from-free seam were **proven-dead and removed** (own commit); `weekNav` is back to its 2-state
+  HOME/WEEK form. Today = one day per swipe; Month = one month per swipe (both triggered).
+  **Why:** for discrete Mon-week / day / month navigation the continuous live track bought little, at
+  the cost of a blind multi-file rebuild (and an any-day model the owner ultimately didn't want);
+  calm + one nav path won. **Trade-off:** no continuous finger-tracked pan — reserved, not built. If
+  ever revived it's the day-strip rebuild the spec describes, done as a verifiable multi-commit
+  sub-sequence, NOT folded in.
+
+- **[Deferred, untouched (confirmed at the close).]** V2-7 keyboard nav (Esc + ←/→); V2-8 brief
+  all-day awareness (its OWN `supabase/` commit track — the 7am brief still reads an all-day event at
+  00:00); standalone `onDeleteEvent` removal (dead in `useWeekData`, left in place per the deferral).
+
 ## Planning view — P6: fold in / retire All Tasks (2026-06-29)
 
 - **[All Tasks is RETIRED; Planning's category mode is now the sole backlog home.]** Today's bottom-left
