@@ -21,82 +21,10 @@
   min-height: 0; /* critical: lets the column chain shrink instead of scrolling */
 }
 
-/* Night / Week / Month segmented control. A hairline-bordered row; the active range
-   reads as ink-on-paper, the others muted; hover hints terracotta (an affordance). */
-.sleep-tabs {
-  display: inline-flex;
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 6px 0 22px;
-}
-.sleep-tab {
-  background: var(--paper);
-  border: none;
-  border-left: 1px solid var(--rule);
-  padding: 8px 20px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: color 120ms ease, background 120ms ease;
-}
-.sleep-tab:first-child {
-  border-left: none;
-}
-.sleep-tab:hover {
-  color: var(--accent);
-}
-.sleep-tab.is-active {
-  background: var(--ink);
-  color: var(--paper);
-}
-.sleep-tab.is-active:hover {
-  color: var(--paper); /* selected stays calm — no terracotta on the active fill */
-}
+/* (V1 .sleep-tabs / .sleep-loading / .sleep-error / .sleep-view-stub removed — replaced
+   by the shared RangeSwitcher, Skeleton and InlineError kit. V2 P1 deletion.) */
 
-/* Loading + error (mirrors the hub). */
-.sleep-loading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--ink-muted);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  padding: 40px 0;
-}
-.sleep-error {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--overdue);
-  padding: 24px 0;
-}
-
-/* Placeholder (piece 1 only — replaced by the real views in pieces 2–3). */
-.sleep-view-stub {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  padding: 40px 0;
-}
-
-/* ── NIGHT VIEW ─────────────────────────────────────────────────────────────── */
-.sleep-night {
-  display: flex;
-  flex-direction: column;
-  gap: 18px; /* tightened for desktop zero-scroll */
-}
-
-/* Hero: big duration + the hypnogram. */
-.sleep-duration {
-  font-family: var(--font-serif);
-  font-size: 44px;
-  line-height: 1;
-  color: var(--ink);
-  margin-bottom: 10px;
-}
-
-/* Shared small label + muted text. */
+/* Shared small label + muted text (kept — used across the V2 layout). */
 .sleep-label {
   display: block;
   font-family: var(--font-sans);
@@ -108,79 +36,6 @@
 }
 .sleep-muted {
   color: var(--ink-muted);
-}
-
-/* Bed/wake + consistency, side by side. */
-.sleep-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-}
-@media (max-width: 720px) {
-  .sleep-row {
-    grid-template-columns: 1fr;
-  }
-}
-.sleep-bedwake-times {
-  font-family: var(--font-serif);
-  font-size: 24px;
-  color: var(--ink);
-}
-.sleep-bedtime-goal,
-.sleep-rest-item span:last-child {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-.sleep-bedtime-goal {
-  display: block;
-  margin-top: 4px;
-}
-
-/* Stages: one row each, minutes + %. */
-.sleep-stages {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border-top: 1px solid var(--rule-faint);
-  padding-top: 12px;
-}
-.sleep-stage {
-  display: grid;
-  grid-template-columns: 14px 1fr auto auto;
-  align-items: center;
-  gap: 12px;
-}
-.sleep-stage-label {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink);
-}
-.sleep-stage-min {
-  font-family: var(--font-serif);
-  font-size: 16px;
-  color: var(--ink);
-}
-.sleep-stage-pct {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-  min-width: 42px;
-  text-align: right;
-}
-
-/* The rest. */
-.sleep-rest {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  border-top: 1px solid var(--rule-faint);
-  padding-top: 12px;
-}
-@media (max-width: 720px) {
-  .sleep-rest {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Empty + no-goal states. */
@@ -202,36 +57,6 @@
   color: var(--accent);
   cursor: pointer;
 }
-.sleep-goalprompt {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-  border-top: 1px solid var(--rule-faint);
-  padding-top: 14px;
-}
-/* Static goal line (drill-in: not editable). */
-.sleep-goalline {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-  border-top: 1px solid var(--rule-faint);
-  padding-top: 14px;
-  margin: 0;
-}
-/* Tappable goal line/prompt → opens the editor; hover hints terracotta (affordance). */
-.sleep-goalprompt--btn {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  border-top: 1px solid var(--rule-faint);
-  cursor: pointer;
-}
-.sleep-goalprompt--btn:hover {
-  color: var(--accent);
-}
-
 /* ── HYPNOGRAM ──────────────────────────────────────────────────────────────── */
 .hyp {
   width: 100%;
@@ -333,48 +158,8 @@
 .hyp-asleep { background: #756e62; }
 .hyp-other { background: #b8b0a0; }
 
-/* Week bed/wake band. */
-.bw-band {
-  position: relative;
-  height: 16px;
-  margin-top: 10px;
-  background: var(--rule-faint);
-  border-radius: 8px;
-}
-.bw-dot {
-  position: absolute;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-/* Bed = filled ink, wake = ink ring — distinguished by shape, not terracotta
-   (keeping terracotta reserved for Deep + movement + affordances). */
-.bw-bed { background: var(--ink); }
-.bw-wake { background: var(--paper); border: 1.5px solid var(--ink); }
-
-/* Tiny legend so the dots aren't cryptic. */
-.bw-legend {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 6px;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  color: var(--ink-muted);
-}
-.bw-legend .bw-key {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.bw-legend .bw-key + span {
-  margin-right: 8px;
-}
-.bw-key-bed { background: var(--ink); }
-.bw-key-wake { background: var(--paper); border: 1.5px solid var(--ink); }
+/* (V1 .bw-band/.bw-dot/.bw-legend bed-wake band removed with the BedWakeBand
+   component — superseded by the rhythm clock dials. V2 P1 deletion.) */
 
 /* ── WEEK / MONTH VIEW ──────────────────────────────────────────────────────── */
 .sleep-range {
@@ -828,20 +613,11 @@
   color: var(--ink-muted);
 }
 
-/* Rhythm column: the switcher rides the top-right; stats then the visualisations. */
+/* Rhythm column: the switcher rides the top-right; dials then the clock columns. */
 .snv-rhythm-head {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 14px;
-}
-.snv-rhythm-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin: 10px 0 4px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
 }
 
 /* ── LANE-PER-STAGE TIMELINE (fills the height it's given) ──────────────────── */
@@ -929,58 +705,8 @@
   margin-top: 10px;
 }
 
-/* ── BED/WAKE BAND v2: hour-tick axis + avg/median markers + hover pairing ───── */
-.bw {
-  margin-top: 14px;
-}
-.bw-band {
-  position: relative;
-  height: 26px;
-  margin-top: 8px;
-  background: var(--rule-faint);
-  border-radius: 6px;
-}
-.bw-tick {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 0;
-  border-left: 1px solid var(--paper);
-}
-.bw-dot.is-active {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-  z-index: 3;
-}
-/* Avg (solid) / median (hollow) markers — thin carets above the band. */
-.bw-mark {
-  position: absolute;
-  top: -5px;
-  width: 0;
-  height: 9px;
-  border-left: 1.5px solid var(--ink);
-  transform: translateX(-50%);
-}
-.bw-mark--wake {
-  border-left-color: var(--ink-muted);
-}
-.bw-mark--med {
-  top: auto;
-  bottom: -5px;
-  border-left-style: dotted;
-}
-.bw-axis {
-  position: relative;
-  height: 14px;
-  margin-top: 4px;
-}
-.bw-axis span {
-  position: absolute;
-  transform: translateX(-50%);
-  font-family: var(--font-sans);
-  font-size: 10px;
-  color: var(--ink-muted);
-}
+/* The hover-readout line, shared by the seven-night clock (the rest of the V2 bed/wake
+   band — .bw / .bw-band / markers — was removed with the BedWakeBand component). */
 .bw-readout {
   margin-top: 8px;
   font-family: var(--font-sans);
