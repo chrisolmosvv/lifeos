@@ -33,6 +33,31 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-30 — Track S — Health V2 P3: shared-kit consolidation (CSS only). Owner-verified each step on 13". → P3 COMPLETE.
+WHAT CHANGED (3 commits, each verified on BOTH Sleep + Body before the next):
+- **step 1 `c563c7f`** — `.skeleton` grid → `var(--skeleton-cols, 260px 1fr 300px)`; Body sets
+  `--skeleton-cols: repeat(4,1fr)` on `.body-page` (dropped the `.body-page .skeleton` override). One base,
+  each page (and future Gym) sets its own columns. No visual change.
+- **step 2 `5904429`** — merged `.sleep-chrome` + `.body-chrome` → shared **`.health-chrome`** (4 consumers
+  re-pointed; `.agg-chrome` dropped as redundant). ONE intentional change: top margin standardized to 16px
+  (Body +2px; Sleep's secondary band −6px; the main Last-night chrome is column-distributed, untouched).
+- **step 3 `0b10561`** — merged `.sleep-fade` + `.body-fade` → shared **`.health-fade`** + `health-fade-up`;
+  the fit inner-child unified to `.health-fit .health-fade { flex:1 1 auto; min-height:0; display:flex;
+  flex-direction:column }`. Body unchanged; **Sleep adopted the flex-column fade parent** — verified zero-scroll
+  + layout intact.
+NOW SHARED (healthChrome.css, consumed by both pages): RangeSwitcher, Breadcrumb, Skeleton (+ cols var),
+InlineError, `.health-fit`/`--health-vh`, `.health-chrome`, `.health-fade`/`health-fade-up`.
+LEFT SIGNATURE (recon-confirmed, NOT merged): band renders (Sleep `.dial-band` arc vs Body `.body-chart-band`
+rect + `.bt-band` cell — only fixedBand logic shared); hover readouts (Sleep-only); no condensed tile exists.
+KNOWN GAPS / RISKS: none new. The dead GoalBar/GoalWaiting/GoalPrompt path was deliberately LEFT for P5's sweep.
+NEXT: **P4 — Gym (recon-gated)** — characterise the Gym front page first; the key question is whether the gym
+calc can reframe its training zones over an arbitrary Latest/Week/Month/90 range (one Gym-wide switcher), plus
+the new Activity section. `--skeleton-cols` lets Gym set its own skeleton; `.health-fit` assumes ONE primary
+flex-grow child — Gym's multi-zone page may need to designate which zone grows (a P4 layout call). Then P5 close
+(polish, accent-sparing, delete HealthStub.jsx + the dead GoalBar path; before P4 Activity: walking_speed units
+magnitude-check + plain heart_rate stays off until the Shortcut sends raw samples).
+FOR THE CHECKER: CSS-only; confirm Sleep + Body both render identically post-merge (chrome row, fade, skeleton, zero-scroll).
+
 ### 2026-06-30 — Track S — Health V2 P2 + P2.0: Body "Scale Ticket" rework. Owner-verified stage-by-stage on 13". → P2 COMPLETE.
 WHAT CHANGED (commits): P2.0 extraction `15f9736` → calc `b3a41ee` → layout `7cc8b25` → deletion `8056c9f`.
 - **P2.0** — extracted the shared chrome/fit CSS (RangeSwitcher/Breadcrumb/Skeleton/InlineError + the fit
