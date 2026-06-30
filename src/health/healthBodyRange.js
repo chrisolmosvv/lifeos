@@ -43,6 +43,26 @@ function percentile(values, p) {
   return xs[lo] + (xs[hi] - xs[lo]) * (rank - lo);
 }
 
+// ── fixedBand (V2 P0c) ───────────────────────────────────────────────────────
+// The counterpart to the PERSONAL baselineBand: a FIXED, constant healthy range for
+// metrics with a known clinical normal (bmi 18.5–25, blood_oxygen 95–100). Unlike
+// baselineBand it needs NO history (no 14-reading floor) — the band is given, so it
+// shows from the first reading. Returns the band + where `value` (the latest daily-
+// average) sits within it. Unknown metric → null (the caller omits the band).
+//   verdict: 'below' (under lo) | 'in' (lo..hi) | 'above' (over hi) | null (no value)
+// → { lo, hi, value, verdict, hasBand: true }
+export const FIXED_BANDS = {
+  bmi: { lo: 18.5, hi: 25 },
+  blood_oxygen: { lo: 95, hi: 100 },
+};
+export function fixedBand(metric, value) {
+  const b = FIXED_BANDS[metric];
+  if (!b) return null;
+  const v = Number.isFinite(value) ? value : null;
+  const verdict = v == null ? null : v < b.lo ? "below" : v > b.hi ? "above" : "in";
+  return { lo: b.lo, hi: b.hi, value: v, verdict, hasBand: true };
+}
+
 // ── windowDelta ──────────────────────────────────────────────────────────────
 // This range's average vs the SAME-length window immediately before it, ending on
 // `end`. days=7 reproduces S5's week-over-week; days=30/90 are the month/90 views.

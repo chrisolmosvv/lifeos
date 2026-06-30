@@ -12,6 +12,9 @@ export const METRIC_META = {
   lean_mass: { label: "Lean mass", unit: "kg", decimals: 1 },
   resting_heart_rate: { label: "Resting HR", unit: "bpm", decimals: 0 },
   respiratory_rate: { label: "Respiratory", unit: "/min", decimals: 1 },
+  // V2 P0c — generic body point readings (no UI yet; config so the numbers format).
+  bmi: { label: "BMI", unit: "", decimals: 1 },
+  blood_oxygen: { label: "Blood oxygen", unit: "%", decimals: 0, tight: true },
 };
 
 export function metaFor(metric) {

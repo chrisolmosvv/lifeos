@@ -30,6 +30,15 @@ export const DEADBAND = {
   sleep_duration: { abs: 10 }, //       minutes per week
   steps: { rel: 0.05 }, //              5% — daily steps swing a lot, so relative
   active_energy: { rel: 0.05 }, //      5% — same reasoning as steps
+  // V2 P0c — starting values, tunable once ~2 weeks of real data exist (like the above).
+  resting_energy: { abs: 50 }, //       kcal/day — basal energy is stable day to day
+  stand_minutes: { rel: 0.1 }, //       10% — stand minutes swing, so relative
+  flights_climbed: { abs: 2 }, //       flights/day
+  walking_speed: { abs: 0.1 }, //       m/s
+  walking_heart_rate_avg: { abs: 2 }, // bpm (noisier than resting HR)
+  walking_step_length: { abs: 1 }, //   cm
+  bmi: { abs: 0.2 }, //                 BMI points/week (mirrors weight)
+  blood_oxygen: { abs: 0.5 }, //        % SpO2
 };
 
 // The named rolling-window presets, all built on the arbitrary-range engine.
