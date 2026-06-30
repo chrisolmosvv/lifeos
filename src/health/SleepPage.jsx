@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { amsTodayYMD, shiftYMD, humanDayLong } from "../gym/gymDates";
+import { amsTodayYMD, shiftYMD, humanDayLong, humanDayShort } from "../gym/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
 import { sleepView, nightOn } from "./healthSleep";
@@ -35,6 +35,7 @@ const RANGE_DAYS = { week: 7, month: 30, "90": 90 };
 export default function SleepPage({ onBack }) {
   const [view, setView] = useState("night"); // 'night' | 'week' | 'month' | '90'
   const [drilledNight, setDrilledNight] = useState(null); // a past night's ymd, or null
+  const [weekAnchor, setWeekAnchor] = useState(null); // a week-start ymd when drilled from 90-day
   const [state, setState] = useState({ loading: true });
   const [goalMap, setGoalMap] = useState(new Map());
   const gw = useGoalWrites(goalMap, setGoalMap);
@@ -94,17 +95,24 @@ export default function SleepPage({ onBack }) {
     );
   }
 
-  function renderRange(days) {
+  function renderRange(days, breadcrumb, switcher) {
     const { sleep, today } = state;
+    // end = today by default; a past week-end when drilled into a week from 90-day.
+    const end = weekAnchor ? shiftYMD(weekAnchor, 6) : today;
     return (
       <SleepRange
         days={days}
         rows={sleep}
         goal={goalMap.get("sleep_duration") ?? null}
-        today={today}
+        end={end}
         rolling={sv.rolling}
-        streak={sv.streak}
+        breadcrumb={breadcrumb}
+        switcher={switcher}
         onDrill={setDrilledNight}
+        onWeekDrill={(weekStart) => {
+          setWeekAnchor(weekStart);
+          setView("week");
+        }}
       />
     );
   }
@@ -132,16 +140,32 @@ export default function SleepPage({ onBack }) {
     );
   }
 
-  // Breadcrumb: Health / Sleep [/ the drilled night].
+  // Breadcrumb: Health / Sleep [/ week of X] [/ the drilled night]. The "week of X" crumb
+  // appears when drilled into a week from the 90-day view; clicking "Sleep" returns to the
+  // 90-day it came from, "week of X" returns to that anchored week.
   const crumbs = [{ label: "Health", onClick: onBack }];
-  if (drilledNight) {
+  if (weekAnchor) {
+    crumbs.push({
+      label: "Sleep",
+      onClick: () => {
+        setView("90");
+        setWeekAnchor(null);
+        setDrilledNight(null);
+      },
+    });
+    crumbs.push({
+      label: `week of ${humanDayShort(weekAnchor)}`,
+      onClick: drilledNight ? () => setDrilledNight(null) : undefined,
+    });
+    if (drilledNight) crumbs.push({ label: humanDayLong(drilledNight) });
+  } else if (drilledNight) {
     crumbs.push({ label: "Sleep", onClick: () => setDrilledNight(null) });
     crumbs.push({ label: humanDayLong(drilledNight) });
   } else {
     crumbs.push({ label: "Sleep" });
   }
 
-  const fadeKey = drilledNight ? `drill-${drilledNight}` : view;
+  const fadeKey = drilledNight ? `drill-${drilledNight}` : weekAnchor ? `wk-${weekAnchor}-${view}` : view;
   const breadcrumbEl = <Breadcrumb crumbs={crumbs} />;
   const switcherEl = (
     <RangeSwitcher
@@ -151,16 +175,19 @@ export default function SleepPage({ onBack }) {
       onChange={(id) => {
         setView(id);
         setDrilledNight(null);
+        setWeekAnchor(null);
       }}
     />
   );
-  // The main "Last night" view carries the chrome INSIDE its columns (V2 visual lock);
-  // every other state (loading / error / drill-in / week / month / 90) uses a top band.
-  const isNightMain = !state.loading && !state.error && !drilledNight && view === "night";
+  // The "Last night" view AND the Week/Month/90 aggregates carry the chrome INSIDE their
+  // own layout (the --fit, zero-scroll model); only loading / error / a night drill-in
+  // fall back to a top chrome band + natural height.
+  const isAgg = view === "week" || view === "month" || view === "90";
+  const isFitMain = !state.loading && !state.error && !drilledNight && (view === "night" || isAgg);
 
   return (
-    <div className={isNightMain ? "sleep-page sleep-page--fit" : "sleep-page"}>
-      {!isNightMain && (
+    <div className={isFitMain ? "sleep-page sleep-page--fit" : "sleep-page"}>
+      {!isFitMain && (
         <div className="sleep-chrome">
           {breadcrumbEl}
           {switcherEl}
@@ -171,13 +198,17 @@ export default function SleepPage({ onBack }) {
         <Skeleton cols={3} />
       ) : state.error ? (
         <InlineError message={state.error} onRetry={load} />
-      ) : isNightMain ? (
+      ) : drilledNight ? (
+        <div className="sleep-fade" key={fadeKey}>
+          {renderDrilledNight()}
+        </div>
+      ) : view === "night" ? (
         <div className="sleep-fade" key={fadeKey}>
           {renderNight(breadcrumbEl, switcherEl)}
         </div>
       ) : (
         <div className="sleep-fade" key={fadeKey}>
-          {drilledNight ? renderDrilledNight() : renderRange(RANGE_DAYS[view])}
+          {renderRange(RANGE_DAYS[view], breadcrumbEl, switcherEl)}
         </div>
       )}
 
