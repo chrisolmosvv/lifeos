@@ -262,6 +262,10 @@
   border-left: 1px solid var(--rule);
 }
 .tk-grid-hour {
+  /* border-box so the 1px hour-line sits INSIDE the 48px, not added on top —
+     otherwise each row is 49px and the lines drift 1px/hour below the gutter
+     labels + the 48px-based drag math (the V2-0 grid-alignment fix). */
+  box-sizing: border-box;
   height: 48px; /* must equal HOUR_HEIGHT */
   border-top: 1px solid var(--rule-faint);
 }
