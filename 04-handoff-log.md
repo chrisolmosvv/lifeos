@@ -33,6 +33,33 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-30 — Track S — Health V2 P2 + P2.0: Body "Scale Ticket" rework. Owner-verified stage-by-stage on 13". → P2 COMPLETE.
+WHAT CHANGED (commits): P2.0 extraction `15f9736` → calc `b3a41ee` → layout `7cc8b25` → deletion `8056c9f`.
+- **P2.0** — extracted the shared chrome/fit CSS (RangeSwitcher/Breadcrumb/Skeleton/InlineError + the fit
+  model, .sleep-page--fit → **.health-fit**, --sleep-vh → --health-vh) into **src/health/healthChrome.css** so
+  Body can reuse the P1 kit. Pure move; Sleep verified byte-identical.
+- **GATE #1 PASSED** (Food/health_goals leak): Food reads goals ONLY by its 4 keys (LogPage GOAL_TYPES,
+  foodCalc.dayLedger target()), write path generic → active_energy goal is safe; no Food-side change.
+- **P2** — Body is now a 3-group **table** (Composition / Energy / Vitals) in the visual lock, zero-scroll on
+  the 13" across Latest + Week/Month/90. Columns Metric · Latest · Movement · 90-day trace · Target/band.
+  New metrics surfaced: bmi (fixed band 18.5–25), blood_oxygen (fixed 95–100), active_energy (days-hit move-
+  goal), resting_energy (greyed "waiting for first sync", 0 rows). RHR/resp personal p10–p90 band hidden <14
+  readings. Two-source: Composition/Vitals = body_metrics, Energy = activity_hourly (first healthActivity
+  import on the page). One new getter: **activityDaysHit** (verified 4/7 at target 500). New: bodyGroups/
+  BodyCells/BodyTable/BodySummary; BodyChart compact mode; bodyFormat META. Deleted dead BodyTile + V1 CSS.
+HOW TO VERIFY: Health → Body → all four ranges — zero-scroll; bands/goal lines render; bottom fat-lean + weight bars.
+KNOWN GAPS / RISKS:
+- **active_energy MOVE-goal:** GoalEditor infers direction from value (wrong for "hit at least"); we FORCE
+  direction "up" at the Body submit site (active_energy only) + the days-hit display forces up. Scoped; Food untouched.
+- **active_energy MOVEMENT = 7-day delta in all ranges** (activity has no range-windowed delta getter — would be new calc, avoided).
+- **GoalBar/GoalWaiting/GoalPrompt** now imported by BodyComposition but unrendered (BodySummary passes goals=[]);
+  the Latest journeys use BodyCells.JourneyBar. Harmless; a future cleanup could drop the unused goal-bar path.
+- **resting_energy** has 0 rows (device sends none) — greyed until it flows.
+NEXT: **P3 — shared kit consolidation** (per build doc): as shared pieces emerged in P1/P2, extract any remaining
+duplicates into the common Health kit (.sleep-chrome/.body-chrome → one; band overlay; hover-readout; condensed
+tile). Then P4 (Gym, recon-gated) + P5 (polish, incl. deleting HealthStub.jsx).
+FOR THE CHECKER: presentation + 1 pure getter (activityDaysHit); confirm zero-scroll on all ranges + the Sleep snapshot still holds.
+
 ### 2026-06-30 — Track S — Health V2 P1 sub-2: Sleep Week/Month/90-day aggregate restyle. Owner-verified on 13". 2 commits. → P1 COMPLETE.
 WHAT CHANGED: layout `04f9c61` → deletion `c9ca58c`.
 - The three aggregate views (one component, varying by `days`) restyled to mockup-1 in the visual lock:
