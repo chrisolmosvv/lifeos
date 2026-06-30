@@ -74,6 +74,17 @@ export default function WeekGrid({
   }, [scrollRef, focusMs])
 
   const byId = new Map(cats.map((c) => [c.id, c]))
+
+  // V2-3: the full-span gutter highlight — the time footprint of whatever's being
+  // dragged/created lights up the gutter (start row → end row). Read straight from
+  // the live drag state (no drag-math change); hidden while a task is dragged off.
+  const span = blockPreview && !blockPreview.off ? blockPreview : createDraft
+  const gutterHi = span
+    ? {
+        top: ((span.startMs - span.dayStartMs) / 3600000) * HOUR_HEIGHT,
+        height: ((span.endMs - span.startMs) / 3600000) * HOUR_HEIGHT,
+      }
+    : null
   const nowH = now.getHours() + now.getMinutes() / 60
   const todayStart = startOfDay(today).getTime()
 
@@ -112,6 +123,7 @@ export default function WeekGrid({
 
         <div className="wk-body" ref={bodyRef}>
           <div className="wk-gutter">
+            {gutterHi && <div className="wk-gutter-hi" style={{ top: gutterHi.top, height: gutterHi.height }} />}
             {HOURS.map((h) => (
               <div className="wk-gutter-cell" key={h}>
                 <span>{pad(h)}</span>

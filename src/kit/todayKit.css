@@ -199,8 +199,11 @@
   overflow: hidden;
   cursor: pointer;
   pointer-events: none; /* the wrapper handles all input; this is just the visual */
-  /* V2-2: completion eases to grey (opacity, fast tier); hover deepens the tint. */
-  transition: opacity 300ms ease, filter 120ms ease;
+  /* V2-2: completion eases to grey (opacity, fast tier); hover deepens the tint.
+     V2-3: the lift's transform + elevation settle here on DROP — quick (~100ms
+     ease-out) so the set-down feels firmer than the gentler pickup below. */
+  transition: opacity 300ms ease, filter 120ms ease, transform 100ms ease-out,
+    box-shadow 100ms ease-out;
   /* the tinted fill + coloured left bar are set inline (per category colour) */
 }
 .tk-block.is-done {
@@ -261,9 +264,12 @@
   animation: tk-appear 280ms ease both;
 }
 @media (prefers-reduced-motion: reduce) {
-  /* Quiet crossfade / instant — no rise, sweep, or glide. */
+  /* Quiet crossfade / instant — no rise, sweep, glide, or lift/drop float. The
+     static elevation still shows (V2-3: it's a look, not movement). */
   .tk-block.is-appearing { animation-name: tk-appear-rm; }
   .tk-block-title::after { transition: none; }
+  .tk-block { transition: opacity 300ms ease, filter 120ms ease; }
+  .tk-block.is-dragging { transition: none; }
 }
 
 /* --- DayGrid: the 7am–midnight day sheet, scrolling inside its column ------ */
@@ -287,6 +293,16 @@
 .tk-grid-times {
   flex: none;
   width: 52px;
+  position: relative; /* anchors the V2-3 gutter highlight band */
+}
+/* V2-3: the full-span gutter highlight while dragging/creating — a faint accent
+   band behind the hour numbers, spanning the block's start row → end row. */
+.tk-grid-times-hi {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
 }
 .tk-grid-time {
   height: 48px; /* must equal HOUR_HEIGHT in dateUtils.js */
@@ -360,10 +376,15 @@
 .tk-block {
   user-select: none;
 }
+/* V2-3: the pickup lift — a faint elevation fading in (Amendment 1, the one
+   sanctioned no-shadow exception, scoped strictly to the dragged block). The
+   gentler ~150ms ease-in is the lift; the firmer ~100ms drop lives on .tk-block
+   above. Shared by both screens (the week adds scale + a hairline outline). */
 .tk-block.is-dragging {
   z-index: 4;
   cursor: grabbing;
-  box-shadow: 0 1px 0 var(--rule);
+  box-shadow: 0 5px 14px rgba(40, 36, 30, 0.16);
+  transition: transform 150ms ease, box-shadow 150ms ease;
 }
 .tk-block.is-removing {
   opacity: 0.4; /* dragged over a module → about to leave the grid */

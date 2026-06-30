@@ -84,6 +84,16 @@
   flex: none;
   position: relative;
 }
+/* V2-3: the full-span gutter highlight while dragging/creating — a faint accent
+   band behind the hour numbers, spanning the block's start row → end row. Lives
+   behind the labels (rendered first) so the numbers stay readable. */
+.wk-gutter-hi {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
+}
 .wk-gutter-cell {
   height: 48px; /* must equal HOUR_HEIGHT in dateUtils.js */
   position: relative;
@@ -190,13 +200,13 @@
   z-index: 2;
   pointer-events: none;
 }
-/* Paper-true lift on the grabbed block — scale + a crisp hairline outline, NO
-   shadow (the ink-on-paper rule). Scoped to .wk-col so Today's blocks are never
-   touched (this overrides the shared .tk-block.is-dragging shadow on the week). */
+/* Paper-true lift on the grabbed block — scale + a crisp hairline outline, plus
+   the shared faint elevation (V2-3, Amendment 1; the no-shadow rule now allows it
+   on the actively-dragged block only). Scoped to .wk-col so the scale/outline stay
+   week-only; the elevation itself comes from the shared .tk-block.is-dragging. */
 .wk-col .tk-block.is-dragging {
   transform: scale(1.02);
   outline: 1px solid var(--ink);
-  box-shadow: none;
   z-index: 6; /* lift above the past veil + now-line while dragging */
 }
 /* The live time label that follows the pointer during a drag (14:15–15:15). */
