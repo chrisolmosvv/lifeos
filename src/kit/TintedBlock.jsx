@@ -9,31 +9,48 @@ import './todayKit.css'
 //
 // Props: title, time, hex, done, top, height, col, cols, bind, dragging, removing,
 //        selected (a quiet outline while this block's form is open).
+// V2-0b: a short block keeps a minimum GRAB area without inflating what you see.
+// The interactive element (the one `bind` is spread onto, so useGridDrag reads its
+// rect for move/resize edges) is a transparent wrapper at least HIT_MIN tall; the
+// visible tinted block sits inside at its TRUE height, centred. For any block
+// already >= HIT_MIN the wrapper equals the block exactly → byte-for-byte as before
+// (HIT_MIN = 24px = the old 30-min floor, i.e. today's grab size unchanged). The
+// drag engine is untouched. Centring is a top-offset (not a transform) so it never
+// collides with the drag-lift scale() on the week.
+const HIT_MIN = 24
+
 export default function TintedBlock({ title, time, hex, done, top, height, col, cols, bind, dragging, removing, selected }) {
   const width = `calc(${100 / cols}% - 4px)`
   const left = `calc(${(col * 100) / cols}% + 2px)`
-  const style = {
-    top,
-    height,
-    left,
-    width,
-    background: tint(hex, 0.14),
-    borderLeft: `3px solid ${hex}`,
-  }
+  const hitH = Math.max(height, HIT_MIN)
+  const inset = (hitH - height) / 2 // visual's offset inside the (taller) hit box
   return (
     <div
-      className={
-        'tk-block' +
-        (done ? ' is-done' : '') +
-        (dragging ? ' is-dragging' : '') +
-        (removing ? ' is-removing' : '') +
-        (selected ? ' is-selected' : '')
-      }
-      style={style}
+      className="tk-block-hit"
+      style={{ position: 'absolute', top: top - inset, height: hitH, left, width }}
       {...bind}
     >
-      {height >= 30 && time && <div className="tk-block-time">{time}</div>}
-      <div className="tk-block-title">{title}</div>
+      <div
+        className={
+          'tk-block' +
+          (done ? ' is-done' : '') +
+          (dragging ? ' is-dragging' : '') +
+          (removing ? ' is-removing' : '') +
+          (selected ? ' is-selected' : '')
+        }
+        style={{
+          position: 'absolute',
+          top: inset,
+          height,
+          left: 0,
+          right: 0,
+          background: tint(hex, 0.14),
+          borderLeft: `3px solid ${hex}`,
+        }}
+      >
+        {height >= 30 && time && <div className="tk-block-time">{time}</div>}
+        <div className="tk-block-title">{title}</div>
+      </div>
     </div>
   )
 }

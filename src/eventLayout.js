@@ -10,20 +10,24 @@ import { HOUR_HEIGHT } from './dateUtils'
 // first column where it doesn't collide; a cluster's column count is the most
 // that overlap at once. Nothing is ever hidden.
 export function layoutEvents(events, dayStart) {
-  const MIN_HOURS = 0.5 // a very short event still gets a readable block
+  // V2-0b: blocks render at their TRUE height — a 15-min block looks 15 min, not
+  // inflated to 30. Only a tiny floor so a zero-duration event isn't invisible.
+  // Grabbability is handled separately (the min hit area in TintedBlock), so the
+  // visual can shrink without the grab target shrinking. (No effect on overlap /
+  // even-split: clustering uses the raw _s/_e times, never these pixel heights.)
+  const MIN_PX = 6 // a zero/near-zero-length event still shows a thin sliver
 
   const items = events.map((ev) => {
     const s = new Date(ev.start_at).getTime()
     const e = new Date(ev.end_at).getTime()
     const startH = clamp((s - dayStart) / 3600000, 0, 24)
-    let endH = clamp((e - dayStart) / 3600000, 0, 24)
-    if (endH - startH < MIN_HOURS) endH = Math.min(startH + MIN_HOURS, 24)
+    const endH = clamp((e - dayStart) / 3600000, 0, 24)
     return {
       ev,
       _s: s,
       _e: e,
       top: startH * HOUR_HEIGHT,
-      height: (endH - startH) * HOUR_HEIGHT,
+      height: Math.max((endH - startH) * HOUR_HEIGHT, MIN_PX),
       col: 0,
       cols: 1,
     }
