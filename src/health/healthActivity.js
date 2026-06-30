@@ -114,3 +114,21 @@ export function metricView(metric, rows, now = Date.now()) {
     trend,
   };
 }
+
+// activityDaysHit — X of N days in the window that hit a daily target (the "move-goal"
+// days-hit tally, mirroring nightsHitGoal — a simple count, NO streak). For a SUM metric
+// (active_energy): a day hits when its daily total ≥ target ('up') or ≤ target ('down').
+// The window ENDS ON `end` (yesterday for activity, so the partial current day never
+// counts) and spans `days`. → { hit, total, withData } or null with no usable target.
+export function activityDaysHit(rows, { target, direction = "up", end, days = 7 }) {
+  if (!Number.isFinite(target)) return null;
+  const start = shiftYMD(end, -(days - 1));
+  const daily = aggregateDaily(rows, "sum"); // energy is a daily SUM
+  let hit = 0, withData = 0;
+  for (const d of daily) {
+    if (d.ymd < start || d.ymd > end || !Number.isFinite(d.value)) continue;
+    withData += 1;
+    if (direction === "down" ? d.value <= target : d.value >= target) hit += 1;
+  }
+  return { hit, total: days, withData };
+}
