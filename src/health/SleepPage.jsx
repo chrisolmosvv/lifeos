@@ -189,7 +189,7 @@ export default function SleepPage({ onBack }) {
   return (
     <div className={isFitMain ? "sleep-page health-fit" : "sleep-page"}>
       {!isFitMain && (
-        <div className="sleep-chrome">
+        <div className="health-chrome">
           {breadcrumbEl}
           {switcherEl}
         </div>

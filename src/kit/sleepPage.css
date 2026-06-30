@@ -174,13 +174,7 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 /* ── CHROME: breadcrumb (left) + range switcher (right) ─────────────────────── */
-.sleep-chrome {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 4px 0 22px;
-}
+/* (.sleep-chrome → the shared .health-chrome in healthChrome.css. P3 step 2.) */
 /* (Breadcrumb .crumb*, RangeSwitcher .range-*, Skeleton .skeleton/.sk-*, and
    InlineError .inline-error* moved to the shared healthChrome.css. .sleep-chrome — the
    chrome ROW container — stays here for now; P3 may share it.) */
@@ -650,10 +644,7 @@
   flex-direction: column;
   min-height: 0;
 }
-.agg-chrome {
-  margin: 4px 0 16px;
-  flex: 0 0 auto;
-}
+/* (.agg-chrome dropped — fully redundant with the shared .health-chrome base. P3 step 2.) */
 
 /* TOP STATS ROW — broadsheet cells, vertical hairline separators, no boxes. */
 .agg-stats {

@@ -16,6 +16,16 @@
   min-height: 0; /* critical: lets the column chain shrink instead of scrolling */
 }
 
+/* ── CHROME ROW: breadcrumb (left) + RangeSwitcher (right), against the nav ──── */
+.health-chrome {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 4px 0 16px;
+}
+
 /* ── BREADCRUMB (left of the chrome row) ────────────────────────────────────── */
 .crumb {
   font-family: var(--font-sans);

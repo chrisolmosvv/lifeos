@@ -124,7 +124,7 @@ export default function BodyPage({ onBack }) {
 
   return (
     <div className={isFit ? "body-page health-fit" : "body-page"}>
-      <div className="body-chrome">
+      <div className="health-chrome">
         {breadcrumbEl}
         {switcherEl}
       </div>

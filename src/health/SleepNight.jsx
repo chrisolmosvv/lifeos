@@ -62,7 +62,7 @@ export default function SleepNight({
     return (
       <div className="sleep-night-v2 sleep-night-v2--empty">
         {(breadcrumb || switcher) && (
-          <div className="sleep-chrome">
+          <div className="health-chrome">
             {breadcrumb}
             {switcher}
           </div>

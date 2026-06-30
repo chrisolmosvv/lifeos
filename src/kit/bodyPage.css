@@ -203,14 +203,7 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 /* Chrome row — Body's equivalent of .sleep-chrome (breadcrumb left, switcher right). */
-.body-chrome {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 4px 0 14px;
-}
+/* (.body-chrome → the shared .health-chrome in healthChrome.css. P3 step 2.) */
 
 /* Body's fade wrapper — the .health-fit inner flex child + the page-fade motion. */
 .health-fit .body-fade {

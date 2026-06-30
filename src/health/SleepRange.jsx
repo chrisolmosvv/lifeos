@@ -135,7 +135,7 @@ export default function SleepRange({ days, rows, goal, end, rolling, breadcrumb,
 
   return (
     <div className="sleep-agg">
-      <div className="sleep-chrome agg-chrome">
+      <div className="health-chrome">
         {breadcrumb}
         {switcher}
       </div>
