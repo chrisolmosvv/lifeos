@@ -8,6 +8,7 @@ import { activeTotal } from './allTasksModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive'
 import { useGridDrag } from './kit/useGridDrag'
+import { useSwipe } from './kit/useSwipe'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
 import QuickAddInput from './kit/QuickAddInput'
@@ -42,6 +43,25 @@ export default function Today({ onOpenPlanning }) {
   const laneRef = useRef(null)
   const todayModRef = useRef(null)
   const weekModRef = useRef(null)
+
+  // V2-5 (sub-step 1): a two-finger horizontal trackpad swipe over the day grid
+  // steps to the next/prev day — TRIGGERED, one day per gesture (a small flick =
+  // one day), reusing the exact arrow step (setViewed + dayNavigated). Attaches to
+  // the grid's existing scroll element via scrollRef, so DayGrid is untouched.
+  // Vertical scroll still scrolls the hours (axis-lock in useSwipe). totalDx > 0 =
+  // next day. The shared detector handles wheel capture / axis-lock / the
+  // history-swipe preventDefault.
+  const swipeStepped = useRef(false)
+  const SWIPE_STEP = 40 // px of accumulated deltaX to commit a day step
+  useSwipe(scrollRef, {
+    onStart: () => { swipeStepped.current = false },
+    onMove: (_dx, totalDx) => {
+      if (swipeStepped.current || Math.abs(totalDx) < SWIPE_STEP) return
+      swipeStepped.current = true
+      setDayNavigated(true)
+      setViewed((v) => addDays(v, totalDx > 0 ? 1 : -1))
+    },
+  })
 
   async function load() {
     const dayStart = startOfDay(viewed)
