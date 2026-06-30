@@ -8,8 +8,8 @@
   margin: 0 auto;
   box-sizing: border-box;
 }
-/* (The fit model — .health-fit + .health-fit .sleep-fade, was .sleep-page--fit — moved to
-   the shared healthChrome.css. SleepPage applies .health-fit to the page wrapper.) */
+/* (The fit model — .health-fit + .health-fit .health-fade — and the fade live in the
+   shared healthChrome.css. SleepPage applies .health-fit + .health-fade.) */
 
 /* (V1 .sleep-tabs / .sleep-loading / .sleep-error / .sleep-view-stub removed — replaced
    by the shared RangeSwitcher, Skeleton and InlineError kit. V2 P1 deletion.) */
@@ -180,16 +180,7 @@
    chrome ROW container — stays here for now; P3 may share it.) */
 
 /* ── MOTION: page fade-up + cross-fade on range switch ──────────────────────── */
-.sleep-fade {
-  animation: sleep-fade-up 240ms ease both;
-}
-@keyframes sleep-fade-up {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sleep-fade { animation: none; }
-}
+/* (.sleep-fade + sleep-fade-up → the shared .health-fade in healthChrome.css. P3 step 3.) */
 
 /* ── NIGHT V2: three FULL-HEIGHT columns, full-height hairline rules ──────────
    Zero-scroll target = MacBook Pro 13" built-in. The grid fills the viewport below

@@ -11,9 +11,23 @@
   display: flex;
   flex-direction: column;
 }
-.health-fit .sleep-fade {
+.health-fit .health-fade {
   flex: 1 1 auto;
   min-height: 0; /* critical: lets the column chain shrink instead of scrolling */
+  display: flex;
+  flex-direction: column; /* the fade is the flex parent of the page's content chain */
+}
+
+/* ── PAGE FADE-UP (shared motion) ────────────────────────────────────────────── */
+.health-fade {
+  animation: health-fade-up 240ms ease both;
+}
+@keyframes health-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .health-fade { animation: none; }
 }
 
 /* ── CHROME ROW: breadcrumb (left) + RangeSwitcher (right), against the nav ──── */

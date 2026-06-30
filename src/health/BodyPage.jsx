@@ -103,7 +103,7 @@ export default function BodyPage({ onBack }) {
     };
     const groups = range === "latest" ? buildLatestGroups(ctx) : buildRangeGroups(ctx, RANGE_DAYS[range]);
     return (
-      <div className="body-fade" key={range}>
+      <div className="health-fade" key={range}>
         <BodyTable groups={groups} />
         <BodySummary
           body={state.body}

@@ -200,15 +200,15 @@ export default function SleepPage({ onBack }) {
       ) : state.error ? (
         <InlineError message={state.error} onRetry={load} />
       ) : drilledNight ? (
-        <div className="sleep-fade" key={fadeKey}>
+        <div className="health-fade" key={fadeKey}>
           {renderDrilledNight()}
         </div>
       ) : view === "night" ? (
-        <div className="sleep-fade" key={fadeKey}>
+        <div className="health-fade" key={fadeKey}>
           {renderNight(breadcrumbEl, switcherEl)}
         </div>
       ) : (
-        <div className="sleep-fade" key={fadeKey}>
+        <div className="health-fade" key={fadeKey}>
           {renderRange(RANGE_DAYS[view], breadcrumbEl, switcherEl)}
         </div>
       )}
