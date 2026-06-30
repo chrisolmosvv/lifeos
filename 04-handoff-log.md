@@ -33,6 +33,25 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-06-30 — Track S — Health V2 P1 sub-2: Sleep Week/Month/90-day aggregate restyle. Owner-verified on 13". 2 commits. → P1 COMPLETE.
+WHAT CHANGED: layout `04f9c61` → deletion `c9ca58c`.
+- The three aggregate views (one component, varying by `days`) restyled to mockup-1 in the visual lock:
+  breadcrumb+switcher chrome → full-width stats row → stacked stage-bars hero (flex-fills, --fit zero-scroll)
+  + right goal/rhythm ledger. Bars reuse hyp-* stage colours; a terracotta goal line crosses them.
+- Stats: avg duration (hero) · avg bed · avg wake · goal X/N · awake avg · baseline. Per-night labels on
+  WEEK only; Month/90 use a hover-readout. Consistency row WEEK only (bedtimeConsistency is 7-night).
+  Awake avg + awakenings = INLINE reduces (no new getter).
+- 90-day collapses to ~13 WEEKLY bars (each = that week's average night), hides the baseline (no window
+  > 90), and drills a weekly bar → Week ANCHORED to that week (weekAnchor) with a "week of X" breadcrumb.
+- New subcomponents SleepAggStats / SleepAggLedger (SleepRange stays < 250). Deleted dead V1 .sr-*/.sleep-range.
+HOW TO VERIFY: Health → Sleep → Week/Month/90 on the 13" — zero-scroll, stats/bars/ledger; tap a 90 weekly
+  bar → anchored Week (breadcrumb "week of X"); Night still holds (shared sleepPage.css).
+KNOWN GAPS / RISKS: weekly-drill only diverges from the default Week once older data exists (today the one
+  populated week IS this week). bedtimeConsistency over Month/90 = a future windowed getter (deliberately omitted).
+NEXT: **P2 — Body Composition rework** (three-group broadsheet; Energy via healthActivity; fixed + personal
+  bands; active_energy goal end-to-end — RECON GATE #1: Food/health_goals leak check first). Inherits the Sleep visual lock.
+FOR THE CHECKER: presentation only (no new getters/schema); confirm zero-scroll + the Sleep snapshot still holds.
+
 ### 2026-06-30 — Track S — Health V2 P1 sub-1: Sleep "Last night" broadsheet rework. Owner-verified on 13". 3 commits.
 WHAT CHANGED (commit chain): calc `0dfbf03` → layout `0b62d1c` → deletion `f4b414e`.
 - **SLEEP "Last night" V2** — full-width, full-height broadsheet, ZERO-SCROLL on the MacBook 13" built-in.
