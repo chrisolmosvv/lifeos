@@ -401,6 +401,12 @@ verify_jwt = true
 [functions.recipe-import]
 verify_jwt = true
 
+# meal-estimate is the V2 P5 AI touch: the React app invokes it as the logged-in owner (a typed
+# meal description → Gemini → {kcal,P,C,F}), so the gateway MUST validate that JWT (like the others).
+# Pinned true explicitly so a config-aware deploy can't flip it. Deploy this function ALONE.
+[functions.meal-estimate]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327
