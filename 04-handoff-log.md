@@ -33,6 +33,62 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P0: FOUNDATION (additive schema + 4 pure getters). TWO-TRACK. (Verified vs real data on Mac + SQL editor.)
+
+P0 lays the Food V2 foundation only — additive schema + compute-on-read getters, each proven
+against REAL data. NOTHING user-facing changed: every getter is PURE and UNWIRED (no component
+touched), so the V1 Behavioural Snapshot is not regressed.
+
+COMMIT CHAIN (schema and src NEVER shared a commit):
+- db/31_recipe_is_favourite.sql — SCHEMA: recipes.is_favourite (boolean, not null, default false),
+  owner-RLS inherited. Its own commit + reviewed rollback DROP. Applied live on Frankfurt
+  (cntlptuacsujbdtwvbis), confirmed present + 4 RLS policies intact + PostgREST cache reloaded.
+  [NOTE: file was applied live before it was git-committed — commit order corrected at P0 close.]
+- 313c724 — 0b-1 recipeKind (recipeCalc.js): draft|meal|recipe from ingredient/step counts.
+- f613b1d — 0b-2 lastCookedFor (recipeCalc.js): MAX(entry_date) over recipe_cook entries,
+  gated on recipeKind==='recipe'. Compute-on-read replacement for stored last_cooked_at.
+- 83b0306 + 973cb28 — 0b-3 rangeAdherence (foodCalc.js): on-target day count. 973cb28 REVISED
+  the denominator to CALENDAR days + two guards (no future / no pre-data) after the lock.
+- cb7dcd2 — 0b-4 recentMealsFrom (foodCalc.js): distinct recipe_id, newest-first, cook entries
+  only. ADDED alongside recentsFrom (untouched — cutover P5).
+
+0a-ii CANCELLED: food_log_entries.is_estimated already existed live in the intended shape.
+
+VERIFICATION (real vs synthetic kept separate throughout; harness scripts/verifyP0.mjs, untracked
+throwaway, imports the ACTUAL getters):
+- recipeKind: 3 real recipes → 'recipe'. 'meal' has a real instance ("apple raw", 1 ing/0 steps)
+  confirmed via lastCookedFor's gate; 'draft' (0-ingredient) SYNTHETIC-ONLY — no real example exists.
+- lastCookedFor: real data all last_cooked_at null / no cook entries → computed=stored=null on every
+  row (null path only). Logic (MAX, entry_source filter, kind gate, day-granularity) proven on
+  labelled synthetics. >>> HARD P3 ENTRY-GATE (below).
+- rangeAdherence: real → 0/3 (both calendar guards proven on real numbers: 06-28 pre-data excluded,
+  07-02..04 future excluded, one under-goal logged day 06-29). On-target path + all branches proven
+  on labelled synthetics. Band read from vsGoal (±10% inclusive), NOT re-implemented.
+- recentMealsFrom: real → 6 search entries in → [] out (correctly excludes all non-meals — core
+  filter proven on real fields). Distinct/newest-first/limit proven on labelled synthetics;
+  recentsFrom shown untouched (same input → its single-food ids, unchanged).
+
+CARRY-FORWARDS (status):
+1. HARD P3 ENTRY-GATE — lastCookedFor. Its real-data faithfulness is proven ONLY on the null path
+   (no cook history exists). Before P3 deletes stampLastCooked / recipes.last_cooked_at, Chris
+   cook-logs 1-2 real recipes and we RE-RUN the stored-vs-computed match on genuine cook history.
+   P3 does NOT proceed to the deletion until that real-history match is clean. GATE, not nicety.
+2. is_estimated ORIGIN UNKNOWN — food_log_entries.is_estimated pre-existed live (boolean/not null/
+   default false), NOT in db/28 or db/29, NO git history: an out-of-band schema add. Recorded so the
+   schema history is honest; Feature-B's estimate marker is already satisfied by it.
+
+CARRY-FORWARD (P5/P6, non-blocking): fetchCookbook loads ingredients but not steps, so recipeKind on
+a card can't tell meal-from-recipe until the loader carries step-presence — a small loader change.
+
+HOW TO VERIFY (Chris): app behaves IDENTICALLY (P0 is unwired — open Food, Log + Cookbook look/act
+as before). Schema: information_schema shows recipes.is_favourite (boolean, NO, false) + 4 owner RLS
+policies. Getters: `node scripts/verifyP0.mjs <getter> <fixture>` reproduces each result above.
+
+NEXT: P1 — GATED on Chris's device-side snapshot walk of current search behaviour (the P1 gate). HOLD
+— do not start P1; P1's prompt comes after the walk.
+
+---
+
 ### 2026-07-01 — Shared header — weather removed, Year/Day moved right. SRC/ ONLY.
 WHAT CHANGED:
 - Removed the top-right city/temp/weather block from the shared logged-in header.
