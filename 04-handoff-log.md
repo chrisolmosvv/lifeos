@@ -33,6 +33,60 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P7: the MARQUEE cook page (kanban + resume-a-cook). TWO-TRACK. (Resume verified on Mac; kanban/layout build-verified.)
+
+P7 replaces CookMode with the premium cook page and adds resume-a-cook persistence. THE MOST IMPORTANT
+AMENDMENT of the upgrade is here (finish-together → sequential) — recorded below as honest omission,
+not a failure.
+
+COMMIT CHAIN (two-track held — the schema is its own commit; git show --stat confirms no db//supabase/
+rode with any src commit):
+- db/34_cook_session.sql (330b577) — SCHEMA: cook_session (resume-a-cook state). PROPERLY CHECKER-GATED
+  — the exact "checker approved" phrase was received before commit; run live on Frankfurt + confirmed
+  (10 columns, 4 owner RLS policies, the resume index). Additive; owner-RLS; intra-module FK only
+  (recipe_id → recipes); no spine FK; timer_ends stores END timestamps (survive reload); only session
+  STATE persists (schedule is compute-on-read). Reviewed rollback (drop table) in-file.
+- d034cf4 — (a) resume-a-cook: new cookSession + useCookSession; CookMode wired to persist struck steps
+  + ticked ingredients + timers (END timestamps). OWNER-VERIFIED: reload mid-cook → struck/ticked/timer-
+  remaining all survive.
+- 58385fd — (b) cookSchedule (pure, dep-ready): no deps → SEQUENTIAL (no fabricated overlaps); deps
+  present → critical-path back-calc. Verified: synthetic sequential + finish-together + null-duration.
+- 63def80 — (c)(d) the marquee CookPage (replaces CookMode): KanbanBoard (waiting→active→done, manual
+  tap-cycle, NEVER auto-advances; start-now cues; calm timer settle, no alarm) + balanced layout
+  (tickable ingredients left, steps right). Persists via useCookSession. TimerRing EXTRACTED to its own
+  file (survives the deletion). "Done cooking" → status='done' + fires the P8 staging trigger.
+- 0da854b — prove-dead delete CookMode (superseded; TimerRing already extracted; no live consumer).
+
+THE FINISH-TOGETHER → SEQUENTIAL AMENDMENT (before → after → why):
+- BEFORE: the cookbook spec locked a "finish-together kanban scheduler" as the marquee (forward auto-
+  schedule, critical path drives the finish, short steps delayed to land together).
+- AFTER: P7 ships a SEQUENTIAL start-now timeline + a DEP-READY scheduler (accepts deps, degrades to
+  sequential). Finish-together parallelism is DEFERRED.
+- WHY: the import parse emits steps as PLAIN STRINGS — durations are derived from text, but there is
+  ZERO parallelism/dependency data anywhere. Computing "finish together" needs deps we don't have;
+  inventing start-times we can't justify is the silent-wrong-output failure we avoid. The scheduler is
+  built dep-ready so the magic lights up cleanly when a trustworthy dep source exists. Honest omission
+  over a fabricated schedule — NOT a failure.
+
+DEFERRED / TRACKED — P9-WINDOW FEATURE BUILD (its OWN recon + commits; NOT the dead-code sweep):
+1. SESSION-SURFACING: app-wide route/view persistence on reload + a resume-cook banner + the visible
+   done-card-until-dismissed. Root cause: LoggedIn.view is useState('today') with no persistence — every
+   refresh returns to Today (a pre-existing app-wide nav gap the cook page makes more felt; NOT a P7
+   regression). P7 built the status='done' transition + the P8 trigger; the visible done-card + resume
+   banner + nav-restore are this piece. FEATURE build (app-wide routing + two new surfaces) — its own
+   recon, must not ride a cleanup commit.
+
+HONEST STATUS: (a) resume owner-verified; (b) scheduler verified; (c)(d) kanban+layout build-verified
+only (owner's visual pass pending). db/34 properly gated (see above).
+
+HOW TO VERIFY (owner): scheduler → sequential no-overlaps on real recipes (synthetic proves the dep
+branch); kanban manual-only, no auto-advance, no alarm; resume survives reload after the rebuild; app
+otherwise unchanged; Body/Sleep untouched.
+
+NEXT: P8 — the cook→log bridge staging sheet (P7 wired the "Done cooking" trigger; P8 builds the sheet).
+
+---
+
 ### 2026-07-01 — Track F — Food V2 P6: the COOKBOOK (library · recipe page · editor + AI rescue). SRC/ ONLY. (Build-verified.)
 
 P6 rebuilds the cookbook and CONVERGES ingredient entry onto the P2 finder. No schema (is_favourite +
