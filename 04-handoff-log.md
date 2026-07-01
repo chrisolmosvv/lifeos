@@ -33,6 +33,50 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P3: logSnapshot + last_cooked_at stored→computed. SRC/ ONLY. (Entry-gate cleared on real cook history; verified on Mac.)
+
+P3 consolidates the cook→log write into ONE primitive and converts "last cooked" from a stored stamp
+to compute-on-read. The sacred snapshot-not-live contract held throughout.
+
+ENTRY-GATE (STEP 0, passed BEFORE any deletion): with 2 real cooks logged (Air Fryer Chicken Breasts,
+Blackened Chicken), lastCookedFor was re-proven on genuine cook history — computed MAX(entry_date)
+matched the stored last_cooked_at's Amsterdam day (both 2026-07-01), getter agreed with standalone SQL,
+UTC→Amsterdam conversion proven live. Only THEN was the stamp retired.
+
+COMMIT CHAIN (both src-only — two-track held):
+- 3079cfb — (i)+(ii) BUNDLED (coherence): useCookLog.logCook → logSnapshot (single insert; no stamp;
+  no all-or-nothing/restore-prior; undo = remove entry). recipeLoad loads each recipe's recipe_cook
+  entries + step counts. Cookbook "Cooked" sort + notYetCooked + RecipePage "last cooked" now read
+  lastCookedFor (computed); RecipePage post-cook echo = optimistic append + recompute (undo removes).
+  WHY BUNDLED: splitting (i) before (ii) would leave a commit where the stamp is dropped but a reader
+  still reads the stored column → a transiently-broken "Cooked" sort (violates works-at-every-commit).
+- 691b7ae — (iii) PROVE-DEAD deletion of stampLastCooked (grep confirmed zero live callers after
+  3079cfb; no surviving recipes.update({last_cooked_at})).
+
+SACRED CONTRACT (preserved by structure): the 7-macro freeze lives in the CALLER
+(RecipePage.onLogMeal: snap[k] = perServing[k] × eaten); logSnapshot is a pure insert of pre-frozen
+numbers and has NO path that re-reads a live recipe. Editing a recipe cannot rewrite logged history.
+
+CARRY-FORWARDS (status):
+- recipes.last_cooked_at is now DEAD (no writer; still SELECTed in recipeLoad, harmless). DROP deferred
+  to P9: remove from the two recipeLoad SELECTs (src) THEN checker-gated DROP (schema), never mixed.
+- The 3 other logSnapshot callers (log-a-saved-meal, re-log, Feature-B estimate) WIRE at P5 — P3 built
+  the primitive + proved the cook caller only.
+- Stale comment recipeCalc.js:38 ("cutover is P3") → tidy in the P9 sweep.
+- The "stepless-meal-WITH-a-cook-entry → null" steps-gate branch stays synthetically-proven (no real
+  instance yet — apple raw never cooked); real-proof deferred to a first stepless-meal cook.
+
+HOW TO VERIFY (owner): (1) a real cook logs via logSnapshot → correct food_log_entries row (frozen
+snapshot, recipe_id, recipe_cook, amount=servings, unit=serving, food_item_id null) + reload persists.
+(2) "Cooked" sort + "last cooked" read the COMPUTED value (2 real cooks show 2026-07-01). (3) load-path
+no-regression with recipeLoad's extra fetch. (4) THE SACRED CHECK: cook a recipe → edit its macros →
+the logged entry's macros DO NOT change.
+
+NEXT: P4 — the logger READ side (Day broadsheet, Week/Month charts, full-screen Goals editor, edit-a-
+logged-entry). Pure display over existing/proven getters; the empty/sparse states are first-class.
+
+---
+
 ### 2026-07-01 — Calendar/Today — green hover-plus cursor replaced. SRC/ ONLY.
 WHAT CHANGED:
 - Replaced the system `copy` hover cursor on empty calendar create areas with a
