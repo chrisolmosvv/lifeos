@@ -18,7 +18,7 @@ export default function BodySummary({ body, rowsByMetric, goalMap, today, openEd
     <div className="body-summary">
       <div className="bsum">
         <span className="bsum-label">fat / lean split</span>
-        <BodyComposition comp={comp} goals={[]} />
+        <BodyComposition comp={comp} />
       </div>
       <div className="bsum">
         <span className="bsum-label">weight to goal</span>

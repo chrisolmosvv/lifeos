@@ -10,17 +10,9 @@
   --skeleton-cols: repeat(4, 1fr); /* Body's loading skeleton = 4 columns (shared base is 3) */
 }
 
-/* (V1 .body-tabs/.body-loading/.body-error/.body-group/.body-tiles/.body-tile and
-   .body-trend removed — superseded by the shared RangeSwitcher/Skeleton/InlineError +
-   the .bt-* Scale-Ticket table. V2 P2 deletion. .body-tile-label kept: GoalBar uses it.) */
-.body-tile-label {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  color: var(--ink-muted);
-  margin-bottom: 6px;
-}
+/* (V1 .body-tabs/.body-loading/.body-error/.body-group/.body-tiles/.body-tile/.body-trend
+   and .body-tile-label removed — superseded by the shared kit + the .bt-* Scale-Ticket
+   table. V2 P2 + P5 deletions.) */
 
 /* Sparkline: ink line, ink dot — informational, so NO terracotta (reserved for
    movement/affordances/the goal marker). Fixed height, full tile width. */
@@ -127,73 +119,8 @@
   margin-right: 6px;
 }
 
-/* Weight goal bar. The goal MARKER is the one terracotta touch here (a target cue). */
-.body-goal {
-  margin-top: 16px;
-}
-/* Stacked goal items (weight + body_fat) sit closer to each other than to the legend
-   above — keeps two bars calm and helps the Latest view hold zero-scroll. */
-.body-goal--btn + .body-goal--btn,
-.body-goal--btn + .body-goalprompt--btn,
-.body-goalprompt--btn + .body-goal--btn,
-.body-goalprompt--btn + .body-goalprompt--btn {
-  margin-top: 10px;
-}
-
-/* The goal bar + the "set a goal" prompt are tappable (open the goal editor). Reset
-   button chrome; hover hints terracotta — a tap affordance (the sanctioned use). */
-.body-goal--btn,
-.body-goalprompt--btn {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font: inherit;
-}
-.body-goalprompt--btn:hover,
-.body-goal--btn:hover .body-goal-caption {
-  color: var(--accent);
-}
-.body-goal-track {
-  position: relative;
-  height: 10px;
-  background: var(--rule-faint);
-  border-radius: 6px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-.body-goal-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: #5c564c;
-  border-radius: 6px;
-}
-.body-goal-marker {
-  position: absolute;
-  right: 0;
-  top: -2px;
-  bottom: -2px;
-  width: 2px;
-  background: var(--accent);
-}
-.body-goal-caption {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--ink-muted);
-  margin-top: 6px;
-}
-.body-goalprompt {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-  margin: 16px 0 0;
-}
+/* (P5: the goal-bar CSS .body-goal* / .body-goalprompt* removed with the GoalBar path —
+   the Scale-Ticket table carries goals in its journey cells now.) */
 
 /* ════════════════════════════════════════════════════════════════════════════
    V2 P2 STAGE 1 — Body "Scale Ticket": chrome row, Body fade/fit (the carried-forward

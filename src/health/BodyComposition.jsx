@@ -1,15 +1,9 @@
 import { fmtFull } from "./bodyFormat";
-import { GoalBar, GoalWaiting, GoalPrompt } from "./GoalBar";
 
-// BodyComposition — the fat-vs-lean bar for the Composition group, plus the goal bars
-// (weight AND, since S9, body_fat). Pure presentation: it draws the numbers the calc
-// layer already worked out (composition() + goalProgress()) — no maths here beyond
-// turning kg into bar widths.
-//
-// `goals` = [{ metric, goalProg, hasGoal, promptText, onEdit }, …] — one entry per
-// goal-able composition metric (weight, body_fat). Each renders the shared bar (goal
-// + readings), a "waiting for data" line (goal, no readings), or the set-a-goal
-// prompt (no goal). Lean is absent here on purpose — it stays trend-only (no goal).
+// BodyComposition — the fat-vs-lean bar for the Composition group. Pure presentation: it
+// draws the numbers the calc layer already worked out (composition()) — no maths here
+// beyond turning kg into bar widths. (The V2 Scale Ticket carries goals in the table's
+// journey cells, so the old goal-bar path was removed in P5.)
 //
 // The bar NEVER forces fat+lean to equal scale weight:
 //   mode 'remainder' — fat | lean | a small UNLABELLED remainder (bone/water).
@@ -32,7 +26,7 @@ function Bar({ segments }) {
   );
 }
 
-export default function BodyComposition({ comp, goals = [] }) {
+export default function BodyComposition({ comp }) {
   let bar = null;
   if (comp.mode === "none") {
     bar = <p className="body-comp-empty">Not enough readings yet to split fat and lean.</p>;
@@ -76,16 +70,6 @@ export default function BodyComposition({ comp, goals = [] }) {
             <span className="body-comp-key body-comp-lean" /> Lean {fmtFull("lean_mass", comp.leanKg)}
           </span>
         </div>
-      )}
-
-      {goals.map(({ metric, goalProg, hasGoal, promptText, onEdit }) =>
-        hasGoal && goalProg ? (
-          <GoalBar key={metric} metric={metric} goalProg={goalProg} onEdit={onEdit} />
-        ) : hasGoal ? (
-          <GoalWaiting key={metric} metric={metric} onEdit={onEdit} />
-        ) : (
-          <GoalPrompt key={metric} text={promptText} onEdit={onEdit} />
-        ),
       )}
     </div>
   );
