@@ -2720,3 +2720,51 @@ Direction-aware goal engine handles down / up / by_time.
 
 - **All guardrails on (CLAUDE.md).** Brain docs, file-size ceiling, one feature
   at a time, commit after each feature, start/end session ritual.
+
+## Food V2 (in-place upgrade P0–P8) — amendments + honest statuses (2026-07-01)
+
+AMENDMENTS (before → after → why):
+- ⚠️ FINISH-TOGETHER → SEQUENTIAL — WARNING TO THE FUTURE, not a to-do. Before: the cookbook spec
+  locked a "finish-together kanban scheduler" (critical path drives the finish, short steps delayed to
+  land together). After: P7 ships a SEQUENTIAL start-now timeline + a DEP-READY scheduler (cookSchedule
+  accepts deps, degrades to sequential). Why: the import parse emits steps as PLAIN STRINGS with ZERO
+  parallelism/dependency data — computing "finish together" would FABRICATE start-times (the silent-
+  wrong-output failure). The scheduler is built dep-ready; it lights up when a trustworthy dep source
+  exists. DO NOT rebuild finish-together on inferred / LLM-guessed deps — "sequential" is a deliberate
+  honest choice, not incomplete work to "fix."
+- QUICK-ADD source (amends the finder lock): recent MEALS + favourited MEALS + favourited FOODS,
+  meals-first — NEVER recent foods. Why: a ★-favourited food is deliberate/curated, unlike a random
+  recent ingredient; more useful day-one on sparse history. (Single-food recents stayed removed.)
+- RECIPE PAGE zero-scroll via COLLAPSE-BY-DEFAULT (steps→titles, macros compact) — long-form was V1-
+  exempt; the amendment makes a recipe fit one page.
+- INGREDIENT MATCHING → AI AUTO-MATCH: the P1 reranker's top pick (results[top3[0]]) replaces
+  recipeMatch's comma-boundary rule (recipeMatch deleted). No new AI surface; deterministic fallback
+  (reranker off/quota → flagged → import completes).
+- LOGGER amendments: empty meal slots SHOWN with an invitation (not hidden); ledger rows are always-on
+  P·C·F shorthand (dropped the 4-row cap / "+N more" / tap-expand — full breakdown moved to Edit);
+  the DRINKS line is omitted until F10 (the dayLedger alcohol READ getter is retained, just not
+  rendered); Week/Month is a 2×2 bar-chart grid (retired the avg-day arc + per-day list); the ±10%
+  on-target band is surfaced in the full-screen Goals editor (was a popover); macro goals are optional
+  (calories required).
+- BRIDGE amendments: recipes.last_cooked_at → COMPUTE-ON-READ (lastCookedFor); the V1 all-or-nothing
+  entry-then-stamp ordering + undo-restore-prior-stamp are gone — undo is a UNIFORM remove-entry.
+  Cook-only ingredient swap stays DROPPED (log then edit).
+- DRAFT DOOR (split): a GRID-tap on a draft → the EDITOR (finish it); a DEEP-LINK → the PAGE (which
+  renders a draft ready-to-finish, not broken-empty).
+
+HONEST STATUSES (recorded truthfully, not fake-greened):
+- is_estimated: PRE-EXISTED live (boolean, not-null, default false) — an out-of-band add, NOT in
+  db/28/29 and NO git history; discovered by the P0 live check. Feature-B reuses it.
+- SCHEMA GATE CONTRAST: db/31 (recipes.is_favourite), db/34 (cook_session), db/35 (drop last_cooked_at)
+  were PROPERLY gated (exact "checker approved" received before commit). db/33 (food_log_entries.
+  entry_label) RAN WITHOUT the phrase reaching the builder — an UNRECORDED gate, recorded honestly here,
+  not falsely marked approved.
+- Estimate deterministic fallback (meal-estimate off → manual entry): DESIGNED (the panel is a manual-
+  editable 4-number form; AI only pre-fills) but owner AI-off verification was DECLINED — designed, not
+  owner-verified.
+- Synthetic-only branches: recipeKind 'draft' (no real 0-ingredient recipe exists) and lastCookedFor's
+  "stepless-meal-WITH-a-cook-entry → null" branch (no real instance — the one meal was never cooked)
+  are proven on labelled synthetics only, not real data.
+- P3 ENTRY-GATE: CLEARED on real cook history (re-run at P9) — computed lastCookedFor faithfully
+  reproduces the stored stamp on every has-steps recipe; the dead recipes.last_cooked_at column dropped
+  (db/35).

@@ -1094,26 +1094,22 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
 - ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
 - ⬜ F11 — Polish + audit to the design laws.
 
-### Food V2 — the in-place upgrade (P0–P7 DONE; full detail in 04-handoff-log.md)
+### Food V2 — the in-place upgrade (P0–P8 + P9 CLEANUP DONE; full detail in 04-handoff-log.md)
 DONE + committed: P0 (schema + getters), P1 (food-search reranker + Basics + fallback, live), P2
 (converged finder), P3 (logSnapshot + last_cooked_at compute-on-read), P4 (logger read), P5 (logger
 write: estimate + save-as-meal + quick-add meals), P6 (cookbook: library/recipe page/editor + AI
 rescue), P7 (marquee cook page + resume-a-cook; finish-together→SEQUENTIAL amendment — deferred until
-a trustworthy dep source exists; scheduler built dep-ready).
+a trustworthy dep source exists; scheduler built dep-ready), P8 (cook→log staging sheet). P9 CLEANUP
+done: dead recipes.last_cooked_at column dropped (db/35, checker-gated; P3 entry-gate re-cleared on
+real data first), dead-code sweep, brain-doc amendments recorded (03-decisions.md).
 
-- ⬜ P9-window — three tracked pieces after P7 (each its OWN work, do not conflate):
-  1. CLEANUP (the tidy sweep): drop the dead recipes.last_cooked_at column (checker-gated, its own
-     migration) + remove it from the two recipeLoad SELECTs; dead-code sweep incl. the P4/P6 dead CSS
-     (flog-header/flog-secondary/flog-empty etc.); update the brain docs with every amendment.
-     >>> GATED FIRST: the P3 entry-gate is NOW SATISFIABLE (real cook history exists — 2 cooks). Before
-     the column drops, RE-RUN the lastCookedFor stored-vs-computed match on that genuine cook history;
-     it must be clean first. (Note: stored last_cooked_at is frozen since P3 removed the stamp, so
-     stored may now trail computed if more cooks were logged — an EXPECTED consequence, not a getter
-     bug, since nothing reads the stored column anymore; the drop is safe once the match is understood.)
-  2. P8 — the cook→log bridge STAGING SHEET (the calm bottom-sheet redesign; P7 wired the "Done cooking"
-     trigger, which currently opens the old LogMealPanel). Own recon + commits.
-  3. SESSION-SURFACING (FEATURE build): app-wide route/view persistence on reload + resume-cook banner +
-     done-card-until-dismissed. Own recon + commits — NOT the cleanup sweep.
+- ⬜ SESSION-SURFACING (the last tracked piece; own recon + commits — a FEATURE build, not cleanup):
+  A. ROUTE/VIEW PERSISTENCE — app-wide (LoggedIn.view is useState('today'), no persistence → every
+     reload drops to Today from anywhere). RISKY (touches core nav); build + verify ALONE across every
+     pillar before the two cook surfaces ride on it.
+  B. RESUME-COOK BANNER — reads the active non-dismissed cook_session; returns you into the cook.
+  C. DONE-CARD-UNTIL-DISMISSED — reads cook_session status='done' + the dismissed flag (P7 wired the
+     write); shows the card + the dismiss action; never auto-clears.
 
 OPEN: caching live API hits into food_items (the cache-on-select write) lands at F6, not F2
       (F2 is read-only).   F4 — nav order of the five pillars.

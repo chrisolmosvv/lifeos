@@ -33,6 +33,38 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P9 CLEANUP SWEEP (three tracks, none mixed). (src + schema + docs.)
+
+The tail of the Food V2 upgrade. Three DISTINCT kinds of work, each its own commit(s):
+- (a) DEAD-CODE SWEEP (src, 4dbea53): prove-dead removal of superseded CSS — flog-tabs/tab/datenav/
+  arrow/date/today (P4 masthead superseded), flog-header, flog-secondary, flog-empty/empty-line/
+  add-primary, flog-setgoals--static (from foodLog.css + foodLogResponsive.css); refreshed the stale
+  lastCookedFor comment. KEPT flog-setgoals/flog-error/flog-arc-btn (still used). Grep-proven each.
+- (b) last_cooked_at DROP — STRICT ORDER: (i) 6accd8f (src) removed the column from BOTH recipeLoad
+  SELECTs, build-verified; THEN (ii) db/35 (schema, 43a91bb) drops the dead column. CHECKER-GATED
+  (exact "checker approved" received). P3 entry-gate re-cleared on real cook history first (computed
+  lastCookedFor faithfully reproduces the stored stamp on every has-steps recipe; nothing reads the
+  column). Rollback is honest STRUCTURAL-ONLY (re-add shape, not the redundant data).
+- (c) BRAIN-DOC UPDATES (docs, this commit): 03-decisions.md gained the "Food V2 amendments + honest
+  statuses" block (finish-together→sequential WARNING-to-the-future; quick-add merge; collapse
+  zero-scroll; reranker auto-match; the logger amendments; bridge amendments; draft-door split;
+  is_estimated out-of-band origin; db/33 ungated vs db/31/34/35 gated; estimate fallback designed-not-
+  verified; synthetic-only branches; P3 gate cleared). 02-roadmap.md → P0–P8 + P9 cleanup COMPLETE;
+  session-surfacing = the last tracked piece.
+
+OPEN LOOP (honest): db/35 was COMMITTED (43a91bb) with the checker phrase, but the owner's LIVE-RUN
+confirmation (the column-gone select) had not been pasted back when this entry was written — the app
+works either way (b(i) removed the SELECTs). Owner to confirm the DROP ran live.
+
+VERIFY (owner): app looks/works IDENTICALLY after the CSS sweep (removed classes were truly unused);
+after the SELECT-removal the cookbook + recipe page still load + show "last cooked" (via lastCookedFor);
+after the DROP the column is gone (SQL confirm) and the app is unchanged.
+
+NEXT: SESSION-SURFACING (the last tracked piece) — A app-wide route/view persistence (risky, verified
+across every pillar alone) → C done-card → B resume-cook banner. Own recon + commits.
+
+---
+
 ### 2026-07-01 — Track F — Food V2 P8: the cook→log staging SHEET. SRC/ ONLY. (Owner-verified — all 3 entry points + sacred check.)
 
 P8 replaces the V1 inline LogMealPanel (which expanded in-flow and shoved the recipe) with the calm
