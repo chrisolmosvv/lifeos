@@ -80,9 +80,16 @@ export async function fetchWithTimeout(
   }
 }
 
+// A curated BASICS staple (V2 P1): a seed food_items row tagged by CONVENTION —
+// source='manual', source_ref='basics:<slug>' (see db/32_food_basics_seed.sql). No new
+// column: the prefix on source_ref is the whole mechanism.
+export function isBasic(c: FoodCandidate): boolean {
+  return c.source === "manual" && !!c.source_ref && c.source_ref.startsWith("basics:");
+}
+
 // Merge the three sources into one ordered list with no duplicate of the SAME food.
-//   • Order: the owner's saved/cached items FIRST (their data, already trusted — and
-//     saved.ts hands them favourites-first), then OFF, then USDA.
+//   • Order: curated BASICS staples FIRST (P1 — the trusted generics lead), then the rest of
+//     the owner's saved/cached items (favourites-first from saved.ts), then OFF, then USDA.
 //   • Dedupe: an API item with the same (source, source_ref) as one the owner already
 //     has saved is dropped — the saved row wins (it carries food_item_id + any edits).
 //     Manual items have a null source_ref, so they never collide with anything.
@@ -100,5 +107,8 @@ export function mergeDedupeOrder(
     const key = `${c.source}:${c.source_ref}`;
     return !seen.has(key);
   });
-  return [...saved, ...apiKept];
+  // Hoist basics to the front of the saved group (their relative order preserved).
+  const basics = saved.filter(isBasic);
+  const savedRest = saved.filter((c) => !isBasic(c));
+  return [...basics, ...savedRest, ...apiKept];
 }

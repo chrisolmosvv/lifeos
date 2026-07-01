@@ -21,10 +21,11 @@
 //   OFF_CONTACT_EMAIL — the contact in OFF's User-Agent (built in off.ts).
 //   SUPABASE_URL / SUPABASE_ANON_KEY — auto-injected; the owner-scoped food_items read.
 
-import { mergeDedupeOrder, type SourceResult } from "./normalize.ts";
+import { type FoodCandidate, isBasic, mergeDedupeOrder, type SourceResult } from "./normalize.ts";
 import { searchSaved } from "./saved.ts";
 import { searchOff } from "./off.ts";
 import { searchUsda, usdaConfigured } from "./usda.ts";
+import { rerankTop } from "./rerank.ts";
 
 // CORS — food-search is the FIRST browser-called function in LifeOS (telegram/brief/gym/
 // health-ingest are all server-to-server and never needed this). The browser sends a
@@ -66,6 +67,17 @@ async function safely(p: Promise<SourceResult>): Promise<{ result: SourceResult;
   }
 }
 
+// A CONFIDENT staple (V2 P1 — the primary quota lever): a curated Basics row whose name LEADS
+// with the query (e.g. "chicken" → "Chicken breast, cooked", "milk" → "Milk, semi-skimmed"). When
+// one exists we SUPPRESS the AI DB zone by default (skip the Gemini rerank → save a call) and the
+// UI hides the OFF/USDA results behind a "search the databases →" tap. Conservative on purpose: a
+// query the staple name does NOT lead (e.g. "chicken korma") still reranks the databases.
+function confidentStaple(query: string, results: FoodCandidate[]): boolean {
+  const q = query.trim().toLowerCase();
+  if (q.length < 3) return false;
+  return results.some((c) => isBasic(c) && c.name.toLowerCase().startsWith(q));
+}
+
 Deno.serve(async (req) => {
   // The browser preflight — answer it with the CORS headers, before any auth/work.
   if (req.method === "OPTIONS") {
@@ -77,7 +89,7 @@ Deno.serve(async (req) => {
 
   const query = await readQuery(req);
   if (query.length === 0) {
-    return json({ ok: true, query: "", results: [], sources: { saved: 0, off: 0, usda: 0 } });
+    return json({ ok: true, query: "", results: [], top3: null, dbSuppressed: false, note: null, sources: { saved: 0, off: 0, usda: 0 } });
   }
 
   const authHeader = req.headers.get("Authorization");
@@ -93,6 +105,13 @@ Deno.serve(async (req) => {
 
   const results = mergeDedupeOrder(saved.result.records, off.result.records, usda.result.records);
 
+  // V2 P1 — the reranker + the quota lever. A confident Basics staple SUPPRESSES the AI DB zone
+  // (skip the Gemini call; the UI reveals the databases behind a tap). Otherwise ask Gemini for a
+  // common-sense top-3 (indices into `results`, ADDITIVE — records are never mutated). ANY rerank
+  // failure / FOOD_RERANK_OFF → top3 null → the deterministic saved/Basics → OFF → USDA order stands.
+  const dbSuppressed = confidentStaple(query, results);
+  const top3 = dbSuppressed ? null : await rerankTop(query, results);
+
   // Per-source outcome: a count when reachable, "unavailable" when the API failed/timed
   // out, "not_configured" when the USDA key isn't set (OFF/saved still worked).
   const sources = {
@@ -100,6 +119,18 @@ Deno.serve(async (req) => {
     off: off.ok ? off.result.records.length : "unavailable",
     usda: !usdaConfigured ? "not_configured" : usda.ok ? usda.result.records.length : "unavailable",
   };
+
+  // V2 P1 — a QUIET partial-results note when a reachable source degraded (never 500 the search).
+  // USDA "not_configured" is NOT a degrade (it was never expected); only a configured source that
+  // failed counts. Additive — the P2 UI shows it as a calm line; current consumers ignore it.
+  const degraded = [
+    saved.ok ? null : "saved foods",
+    off.ok ? null : "Open Food Facts",
+    !usdaConfigured || usda.ok ? null : "USDA",
+  ].filter(Boolean) as string[];
+  const note = degraded.length
+    ? `Some sources are unavailable right now (${degraded.join(", ")}) — showing what we could reach.`
+    : null;
 
   // Diagnostic: per source, RAW hits the API returned vs how many SURVIVED normalisation,
   // and whether the source was reachable. raw>0 but kept 0 = "came back, got dropped";
@@ -110,5 +141,5 @@ Deno.serve(async (req) => {
     usda: { raw: usda.result.raw, kept: usda.result.records.length, reachable: usda.ok, configured: usdaConfigured },
   };
 
-  return json({ ok: true, query, results, sources, debug });
+  return json({ ok: true, query, results, top3, dbSuppressed, note, sources, debug });
 });
