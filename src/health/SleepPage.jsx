@@ -29,7 +29,7 @@ const RANGES = [
   { id: "night", label: "Last night" },
   { id: "week", label: "Week" },
   { id: "month", label: "Month" },
-  { id: "90", label: "90-day" },
+  { id: "90", label: "90 days" },
 ];
 const RANGE_DAYS = { week: 7, month: 30, "90": 90 };
 
