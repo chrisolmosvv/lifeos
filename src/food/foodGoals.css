@@ -1,0 +1,154 @@
+/* LifeOS — Food → the full-screen Goals editor (V2 P4). Calm broadsheet: paper panel, hairline
+   rules never boxes, Fraunces for the big calorie number, terracotta only on the band + Save. */
+
+.fgoal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 24%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 60;
+}
+.fgoal {
+  width: 100%;
+  max-width: 440px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 22px 26px 20px;
+}
+.fgoal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.fgoal-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.fgoal-close {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.fgoal-close:hover { color: var(--ink); }
+
+.fgoal-cal { display: block; }
+.fgoal-cal-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}
+.fgoal-cal-input {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 6px;
+}
+.fgoal-cal-input input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-serif);
+  font-size: 2.4rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.fgoal-cal-unit { font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink-muted); }
+
+.fgoal-band { margin: 14px 0 20px; }
+.fgoal-band-bar {
+  position: relative;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--rule-faint);
+  overflow: hidden;
+}
+.fgoal-band-zone {
+  position: absolute;
+  left: 40%;
+  width: 20%;
+  top: 0;
+  bottom: 0;
+  background: var(--accent);
+  opacity: 0.5;
+}
+.fgoal-band-line {
+  margin: 7px 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fgoal-macros { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+.fgoal-macro { display: flex; align-items: baseline; gap: 12px; }
+.fgoal-macro-label {
+  width: 5.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+.fgoal-macro-input {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.fgoal-macro-input input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.fgoal-macro-unit { font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink-muted); }
+.fgoal-clear-one {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.fgoal-clear-one:hover { color: var(--accent); }
+
+.fgoal-actions, .fgoal-confirm { display: flex; align-items: center; gap: 10px; }
+.fgoal-confirm { font-family: var(--font-sans); font-size: 0.8rem; color: var(--ink-muted); flex-wrap: wrap; }
+.fgoal-spacer { flex: 1; }
+.fgoal-btn {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.fgoal-btn:hover { border-color: var(--ink-muted); }
+.fgoal-save { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.fgoal-save:disabled { opacity: 0.4; cursor: default; }
+.fgoal-clear { color: var(--ink-muted); }
+.fgoal-danger { color: var(--accent); border-color: var(--accent); }

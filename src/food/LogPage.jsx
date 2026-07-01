@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { amsTodayYMD, amsClockMinutes, shiftYMD, humanDayLong, humanDayShort } from "../gym/gymDates";
 import { fetchGoals } from "../health/healthLoad";
 import { resolveGoals } from "../health/healthGoals";
@@ -14,7 +14,6 @@ import Finder from "./finder/Finder";
 import { loggerFinderConfig } from "./finder/finderConfig";
 import EditEntryPanel from "./EditEntryPanel";
 import NutritionGoalsEditor from "./NutritionGoalsEditor";
-import Popover from "../kit/Popover";
 import Toast from "../kit/Toast";
 import "./foodLog.css";
 import "./foodLogResponsive.css";
@@ -35,7 +34,6 @@ export default function LogPage({ onOpenRecipe }) {
   const [addModal, setAddModal] = useState(null); // { slot, preset?, swapEntry?, title? }
   const [editing, setEditing] = useState(null); //   the entry being edited
   const [goalOpen, setGoalOpen] = useState(false);
-  const goalAnchor = useRef(null);
   const fw = useFoodWrites(entries, setEntries);
   const gw = useGoalWrites(goalMap, setGoalMap);
 
@@ -129,7 +127,7 @@ export default function LogPage({ onOpenRecipe }) {
       {range === "day" ? (
         <DayView entries={entries} goalMap={goalMap} day={date} names={state.names} quickFoods={quickFoods} favSet={favSet}
           onAdd={openAdd} onQuickAdd={openQuickAdd} onEditEntry={setEditing} onToggleFav={toggleFav} onOpenRecipe={onOpenRecipe}
-          onOpenGoals={(el) => { goalAnchor.current = el; setGoalOpen(true); }} />
+          onOpenGoals={() => setGoalOpen(true)} />
       ) : (
         <WeekMonthView daily={daily} days={step} end={date} goalMap={goalMap} today={state.today} onDrillDay={(ymd) => { setRange("day"); setDate(ymd); }} />
       )}
@@ -145,9 +143,7 @@ export default function LogPage({ onOpenRecipe }) {
           onClose={() => setEditing(null)} />
       )}
       {goalOpen && (
-        <Popover anchorRef={goalAnchor} title="Daily targets" onClose={() => setGoalOpen(false)}>
-          <NutritionGoalsEditor goalMap={goalMap} onSubmit={submitGoals} onClearAll={() => { gw.clearGoals(GOAL_TYPES); setGoalOpen(false); }} onClose={() => setGoalOpen(false)} />
-        </Popover>
+        <NutritionGoalsEditor goalMap={goalMap} onSubmit={submitGoals} onClearAll={() => { gw.clearGoals(GOAL_TYPES); setGoalOpen(false); }} onClose={() => setGoalOpen(false)} />
       )}
       {fw.toast ? (
         <Toast text={fw.toast.text} onUndo={fw.toast.undo} onDismiss={fw.dismissToast} />
