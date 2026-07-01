@@ -11,6 +11,23 @@
 
 import { entryMacros, NUTRIENTS } from "./foodCalc.js";
 
+// ── recipeKind (V2 P0) ─────────────────────────────────────────────────────────
+// A recipe's structural KIND, derived from what it holds (PURE — the SINGLE source of this
+// distinction, later read by the card, the recipe page, the All/Recipes/Meals filter, and
+// lastCookedFor's "is this cookable" gate). NOT stored: it falls straight out of the child
+// counts, so it can never drift from the actual ingredients/steps.
+//   • draft  — no ingredients yet (a title-only stub).
+//   • meal   — HAS ingredients but NO steps (a plate you assemble; nothing to cook).
+//   • recipe — has BOTH ingredients and steps (something you cook).
+// Reads `recipe.ingredients` / `recipe.steps` (arrays); a missing/empty array counts as none.
+// "No ingredients" wins → draft (even if steps somehow exist, there's nothing to make yet).
+export function recipeKind(recipe) {
+  const nIng = Array.isArray(recipe?.ingredients) ? recipe.ingredients.length : 0;
+  const nStep = Array.isArray(recipe?.steps) ? recipe.steps.length : 0;
+  if (nIng === 0) return "draft";
+  return nStep === 0 ? "meal" : "recipe";
+}
+
 // recipeMacros(ingredients, servings, itemsById) →
 //   { total, perServing, servings, unestimatedCount, ingredientCount }
 // servings ≤ 0 / absent → perServing = total (no divide-by-zero; caller can flag it).
