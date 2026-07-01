@@ -214,6 +214,32 @@ export function recentsFrom(entries, limit = 12) {
   return out;
 }
 
+// ── recentMealsFrom (V2 P0) ───────────────────────────────────────────────────
+// The most-recently-COOKED distinct MEALS (recipe_id), newest first — the new quick-add
+// "Log again" source. Mirrors recentsFrom, but for cooked recipes instead of single foods:
+// ONLY entry_source==='recipe_cook' entries count (a single-food entry — food_item_id set,
+// recipe_id null — is skipped). Distinct by recipe_id (a recipe cooked several times appears
+// once, at its most recent). `limit` caps the list. → recipe_ids in recency order; the caller
+// maps them to recipes rows.
+// ADDED ALONGSIDE recentsFrom (single foods) — recentsFrom is left untouched; the quick-add
+// consumer cuts over at P5.
+export function recentMealsFrom(entries, limit = 12) {
+  const seen = new Set();
+  const out = [];
+  const byNewest = [...(entries || [])].sort((a, b) =>
+    (a.created_at || "") < (b.created_at || "") ? 1 : (a.created_at || "") > (b.created_at || "") ? -1 : 0,
+  );
+  for (const e of byNewest) {
+    if (e?.entry_source !== "recipe_cook") continue; // meals only — never a single food
+    const id = e?.recipe_id;
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 // ── rangeTotals (REUSES presetRange + statsForRange) ─────────────────────────
 // Week/Month: the AVERAGE daily total per nutrient over the window ending on `end`, averaged
 // over LOGGED days only (statsForRange skips gap days — a day with no entries is NOT a 0).
