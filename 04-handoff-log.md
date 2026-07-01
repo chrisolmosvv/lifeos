@@ -56,17 +56,14 @@ THE SAFETY PROPERTY: rerank.ts is wrapped in a TOTAL fallback — the FOOD_RERAN
 failure (no/rate-limited key, junk output, bad index) → top3 null → the deterministic saved/Basics →
 OFF → USDA order stands. Search never depends on the AI being up.
 
-DEPLOY: deployed food-search ALONE (verify_jwt=true preserved from config.toml), AI ON (owner chose
-AI-first; the FOOD_RERANK_OFF proof-run was skipped by choice, available on demand). Gateway verified:
-OPTIONS→200 with CORS; POST without JWT→401 (verify_jwt active). Auth via `env -u SUPABASE_ACCESS_TOKEN`
-(the wrong-account-token trap — see memory).
+DEPLOY: deployed food-search ALONE (verify_jwt=true preserved from config.toml), AI ON. Gateway
+verified: OPTIONS→200 with CORS; POST without JWT→401 (verify_jwt active). Auth via
+`env -u SUPABASE_ACCESS_TOKEN` (the wrong-account-token trap — see memory).
 
-HOW TO VERIFY (owner, done): logger add-food → "chicken breast"/"milk" lead with the Basics generic
-(was buried pre-P1); branded/compound queries rerank sensibly; the three consumers still work.
-
-CARRY-FORWARD (soft): the deliberate FOOD_RERANK_OFF fallback proof-run was not exercised live (AI
-deployed first by choice). The fallback is in code + trips on any real failure; the explicit proof-run
-is a one-command pair, available anytime.
+HOW TO VERIFY (owner, DONE): 20 Basics rows seeded (db/32). Logger add-food → "chicken breast"/"milk"
+lead with the Basics generic (buried pre-P1); branded/compound queries rerank sensibly; the three
+consumers still work. THE SAFETY PROPERTY WAS PROVEN LIVE: with AI off (FOOD_RERANK_OFF), search still
+returned the deterministic saved/Basics → OFF → USDA order, no error — then AI re-enabled.
 
 NEXT: P2 — the CONVERGED FINDER (one search/pick/amount component replacing AddFoodModal +
 IngredientPicker), reading P1's flat results + envelope. Logger context wired first; recipe context P6.
