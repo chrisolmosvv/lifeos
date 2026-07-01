@@ -7,6 +7,7 @@ import { dailyTotals, recentsFrom, entryMacros, slotForHour } from "./foodCalc";
 import { fetchEntries, fetchNames, fetchMyFoods } from "./foodLoad";
 import { cacheFoodOnLog, insertManualFood, setFavourite } from "./foodWrite";
 import { useFoodWrites } from "./useFoodWrites";
+import LoggerMasthead from "./LoggerMasthead";
 import DayView from "./DayView";
 import FoodRange from "./FoodRange";
 import Finder from "./finder/Finder";
@@ -122,17 +123,8 @@ export default function LogPage({ onOpenRecipe }) {
 
   return (
     <div className="flog">
-      <div className="flog-tabs" role="tablist" aria-label="Food range">
-        {RANGES.map((r) => (
-          <button key={r.id} type="button" role="tab" aria-selected={r.id === range} className={r.id === range ? "flog-tab is-active" : "flog-tab"} onClick={() => setRange(r.id)}>{r.label}</button>
-        ))}
-      </div>
-
-      <div className="flog-datenav">
-        <button type="button" className="flog-arrow" aria-label="Previous" onClick={() => go(-1)}>‹</button>
-        <div className="flog-date">{dateLabel}{range === "day" && date === state.today && <span className="flog-today">Today</span>}</div>
-        <button type="button" className="flog-arrow" aria-label="Next" disabled={atToday} onClick={() => go(1)}>›</button>
-      </div>
+      <LoggerMasthead ranges={RANGES} range={range} onRange={setRange} dateLabel={dateLabel}
+        isToday={range === "day" && date === state.today} atToday={atToday} onPrev={() => go(-1)} onNext={() => go(1)} />
 
       {range === "day" ? (
         <DayView entries={entries} goalMap={goalMap} day={date} names={state.names} quickFoods={quickFoods} favSet={favSet}

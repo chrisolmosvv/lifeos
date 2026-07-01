@@ -5,14 +5,14 @@ import MacroBar from "./MacroBar";
 import MealLedger from "./MealLedger";
 import QuickAddStrip from "./QuickAddStrip";
 
-// DayView — the Day content: the calorie-arc + macro-bar header, the fibre/sugar/sodium +
-// drinks line, the quick-add strip, and the meal ledger — or the warm states (no calorie goal
-// → a set-targets prompt that opens the goals editor; empty day → invite + primary add). Every
-// number comes from the F3 calc layer. Props carry the handlers; this file holds no write logic.
+// DayView (V2 P4) — the two-column broadsheet. LEFT rail: the 270° calorie arc (a button → Goals) →
+// the P/C/F macro bar → a quiet fibre/sugar/sodium micros line → quick-add ("Log again", foods-only
+// at P4 — meals-in-quick-add is P5). RIGHT column: a terracotta "+ Log food" (summons the P2 finder)
+// → the meal ledger (four slots, empty ones invited). The V1 drinks line is DROPPED (F10 parked; the
+// dayLedger alcohol READ getter is retained, just not rendered). Every number comes from the getters.
 export default function DayView({ entries, goalMap, day, names, quickFoods, favSet, onAdd, onQuickAdd, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals }) {
   const ledger = dayLedger(entries, goalMap, { day });
   const calGoal = goalMap.get("calories")?.target_value ?? null;
-  const hasEntries = Object.values(ledger.slots).some((s) => s.items.length > 0);
   const arc = calorieArc(ledger.total.kcal, calGoal);
   const split = macroSplit(ledger.total);
   const targets = {
@@ -22,49 +22,34 @@ export default function DayView({ entries, goalMap, day, names, quickFoods, favS
   };
 
   return (
-    <>
-      <div className="flog-header">
+    <div className="flog-day">
+      <aside className="flog-rail">
         {calGoal != null ? (
           <button type="button" className="flog-arc-btn" onClick={(e) => onOpenGoals(e.currentTarget)} aria-label="Edit daily targets">
             <CalorieArc arc={arc} />
           </button>
         ) : (
-          <button type="button" className="flog-setgoals" onClick={(e) => onOpenGoals(e.currentTarget)}>
-            Set your daily targets
-          </button>
+          <button type="button" className="flog-setgoals" onClick={(e) => onOpenGoals(e.currentTarget)}>Set your daily targets</button>
         )}
         <MacroBar split={split} grams={ledger.total} targets={targets} />
-      </div>
+        <p className="flog-micros">
+          fibre {fmtFull("fibre", ledger.total.fibre)} · sugar {fmtFull("sugar", ledger.total.sugar)} · sodium {fmtFull("sodium", ledger.total.sodium)}
+        </p>
+        <QuickAddStrip foods={quickFoods} onPick={onQuickAdd} />
+      </aside>
 
-      <div className="flog-secondary">
-        <span>
-          fibre {fmtFull("fibre", ledger.total.fibre)} · sugar {fmtFull("sugar", ledger.total.sugar)} · sodium{" "}
-          {fmtFull("sodium", ledger.total.sodium)}
-        </span>
-        <span className="flog-drinks">
-          drinks: {ledger.alcohol.units} · {Math.round(ledger.alcohol.kcal)} kcal
-        </span>
-      </div>
-
-      <QuickAddStrip foods={quickFoods} onPick={onQuickAdd} />
-
-      {hasEntries ? (
+      <div className="flog-col">
+        <button type="button" className="flog-logfood" onClick={() => onAdd()}>+ Log food</button>
         <MealLedger
           slots={ledger.slots}
           names={names}
           favSet={favSet}
-          onAddFood={() => onAdd()}
           onAddToSlot={(s) => onAdd(s)}
           onEditEntry={onEditEntry}
           onToggleFav={onToggleFav}
           onOpenRecipe={onOpenRecipe}
         />
-      ) : (
-        <div className="flog-empty">
-          <p className="flog-empty-line">Nothing logged yet — add a meal to start today’s ledger.</p>
-          <button type="button" className="flog-add-primary" onClick={() => onAdd()}>+ add food</button>
-        </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }

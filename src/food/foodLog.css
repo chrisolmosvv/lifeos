@@ -524,6 +524,159 @@
   margin-right: 4px;
 }
 
+/* ── V2 P4 — the logger masthead ─────────────────────────────────────────────── */
+.lmast {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+.lmast-eyebrow {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 3px;
+}
+.lmast-headline {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--ink);
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.lmast-today {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.lmast-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+.lmast-tabs {
+  display: flex;
+  gap: 16px;
+}
+.lmast-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0 0 4px;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.lmast-tab:hover { color: var(--ink); }
+.lmast-tab.is-active { color: var(--accent); border-bottom-color: var(--accent); }
+.lmast-nav { display: flex; gap: 2px; }
+.lmast-arrow {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.lmast-arrow:hover:not(:disabled) { color: var(--ink); }
+.lmast-arrow:disabled { opacity: 0.3; cursor: default; }
+
+/* ── V2 P4 — the Day two-column broadsheet ───────────────────────────────────── */
+.flog-day {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 34px;
+  align-items: start;
+}
+.flog-rail { min-width: 0; }
+.flog-col { min-width: 0; }
+.flog-micros {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  padding: 10px 0;
+  margin: 8px 0 0;
+  border-top: 1px solid var(--rule);
+}
+.flog-logfood {
+  width: 100%;
+  background: var(--accent);
+  color: var(--paper);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+.flog-logfood:hover { opacity: 0.9; }
+
+/* ── V2 P4 — rebuilt ledger row (always-on shorthand; ★/↗ on hover) ──────────── */
+.ml-slot-add {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.ml-slot-add:hover { color: var(--accent); }
+.ml-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.ml-row:last-child { border-bottom: none; }
+.ml-row-main {
+  flex: 1;
+  grid-template-columns: 1fr auto auto;
+  border: none;
+  padding: 6px 0;
+}
+.ml-meal-tag {
+  margin-left: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
+.ml-row-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.ml-row:hover .ml-row-actions,
+.ml-row:focus-within .ml-row-actions { opacity: 1; }
+
 /* Favourite star in a logged row's detail. */
 .ml-fav {
   background: none;

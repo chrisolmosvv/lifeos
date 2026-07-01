@@ -1,100 +1,75 @@
-import { useState } from "react";
-import { fmtNum, fmtFull } from "./foodFormat";
+import { fmtNum } from "./foodFormat";
 
-// MealLedger — the day's entries grouped into the 4 fixed slots, each with a subtotal. Calm
-// via typographic restraint: hairline rules, tabular figures, muted secondary numbers — dense
-// but not loud. Zero-scroll mechanism: CAP rows per slot, "+N more" expands inline. Tapping a
-// row expands it to the full 7 numbers + an Edit affordance. The '+' (per slot) and "+ add
-// food" + Edit ACTIONS are F6 — wired here as stubs. No math; reads the F3 dayLedger slots.
-
+// MealLedger (V2 P4) — the day's four fixed slots, each a hairline-ruled section. Rows carry an
+// ALWAYS-ON P·C·F shorthand + kcal (no cap, no "+N more", no tap-to-expand — the full 7-number
+// breakdown lives in the full-screen Edit). Empty slots are SHOWN with a quiet invitation (never
+// hidden). A cooked/meal entry (recipe_id) gets a "Meal" tag + a ↗ view-recipe affordance; a single
+// food stays plain with a ★ favourite. Row → Edit; ★/↗ reveal on hover. Scrolls as one region.
 const SLOTS = [
   { key: "breakfast", label: "Breakfast" },
   { key: "lunch", label: "Lunch" },
   { key: "dinner", label: "Dinner" },
   { key: "snacks", label: "Snacks" },
 ];
-const CAP = 4; // rows shown per slot before "+N more"
 
 function entryName(e, names) {
   if (e.food_item_id && names?.itemById?.[e.food_item_id]) return names.itemById[e.food_item_id].name;
   if (e.recipe_id && names?.recipeById?.[e.recipe_id]) return names.recipeById[e.recipe_id];
-  return "Food"; // a manual entry with no FK has no stored name — F6 gives manual adds a name
+  return "Food";
 }
 
-export default function MealLedger({ slots, names, favSet, onAddFood, onAddToSlot, onEditEntry, onToggleFav, onOpenRecipe }) {
-  const [openSlots, setOpenSlots] = useState({}); // slot key → show all rows
-  const [openRow, setOpenRow] = useState(null); //   entry id → expanded full nutrition
-
+export default function MealLedger({ slots, names, favSet, onAddToSlot, onEditEntry, onToggleFav, onOpenRecipe }) {
   return (
     <div className="ml">
       {SLOTS.map(({ key, label }) => {
-        const slot = slots[key];
-        const items = slot.items;
-        if (items.length === 0) return null; // empty slots stay hidden until they hold an entry
-        const sub = slot.subtotal;
-        const shown = openSlots[key] ? items : items.slice(0, CAP);
-        const more = items.length - shown.length;
+        const items = slots[key].items;
+        const sub = slots[key].subtotal;
         return (
           <section key={key} className="ml-slot">
             <header className="ml-slot-head">
               <span className="ml-slot-name">{label}</span>
-              <span className="ml-slot-sub">
-                {fmtNum("kcal", sub.kcal)} · P{fmtNum("protein", sub.protein)} C{fmtNum("carbs", sub.carbs)} F
-                {fmtNum("fat", sub.fat)}
-              </span>
-              <button type="button" className="ml-add" aria-label={`Add to ${label}`} onClick={() => onAddToSlot(key)}>+</button>
+              {items.length > 0 ? (
+                <span className="ml-slot-sub">
+                  {fmtNum("kcal", sub.kcal)} kcal · P{fmtNum("protein", sub.protein)} C{fmtNum("carbs", sub.carbs)} F{fmtNum("fat", sub.fat)}
+                </span>
+              ) : (
+                <button type="button" className="ml-slot-add" onClick={() => onAddToSlot(key)}>+ add</button>
+              )}
             </header>
-            <ul className="ml-rows">
-              {shown.map((e) => {
-                const open = openRow === e.id;
-                return (
-                  <li key={e.id} className={open ? "ml-row is-open" : "ml-row"}>
-                    <button type="button" className="ml-row-main" onClick={() => setOpenRow(open ? null : e.id)}>
-                      <span className="ml-name">{entryName(e, names)}</span>
-                      <span className="ml-amt">{e.amount != null ? `${e.amount} ${e.unit || "g"}` : ""}</span>
-                      <span className="ml-kcal">{fmtNum("kcal", e.kcal)}</span>
-                      <span className="ml-macros">
-                        P{fmtNum("protein", e.protein)} C{fmtNum("carbs", e.carbs)} F{fmtNum("fat", e.fat)}
-                      </span>
-                    </button>
-                    {open && (
-                      <div className="ml-detail">
-                        <span>{fmtFull("kcal", e.kcal)}</span>
-                        <span>protein {fmtFull("protein", e.protein)}</span>
-                        <span>carbs {fmtFull("carbs", e.carbs)}</span>
-                        <span>fat {fmtFull("fat", e.fat)}</span>
-                        <span>fibre {fmtFull("fibre", e.fibre)}</span>
-                        <span>sugar {fmtFull("sugar", e.sugar)}</span>
-                        <span>sodium {fmtFull("sodium", e.sodium)}</span>
+            {items.length > 0 && (
+              <ul className="ml-rows">
+                {items.map((e) => {
+                  const isMeal = !!e.recipe_id;
+                  return (
+                    <li key={e.id} className="ml-row">
+                      <button type="button" className="ml-row-main" onClick={() => onEditEntry(e)}>
+                        <span className="ml-name">
+                          {entryName(e, names)}
+                          {isMeal && <span className="ml-meal-tag">Meal</span>}
+                        </span>
+                        <span className="ml-macros">
+                          P{fmtNum("protein", e.protein)} C{fmtNum("carbs", e.carbs)} F{fmtNum("fat", e.fat)}
+                        </span>
+                        <span className="ml-kcal">{fmtNum("kcal", e.kcal)}</span>
+                      </button>
+                      <span className="ml-row-actions">
+                        {isMeal && onOpenRecipe && (
+                          <button type="button" className="ml-recipe-link" aria-label="View recipe" onClick={() => onOpenRecipe(e.recipe_id)}>↗</button>
+                        )}
                         {e.food_item_id && onToggleFav && (
-                          <button
-                            type="button"
-                            className={favSet?.has(e.food_item_id) ? "ml-fav is-on" : "ml-fav"}
-                            aria-label="Toggle favourite"
-                            onClick={() => onToggleFav(e.food_item_id)}
-                          >
+                          <button type="button" className={favSet?.has(e.food_item_id) ? "ml-fav is-on" : "ml-fav"} aria-label="Toggle favourite" onClick={() => onToggleFav(e.food_item_id)}>
                             {favSet?.has(e.food_item_id) ? "★" : "☆"}
                           </button>
                         )}
-                        {e.recipe_id && onOpenRecipe && (
-                          <button type="button" className="ml-recipe-link" onClick={() => onOpenRecipe(e.recipe_id)}>View recipe</button>
-                        )}
-                        <button type="button" className="ml-edit" onClick={() => onEditEntry(e)}>Edit</button>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-            {more > 0 && (
-              <button type="button" className="ml-more" onClick={() => setOpenSlots((s) => ({ ...s, [key]: true }))}>
-                +{more} more
-              </button>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </section>
         );
       })}
-      <button type="button" className="flog-add-primary" onClick={onAddFood}>+ add food</button>
     </div>
   );
 }
