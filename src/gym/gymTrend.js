@@ -5,7 +5,33 @@
 // it never recomputes a metric.
 
 import { amsYMD, amsTodayYMD, shiftYMD, humanDayShort } from "./gymDates.js";
-import { sumVolume, best1RM } from "./gymCalc.js";
+import { sumVolume, best1RM, workoutVolume } from "./gymCalc.js";
+
+// dailyVolumeSeries — training volume per Amsterdam day over a window ending today, as
+// BOTH a raw-daily series (spiky — 0 on rest days) AND a rolling-7-day mean (calm). The
+// TR over-time trend renders one of these as a line so it doesn't die at the Week range
+// (a weekly-bucketed series would be a single point). Rolling uses days beyond the window
+// edge so the earliest points aren't understated. → { raw:[{ymd,value}], rolling:[…] }.
+export function dailyVolumeSeries(workouts, { days = 7, now = Date.now() } = {}) {
+  const today = amsTodayYMD(now);
+  const byDay = new Map();
+  for (const w of workouts || []) {
+    const ymd = amsYMD(w.started_at);
+    if (!ymd) continue;
+    byDay.set(ymd, (byDay.get(ymd) || 0) + workoutVolume(w));
+  }
+  const raw = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const ymd = shiftYMD(today, -i);
+    raw.push({ ymd, value: byDay.get(ymd) || 0 });
+  }
+  const rolling = raw.map((p) => {
+    let sum = 0;
+    for (let k = 0; k < 7; k++) sum += byDay.get(shiftYMD(p.ymd, -k)) || 0;
+    return { ymd: p.ymd, value: sum / 7 };
+  });
+  return { raw, rolling };
+}
 
 // `n` weekly day-sets, oldest first. Week i (counting back) ends 7*i days before
 // today; week 0 (the last entry) ends today → its days are the box score's window.
