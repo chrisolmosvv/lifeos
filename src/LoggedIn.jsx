@@ -12,6 +12,17 @@ import FoodPage from './food/FoodPage'
 import HealthDebugV2 from './health/HealthDebugV2' // THROWAWAY (V2 P0c verify) — delete with the hook below
 import './calendar.css'
 
+// Session-surfacing A — the current pillar PERSISTS across reloads (localStorage, like the Cookbook
+// grid/list toggle). SHALLOW by design: only the top-level pillar is remembered (a reload returns you
+// to the right pillar, its default sub-view); the deep restore into a cook is the resume banner's job.
+// A garbage/unknown stored value falls back to 'today' — never a blank screen.
+const PILLARS = ['today', 'planning', 'archive', 'calendar', 'health', 'food', 'settings']
+const VIEW_KEY = 'lifeos.view'
+function initialView() {
+  if (typeof window === 'undefined') return 'today'
+  try { const v = window.localStorage.getItem(VIEW_KEY); return PILLARS.includes(v) ? v : 'today' } catch { return 'today' }
+}
+
 // The logged-in app frame: the masthead (nameplate + Today/Calendar/Settings
 // nav) over the current screen, with a quiet colophon at the foot. Three
 // destinations: Today (the task view for now — the real Today layout is next),
@@ -19,7 +30,8 @@ import './calendar.css'
 export default function LoggedIn({ email }) {
   const today = new Date()
   const days = weekDays(today)
-  const [view, setView] = useState('today')
+  const [view, setViewState] = useState(initialView)
+  const setView = (v) => { setViewState(v); try { window.localStorage.setItem(VIEW_KEY, v) } catch { /* private mode / disabled → in-memory only */ } }
 
   // THROWAWAY (V2 P0c verify): open <app>/#health-debug-v2 to read the calc readout. Delete with the import above.
   if (typeof window !== 'undefined' && window.location.hash === '#health-debug-v2') return <HealthDebugV2 />
