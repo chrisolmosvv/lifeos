@@ -48,7 +48,8 @@ export const loggerFinderConfig = {
   unitsFor: loggerUnits,
   showSlot: true,
   allowNoMacros: false,
-  allowManual: true, // reuses ManualForm behind the manual hatch
+  allowManual: true, // "add a food" hatch → ManualForm
+  allowEstimate: true, // "estimate this meal" hatch → EstimateMealPanel (Feature B, P5)
 };
 
 export const recipeFinderConfig = {
@@ -59,4 +60,5 @@ export const recipeFinderConfig = {
   showSlot: false,
   allowNoMacros: true, // recipe: "keep as text (no macros)" hatch (wired P6)
   allowManual: false,
+  allowEstimate: false,
 };

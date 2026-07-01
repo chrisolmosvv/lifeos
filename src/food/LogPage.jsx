@@ -13,6 +13,7 @@ import WeekMonthView from "./WeekMonthView";
 import Finder from "./finder/Finder";
 import { loggerFinderConfig } from "./finder/finderConfig";
 import EditEntryPanel from "./EditEntryPanel";
+import EstimateMealPanel from "./EstimateMealPanel";
 import NutritionGoalsEditor from "./NutritionGoalsEditor";
 import Toast from "../kit/Toast";
 import "./foodLog.css";
@@ -33,6 +34,7 @@ export default function LogPage({ onOpenRecipe }) {
   const [myFoods, setMyFoods] = useState([]);
   const [addModal, setAddModal] = useState(null); // { slot, preset?, swapEntry?, title? }
   const [editing, setEditing] = useState(null); //   the entry being edited
+  const [estimate, setEstimate] = useState(null); // { slot } — Feature-B estimate panel open
   const [goalOpen, setGoalOpen] = useState(false);
   const fw = useFoodWrites(entries, setEntries);
   const gw = useGoalWrites(goalMap, setGoalMap);
@@ -134,7 +136,14 @@ export default function LogPage({ onOpenRecipe }) {
 
       {addModal && (
         <Finder finderConfig={loggerFinderConfig} defaultSlot={addModal.slot} presetFood={addModal.preset} title={addModal.title}
-          onResolve={(food, d) => onLog(food, d.amount, d.unit, d.slot)} onClose={() => setAddModal(null)} />
+          onResolve={(food, d) => onLog(food, d.amount, d.unit, d.slot)}
+          onEstimate={() => { const slot = addModal.slot; setAddModal(null); setEstimate({ slot }); }}
+          onClose={() => setAddModal(null)} />
+      )}
+      {estimate && (
+        <EstimateMealPanel defaultSlot={estimate.slot}
+          onLog={(snap, slot) => { setEstimate(null); fw.addEntry({ entry_date: date, meal_slot: slot, food_item_id: null, recipe_id: null, amount: 1, unit: "serving", kcal: snap.kcal, protein: snap.protein, carbs: snap.carbs, fat: snap.fat, fibre: null, sugar: null, sodium: null, entry_source: "manual", is_estimated: true, is_alcohol: false }); }}
+          onClose={() => setEstimate(null)} />
       )}
       {editing && (
         <EditEntryPanel entry={editing} name={nameFor(editing)} onApply={(patch) => { fw.editEntry(editing.id, patch); setEditing(null); }}

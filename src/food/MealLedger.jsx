@@ -46,11 +46,12 @@ export default function MealLedger({ slots, names, favSet, onAddToSlot, onEditEn
                         <span className="ml-name">
                           {entryName(e, names)}
                           {isMeal && <span className="ml-meal-tag">Meal</span>}
+                          {e.is_estimated && <span className="ml-meal-tag">~ est</span>}
                         </span>
                         <span className="ml-macros">
                           P{fmtNum("protein", e.protein)} C{fmtNum("carbs", e.carbs)} F{fmtNum("fat", e.fat)}
                         </span>
-                        <span className="ml-kcal">{fmtNum("kcal", e.kcal)}</span>
+                        <span className="ml-kcal">{e.is_estimated ? "~" : ""}{fmtNum("kcal", e.kcal)}</span>
                       </button>
                       <span className="ml-row-actions">
                         {isMeal && onOpenRecipe && (

@@ -17,7 +17,7 @@ import "./finder.css";
 // Props: finderConfig, defaultSlot, presetFood, title, onResolve(food, detail), onClose.
 const DEBOUNCE_MS = 350;
 
-export default function Finder({ finderConfig: cfg, defaultSlot, presetFood, title, onResolve, onClose }) {
+export default function Finder({ finderConfig: cfg, defaultSlot, presetFood, title, onResolve, onEstimate, onClose }) {
   const [view, setView] = useState("search"); // 'search' | 'manual'
   const [query, setQuery] = useState("");
   const [resp, setResp] = useState({ results: [], top3: null, dbSuppressed: false, note: null });
@@ -86,24 +86,27 @@ export default function Finder({ finderConfig: cfg, defaultSlot, presetFood, tit
   }
 
   const q = query.trim();
+  // Manual-hatch SPLIT (V2 P5): "add a food" (reusable food_items row → ManualForm) vs "estimate this
+  // meal" (one-off Feature-B estimate → EstimateMealPanel, opened by the consumer via onEstimate).
+  const hatches = (
+    <div className="fdr-hatches">
+      {cfg.allowManual && <button type="button" className="afm-manual" onClick={() => setView("manual")}>+ add a food</button>}
+      {cfg.allowEstimate && onEstimate && <button type="button" className="afm-manual" onClick={onEstimate}>~ estimate this meal</button>}
+    </div>
+  );
   return (
     <Shell title={title || cfg.title} onClose={onClose}>
       <input className="afm-search" type="text" placeholder="Search foods…" value={query} autoFocus
         onChange={(e) => setQuery(e.target.value)} onKeyDown={onSearchKey} />
       {searching && <p className="afm-hint">Searching…</p>}
       {!searching && q.length >= 2 && resp.results.length === 0 && (
-        <div className="fdr-empty">
-          <p>No matches for “{q}”.</p>
-          {cfg.allowManual && <button type="button" className="afm-manual" onClick={() => setView("manual")}>+ enter manually</button>}
-        </div>
+        <div className="fdr-empty"><p>No matches for “{q}”.</p></div>
       )}
       {resp.results.length > 0 && (
         <FinderResults zones={zones} dbSuppressed={resp.dbSuppressed} dbRevealed={dbRevealed} onRevealDb={() => setDbRevealed(true)}
           moreShown={moreShown} onShowMore={() => setMoreShown(true)} note={resp.note} activeFood={visible[active]} onPick={setPicked} />
       )}
-      {cfg.allowManual && resp.results.length > 0 && (
-        <button type="button" className="afm-manual" onClick={() => setView("manual")}>+ enter manually</button>
-      )}
+      {(cfg.allowManual || cfg.allowEstimate) && hatches}
     </Shell>
   );
 }

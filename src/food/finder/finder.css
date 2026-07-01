@@ -76,6 +76,12 @@
   text-decoration: underline;
 }
 
+.fdr-hatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
 .fdr-empty {
   padding: 10px 2px;
   font-family: var(--font-sans);
