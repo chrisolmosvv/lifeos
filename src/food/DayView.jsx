@@ -1,16 +1,20 @@
+import { useState } from "react";
 import { dayLedger, calorieArc, macroSplit } from "./foodCalc";
 import { fmtFull } from "./foodFormat";
 import CalorieArc from "./CalorieArc";
 import MacroBar from "./MacroBar";
 import MealLedger from "./MealLedger";
 import QuickAddStrip from "./QuickAddStrip";
+import SaveAsMealPanel from "./SaveAsMealPanel";
 
-// DayView (V2 P4) — the two-column broadsheet. LEFT rail: the 270° calorie arc (a button → Goals) →
-// the P/C/F macro bar → a quiet fibre/sugar/sodium micros line → quick-add ("Log again", foods-only
-// at P4 — meals-in-quick-add is P5). RIGHT column: a terracotta "+ Log food" (summons the P2 finder)
-// → the meal ledger (four slots, empty ones invited). The V1 drinks line is DROPPED (F10 parked; the
-// dayLedger alcohol READ getter is retained, just not rendered). Every number comes from the getters.
-export default function DayView({ entries, goalMap, day, names, quickFoods, favSet, onAdd, onQuickAdd, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals }) {
+// DayView (V2 P4 + P5) — the two-column broadsheet. LEFT rail: calorie arc (→ Goals) → macro bar →
+// micros → quick-add (OR, in save-as-meal mode, the builder). RIGHT column: "+ Log food" (P2 finder)
+// + "Save a meal" toggle → the ledger. Save-as-meal (P5, Feature A) is a local multi-select over
+// today's FOOD entries → onSaveMeal (the caller writes a stepless recipe); it does NOT log.
+export default function DayView({ entries, goalMap, day, names, quickFoods, favSet, onAdd, onQuickAdd, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals, onSaveMeal }) {
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState(() => new Set());
+
   const ledger = dayLedger(entries, goalMap, { day });
   const calGoal = goalMap.get("calories")?.target_value ?? null;
   const arc = calorieArc(ledger.total.kcal, calGoal);
@@ -20,6 +24,12 @@ export default function DayView({ entries, goalMap, day, names, quickFoods, favS
     carbs: goalMap.get("carbs")?.target_value ?? null,
     fat: goalMap.get("fat")?.target_value ?? null,
   };
+
+  const allItems = Object.values(ledger.slots).flatMap((s) => s.items);
+  const selectedEntries = allItems.filter((e) => selected.has(e.id));
+  const exitSelect = () => { setSelectMode(false); setSelected(new Set()); };
+  const toggleSelect = (id) => setSelected((cur) => { const n = new Set(cur); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const save = (name, fav) => { onSaveMeal(selectedEntries, name, fav); exitSelect(); };
 
   return (
     <div className="flog-day">
@@ -35,11 +45,22 @@ export default function DayView({ entries, goalMap, day, names, quickFoods, favS
         <p className="flog-micros">
           fibre {fmtFull("fibre", ledger.total.fibre)} · sugar {fmtFull("sugar", ledger.total.sugar)} · sodium {fmtFull("sodium", ledger.total.sodium)}
         </p>
-        <QuickAddStrip foods={quickFoods} onPick={onQuickAdd} />
+        {selectMode ? (
+          <SaveAsMealPanel entries={selectedEntries} onSave={save} onCancel={exitSelect} />
+        ) : (
+          <QuickAddStrip foods={quickFoods} onPick={onQuickAdd} />
+        )}
       </aside>
 
       <div className="flog-col">
         <button type="button" className="flog-logfood" onClick={() => onAdd()}>+ Log food</button>
+        {selectMode ? (
+          <p className="flog-selecthint">Tick food items to include, then name your meal in the panel ‹</p>
+        ) : (
+          allItems.some((e) => e.food_item_id) && (
+            <button type="button" className="flog-savemeal" onClick={() => setSelectMode(true)}>⊕ Save a meal from today</button>
+          )
+        )}
         <MealLedger
           slots={ledger.slots}
           names={names}
@@ -48,6 +69,9 @@ export default function DayView({ entries, goalMap, day, names, quickFoods, favS
           onEditEntry={onEditEntry}
           onToggleFav={onToggleFav}
           onOpenRecipe={onOpenRecipe}
+          selectMode={selectMode}
+          selected={selected}
+          onToggleSelect={toggleSelect}
         />
       </div>
     </div>

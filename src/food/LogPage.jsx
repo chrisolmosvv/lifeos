@@ -6,7 +6,9 @@ import { useGoalWrites } from "../health/useGoalWrites";
 import { dailyTotals, recentsFrom, entryMacros, slotForHour } from "./foodCalc";
 import { fetchEntries, fetchNames, fetchMyFoods } from "./foodLoad";
 import { cacheFoodOnLog, insertManualFood, setFavourite } from "./foodWrite";
+import { setRecipeFavourite } from "./recipeWrite";
 import { useFoodWrites } from "./useFoodWrites";
+import { useRecipeWrites } from "./useRecipeWrites";
 import LoggerMasthead from "./LoggerMasthead";
 import DayView from "./DayView";
 import WeekMonthView from "./WeekMonthView";
@@ -38,6 +40,7 @@ export default function LogPage({ onOpenRecipe }) {
   const [goalOpen, setGoalOpen] = useState(false);
   const fw = useFoodWrites(entries, setEntries);
   const gw = useGoalWrites(goalMap, setGoalMap);
+  const rw = useRecipeWrites();
 
   useEffect(() => {
     let alive = true;
@@ -115,6 +118,18 @@ export default function LogPage({ onOpenRecipe }) {
     try { await setFavourite(id, next); } catch { setMyFoods((ms) => ms.map((f) => (f.id === id ? { ...f, is_favourite: !next } : f))); fw.fail("Couldn’t update favourite."); }
   };
 
+  // Save-as-meal (Feature A): the ticked FOOD entries → a STEPLESS recipe (a meal) via the reused
+  // recipe-create path. Does NOT log. ★ via setRecipeFavourite. Its macros derive from ingredients.
+  const onSaveMeal = async (selEntries, name, fav) => {
+    const ingredients = selEntries.map((e) => ({
+      food_item_id: e.food_item_id,
+      raw_text: state.names?.itemById?.[e.food_item_id]?.name || null,
+      amount: e.amount, unit: e.unit, manual_macros: null, no_macros: false,
+    }));
+    const res = await rw.save(null, { title: name, servings: 1, prep_minutes: null, cook_minutes: null, source_url: null }, ingredients, []);
+    if (res.ok && fav) { try { await setRecipeFavourite(res.id, true); } catch { /* failure surfaces via rw.toast */ } }
+  };
+
   const submitGoals = (setList, clearList) => {
     if (setList.length) gw.submitGoals(setList);
     if (clearList.length) gw.clearGoals(clearList);
@@ -129,7 +144,7 @@ export default function LogPage({ onOpenRecipe }) {
       {range === "day" ? (
         <DayView entries={entries} goalMap={goalMap} day={date} names={state.names} quickFoods={quickFoods} favSet={favSet}
           onAdd={openAdd} onQuickAdd={openQuickAdd} onEditEntry={setEditing} onToggleFav={toggleFav} onOpenRecipe={onOpenRecipe}
-          onOpenGoals={() => setGoalOpen(true)} />
+          onOpenGoals={() => setGoalOpen(true)} onSaveMeal={onSaveMeal} />
       ) : (
         <WeekMonthView daily={daily} days={step} end={date} goalMap={goalMap} today={state.today} onDrillDay={(ymd) => { setRange("day"); setDate(ymd); }} />
       )}
@@ -158,6 +173,8 @@ export default function LogPage({ onOpenRecipe }) {
         <Toast text={fw.toast.text} onUndo={fw.toast.undo} onDismiss={fw.dismissToast} />
       ) : gw.toast ? (
         <Toast text={gw.toast} onDismiss={gw.dismissToast} />
+      ) : rw.toast ? (
+        <Toast text={rw.toast.text} onDismiss={rw.dismiss} />
       ) : null}
     </div>
   );

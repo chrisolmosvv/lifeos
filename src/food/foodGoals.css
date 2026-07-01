@@ -260,3 +260,17 @@
   font-variant-numeric: tabular-nums;
 }
 .fest-num-unit { font-family: var(--font-sans); font-size: 0.74rem; color: var(--ink-muted); }
+
+/* ── V2 P5 — save-as-meal rail builder (Feature A) ───────────────────────────── */
+.sam { border: 1px solid var(--rule); border-radius: 10px; padding: 12px; margin-top: 8px; }
+.sam-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.sam-title { font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink); }
+.sam-count { font-family: var(--font-sans); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); }
+.sam-name {
+  width: 100%; box-sizing: border-box; background: none; border: none;
+  border-bottom: 1px solid var(--rule); padding: 4px 0; margin-bottom: 8px; outline: none;
+  font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink);
+}
+.sam-macros { font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; margin: 0 0 8px; }
+.sam-fav { display: flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-size: 0.8rem; color: var(--ink-muted); margin-bottom: 10px; }
+.sam-actions { display: flex; gap: 8px; justify-content: flex-end; }

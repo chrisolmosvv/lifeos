@@ -71,6 +71,14 @@ export async function updateRecipe(id, recipe, ingredients, steps) {
 // (V2 P3: stampLastCooked removed — "last cooked" is now COMPUTE-ON-READ via lastCookedFor. The
 //  recipes.last_cooked_at column is now dead; its DROP is deferred to P9, checker-gated.)
 
+// Toggle is_favourite on a recipe (V2 P5 — save-as-meal ★, and the cookbook meal/recipe star). A
+// plain owner-RLS update; no updated_at bump (favourite is curation, not an edit — must not reshuffle
+// the "added" order). Mirrors foodWrite.setFavourite for food_items. Throws on error.
+export async function setRecipeFavourite(recipeId, value) {
+  const { error } = await supabase.from("recipes").update({ is_favourite: value }).eq("id", recipeId);
+  if (error) throw new Error(error.message);
+}
+
 // Delete the recipe; children CASCADE; food_log_entries.recipe_id is SET NULL (logged history +
 // its macro snapshot survive). Throws on error.
 export async function deleteRecipe(id) {

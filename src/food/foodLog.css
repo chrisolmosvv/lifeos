@@ -695,6 +695,20 @@
   margin-bottom: 12px;
 }
 .flog-logfood:hover { opacity: 0.9; }
+.flog-savemeal {
+  background: none;
+  border: 1px dashed var(--rule);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+.flog-savemeal:hover { color: var(--accent); border-color: var(--accent); }
+.flog-selecthint { font-family: var(--font-sans); font-size: 0.78rem; color: var(--accent); margin: 0 0 12px; }
+.ml-tick { margin-right: 8px; color: var(--ink-muted); }
 
 /* ── V2 P4 — rebuilt ledger row (always-on shorthand; ★/↗ on hover) ──────────── */
 .ml-slot-add {

@@ -19,7 +19,7 @@ function entryName(e, names) {
   return "Food";
 }
 
-export default function MealLedger({ slots, names, favSet, onAddToSlot, onEditEntry, onToggleFav, onOpenRecipe }) {
+export default function MealLedger({ slots, names, favSet, onAddToSlot, onEditEntry, onToggleFav, onOpenRecipe, selectMode, selected, onToggleSelect }) {
   return (
     <div className="ml">
       {SLOTS.map(({ key, label }) => {
@@ -41,9 +41,12 @@ export default function MealLedger({ slots, names, favSet, onAddToSlot, onEditEn
               <ul className="ml-rows">
                 {items.map((e) => {
                   const isMeal = !!e.recipe_id;
+                  const selectable = selectMode && !!e.food_item_id; // only foods can become meal ingredients
                   return (
                     <li key={e.id} className="ml-row">
-                      <button type="button" className="ml-row-main" onClick={() => onEditEntry(e)}>
+                      <button type="button" className="ml-row-main" disabled={selectMode && !selectable}
+                        onClick={() => (selectMode ? (selectable && onToggleSelect(e.id)) : onEditEntry(e))}>
+                        {selectMode && <span className="ml-tick">{selected?.has(e.id) ? "☑" : selectable ? "☐" : "·"}</span>}
                         <span className="ml-name">
                           {entryName(e, names)}
                           {isMeal && <span className="ml-meal-tag">Meal</span>}
@@ -54,16 +57,18 @@ export default function MealLedger({ slots, names, favSet, onAddToSlot, onEditEn
                         </span>
                         <span className="ml-kcal">{e.is_estimated ? "~" : ""}{fmtNum("kcal", e.kcal)}</span>
                       </button>
-                      <span className="ml-row-actions">
-                        {isMeal && onOpenRecipe && (
-                          <button type="button" className="ml-recipe-link" aria-label="View recipe" onClick={() => onOpenRecipe(e.recipe_id)}>↗</button>
-                        )}
-                        {e.food_item_id && onToggleFav && (
-                          <button type="button" className={favSet?.has(e.food_item_id) ? "ml-fav is-on" : "ml-fav"} aria-label="Toggle favourite" onClick={() => onToggleFav(e.food_item_id)}>
-                            {favSet?.has(e.food_item_id) ? "★" : "☆"}
-                          </button>
-                        )}
-                      </span>
+                      {!selectMode && (
+                        <span className="ml-row-actions">
+                          {isMeal && onOpenRecipe && (
+                            <button type="button" className="ml-recipe-link" aria-label="View recipe" onClick={() => onOpenRecipe(e.recipe_id)}>↗</button>
+                          )}
+                          {e.food_item_id && onToggleFav && (
+                            <button type="button" className={favSet?.has(e.food_item_id) ? "ml-fav is-on" : "ml-fav"} aria-label="Toggle favourite" onClick={() => onToggleFav(e.food_item_id)}>
+                              {favSet?.has(e.food_item_id) ? "★" : "☆"}
+                            </button>
+                          )}
+                        </span>
+                      )}
                     </li>
                   );
                 })}
