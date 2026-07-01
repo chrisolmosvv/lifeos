@@ -34,9 +34,9 @@ export function recipeKind(recipe) {
 // "cooked" (there is nothing to cook), so it returns null even if a cook entry somehow exists.
 // entry_date is already the Amsterdam day (the write layer sets it), so a lexical string MAX is
 // the correct latest day — no Date parsing, no timezone helper needed here.
-// This is the compute-on-read value that REPLACES the stored recipes.last_cooked_at + the
-// stampLastCooked write; the cutover (wiring + deleting the stamp) is P3 — here it is only
-// ADDED, alongside the still-live stored column.  → 'YYYY-MM-DD' | null.
+// This is the compute-on-read value that REPLACED the stored recipes.last_cooked_at + the
+// stampLastCooked write (both removed at P3; the dead column dropped at P9). The "Cooked" sort and
+// the recipe page's "last cooked" read this, never a stored stamp.  → 'YYYY-MM-DD' | null.
 export function lastCookedFor(recipe, entries) {
   if (recipeKind(recipe) !== "recipe") return null;
   const id = recipe?.id;

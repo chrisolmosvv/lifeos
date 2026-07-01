@@ -1,12 +1,6 @@
 /* Food log phone fit rules. Kept separate because foodLog.css is already large. */
 
 @media (max-width: 520px) {
-  .flog-header {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    justify-items: center;
-  }
-
   .mb {
     width: 100%;
   }

@@ -14,88 +14,7 @@
   text-align: center;
 }
 
-/* Day / Week / Month range switcher — text tabs, accent underline on the active one. */
-.flog-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 8px;
-  margin-bottom: 10px;
-}
-.flog-tab {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -9px;
-  padding: 0 0 7px;
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: color 160ms ease;
-}
-.flog-tab:hover {
-  color: var(--ink);
-}
-.flog-tab.is-active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
-/* Date nav — chevrons flank the date (the calendar house pattern). */
-.flog-datenav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-.flog-arrow {
-  background: none;
-  border: none;
-  color: var(--ink-muted);
-  font-size: 1.5rem;
-  line-height: 1;
-  padding: 0 6px;
-  cursor: pointer;
-  transition: color 160ms ease;
-}
-.flog-arrow:hover:not(:disabled) {
-  color: var(--ink);
-}
-.flog-arrow:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-.flog-date {
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
-  color: var(--ink);
-  display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
-  min-width: 18ch;
-  justify-content: center;
-}
-.flog-today {
-  font-family: var(--font-sans);
-  font-size: 0.6rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-/* Header — the calorie arc (left) + the macro bar (right). */
-.flog-header {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 30px;
-  align-items: center;
-  margin-bottom: 12px;
-}
+/* (V2 P9 cleanup: removed dead flog-tabs / flog-datenav / flog-header — the P4 masthead superseded them.) */
 .flog-setgoals {
   width: 200px;
   height: 200px;
@@ -116,9 +35,6 @@
 .flog-setgoals:hover {
   color: var(--ink);
   border-color: var(--ink-muted);
-}
-.flog-setgoals--static {
-  cursor: default;
 }
 
 /* The calorie arc itself. */
@@ -210,43 +126,8 @@
   color: var(--ink-muted);
 }
 
-/* The fibre/sugar/sodium secondary line + the reserved drinks spot (populated at F10). */
-.flog-secondary {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
-  padding: 8px 0 12px;
-  border-bottom: 1px solid var(--rule);
-  margin-bottom: 6px;
-}
-
-/* Empty-day invite. */
-.flog-empty {
-  text-align: center;
-  padding: 6vh 0 2vh;
-}
-.flog-empty-line {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  color: var(--ink-muted);
-  margin-bottom: 18px;
-}
-.flog-add-primary {
-  background: var(--ink);
-  color: var(--paper);
-  border: none;
-  border-radius: 8px;
-  padding: 9px 20px;
-  font-family: var(--font-sans);
-  font-size: 0.9rem;
-  cursor: pointer;
-  margin-top: 10px;
-}
+/* (V2 P9 cleanup: removed dead flog-secondary / flog-empty / flog-empty-line / flog-add-primary —
+   the drinks line was dropped at P4, the empty-day invite is now handled by the rebuilt MealLedger.) */
 
 /* Meal ledger. */
 .ml-slot {
