@@ -3,14 +3,17 @@ import { fetchRecipe } from "./recipeLoad";
 import { recipeMacros } from "./recipeCalc";
 import { entryMacros } from "./foodCalc";
 import { fmtNum } from "./foodFormat";
-import IngredientPicker from "./IngredientPicker";
+import { ensureFoodItem } from "./recipeWrite";
+import Finder from "./finder/Finder";
+import { recipeFinderConfig } from "./finder/finderConfig";
 import "./cookbook.css";
 
-// RecipeEditor — create + edit + the F8 IMPORT review (same form). Title only is required. The
-// editor is the import "review screen": `initialDraft` pre-fills it; auto-matched ingredients show
-// their matched food NAME + kcal in the row (the spot-check — a wrong match is catchable by eye);
-// a flagged ingredient (no clear match) shows "needs a match" with a tap → the F6 search pre-filled
-// with the parsed name, or "keep as text". Save → onSave(recipe incl source_url, ingredients, steps).
+// RecipeEditor (V2 P6) — create + edit + the import review (same form), now TWO-COLUMN (ingredients +
+// live macros left, steps right). Ingredient add/match MOUNTS the converged finder (recipeFinderConfig
+// — portions ON, no-macros/free-text hatch ON, meals OFF) — the SAME <Finder> as the logger, not a
+// clone (IngredientPicker retired). A matched ingredient shows its food + kcal (spot-check); a flagged
+// one shows "needs a match" → the finder (pre-filled) or "text" (no_macros). Edit-rewrites-children
+// is preserved (the write layer). Save → onSave(recipe incl source_url, ingredients, steps).
 export default function RecipeEditor({ recipeId, initialDraft, initialItemsById, onSave, onCancel, onDelete, saving }) {
   const [title, setTitle] = useState(initialDraft?.title || "");
   const [servings, setServings] = useState(initialDraft?.servings ?? "");
@@ -20,7 +23,7 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   const [steps, setSteps] = useState(initialDraft?.steps || []);
   const [itemsById, setItemsById] = useState(initialItemsById || {});
   const [sourceUrl, setSourceUrl] = useState(initialDraft?.source_url ?? null);
-  const [picker, setPicker] = useState(null); // null | { index: number|null, query }
+  const [finderAt, setFinderAt] = useState(null); // null | { index: number|null, query }
   const [confirmDel, setConfirmDel] = useState(false);
   const [loading, setLoading] = useState(!!recipeId);
 
@@ -47,22 +50,29 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   const servNum = Number(servings) > 0 ? Number(servings) : 1;
   const macros = recipeMacros(ingredients, servNum, itemsById);
 
-  const openPicker = (index) => setPicker({ index, query: index != null ? (ingredients[index]?.parsedName || ingredients[index]?.raw_text || "") : "" });
-  const onPick = (ing, food) => {
-    setIngredients((xs) => (picker.index == null ? [...xs, ing] : xs.map((x, i) => (i === picker.index ? ing : x))));
-    if (food?.food_item_id) setItemsById((m) => ({ ...m, [food.food_item_id]: food }));
-    setPicker(null);
+  const openFinder = (index) => setFinderAt({ index, query: index != null ? (ingredients[index]?.parsedName || ingredients[index]?.raw_text || "") : "" });
+  const applyIng = (ing) => setIngredients((xs) => (finderAt.index == null ? [...xs, ing] : xs.map((x, i) => (i === finderAt.index ? ing : x))));
+  // Finder recipe-context outputs: a matched food (cache → food_item_id + resolved grams) …
+  const onResolve = async (food, detail) => {
+    try {
+      const item = await ensureFoodItem(food);
+      setItemsById((m) => ({ ...m, [item.id]: { ...food, food_item_id: item.id } }));
+      applyIng({ food_item_id: item.id, raw_text: food.name, amount: detail.grams, unit: "g", no_macros: false });
+    } catch { /* leave the finder open to retry */ return; }
+    setFinderAt(null);
   };
+  // … or a free-text no-macros line.
+  const onResolveText = (text) => { applyIng({ food_item_id: null, raw_text: text, amount: null, unit: null, no_macros: true }); setFinderAt(null); };
   const keepAsText = (i) => setIngredients((xs) => xs.map((x, j) => (j === i ? { ...x, no_macros: true, food_item_id: null } : x)));
   const removeIng = (i) => setIngredients((xs) => xs.filter((_, j) => j !== i));
   const moveStep = (i, d) => setSteps((xs) => { const j = i + d; if (j < 0 || j >= xs.length) return xs; const c = [...xs]; [c[i], c[j]] = [c[j], c[i]]; return c; });
 
   const info = (ing) => {
     if (ing.food_item_id && itemsById[ing.food_item_id]) {
-      const item = itemsById[ing.food_item_id];
-      const kcal = ing.amount != null ? entryMacros(item, Number(ing.amount), "g").kcal : null;
-      return { status: "matched", name: item.name, kcal };
+      const kcal = ing.amount != null ? entryMacros(itemsById[ing.food_item_id], Number(ing.amount), "g").kcal : null;
+      return { status: "matched", name: itemsById[ing.food_item_id].name, kcal };
     }
+    if (ing.manual_macros && Number.isFinite(ing.manual_macros.kcal)) return { status: "manual", kcal: ing.manual_macros.kcal };
     if (ing.no_macros) return { status: "text" };
     return { status: "flag" };
   };
@@ -89,47 +99,53 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
         <label>Cook min <input type="number" min="0" value={cook} onChange={(e) => setCook(e.target.value)} /></label>
       </div>
 
-      <h3 className="red-h">Ingredients</h3>
-      <ul className="red-ings">
-        {ingredients.map((ing, i) => {
-          const m = info(ing);
-          return (
-            <li key={i} className="red-ing">
-              <span className="red-ing-text">
-                {ing.raw_text || "ingredient"}
-                {m.status === "matched" && <span className="red-ing-match"> · {m.name}{m.kcal != null ? ` · ${Math.round(m.kcal)} kcal` : " · set amount"}</span>}
-                {m.status === "flag" && <span className="red-ing-flag"> · needs a match</span>}
-                {m.status === "text" && <span className="red-mark"> · no macros</span>}
-              </span>
-              <span className="red-ing-ctl">
-                <button type="button" onClick={() => openPicker(i)}>{m.status === "matched" ? "change" : "match"}</button>
-                {m.status === "flag" && <button type="button" onClick={() => keepAsText(i)}>text</button>}
-                <button type="button" className="red-x" aria-label="Remove" onClick={() => removeIng(i)}>×</button>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      <button type="button" className="red-add" onClick={() => openPicker(null)}>+ ingredient</button>
+      <div className="red-cols">
+        <div className="red-col">
+          <h3 className="red-h">Ingredients</h3>
+          <ul className="red-ings">
+            {ingredients.map((ing, i) => {
+              const m = info(ing);
+              return (
+                <li key={i} className="red-ing">
+                  <span className="red-ing-text">
+                    {ing.raw_text || "ingredient"}
+                    {m.status === "matched" && <span className="red-ing-match"> · {m.name}{m.kcal != null ? ` · ${Math.round(m.kcal)} kcal` : " · set amount"}</span>}
+                    {m.status === "manual" && <span className="red-ing-match"> · ~ {Math.round(m.kcal)} kcal (estimated)</span>}
+                    {m.status === "flag" && <span className="red-ing-flag"> · needs a match</span>}
+                    {m.status === "text" && <span className="red-mark"> · no macros</span>}
+                  </span>
+                  <span className="red-ing-ctl">
+                    <button type="button" onClick={() => openFinder(i)}>{m.status === "matched" ? "change" : "match"}</button>
+                    {m.status === "flag" && <button type="button" onClick={() => keepAsText(i)}>text</button>}
+                    <button type="button" className="red-x" aria-label="Remove" onClick={() => removeIng(i)}>×</button>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <button type="button" className="red-add" onClick={() => openFinder(null)}>+ ingredient</button>
+          <div className="red-macros">
+            Per serving: {fmtNum("kcal", macros.perServing.kcal)} kcal · P{fmtNum("protein", macros.perServing.protein)} C{fmtNum("carbs", macros.perServing.carbs)} F{fmtNum("fat", macros.perServing.fat)}
+            {macros.unestimatedCount > 0 && <span className="red-approx"> · ~{macros.unestimatedCount} unestimated</span>}
+          </div>
+        </div>
 
-      <h3 className="red-h">Steps</h3>
-      <ol className="red-steps">
-        {steps.map((s, i) => (
-          <li key={i} className="red-step">
-            <textarea rows={2} value={s.text} placeholder={`Step ${i + 1}`} onChange={(e) => setSteps((xs) => xs.map((x, j) => (j === i ? { text: e.target.value } : x)))} />
-            <div className="red-step-ctl">
-              <button type="button" onClick={() => moveStep(i, -1)} aria-label="Move up">↑</button>
-              <button type="button" onClick={() => moveStep(i, 1)} aria-label="Move down">↓</button>
-              <button type="button" onClick={() => setSteps((xs) => xs.filter((_, j) => j !== i))} aria-label="Remove">×</button>
-            </div>
-          </li>
-        ))}
-      </ol>
-      <button type="button" className="red-add" onClick={() => setSteps((xs) => [...xs, { text: "" }])}>+ step</button>
-
-      <div className="red-macros">
-        Per serving: {fmtNum("kcal", macros.perServing.kcal)} kcal · P{fmtNum("protein", macros.perServing.protein)} C{fmtNum("carbs", macros.perServing.carbs)} F{fmtNum("fat", macros.perServing.fat)}
-        {macros.unestimatedCount > 0 && <span className="red-approx"> · ~{macros.unestimatedCount} unestimated</span>}
+        <div className="red-col">
+          <h3 className="red-h">Steps</h3>
+          <ol className="red-steps">
+            {steps.map((s, i) => (
+              <li key={i} className="red-step">
+                <textarea rows={2} value={s.text} placeholder={`Step ${i + 1}`} onChange={(e) => setSteps((xs) => xs.map((x, j) => (j === i ? { text: e.target.value } : x)))} />
+                <div className="red-step-ctl">
+                  <button type="button" onClick={() => moveStep(i, -1)} aria-label="Move up">↑</button>
+                  <button type="button" onClick={() => moveStep(i, 1)} aria-label="Move down">↓</button>
+                  <button type="button" onClick={() => setSteps((xs) => xs.filter((_, j) => j !== i))} aria-label="Remove">×</button>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <button type="button" className="red-add" onClick={() => setSteps((xs) => [...xs, { text: "" }])}>+ step</button>
+        </div>
       </div>
 
       <div className="red-actions">
@@ -143,7 +159,10 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
         <button type="button" className="red-save" disabled={!valid || saving} onClick={submit}>{saving ? "Saving…" : "Save"}</button>
       </div>
 
-      {picker && <IngredientPicker initialQuery={picker.query} onAdd={onPick} onClose={() => setPicker(null)} />}
+      {finderAt && (
+        <Finder finderConfig={recipeFinderConfig} title="Add ingredient" initialQuery={finderAt.query}
+          onResolve={onResolve} onResolveText={onResolveText} onClose={() => setFinderAt(null)} />
+      )}
     </div>
   );
 }

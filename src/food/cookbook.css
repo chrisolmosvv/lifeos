@@ -624,3 +624,8 @@
 .rp-draft-invite { font-family: var(--font-serif); font-size: 1.1rem; color: var(--ink-muted); padding: 4vh 0; text-align: center; }
 
 .rp-head .rp-title { flex: 1; }
+
+/* ── V2 P6 — editor two-column (ingredients+macros | steps) ──────────────────── */
+.red-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.red-col { min-width: 0; }
+@media (max-width: 640px) { .red-cols { grid-template-columns: 1fr; gap: 16px; } }

@@ -17,9 +17,9 @@ import "./finder.css";
 // Props: finderConfig, defaultSlot, presetFood, title, onResolve(food, detail), onClose.
 const DEBOUNCE_MS = 350;
 
-export default function Finder({ finderConfig: cfg, defaultSlot, presetFood, title, onResolve, onEstimate, onClose }) {
+export default function Finder({ finderConfig: cfg, defaultSlot, presetFood, title, initialQuery, onResolve, onResolveText, onEstimate, onClose }) {
   const [view, setView] = useState("search"); // 'search' | 'manual'
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery || "");
   const [resp, setResp] = useState({ results: [], top3: null, dbSuppressed: false, note: null });
   const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState(presetFood || null);
@@ -92,6 +92,9 @@ export default function Finder({ finderConfig: cfg, defaultSlot, presetFood, tit
     <div className="fdr-hatches">
       {cfg.allowManual && <button type="button" className="afm-manual" onClick={() => setView("manual")}>+ add a food</button>}
       {cfg.allowEstimate && onEstimate && <button type="button" className="afm-manual" onClick={onEstimate}>~ estimate this meal</button>}
+      {cfg.allowNoMacros && onResolveText && q.length >= 2 && (
+        <button type="button" className="afm-manual" onClick={() => onResolveText(q)}>Add “{q}” as text (no macros)</button>
+      )}
     </div>
   );
   return (
@@ -106,7 +109,7 @@ export default function Finder({ finderConfig: cfg, defaultSlot, presetFood, tit
         <FinderResults zones={zones} dbSuppressed={resp.dbSuppressed} dbRevealed={dbRevealed} onRevealDb={() => setDbRevealed(true)}
           moreShown={moreShown} onShowMore={() => setMoreShown(true)} note={resp.note} activeFood={visible[active]} onPick={setPicked} />
       )}
-      {(cfg.allowManual || cfg.allowEstimate) && hatches}
+      {(cfg.allowManual || cfg.allowEstimate || cfg.allowNoMacros) && hatches}
     </Shell>
   );
 }
