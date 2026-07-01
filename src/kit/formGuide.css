@@ -4,30 +4,8 @@
    masthead (no in-page header — G9 removed the bespoke FormGuideHead), so this
    file holds only the page frame, section spacing, and the zone blocks. */
 
-/* --- The page frame ------------------------------------------------------- */
-.fg-page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
-}
-.fg-zone {
-  margin: 0 0 2rem;
-}
-
-/* The story headline — the lead line, in the serif display face (the data-page
-   Fraunces exception), calm and centred above the box-score band. */
-.fg-story {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  font-size: clamp(1.4rem, 3.2vw, 2.1rem);
-  line-height: 1.15;
-  color: var(--ink);
-  text-align: center;
-  margin: 0 0 1.6rem;
-  text-wrap: balance;
-}
-
-/* A calm full-width note for loading / error / no-data-yet states. */
+/* (P4: the old front-page frame .fg-page/.fg-zone + .fg-story removed — the Gym front
+   page is now the .gym-page 2×2 below. .fg-note kept for empty/loading states.) */
 .fg-note {
   font-family: var(--font-serif);
   font-style: italic;
@@ -38,41 +16,8 @@
   margin: 0;
 }
 
-/* --- Zone 1: the rolling-7-day box-score band ----------------------------- */
-.fg-band {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-top: 0.9rem;
-}
-.fg-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.35rem;
-}
-/* The big lead figure: Fraunces (the documented Health/Gym data-page exception). */
-.fg-stat-fig {
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-}
-.fg-stat-num {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  font-size: clamp(2rem, 4.5vw, 3rem);
-  line-height: 1;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-/* Units stay small Inter (tabular) so they never overpower the figure. */
-.fg-stat-unit {
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--ink-muted);
-}
+/* (P4: box-score band .fg-band/.fg-stat* removed — replaced by the TL quadrant.
+   .fg-band-empty kept: GymRecords/empty states still use it.) */
 .fg-band-empty {
   font-family: var(--font-serif);
   font-style: italic;
@@ -83,53 +28,13 @@
   margin: 0.9rem 0 0;
 }
 
-/* On a narrow window the four stats fold to a 2×2 grid rather than squashing. */
-@media (max-width: 640px) {
-  .fg-band {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem 1rem;
-  }
-}
-
-/* --- Zone 2: the weekly trend chart (hand-rolled SVG) --------------------- */
-.fg-trend {
-  margin-top: 0.9rem;
-}
-.fg-trend-toggle {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  justify-content: center;
-  margin-bottom: 0.7rem;
-}
-.fg-trend-toggle button {
-  background: none;
-  border: none;
-  padding: 0 0 2px;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 0.66rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-muted);
-  border-bottom: 1.5px solid transparent;
-}
-.fg-trend-toggle button.is-active {
-  color: var(--ink);
-  border-bottom-color: var(--accent);
-}
-.fg-trend-toggle button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
+/* --- Chart primitives (still used by ClimbChart) ------------------------- */
 .fg-trend-svg {
   width: 100%;
   height: auto;
   display: block;
 }
 .fg-axis { stroke: var(--rule); stroke-width: 1; }
-.fg-grid { stroke: var(--rule-faint); stroke-width: 1; }
 .fg-line {
   fill: none;
   stroke: var(--ink);
@@ -145,135 +50,6 @@
   font-size: 0.6rem;
   fill: var(--ink-muted);
   font-variant-numeric: tabular-nums;
-}
-
-/* --- Zone 3: the consistency heatmap -------------------------------------- */
-.fg-hm {
-  margin-top: 0.9rem;
-}
-.fg-hm-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.9rem;
-}
-/* Sessions-per-week is the headline (Fraunces, the data-page exception). */
-.fg-hm-num {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  font-size: 1.9rem;
-  line-height: 1;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-.fg-hm-unit {
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-muted);
-}
-/* The streak is a small SECONDARY figure, never the hero. */
-.fg-hm-streak {
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  color: var(--ink-muted);
-}
-.fg-hm-grid {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-}
-.fg-hm-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.fg-hm-cell {
-  width: 14px;
-  height: 14px;
-  border-radius: 2px;
-  background: var(--rule-faint);
-}
-/* Calm terracotta tints mixed onto the paper tone — never loud. */
-.fg-hm-cell--t0 { background: var(--rule-faint); }
-.fg-hm-cell--t1 { background: color-mix(in srgb, var(--accent) 30%, var(--paper)); }
-.fg-hm-cell--t2 { background: color-mix(in srgb, var(--accent) 60%, var(--paper)); }
-.fg-hm-cell--t3 { background: var(--accent); }
-.fg-hm-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 0.7rem;
-}
-.fg-hm-range,
-.fg-hm-legend {
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-muted);
-}
-.fg-hm-legend {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.fg-hm-legend i {
-  display: inline-block;
-  width: 11px;
-  height: 11px;
-  border-radius: 2px;
-}
-
-/* --- Zone 4: body-part balance (ranked bars) ------------------------------ */
-.fg-bal {
-  margin-top: 0.9rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.fg-bal-row {
-  display: grid;
-  grid-template-columns: 9rem 1fr 2.5rem;
-  align-items: center;
-  gap: 0.75rem;
-}
-.fg-bal-name {
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.fg-bal-track {
-  height: 10px;
-  background: var(--rule-faint);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.fg-bal-fill {
-  display: block;
-  height: 100%;
-  background: color-mix(in srgb, var(--accent) 55%, var(--paper));
-  border-radius: 2px;
-}
-.fg-bal-val {
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--ink-muted);
-  text-align: right;
-}
-
-@media (max-width: 640px) {
-  .fg-bal-row {
-    grid-template-columns: 6.5rem 1fr 2rem;
-    gap: 0.5rem;
-  }
 }
 
 /* --- Zone 5: the recent-sessions table ------------------------------------ */
@@ -377,34 +153,7 @@
   color: var(--ink);
   border-bottom-color: var(--accent);
 }
-.fg-links {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-top: 1rem;
-}
-.fg-links .fg-archive-link {
-  margin: 0;
-}
-.fg-archive-link {
-  display: block;
-  margin: 1rem auto 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-muted);
-  border-bottom: 1.5px solid transparent;
-  padding: 0 0 2px;
-}
-.fg-archive-link:hover {
-  color: var(--ink);
-  border-bottom-color: var(--accent);
-}
+/* (P4: the old front-page .fg-links/.fg-archive-link removed — the 2×2 uses .gym-more.) */
 
 @media (max-width: 640px) {
   .fg-rs-head,
@@ -415,4 +164,330 @@
   .fg-rs-title {
     font-size: 0.8rem;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   V2 P4 STAGE 1 — the Gym 2×2 (Gym × Walking / Today × Over-time), zero-scroll.
+   Consumes the shared kit (healthChrome.css): .health-chrome, .health-fit,
+   .health-fade, .skeleton + --skeleton-cols. The 2×2 grid is the flex-grow child.
+   ════════════════════════════════════════════════════════════════════════════ */
+.gym-page {
+  padding: 8px 32px 20px;
+  max-width: 1340px; /* V2 broadsheet (was 900 on the old Form Guide) */
+  margin: 0 auto;
+  box-sizing: border-box;
+  --skeleton-cols: 1fr 1fr; /* Gym's loading skeleton = 2 columns */
+}
+/* The story-headline lead — fixed "now" (NOT ranged), flex:0 above the grid. */
+.gym-lead {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+/* The 2×2 grid — the designated flex-grow child that fills the fold. */
+.gym-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.gym-quad {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 24px;
+}
+/* Hairline rules between quadrants — no boxes. Left column has no left padding. */
+.gym-quad--tl,
+.gym-quad--bl {
+  padding-left: 0;
+}
+.gym-quad--tr,
+.gym-quad--br {
+  border-left: 1px solid var(--rule);
+}
+.gym-quad--bl,
+.gym-quad--br {
+  border-top: 1px solid var(--rule);
+}
+.gym-kicker {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.gym-ph {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-top: 8px;
+}
+
+/* P4 STAGE 2 — TL "Gym · today" (last session snapshot). */
+.gym-today {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 8px;
+}
+.gym-today-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.gym-today-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 22px;
+  color: var(--ink);
+}
+.gym-today-date {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.gym-today-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.gym-today-stats b {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--ink);
+}
+.gym-pr {
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.gym-today-lifts {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+.gym-lift {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+.gym-lift-name {
+  color: var(--ink);
+}
+.gym-lift-top {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gym-lift-more {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+/* P4 STAGE 3 — BL "Walking · today" (today-so-far). */
+.gym-walk {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 8px;
+}
+.gym-walk-empty {
+  margin-top: 8px;
+}
+.gym-walk-hero {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  line-height: 1;
+  color: var(--ink);
+}
+.gym-walk-unit {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin-left: 6px;
+}
+.gym-walk-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+.gym-walk-label b {
+  color: var(--accent);
+  font-weight: 600;
+}
+.gym-walk-mini {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 16px;
+  margin-top: 14px;
+}
+.gym-walk-cell {
+  display: flex;
+  flex-direction: column;
+}
+.gym-walk-cell-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.gym-walk-cell b {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--ink);
+  margin-top: 1px;
+}
+
+/* P4 STAGE 4 — TR "Gym · over-time" (ranged aggregates + trend + consistency). */
+.gym-over {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 8px;
+  gap: 12px;
+}
+.gym-over-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.gym-over-stats b {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--ink);
+  margin-right: 4px;
+}
+.gym-volline {
+  width: 100%;
+  height: 40px;
+  display: block;
+}
+.gym-volline polyline {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.gym-consistency {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.gym-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rule);
+}
+.gym-dot--on {
+  background: var(--ink);
+}
+.gym-balance {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gym-bal-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+}
+.gym-bal-pct {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gym-more {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.gym-more-row { display:flex; gap:16px; margin-top:auto; }
+.gym-more-row .gym-more { margin-top:0; }
+
+/* P4 STAGE 5 — BR "Walking · over-time" more-link + the terminal per-day table. */
+.gym-walk-more {
+  align-self: flex-start;
+  margin-top: 10px;
+}
+.walkdays {
+  padding: 8px 32px 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.walkdays-back {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--accent);
+  cursor: pointer;
+}
+.walkdays-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--ink);
+  margin: 12px 0 16px;
+}
+.walkdays-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+.walkdays-table th {
+  text-align: right;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--rule);
+}
+.walkdays-table th:first-child,
+.walkdays-table td:first-child {
+  text-align: left;
+}
+.walkdays-table td {
+  text-align: right;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--rule-faint);
+  color: var(--ink);
 }

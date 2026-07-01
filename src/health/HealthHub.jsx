@@ -77,16 +77,7 @@ export default function HealthHub() {
     };
   }, [sub]); // recompute each time we land back on the hub (fresh on open)
 
-  if (sub === "gym") {
-    return (
-      <div className="hub-wrap">
-        <button type="button" className="hub-back" onClick={() => setSub("hub")}>
-          ← Health
-        </button>
-        <Health />
-      </div>
-    );
-  }
+  if (sub === "gym") return <Health onBack={() => setSub("hub")} />;
   if (sub === "sleep") return <SleepPage onBack={() => setSub("hub")} />;
   if (sub === "body") return <BodyPage onBack={() => setSub("hub")} />;
 
