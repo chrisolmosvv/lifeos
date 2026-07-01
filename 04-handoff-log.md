@@ -33,6 +33,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P1: food-search reranker + Basics + deterministic fallback. TWO-TRACK (supabase + data). (Deployed live on Frankfurt; gateway verified, app searches confirmed.)
+
+P1 upgrades the food-search Edge Function — the pillar's single highest-coupling surface (one
+function, three consumers). EXTENDED in place, NOT forked. NO src/ change: the three consumers
+(AddFoodModal, IngredientPicker, importClient) are untouched — the contract held.
+
+COMMIT CHAIN (two-track; data and function are separate commits):
+- 79f773c — DATA: db/32_food_basics_seed.sql — ~20 canonical staples as food_items rows, tagged by
+  CONVENTION (source='manual', source_ref='basics:<slug>'). NO new table/column (schema verdict:
+  none). Idempotent + rollback in-file. Owner ran live on Frankfurt, confirmed 20 rows.
+- 91c55d6 — SUPABASE: food-search — normalize.ts hoists basics:% to the front of results; new
+  rerank.ts (Gemini top-3, indices only, records UNMUTATED, free key shared w/ recipe-import+Marty);
+  index.ts wires the reranker + suppress-on-confident-staple (quota lever) + a quiet partial note.
+
+THE INVIOLABLE CONTRACT (held): `results` stays a FLAT array of FoodCandidate; P1 adds ADDITIVE
+envelope fields {top3 (indices into results), dbSuppressed (bool), note (string|null)} that current
+consumers ignore and the P2 finder will read. Unchanged: parallel safely-fetch, one-shape normalise,
+(source,source_ref) dedup + saved-beats-API, hasMacros filter, per-source degrade.
+
+THE SAFETY PROPERTY: rerank.ts is wrapped in a TOTAL fallback — the FOOD_RERANK_OFF env switch OR any
+failure (no/rate-limited key, junk output, bad index) → top3 null → the deterministic saved/Basics →
+OFF → USDA order stands. Search never depends on the AI being up.
+
+DEPLOY: deployed food-search ALONE (verify_jwt=true preserved from config.toml), AI ON (owner chose
+AI-first; the FOOD_RERANK_OFF proof-run was skipped by choice, available on demand). Gateway verified:
+OPTIONS→200 with CORS; POST without JWT→401 (verify_jwt active). Auth via `env -u SUPABASE_ACCESS_TOKEN`
+(the wrong-account-token trap — see memory).
+
+HOW TO VERIFY (owner, done): logger add-food → "chicken breast"/"milk" lead with the Basics generic
+(was buried pre-P1); branded/compound queries rerank sensibly; the three consumers still work.
+
+CARRY-FORWARD (soft): the deliberate FOOD_RERANK_OFF fallback proof-run was not exercised live (AI
+deployed first by choice). The fallback is in code + trips on any real failure; the explicit proof-run
+is a one-command pair, available anytime.
+
+NEXT: P2 — the CONVERGED FINDER (one search/pick/amount component replacing AddFoodModal +
+IngredientPicker), reading P1's flat results + envelope. Logger context wired first; recipe context P6.
+
+---
+
 ### 2026-07-01 — Track F — Food V2 P0: FOUNDATION (additive schema + 4 pure getters). TWO-TRACK. (Verified vs real data on Mac + SQL editor.)
 
 P0 lays the Food V2 foundation only — additive schema + compute-on-read getters, each proven
