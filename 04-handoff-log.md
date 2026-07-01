@@ -33,6 +33,24 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track S — Health V2 P4: Gym front page → the zero-scroll 2×2 (+ Walking/Activity). Owner-verified stage-by-stage on 13". → P4 COMPLETE.
+WHAT SHIPPED (3 commits): calc `96e3840` (dailyVolumeSeries) → layout `52c966f` (the 2×2) → deletion `7f06441` (6 dead components).
+- **The 2×2** (Health.jsx, `.health-fit`, consumes the P3 shared kit): breadcrumb "Health / Gym" + RangeSwitcher + a story-headline lead (fixed "now"), over a 2-col × 2-row grid (hairline rules, no boxes). The grid is the flex-grow child; Gym sets its own `--skeleton-cols: 1fr 1fr`. HealthHub now opens Gym via `onBack` (breadcrumb pattern; dropped the old `hub-wrap`/`hub-back` band).
+  · TL `GymTodayCard` — last logged session (name/date · volume · lifts · PR; top working lifts, warmup-only skipped). Point-in-time.
+  · TR `GymOverTimeCard` (W/M/90) — sessions + volume (boxScore(days)) · top-3 muscle groups (muscleBalance(days)) · per-day consistency dots · rolling-7 volume line (dailyVolumeSeries) · "more ›"→GymArchive, "records ›"→GymRecords (reused; SessionReport hangs off archive).
+  · BL `WalkingTodayCard` — TODAY-SO-FAR from `metricView.todaySoFar` (NO new calc — the mode already existed; Body's to-yesterday untouched). Steps hero + mobility mini + honesty label. On a day with no sync it shows "waiting for today's sync".
+  · BR `WalkingOverTimeCard` (W/M/90) — mobility AVERAGES via `rolling[days].avg` (to-yesterday) · "more ›" → terminal `WalkingDaysTable` (one row/day, no deeper drill).
+- **CALC:** only ONE new getter — `dailyVolumeSeries` (gymTrend.js), raw + rolling-7; owner picked **rolling-7**. The planned "today-so-far mode" was NOT needed (metricView.todaySoFar already is it).
+- **Range model:** the W/M/90 switcher governs ONLY the right column (TL/BL are fixed "today"/"last"). RANGE_DAYS {week:7, month:30, '90':90} → boxScore/muscleBalance days + rolling[days] (PRESETS 7/30/90 line up exactly).
+OPERATIONAL GATES honoured: walking_speed rendered RAW as **km/h** (stored ~3.6–5.0 is a km/h magnitude mislabelled "m/s" — owner to confirm on a real push); plain `heart_rate` stays OFF (0 rows, purged); `walking_heart_rate_avg` is fine (already-averaged).
+CARRIED FLAGS / DEBT:
+- **Walking data is only ~1 week old** (mobility ~2 days, steps ~6): BL often shows the waiting state, and BR is ≈ constant across W/M/90 (no older data to widen into). Honest, not a bug — fills in as ingest accrues. BL-populated + BR-re-ranging stay UNVERIFIED until history builds.
+- Story lead had a bug (read `story?.text`; storyHeadline returns a STRING) — **fixed** in the layout commit to `{story}`.
+- Now-dead getters **heatmap** + **currentStreakDays** (0-ref after the deletion) — left for **P5's calc sweep** (with HealthStub + the Body GoalBar path). `trendSeries` stays (live via storyHeadline).
+- Kept shared: ModuleHeader (Today), SmallCapsLabel, ClimbChart's `.fg-*` chart primitives, `.fg-rs-*` (GymArchive), `.fg-note`/`.fg-band-empty`.
+FOR THE CHECKER: src/ only, no schema, no new checker gate. Re-verify surfaces on any getter touch: HealthHub Gym card (shares boxScore/recentSessions — untouched here) and Body (shares healthActivity — only READ, not modified).
+NEXT: **P5 — polish + dead-code sweep** (accent-sparing pass; delete HealthStub.jsx, the dead GoalBar/GoalWaiting/GoalPrompt path, and the now-dead heatmap + currentStreakDays getters, each proved 0-ref; walking_speed units confirm on a real push).
+
 ### 2026-06-30 — Track S — Health V2 P3: shared-kit consolidation (CSS only). Owner-verified each step on 13". → P3 COMPLETE.
 WHAT CHANGED (3 commits, each verified on BOTH Sleep + Body before the next):
 - **step 1 `c563c7f`** — `.skeleton` grid → `var(--skeleton-cols, 260px 1fr 300px)`; Body sets
