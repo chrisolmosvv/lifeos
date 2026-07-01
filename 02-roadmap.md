@@ -8,6 +8,13 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-01 — Planning blank-page repair
+Planning's entry from Today was opening a blank page because the shared task row
+expected the category lookup map used for shaded colours, but Planning time/category
+modes were not passing it through after the Calendar/Today colour-unify work. Fixed
+by threading the existing map into those Planning rows; build passes, Time opens, and
+Category expands without browser errors. No schema or product decision change.
+
 ## ✅ Phase 0 — Setup & the Project Brain
 Goal: make the free accounts, get Claude Code running, put the brain docs
 into the repo and the project knowledge.

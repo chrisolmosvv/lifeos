@@ -11,9 +11,9 @@ import PlanningGroup from './PlanningGroup'
 // show-done toggle (done hidden by default; counts always exclude done). Sealed kit
 // block; the parent owns the data + writes (status pill, tap-to-edit, "+ add").
 //
-// Props: tasks, cats, dispCat, inboxColor, byParent, busy, onUpdate(id, fields),
+// Props: tasks, cats, catsById, dispCat, inboxColor, byParent, busy, onUpdate(id, fields),
 //        onOpenTask(task), onAdd(catId).
-export default function PlanningCategory({ tasks, cats, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onAdd }) {
+export default function PlanningCategory({ tasks, cats, catsById, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onAdd }) {
   const [showDone, setShowDone] = useState(false)
   const [open, setOpen] = useState(new Set()) // open group + expanded-parent ids (uuids; '__inbox__')
   const toggle = (key) =>
@@ -28,6 +28,7 @@ export default function PlanningCategory({ tasks, cats, dispCat, inboxColor, byP
     cats,
     tasks,
     byParent,
+    catsById,
     dispCat,
     inboxColor,
     busy,

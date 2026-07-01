@@ -157,6 +157,7 @@ export default function Planning({ onBack }) {
           <PlanningCategory
             tasks={tasks}
             cats={cats}
+            catsById={catById}
             dispCat={dispCat}
             inboxColor={inboxColor}
             byParent={byParent}
@@ -169,6 +170,7 @@ export default function Planning({ onBack }) {
           <PlanningTime
             tasks={tasks}
             cats={cats}
+            catsById={catById}
             dispCat={dispCat}
             inboxColor={inboxColor}
             byParent={byParent}

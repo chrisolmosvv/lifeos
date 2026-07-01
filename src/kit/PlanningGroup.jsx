@@ -12,7 +12,7 @@ import TodayTaskRow from './TodayTaskRow'
 // with catId null and no children. Many groups open at once (not drill-in). Sealed
 // kit block; the parent owns state + writes.
 //
-// Props: node ({ id: catId | '__inbox__', name, color }), cats, tasks, byParent,
+// Props: node ({ id: catId | '__inbox__', name, color }), cats, tasks, byParent, catsById,
 //        dispCat, inboxColor, busy, showDone, open (Set), onToggle(key),
 //        onOpenTask(task), onSetStatus(id, status), onAdd(catId), depth.
 export default function PlanningGroup({
@@ -20,6 +20,7 @@ export default function PlanningGroup({
   cats,
   tasks,
   byParent,
+  catsById,
   dispCat,
   inboxColor,
   busy,
@@ -62,6 +63,7 @@ export default function PlanningGroup({
                 <TodayTaskRow
                   task={t}
                   cat={dispCat(t)}
+                  catsById={catsById}
                   inboxColor={inboxColor}
                   busy={busy}
                   badge={t.due_date ? undefined : { text: 'undated' }}
@@ -77,6 +79,7 @@ export default function PlanningGroup({
                       key={s.id}
                       task={s}
                       cat={dispCat(s)}
+                      catsById={catsById}
                       inboxColor={inboxColor}
                       isSub
                       subLabel={t.title}
@@ -96,6 +99,7 @@ export default function PlanningGroup({
               cats={cats}
               tasks={tasks}
               byParent={byParent}
+              catsById={catsById}
               dispCat={dispCat}
               inboxColor={inboxColor}
               busy={busy}

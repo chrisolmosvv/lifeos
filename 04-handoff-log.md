@@ -33,6 +33,25 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Planning — blank page on Planning button fixed. SRC/ ONLY.
+WHAT CHANGED:
+- Found the crash in the live browser: Planning opened blank because `TodayTaskRow`
+  called `resolveColor(cat, catsById)`, but Planning time/category rows were not
+  passing `catsById`, so `resolveColor` tried to read `.get` on `undefined`.
+- Threaded the existing `catById` map from `Planning.jsx` into `PlanningTime`,
+  `PlanningCategory`, and recursive `PlanningGroup` task rows. No data shape change.
+FILES TOUCHED: `Planning.jsx`, `PlanningTime.jsx`, `PlanningCategory.jsx`,
+  `PlanningGroup.jsx`, plus this roadmap/handoff note.
+HOW TO VERIFY: open Today, click `Planning · N`. You should see the Planning screen
+  instead of a blank page. Time mode should show lanes; Category mode should open and
+  expanding Inbox should show task rows. Browser console had no fresh errors after
+  these checks. `npm run build` passes.
+KNOWN GAPS / RISKS: none known. This only restores the category map expected by the
+  shared row after the colour-unify change.
+NEXT: return to the current Health V2 P5 / chosen next track.
+FOR THE CHECKER: confirm no other `TodayTaskRow` caller lacks `catsById`; this fix
+  covers the Planning callers that can render shared task rows.
+
 ### 2026-07-01 — Track S — Health V2 P4: Gym front page → the zero-scroll 2×2 (+ Walking/Activity). Owner-verified stage-by-stage on 13". → P4 COMPLETE.
 WHAT SHIPPED (3 commits): calc `96e3840` (dailyVolumeSeries) → layout `52c966f` (the 2×2) → deletion `7f06441` (6 dead components).
 - **The 2×2** (Health.jsx, `.health-fit`, consumes the P3 shared kit): breadcrumb "Health / Gym" + RangeSwitcher + a story-headline lead (fixed "now"), over a 2-col × 2-row grid (hairline rules, no boxes). The grid is the flex-grow child; Gym sets its own `--skeleton-cols: 1fr 1fr`. HealthHub now opens Gym via `onBack` (breadcrumb pattern; dropped the old `hub-wrap`/`hub-back` band).

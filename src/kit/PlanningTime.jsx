@@ -14,7 +14,7 @@ import TriagePopover from './TriagePopover'
 // axes stay independent (date writes due_date, category writes category_id). Overdue
 // is drag-FROM only. Sealed kit block; the parent owns the data + writes.
 //
-// Props: tasks, cats (for the triage category picker), dispCat (task→cat row),
+// Props: tasks, cats (for the triage category picker), catsById, dispCat (task→cat row),
 //        inboxColor, byParent (for x/N), busy, onUpdate(id, fields) (existing
 //        task-update path, returns an error msg | null), onOpenTask(task), onError(msg).
 const LANES = [
@@ -24,7 +24,7 @@ const LANES = [
   { id: 'later', label: 'Later' },
 ]
 
-export default function PlanningTime({ tasks, cats, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onError }) {
+export default function PlanningTime({ tasks, cats, catsById, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onError }) {
   const [draggingId, setDraggingId] = useState(null)
   const [triage, setTriage] = useState(null) // the tapped rail task | null
   const triageAnchor = useRef(null) // the rail card element the popover points at
@@ -58,6 +58,7 @@ export default function PlanningTime({ tasks, cats, dispCat, inboxColor, byParen
       <TodayTaskRow
         task={t}
         cat={dispCat(t)}
+        catsById={catsById}
         inboxColor={inboxColor}
         busy={busy}
         progress={progressOf(t.id, byParent)}
@@ -86,6 +87,7 @@ export default function PlanningTime({ tasks, cats, dispCat, inboxColor, byParen
       key={t.id}
       task={t}
       cat={dispCat(t)}
+      catsById={catsById}
       inboxColor={inboxColor}
       busy={busy}
       progress={progressOf(t.id, byParent)}
