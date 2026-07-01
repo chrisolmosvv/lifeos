@@ -33,6 +33,47 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P8: the cook→log staging SHEET. SRC/ ONLY. (Owner-verified — all 3 entry points + sacred check.)
+
+P8 replaces the V1 inline LogMealPanel (which expanded in-flow and shoved the recipe) with the calm
+bottom-sheet the bridge session designed. LOW-RISK UI POLISH — the write primitive (logSnapshot, P3)
+is untouched; the sheet only changes the staging PRESENTATION.
+
+COMMIT CHAIN (src-only — no schema):
+- c9a12fc — new LogMealSheet: a calm card rising from the bottom over a DIMMED page — NO shadow (lifts
+  via the backdrop + a hairline top edge). SERVINGS LEADS (large tactile stepper); the SLOT is a quiet
+  tap-to-cycle line beneath (meal order Breakfast→Lunch→Dinner→Snacks, pre-picked to time-of-day — not
+  a row of buttons); a rolling kcal·P/C/F Fraunces preview is the ONLY motion (reads recipeMacros.
+  perServing, unforked); confirm NAMES its destination ("Log to Dinner"); no cancel — tap-outside
+  dismisses; "~ approximate" italic/grey. ONE sheet, THREE entry points via props + the caller's onLog
+  (the sheet writes NOTHING; the sacred freeze stays in the caller):
+    (1) recipe "Log this meal" → cl.logSnapshot;
+    (2) cook "Done cooking" → the SAME sheet, cookedEyebrow=true + confident defaults (the RecipePage
+        staging flag carries 'log' vs 'cooked') → cl.logSnapshot;
+    (3) quick-add LONG-PRESS (450ms) → the sheet to adjust servings → fw.addEntry (the P5 one-tap
+        re-log stays on plain tap; onRelogMeal now takes servings + slot).
+- 74e043d — prove-dead delete LogMealPanel (only consumer was RecipePage; reference sweep clean).
+
+OWNER-VERIFIED: all three entry points open the one sheet; servings leads, preview rolls, slot cycles,
+tap-outside dismisses; THE SACRED CHECK HOLDS THROUGH THE SHEET — edited a recipe after logging via the
+sheet, the logged entry's macros did not change (freeze at build → logSnapshot inserts).
+
+CONTRACTS held: logSnapshot / fw.addEntry are the caller's write — the sheet CALLS onLog, forks nothing
+(no three variants — differences are props + the passed callback). recipeMacros.perServing unforked
+(the rolling preview reads it). EstimateMealPanel (P5) untouched. recipes.title/recipe_id reads preserved.
+
+NOTES (honest, minor): the long-press is 450ms (tunable); the "roll" is a slide-fade on each servings
+step (not a per-digit odometer) — the calm intent.
+
+SCHEMA: none. Two-track: src-only.
+
+NEXT: the P9-window — (1) CLEANUP sweep (the P3 entry-gate is CLEARED, so drop the dead
+recipes.last_cooked_at — its own checker-gated migration, remove it from the two recipeLoad SELECTs
+first; + P4/P6 dead CSS; + brain-doc amendments), (2) SESSION-SURFACING feature build (app-wide route/
+view persistence + resume-cook banner + done-card-until-dismissed). Each its own recon + commits.
+
+---
+
 ### 2026-07-01 — Track F — Food V2 P7: the MARQUEE cook page (kanban + resume-a-cook). TWO-TRACK. (Resume verified on Mac; kanban/layout build-verified.)
 
 P7 replaces CookMode with the premium cook page and adds resume-a-cook persistence. THE MOST IMPORTANT
