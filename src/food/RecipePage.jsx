@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
 import { amsTodayYMD, amsClockMinutes } from "../gym/gymDates";
 import { fetchRecipe } from "./recipeLoad";
-import { recipeMacros, lastCookedFor } from "./recipeCalc";
+import { recipeMacros, lastCookedFor, recipeKind } from "./recipeCalc";
 import { entryMacros, slotForHour, NUTRIENTS } from "./foodCalc";
 import { fmtNum, fmtFull } from "./foodFormat";
+import { setRecipeFavourite } from "./recipeWrite";
 import { useCookLog } from "./useCookLog";
 import CookMode from "./CookMode";
 import LogMealPanel from "./LogMealPanel";
+import RecipeActionBar from "./RecipeActionBar";
 import Toast from "../kit/Toast";
 import "./cookbook.css";
 
-// A calm "last cooked" date from a computed Amsterdam-day YMD (null → nothing shown). Noon-anchored
-// parse so the label never flips a day across the timezone. (V2 P3 — was a stored timestamp.)
+// RecipePage (V2 P6) — zero-scroll via COLLAPSE-BY-DEFAULT: steps read as titles (expand on tap), the
+// macro block is compact (kcal/serving + P/C/F lead; fibre/sugar/sodium behind a tap). recipeMacros
+// still returns all six — DISPLAY-only, unforked. A fixed TYPE-AWARE action bar (recipeKind): a meal
+// hides Cook + leads Log; a draft shows Edit only + a ready-to-finish invitation (deep-link path). ★
+// on the header. Cook mode + the cook→log snapshot (P3, sacred freeze) are unchanged.
 const cookedDate = (ymd) => (ymd ? new Date(ymd + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null);
-
-// RecipePage — the long-form recipe (scroll is fine here). Breadcrumb (Cookbook ▸ Recipe), the
-// full per-serving macro block, ingredients with their kcal + an unmatched MARK, and a SUBTLE
-// "approximate" signal on the total whenever any ingredient is unestimated. A view-only servings
-// stepper rescales amounts + the displayed macros LIVE (never mutates the saved recipe). 'Cook'
-// enters cooking mode (a reflow); 'Log this meal' is stubbed (F9); Edit + delete (⋯, confirm).
-const NUTR = [["protein", "Protein"], ["carbs", "Carbs"], ["fat", "Fat"], ["fibre", "Fibre"], ["sugar", "Sugar"], ["sodium", "Sodium"]];
+const LEAD = [["protein", "Protein"], ["carbs", "Carbs"], ["fat", "Fat"]];
+const MORE = [["fibre", "Fibre"], ["sugar", "Sugar"], ["sodium", "Sodium"]];
 
 export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooked }) {
   const [data, setData] = useState(null);
@@ -28,12 +28,15 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   const [menu, setMenu] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
   const [staging, setStaging] = useState(false);
-  const [cookEntries, setCookEntries] = useState([]); // this recipe's recipe_cook entries (compute-on-read source)
+  const [macMore, setMacMore] = useState(false);
+  const [openSteps, setOpenSteps] = useState({});
+  const [fav, setFav] = useState(false);
+  const [cookEntries, setCookEntries] = useState([]);
   const cl = useCookLog();
 
   useEffect(() => {
     let alive = true;
-    fetchRecipe(recipeId).then((r) => { if (alive) { setData(r); setServings(r.recipe.servings || 1); setCookEntries(r.cookEntries || []); } }).catch(() => alive && setData({ error: true }));
+    fetchRecipe(recipeId).then((r) => { if (alive) { setData(r); setServings(r.recipe.servings || 1); setCookEntries(r.cookEntries || []); setFav(!!r.recipe.is_favourite); } }).catch(() => alive && setData({ error: true }));
     return () => { alive = false; };
   }, [recipeId]);
 
@@ -41,63 +44,43 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   if (data.error) return <p className="flog-error">Couldn’t load that recipe.</p>;
 
   const { recipe, ingredients, steps, itemsById } = data;
+  const kind = recipeKind({ ingredients, steps });
   const base = recipe.servings || 1;
-  const macros = recipeMacros(ingredients, base, itemsById); // per-serving = canonical
+  const macros = recipeMacros(ingredients, base, itemsById);
   const approx = macros.unestimatedCount > 0;
-  const scale = servings / base; // view-only rescale of the ingredient list
-  // "Last cooked" COMPUTE-ON-READ (V2 P3): lastCookedFor = MAX(entry_date) over this recipe's
-  // recipe_cook entries, gated on recipeKind==='recipe' (a stepless meal → null, never "cooked").
+  const scale = servings / base;
   const cookedLabel = cookedDate(lastCookedFor({ id: recipe.id, ingredients, steps }, cookEntries));
+  const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
 
-  // Cook mode's "Done cooking" exits AND offers to log — it opens the SAME staging panel (one panel,
-  // two triggers). offerLog is true only from that button, so a bare exit wouldn't pop the panel.
   if (cooking) return <CookMode recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging(true); }} />;
 
-  // Cook→log (V2 P3): FREEZE recipeMacros.perServing × servings into the 7-number snapshot (the
-  // sacred snapshot-not-live line), write it as one food_log_entries row via logSnapshot (recipe_id,
-  // entry_source='recipe_cook', amount=servings, unit='serving', food_item_id null). No stamp —
-  // "last cooked" is computed from cookEntries. We optimistically APPEND a lightweight cook entry so
-  // the computed line updates at once; onRevert drops it on failure/undo. The real row (with its id)
-  // lands on the Log tab's refetch.
+  const toggleFav = () => { const next = !fav; setFav(next); setRecipeFavourite(recipe.id, next).catch(() => setFav(!next)); };
+
   const onLogMeal = (eaten, slot) => {
     setStaging(false);
     const today = amsTodayYMD(Date.now());
     const snap = {};
     for (const k of NUTRIENTS) snap[k] = (macros.perServing[k] || 0) * eaten; // FROZEN here — never re-read
-    const row = {
-      entry_date: today,
-      meal_slot: slot,
-      food_item_id: null,
-      recipe_id: recipeId,
-      amount: eaten,
-      unit: "serving",
-      ...snap,
-      entry_source: "recipe_cook",
-      is_alcohol: false,
-    };
+    const row = { entry_date: today, meal_slot: slot, food_item_id: null, recipe_id: recipeId, amount: eaten, unit: "serving", ...snap, entry_source: "recipe_cook", is_alcohol: false };
     const optimistic = { recipe_id: recipeId, entry_source: "recipe_cook", entry_date: today };
     setCookEntries((cur) => [...cur, optimistic]);
     cl.logSnapshot(row, { onRevert: () => setCookEntries((cur) => cur.filter((e) => e !== optimistic)) });
-    onCooked?.(); // tell the cookbook to refresh its grid (the cooked sort) on return
+    onCooked?.();
   };
 
   const ingKcal = (ing) => {
     if (ing.no_macros) return null;
     if (ing.manual_macros && Number.isFinite(ing.manual_macros.kcal)) return ing.manual_macros.kcal * scale;
     const item = ing.food_item_id ? itemsById[ing.food_item_id] : null;
-    if (!item) return null;
-    return entryMacros(item, (Number(ing.amount) || 0) * scale, "g").kcal;
+    return item ? entryMacros(item, (Number(ing.amount) || 0) * scale, "g").kcal : null;
   };
-  const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
 
-  return (
-    <div className="rp">
-      <nav className="rp-crumb">
-        <button type="button" onClick={onBack}>Cookbook</button> <span>▸</span> <span className="rp-crumb-here">{recipe.title}</span>
-      </nav>
-
+  const header = (
+    <>
+      <nav className="rp-crumb"><button type="button" onClick={onBack}>Cookbook</button> <span>▸</span> <span className="rp-crumb-here">{recipe.title}</span></nav>
       <div className="rp-head">
-        <h1 className="rp-title">{recipe.title}</h1>
+        <h1 className="rp-title">{recipe.title}{kind === "meal" && <span className="rp-kind"> · meal</span>}</h1>
+        <button type="button" className={fav ? "rp-fav is-on" : "rp-fav"} aria-label="Toggle favourite" onClick={toggleFav}>{fav ? "★" : "☆"}</button>
         <div className="rp-menu-wrap">
           <button type="button" className="rp-menu-btn" aria-label="More" onClick={() => setMenu((m) => !m)}>⋯</button>
           {menu && (
@@ -112,21 +95,35 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
           )}
         </div>
       </div>
+    </>
+  );
+
+  if (kind === "draft") {
+    return (
+      <div className="rp">
+        {header}
+        <p className="rp-draft-invite">This recipe is a draft — add ingredients and steps to finish it.</p>
+        <RecipeActionBar kind={kind} onEdit={() => onEdit(recipeId)} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="rp">
+      {header}
       <p className="rp-sub">
         {time ? `${time} min · ` : ""}{base} serving{base === 1 ? "" : "s"}
-        {recipe.source_url && (
-          <> · <a className="rp-source" href={recipe.source_url} target="_blank" rel="noreferrer">{(() => { try { return `from ${new URL(recipe.source_url).hostname}`; } catch { return "source"; } })()}</a></>
-        )}
+        {recipe.source_url && (<> · <a className="rp-source" href={recipe.source_url} target="_blank" rel="noreferrer">{(() => { try { return `from ${new URL(recipe.source_url).hostname}`; } catch { return "source"; } })()}</a></>)}
       </p>
       {cookedLabel && <p className="rp-cooked">Last cooked {cookedLabel}</p>}
 
       <div className="rp-macros">
         <div className="rp-kcal">{approx ? "~" : ""}{fmtNum("kcal", macros.perServing.kcal)} <span>kcal / serving</span></div>
         <div className="rp-macro-grid">
-          {NUTR.map(([k, label]) => (
-            <span key={k} className="rp-macro"><span className="rp-macro-name">{label}</span> {fmtFull(k, macros.perServing[k])}</span>
-          ))}
+          {LEAD.map(([k, label]) => <span key={k} className="rp-macro"><span className="rp-macro-name">{label}</span> {fmtFull(k, macros.perServing[k])}</span>)}
+          {macMore && MORE.map(([k, label]) => <span key={k} className="rp-macro"><span className="rp-macro-name">{label}</span> {fmtFull(k, macros.perServing[k])}</span>)}
         </div>
+        <button type="button" className="rp-macro-more" onClick={() => setMacMore((v) => !v)}>{macMore ? "less" : "more"}</button>
         {approx && <p className="rp-approx">~ approximate — {macros.unestimatedCount} ingredient{macros.unestimatedCount === 1 ? "" : "s"} unestimated</p>}
       </div>
 
@@ -153,25 +150,26 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
         })}
       </ul>
 
-      <h3 className="rp-h">Method</h3>
-      <ol className="rp-steps">
-        {steps.map((s, i) => <li key={i}>{s.text}</li>)}
-      </ol>
+      {kind === "recipe" && (
+        <>
+          <h3 className="rp-h">Method</h3>
+          <ol className="rp-steps">
+            {steps.map((s, i) => (
+              <li key={i} className={openSteps[i] ? "rp-step is-open" : "rp-step"}>
+                <button type="button" className="rp-step-btn" onClick={() => setOpenSteps((o) => ({ ...o, [i]: !o[i] }))}>
+                  <span className="rp-step-n">{i + 1}</span>
+                  <span className="rp-step-text">{s.text}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
 
-      <div className="rp-actions">
-        <button type="button" className="rp-cook" onClick={() => setCooking(true)}>Cook</button>
-        <button type="button" className="rp-log" onClick={() => setStaging((v) => !v)}>Log this meal</button>
-        <button type="button" className="rp-edit" onClick={() => onEdit(recipeId)}>Edit</button>
-      </div>
+      <RecipeActionBar kind={kind} onCook={() => setCooking(true)} onLog={() => setStaging((v) => !v)} onEdit={() => onEdit(recipeId)} />
 
       {staging && (
-        <LogMealPanel
-          perServing={macros.perServing}
-          unestimatedCount={macros.unestimatedCount}
-          defaultSlot={slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60))}
-          onLog={onLogMeal}
-          onClose={() => setStaging(false)}
-        />
+        <LogMealPanel perServing={macros.perServing} unestimatedCount={macros.unestimatedCount} defaultSlot={slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60))} onLog={onLogMeal} onClose={() => setStaging(false)} />
       )}
       {cl.toast && <Toast text={cl.toast.text} onUndo={cl.toast.undo} onDismiss={cl.dismiss} />}
     </div>
