@@ -1,6 +1,7 @@
 import { resolveColor } from '../colorModel'
 import { colorHex, INBOX_COLOR } from '../palette'
 import './allDayBand.css'
+import './gridCursor.css'
 
 // The all-day band (Phase 7, C7) — sits above the timed grid, aligned to the 7
 // columns. All-day items render as bars (multi-day stretch across the days they
@@ -40,7 +41,7 @@ export default function AllDayBand({ days, today, allDayEvents, byId, bandRef, c
   return (
     <div className="adb">
       <div className="adb-gutter">all-day</div>
-      <div className="adb-cols" ref={bandRef} {...createBind} style={{ height: laneCount * BAR_H }}>
+      <div className="adb-cols kit-create-cursor" ref={bandRef} {...createBind} style={{ height: laneCount * BAR_H }}>
         {bars.map((b) => {
           const sc = dragId === b.ev.id ? preview.startCol : b.startCol
           const ec = dragId === b.ev.id ? preview.endCol : b.endCol

@@ -3,6 +3,7 @@ import { colorHex, INBOX_COLOR } from '../palette'
 import { resolveColor } from '../colorModel'
 import { HOUR_HEIGHT } from '../dateUtils'
 import TintedBlock from './TintedBlock'
+import './gridCursor.css'
 
 // One day column of the week sheet (Phase 7, C2). Renders the hour backdrop, the
 // day's tinted title-only blocks (even-split via the shared layout maths), the
@@ -47,7 +48,7 @@ export default function WeekColumn({
 
   return (
     <div
-      className={'wk-col' + (isWeekend ? ' is-weekend' : '') + (isToday ? ' is-today' : '')}
+      className={'wk-col kit-create-cursor' + (isWeekend ? ' is-weekend' : '') + (isToday ? ' is-today' : '')}
       {...backgroundBind}
     >
       {HOURS.map((h) => (

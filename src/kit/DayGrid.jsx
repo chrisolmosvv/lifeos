@@ -6,6 +6,7 @@ import { resolveColor } from '../colorModel'
 import { useBlockAppearance } from './useBlockAppearance'
 import TintedBlock from './TintedBlock'
 import './todayKit.css'
+import './gridCursor.css'
 
 // DayGrid — "the day" on Today: a 7am–midnight sheet that scrolls inside its
 // column. Shows today's events + scheduled tasks as soft tinted blocks (overlaps
@@ -96,7 +97,7 @@ export default function DayGrid({
             ))}
           </div>
 
-          <div className="tk-grid-lane" ref={laneRef} {...backgroundBind}>
+          <div className="tk-grid-lane kit-create-cursor" ref={laneRef} {...backgroundBind}>
             {HOURS.map((h) => (
               <div className="tk-grid-hour" key={h} />
             ))}

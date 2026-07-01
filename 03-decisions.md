@@ -9,6 +9,15 @@
 
 ---
 
+## Calendar create cursor — no system green plus (2026-07-01)
+
+- **[Empty calendar space uses a LifeOS cursor, not the OS `copy` cursor.]** The
+  Today lane, Calendar week columns, and all-day strip now use a shared ink
+  target cursor for create-on-grid areas. **Why:** the OS copy cursor can render
+  as a green plus, which reads too loud and off-brand for the app. **Trade-off:**
+  the cursor is custom CSS, with a normal crosshair fallback if a browser ever
+  refuses the image cursor.
+
 ## Shared masthead — weather retired; personal edition moves right (2026-07-01)
 
 - **[No live weather/location in the top-right header.]** The shared logged-in

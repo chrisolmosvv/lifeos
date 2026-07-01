@@ -33,6 +33,25 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Calendar/Today — green hover-plus cursor replaced. SRC/ ONLY.
+WHAT CHANGED:
+- Replaced the system `copy` hover cursor on empty calendar create areas with a
+  shared small ink-coloured target cursor that better matches the app.
+- Wired it into Today, Calendar week columns, and the all-day strip when that
+  strip is visible.
+FILES TOUCHED: `DayGrid.jsx`, `WeekColumn.jsx`, `AllDayBand.jsx`,
+  new `gridCursor.css`, plus roadmap/decisions/handoff docs.
+HOW TO VERIFY: open Today and hover empty time-grid space; the green plus should
+  be gone. Click Calendar and hover an empty week column; it should use the same
+  quiet target cursor. `npm run build` passes, and browser checks on Today and
+  Calendar showed no error overlay.
+KNOWN GAPS / RISKS: the all-day strip only renders when all-day events exist, so
+  the visible browser check covered Today and the timed Calendar grid; the all-day
+  strip is wired to the same shared class.
+NEXT: return to the current chosen track.
+FOR THE CHECKER: confirm there are no remaining live `cursor: copy` create areas
+  that should use the shared cursor.
+
 ### 2026-07-01 — Track F — Food V2 P2: the CONVERGED FINDER (logger context). SRC/ ONLY. (Verified on local dev — 5 checks pass.)
 
 P2 replaces the logger's add-food UI with ONE converged finder — the keystone component both faces

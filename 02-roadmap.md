@@ -8,6 +8,13 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-01 — Calendar create cursor polished
+The empty create areas in Today and Calendar no longer use the operating system's
+`copy` cursor, which could show as a green plus on hover. They now share a small
+ink-coloured target cursor, with the all-day strip wired to the same style when
+it is present. Build passes; Today and Calendar were checked in the browser with
+no error overlay.
+
 ## Session note — 2026-07-01 — Shared header compacted
 The shared masthead no longer shows live city/weather in the top right. The
 right side now carries the personal edition mark as two lines (`Year XX` /

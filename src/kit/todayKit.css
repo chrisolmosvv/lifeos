@@ -370,7 +370,7 @@
 /* --- T5 interaction visuals ---------------------------------------------- */
 /* The empty lane invites a click/drag to create. */
 .tk-grid-lane {
-  cursor: copy;
+  cursor: var(--kit-create-cursor, crosshair);
   touch-action: pan-y; /* let touch scroll the column; mouse handles drag */
 }
 .tk-block {
