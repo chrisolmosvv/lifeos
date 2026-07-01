@@ -142,7 +142,7 @@ export default function LogPage({ onOpenRecipe }) {
       )}
       {estimate && (
         <EstimateMealPanel defaultSlot={estimate.slot}
-          onLog={(snap, slot) => { setEstimate(null); fw.addEntry({ entry_date: date, meal_slot: slot, food_item_id: null, recipe_id: null, amount: 1, unit: "serving", kcal: snap.kcal, protein: snap.protein, carbs: snap.carbs, fat: snap.fat, fibre: null, sugar: null, sodium: null, entry_source: "manual", is_estimated: true, is_alcohol: false }); }}
+          onLog={(snap, slot, label) => { setEstimate(null); fw.addEntry({ entry_date: date, meal_slot: slot, food_item_id: null, recipe_id: null, amount: 1, unit: "serving", kcal: snap.kcal, protein: snap.protein, carbs: snap.carbs, fat: snap.fat, fibre: null, sugar: null, sodium: null, entry_source: "manual", is_estimated: true, entry_label: label || null, is_alcohol: false }); }}
           onClose={() => setEstimate(null)} />
       )}
       {editing && (

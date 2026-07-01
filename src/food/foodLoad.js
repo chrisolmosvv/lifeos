@@ -26,7 +26,7 @@ async function fetchAll(table, columns, apply = (q) => q) {
 }
 
 const ENTRY_COLS =
-  "id,entry_date,meal_slot,food_item_id,recipe_id,amount,unit,kcal,protein,carbs,fat,fibre,sugar,sodium,entry_source,is_estimated,is_alcohol,alcohol_units,created_at";
+  "id,entry_date,meal_slot,food_item_id,recipe_id,amount,unit,kcal,protein,carbs,fat,fibre,sugar,sodium,entry_source,is_estimated,entry_label,is_alcohol,alcohol_units,created_at";
 
 // All log entries whose entry_date falls in [start, end], inclusive — oldest-first, and
 // within a day by created_at so the ledger order is stable.

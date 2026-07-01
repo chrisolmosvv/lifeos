@@ -41,7 +41,7 @@ export default function EstimateMealPanel({ defaultSlot, onLog, onClose }) {
   const log = () => {
     const snap = {};
     for (const [k] of NUMS) snap[k] = numOrNull(vals[k]) ?? 0;
-    onLog(snap, slot);
+    onLog(snap, slot, description.trim()); // the description becomes the entry's label
   };
 
   return (

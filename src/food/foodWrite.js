@@ -7,7 +7,7 @@
 import { supabase } from "../supabaseClient.js";
 
 const RETURN_COLS =
-  "id,entry_date,meal_slot,food_item_id,recipe_id,amount,unit,kcal,protein,carbs,fat,fibre,sugar,sodium,entry_source,is_estimated,is_alcohol,alcohol_units,created_at,updated_at";
+  "id,entry_date,meal_slot,food_item_id,recipe_id,amount,unit,kcal,protein,carbs,fat,fibre,sugar,sodium,entry_source,is_estimated,entry_label,is_alcohol,alcohol_units,created_at,updated_at";
 const ITEM_COLS = "id,name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite";
 const PER100G = ["kcal", "protein", "carbs", "fat", "fibre", "sugar", "sodium"];
 
