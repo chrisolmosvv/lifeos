@@ -6,7 +6,7 @@ import { entryMacros, slotForHour, NUTRIENTS } from "./foodCalc";
 import { fmtNum, fmtFull } from "./foodFormat";
 import { setRecipeFavourite } from "./recipeWrite";
 import { useCookLog } from "./useCookLog";
-import CookMode from "./CookMode";
+import CookPage from "./CookPage";
 import LogMealPanel from "./LogMealPanel";
 import RecipeActionBar from "./RecipeActionBar";
 import Toast from "../kit/Toast";
@@ -52,7 +52,7 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   const cookedLabel = cookedDate(lastCookedFor({ id: recipe.id, ingredients, steps }, cookEntries));
   const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
 
-  if (cooking) return <CookMode recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging(true); }} />;
+  if (cooking) return <CookPage recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging(true); }} />;
 
   const toggleFav = () => { const next = !fav; setFav(next); setRecipeFavourite(recipe.id, next).catch(() => setFav(!next)); };
 
