@@ -68,15 +68,8 @@ export async function updateRecipe(id, recipe, ingredients, steps) {
   await writeChildren(id, ingredients, steps);
 }
 
-// Stamp (or restore) a recipe's last_cooked_at — the FORWARD-ONLY "last cooked" marker (F9). The
-// cook→log write calls it with ts = now; its UNDO calls it with the PRIOR value (which may be null,
-// if the recipe had never been cooked). A plain owner-RLS update; we do NOT bump updated_at here —
-// "last cooked" is a cook signal, not an edit, and must not reshuffle the "added" order. Throws on
-// error so useCookLog can roll the whole log back (all-or-nothing).
-export async function stampLastCooked(recipeId, ts) {
-  const { error } = await supabase.from("recipes").update({ last_cooked_at: ts ?? null }).eq("id", recipeId);
-  if (error) throw new Error(error.message);
-}
+// (V2 P3: stampLastCooked removed — "last cooked" is now COMPUTE-ON-READ via lastCookedFor. The
+//  recipes.last_cooked_at column is now dead; its DROP is deferred to P9, checker-gated.)
 
 // Delete the recipe; children CASCADE; food_log_entries.recipe_id is SET NULL (logged history +
 // its macro snapshot survive). Throws on error.
