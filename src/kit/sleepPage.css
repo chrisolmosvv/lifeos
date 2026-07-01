@@ -140,7 +140,7 @@
 }
 
 /* Stage shades: ink across the board, terracotta reserved for Deep. */
-.hyp-deep { background: var(--accent); }
+.hyp-deep { background: #423b32; } /* darkest neutral — extends the stage gray ramp (terracotta off stages) */
 .hyp-core { background: #5c564c; }
 .hyp-rem { background: #8a8275; }
 .hyp-awake { background: #c9c1b2; }
@@ -331,7 +331,7 @@
   opacity: 0.34;
 }
 .dial-avg {
-  stroke: var(--accent);
+  stroke: var(--ink); /* ink — the band is the dial's one terracotta accent, not the avg tick */
   stroke-width: 2;
 }
 .dial-median {

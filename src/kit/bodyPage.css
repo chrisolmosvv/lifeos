@@ -259,7 +259,7 @@
 .bt-move-on {
   font-family: var(--font-sans);
   font-size: 13px;
-  color: var(--accent); /* real movement = terracotta (house rule) */
+  color: var(--ink); /* real movement reads darker than flat (ink vs muted) — NOT terracotta (state ≠ accent) */
 }
 /* keep the 90-day sparkline compact inside the trace cell */
 .bt-trace .body-spark {

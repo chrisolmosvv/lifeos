@@ -332,7 +332,7 @@
   margin-top: 4px;
 }
 .gym-walk-label b {
-  color: var(--accent);
+  color: var(--ink-muted); /* honesty/freshness text, not an affordance — no terracotta */
   font-weight: 600;
 }
 .gym-walk-mini {
