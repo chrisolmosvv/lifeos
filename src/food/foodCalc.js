@@ -231,34 +231,45 @@ export function rangeTotals(daily, days, { end } = {}) {
 }
 
 // ── rangeAdherence (V2 P0) ─────────────────────────────────────────────────────
-// How many LOGGED days in a window were "on target". The rule (LOCKED): a day counts iff its
+// How many days in a window were "on target", over a CALENDAR-day denominator (an UNTRACKED day
+// counts against you — stricter, LOCKED). The on-target rule (LOCKED): a day counts iff its
 // CALORIES are goaled AND 'on' (within the ±10% inclusive band — read from the EXISTING vsGoal,
 // the band is NOT re-implemented here), AND every OTHER macro THAT HAS A GOAL SET is also 'on'.
 // A macro with NO goal is SKIPPED, never a failure — so a calories-only day CAN be on target.
+//
+// TWO DENOMINATOR GUARDS (or a fresh week reads wrong):
+//   1) NO FUTURE DAYS — count only up to `today` (Amsterdam) or `end`, whichever is EARLIER. A
+//      day that hasn't happened isn't a failure (a current partial week counts only to today).
+//   2) NO PRE-DATA DAYS — the count starts no earlier than the FIRST logged day (daily is sorted
+//      oldest-first, so daily[0].ymd), so calendar days before any data don't count against you.
+// Within the bounded [lo, hi] span: a day WITH a log is judged by the rule; a day with NO log is
+// counted in `total` but not in `onTarget` (that's the "untracked counts against you" intent).
 //   • `daily`   = dailyTotals() output (one summed row per logged day: { ymd, kcal, protein, … }).
-//   • `goalMap` = the resolved goals Map (get(type)?.target_value); goal_type 'calories' ↔ the
-//                 kcal column. vsGoal returns null when a type has no goal → that macro is skipped.
-//   • window    = { start, end } Amsterdam-day strings, inclusive.
-// → { onTarget, total } where total = LOGGED days in the window (a day with no log has no daily
-//   row and is not counted — mirrors rangeTotals averaging over logged days only). The "X of N"
-//   presentation is the caller's, at P4.  [DENOMINATOR CHOICE — flagged for confirmation.]
+//   • `goalMap` = the resolved goals Map (get(type)?.target_value); goal_type 'calories' ↔ kcal.
+//   • window    = { start, end, today } — Amsterdam-day strings, inclusive; `today` passed IN (no
+//                 Date.now here). Omitting `today` disables the future cap (hi = end).
+// → { onTarget, total }. "X of N" presentation is the caller's, at P4.
 const ADHERENCE_MACROS = [["protein", "protein"], ["carbs", "carbs"], ["fat", "fat"]];
-export function rangeAdherence(daily, goalMap, { start, end } = {}) {
-  const inWindow = (daily || []).filter(
-    (d) => d?.ymd && (start == null || d.ymd >= start) && (end == null || d.ymd <= end),
-  );
+const MS_PER_DAY = 86400000;
+export function rangeAdherence(daily, goalMap, { start, end, today } = {}) {
+  const rows = (daily || []).filter((d) => d?.ymd);
+  if (!rows.length || start == null || end == null) return { onTarget: 0, total: 0 };
+  const firstLogged = rows.reduce((m, d) => (m == null || d.ymd < m ? d.ymd : m), null);
+  const lo = firstLogged > start ? firstLogged : start;        // guard 2: no pre-data days
+  const hi = today != null && today < end ? today : end;       // guard 1: no future days
+  if (hi < lo) return { onTarget: 0, total: 0 };
+  const total = Math.round((Date.parse(hi) - Date.parse(lo)) / MS_PER_DAY) + 1; // calendar days, inclusive
   let onTarget = 0;
-  for (const day of inWindow) {
-    // Calories must be goaled AND 'on' (vsGoal → null when calories has no goal → day fails).
+  for (const day of rows) {
+    if (day.ymd < lo || day.ymd > hi) continue; // logged days outside the bounded span don't count
     const cal = vsGoal(day.kcal, goalMap?.get?.("calories")?.target_value);
-    if (!cal || cal.status !== "on") continue;
-    // Every OTHER goaled macro must be 'on'; an ungoaled macro → vsGoal null → skipped, not a fail.
+    if (!cal || cal.status !== "on") continue; // calories must be goaled AND 'on'
     let ok = true;
     for (const [type, key] of ADHERENCE_MACROS) {
       const s = vsGoal(day[key], goalMap?.get?.(type)?.target_value);
-      if (s && s.status !== "on") { ok = false; break; }
+      if (s && s.status !== "on") { ok = false; break; } // a goaled macro off → day fails
     }
     if (ok) onTarget += 1;
   }
-  return { onTarget, total: inWindow.length };
+  return { onTarget, total };
 }
