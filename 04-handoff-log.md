@@ -33,6 +33,41 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P6: the COOKBOOK (library · recipe page · editor + AI rescue). SRC/ ONLY. (Build-verified.)
+
+P6 rebuilds the cookbook and CONVERGES ingredient entry onto the P2 finder. No schema (is_favourite +
+step-data already existed). CookMode untouched (the marquee is P7).
+
+COMMIT CHAIN (all src-only):
+- 8d82aec — (a+b) library: is_favourite SELECTed (fetchRecipeList). Grid⇄list (localStorage pref),
+  search-icon→field, All/Recipes/Meals filter (DERIVED via recipeKind + P3 stepCountByRecipe), sort
+  incl. Favourites + Cooked (lastCookedFor), ★ per entry, keyboard. DRAFT DOOR: grid-tap draft→editor,
+  deep-link→page. New RecipeListRow + CookbookToolbar (split to stay <250); RecipeCard type-signal.
+- a18ac66 — (c) recipe page: collapse-by-default (steps→titles; compact macros, micros behind 'more' —
+  recipeMacros returns all six, DISPLAY-only, unforked); ★ header; new RecipeActionBar (type-aware:
+  meal hides Cook + leads Log, draft = Edit only); meal variant (no Method); draft deep-link invitation.
+- 22a5b7e — (d) editor two-column + MOUNT the P2 <Finder> (recipeFinderConfig: portions ON, no-macros
+  hatch ON, meals OFF) in place of IngredientPicker (SAME component, not a clone). Finder gained
+  initialQuery + onResolveText (gated by allowNoMacros — logger unaffected). 2e37ece — delete IngredientPicker.
+- 551eeec — (e) AI auto-match = the P1 reranker's top pick (results[top3[0]]) else FLAGGED — supersedes
+  recipeMatch, NO new AI surface; deterministic fallback (reranker off/quota → flagged → import still
+  completes). Editor rescue per flagged row: search · manual (new ManualMacrosPanel → manual_macros
+  '~ estimated') · skip. 5edb2bc — delete recipeMatch.
+
+HONEST STATUSES (record, not a pass):
+- Build-verified only (owner's visual pass pending; accepted by proceeding to P7).
+- [accept] rescue SUBSUMED by auto-accept in Option A (a flagged row has no confident suggestion to
+  accept) — flagged rescue is search/manual/skip. Recorded, not invented.
+- Import AI-off fallback DESIGNED (FOOD_RERANK_OFF → flagged → import completes); owner-verify pending.
+- Recipe-context finder: an unresolvable portion disables amount-confirm → the no-macros hatch is the path.
+
+CONTRACTS held: recipeMacros.perServing (4 consumers) display-only, unforked; recipeKind = single source
+of draft/meal/recipe; lastCookedFor (P3) powers Cooked sort + "last cooked"; edit-rewrites-children preserved.
+
+NEXT: P7 — the MARQUEE cook page (finish-together kanban + resume-a-cook + the cook_session schema).
+
+---
+
 ### 2026-07-01 — Track F — Food V2 P5: the logger WRITE side (estimate · save-as-meal · quick-add meals). TWO-TRACK. (Build-verified; estimate fallback DESIGNED-not-verified.)
 
 P5 WIRES already-built primitives (logSnapshot/logEntry, the converged finder, recentMealsFrom,
