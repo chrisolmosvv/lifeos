@@ -1,15 +1,15 @@
-// LifeOS — Food → recipe import client (F8). Invokes the recipe-import Edge Function (paste/URL →
-// Gemini → house JSON), then auto-matches each parsed ingredient against the food DB (reusing
-// food-search) — linking ONLY clear hits (recipeMatch), caching them on link (reuse F6), and
-// resolving the parsed amount to grams via the portions table. Returns the editor draft + itemsById,
-// or a DISTINCT error (fetch_fail / parse_fail) for the import screen. Matching is best-effort +
-// parallel: a slow/failed search just leaves that ingredient FLAGGED (no food_item_id), never fatal.
+// LifeOS — Food → recipe import client (F8; auto-match rewritten V2 P6). Invokes the recipe-import
+// Edge Function (paste/URL → Gemini → house JSON), then auto-matches each parsed ingredient against
+// the food DB (reusing food-search) — taking the P1 RERANKER's top pick (results[top3[0]]) when
+// present, caching it on link, and resolving the parsed amount to grams via the portions table.
+// Returns the editor draft + itemsById, or a DISTINCT error (fetch_fail / parse_fail) for the import
+// screen. Best-effort + parallel: a slow/failed search, or reranker off/quota (no top3), just leaves
+// that ingredient FLAGGED (no food_item_id) for the editor rescue — never fatal; import always completes.
 
 import { supabase } from "../supabaseClient.js";
 import { searchFoods } from "./foodLoad.js";
 import { ensureFoodItem } from "./recipeWrite.js";
 import { resolvePortion } from "./portions.js";
-import { pickClearHit } from "./recipeMatch.js";
 
 const CLIENT_TIMEOUT_MS = 25000; // backstop so the UI never hangs (function self-bounds at ~8s fetch + Gemini)
 
@@ -53,15 +53,19 @@ export async function importRecipe({ text, url }) {
   };
 }
 
-// One parsed ingredient → a draft ingredient. A clear DB hit → matched + cached (food_item_id) with
-// the amount resolved to grams; else flagged text (food_item_id null, fixable in the editor).
-// `parsedName` rides along (transient) so the editor can pre-fill the F6 search when re-matching.
+// One parsed ingredient → a draft ingredient (V2 P6, auto-match Option A). AUTO-MATCH = the P1
+// RERANKER's top pick: search the DB, take results[top3[0]] when the reranker returned a pick, else
+// FLAG it (food_item_id null, fixable via the editor rescue). Supersedes recipeMatch's comma rule; adds
+// NO new AI surface — the reranker is P1's existing call. DETERMINISTIC FALLBACK: reranker off/quota →
+// top3 null → flagged → import STILL COMPLETES (every ingredient lands, some flagged; nothing hard-stops).
+// `parsedName` rides along (transient) so the editor can pre-fill the finder when re-matching.
 async function matchOne(ing, itemsById) {
   const base = { parsedName: ing.name || ing.raw_text || "", raw_text: ing.raw_text || ing.name || "", no_macros: false };
   try {
-    const { results } = await searchFoods(ing.name || ing.raw_text || "");
-    const hit = pickClearHit(ing.name, results);
-    if (!hit) return { ...base, food_item_id: null, amount: null, unit: null };
+    const res = await searchFoods(ing.name || ing.raw_text || "");
+    const results = res.results || [];
+    const hit = Array.isArray(res.top3) && res.top3.length ? results[res.top3[0]] : null;
+    if (!hit) return { ...base, food_item_id: null, amount: null, unit: null }; // flagged — no confident rerank
     const item = await ensureFoodItem(hit);
     itemsById[item.id] = { ...hit, food_item_id: item.id };
     const grams = resolvePortion(ing.name, ing.amount, ing.unit);

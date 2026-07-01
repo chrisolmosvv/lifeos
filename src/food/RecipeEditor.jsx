@@ -6,6 +6,7 @@ import { fmtNum } from "./foodFormat";
 import { ensureFoodItem } from "./recipeWrite";
 import Finder from "./finder/Finder";
 import { recipeFinderConfig } from "./finder/finderConfig";
+import ManualMacrosPanel from "./ManualMacrosPanel";
 import "./cookbook.css";
 
 // RecipeEditor (V2 P6) — create + edit + the import review (same form), now TWO-COLUMN (ingredients +
@@ -24,6 +25,7 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   const [itemsById, setItemsById] = useState(initialItemsById || {});
   const [sourceUrl, setSourceUrl] = useState(initialDraft?.source_url ?? null);
   const [finderAt, setFinderAt] = useState(null); // null | { index: number|null, query }
+  const [manualAt, setManualAt] = useState(null); // null | index — the [manual] macros rescue
   const [confirmDel, setConfirmDel] = useState(false);
   const [loading, setLoading] = useState(!!recipeId);
 
@@ -64,6 +66,7 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   // … or a free-text no-macros line.
   const onResolveText = (text) => { applyIng({ food_item_id: null, raw_text: text, amount: null, unit: null, no_macros: true }); setFinderAt(null); };
   const keepAsText = (i) => setIngredients((xs) => xs.map((x, j) => (j === i ? { ...x, no_macros: true, food_item_id: null } : x)));
+  const setManual = (i, m) => { setIngredients((xs) => xs.map((x, j) => (j === i ? { ...x, manual_macros: m, no_macros: false, food_item_id: null } : x))); setManualAt(null); };
   const removeIng = (i) => setIngredients((xs) => xs.filter((_, j) => j !== i));
   const moveStep = (i, d) => setSteps((xs) => { const j = i + d; if (j < 0 || j >= xs.length) return xs; const c = [...xs]; [c[i], c[j]] = [c[j], c[i]]; return c; });
 
@@ -115,8 +118,9 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
                     {m.status === "text" && <span className="red-mark"> · no macros</span>}
                   </span>
                   <span className="red-ing-ctl">
-                    <button type="button" onClick={() => openFinder(i)}>{m.status === "matched" ? "change" : "match"}</button>
-                    {m.status === "flag" && <button type="button" onClick={() => keepAsText(i)}>text</button>}
+                    <button type="button" onClick={() => openFinder(i)}>{m.status === "matched" ? "change" : "search"}</button>
+                    {(m.status === "flag" || m.status === "manual") && <button type="button" onClick={() => setManualAt(i)}>manual</button>}
+                    {m.status === "flag" && <button type="button" onClick={() => keepAsText(i)}>skip</button>}
                     <button type="button" className="red-x" aria-label="Remove" onClick={() => removeIng(i)}>×</button>
                   </span>
                 </li>
@@ -162,6 +166,10 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
       {finderAt && (
         <Finder finderConfig={recipeFinderConfig} title="Add ingredient" initialQuery={finderAt.query}
           onResolve={onResolve} onResolveText={onResolveText} onClose={() => setFinderAt(null)} />
+      )}
+      {manualAt != null && (
+        <ManualMacrosPanel name={ingredients[manualAt]?.raw_text} initial={ingredients[manualAt]?.manual_macros}
+          onSave={(m) => setManual(manualAt, m)} onClose={() => setManualAt(null)} />
       )}
     </div>
   );
