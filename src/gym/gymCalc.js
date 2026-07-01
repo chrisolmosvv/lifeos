@@ -135,35 +135,9 @@ export function workoutMinutes(workout) {
   return (b - a) / 60000;
 }
 
-// ── Streak / consistency ──────────────────────────────────────────────────────
-// Distinct Amsterdam calendar dates (YYYY-MM-DD) that have a workout (gymDates).
-export function trainingDays(workouts) {
-  const days = new Set();
-  for (const w of workouts || []) {
-    const d = amsYMD(w.started_at);
-    if (d) days.add(d);
-  }
-  return days;
-}
-// Current DAILY streak: consecutive Amsterdam calendar days with a session,
-// counting back from today — but only "live" if the most recent session was today
-// or yesterday (otherwise the streak is broken → 0). NOTE: a definition choice; the
-// owner-confirmed headline consistency metric is sessions-per-week (below).
-export function currentStreakDays(workouts, now = Date.now()) {
-  const days = trainingDays(workouts);
-  if (days.size === 0) return 0;
-  let cursor = amsTodayYMD(now);
-  if (!days.has(cursor)) {
-    cursor = shiftYMD(cursor, -1); // allow "trained yesterday, not yet today"
-    if (!days.has(cursor)) return 0;
-  }
-  let streak = 0;
-  while (days.has(cursor)) {
-    streak++;
-    cursor = shiftYMD(cursor, -1);
-  }
-  return streak;
-}
+// ── Consistency ───────────────────────────────────────────────────────────────
+// (P5: currentStreakDays + its only-caller helper trainingDays removed — both 0-ref
+// after the P4 2×2 replaced the streak display.)
 // Sessions per week for the last N weeks (index 0 = current week, oldest last).
 // Week = rolling 7-day buckets ending "now". The gentler consistency view.
 export function lastNWeeksSessions(workouts, n = 8, now = Date.now()) {
