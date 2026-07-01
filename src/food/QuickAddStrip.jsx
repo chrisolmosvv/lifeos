@@ -1,21 +1,27 @@
 import { itemToFood } from "./foodShape";
 
-// QuickAddStrip — one blended row of favourites + recents (the F5 reserved spot). Tapping a
-// chip opens the pre-filled amount step (the same flow as a search pick, but the food is
-// already a saved food_items row → no re-cache). Favourites carry a small star. `foods` is a
-// pre-blended, pre-ordered list of food_items rows (favourites first, then recents).
-export default function QuickAddStrip({ foods, onPick }) {
-  if (!foods?.length) return null;
+// QuickAddStrip (V2 P5) — the "Log again" strip: recent MEALS + favourited MEALS + favourited FOODS
+// (meals-first; NEVER recent single foods — that was the noise the finder session removed). A MEAL
+// chip re-logs in ONE tap (onPickMeal → a frozen recipe_cook snapshot); a FOOD chip opens the
+// pre-filled amount step (onPickFood → the finder preset, a food needs an amount). ★ marks favourites.
+// `items` is a pre-ordered list of { type:'meal', recipe, favourite } | { type:'food', row }.
+export default function QuickAddStrip({ items, onPickMeal, onPickFood }) {
+  if (!items?.length) return null;
   return (
     <div className="qa">
       <span className="qa-label">Quick add</span>
       <div className="qa-row">
-        {foods.map((row) => (
-          <button key={row.id} type="button" className="qa-chip" onClick={() => onPick(itemToFood(row))}>
-            {row.is_favourite ? <span className="qa-star">★</span> : null}
-            {row.name}
-          </button>
-        ))}
+        {items.map((it) =>
+          it.type === "meal" ? (
+            <button key={`m:${it.recipe.id}`} type="button" className="qa-chip" onClick={() => onPickMeal(it)}>
+              {it.favourite ? <span className="qa-star">★</span> : null}{it.recipe.title}
+            </button>
+          ) : (
+            <button key={`f:${it.row.id}`} type="button" className="qa-chip" onClick={() => onPickFood(itemToFood(it.row))}>
+              {it.row.is_favourite ? <span className="qa-star">★</span> : null}{it.row.name}
+            </button>
+          ),
+        )}
       </div>
     </div>
   );

@@ -3,8 +3,10 @@ import { amsTodayYMD, amsClockMinutes, shiftYMD, humanDayLong, humanDayShort } f
 import { fetchGoals } from "../health/healthLoad";
 import { resolveGoals } from "../health/healthGoals";
 import { useGoalWrites } from "../health/useGoalWrites";
-import { dailyTotals, recentsFrom, entryMacros, slotForHour } from "./foodCalc";
+import { dailyTotals, recentMealsFrom, entryMacros, slotForHour, NUTRIENTS } from "./foodCalc";
+import { recipeMacros } from "./recipeCalc";
 import { fetchEntries, fetchNames, fetchMyFoods } from "./foodLoad";
+import { fetchCookbook } from "./recipeLoad";
 import { cacheFoodOnLog, insertManualFood, setFavourite } from "./foodWrite";
 import { setRecipeFavourite } from "./recipeWrite";
 import { useFoodWrites } from "./useFoodWrites";
@@ -34,6 +36,7 @@ export default function LogPage({ onOpenRecipe }) {
   const [goalMap, setGoalMap] = useState(new Map());
   const [entries, setEntries] = useState([]);
   const [myFoods, setMyFoods] = useState([]);
+  const [cookbook, setCookbook] = useState({ recipes: [], ingredientsByRecipe: {}, itemsById: {} }); // for quick-add meals + re-log macros
   const [addModal, setAddModal] = useState(null); // { slot, preset?, swapEntry?, title? }
   const [editing, setEditing] = useState(null); //   the entry being edited
   const [estimate, setEstimate] = useState(null); // { slot } — Feature-B estimate panel open
@@ -47,7 +50,7 @@ export default function LogPage({ onOpenRecipe }) {
     const now = Date.now();
     const today = amsTodayYMD(now);
     (async () => {
-      const [goals, rows, foods] = await Promise.all([fetchGoals(), fetchEntries(START, today), fetchMyFoods()]);
+      const [goals, rows, foods, cb] = await Promise.all([fetchGoals(), fetchEntries(START, today), fetchMyFoods(), fetchCookbook()]);
       const itemIds = [...new Set(rows.filter((e) => e.food_item_id).map((e) => e.food_item_id))];
       const recipeIds = [...new Set(rows.filter((e) => e.recipe_id).map((e) => e.recipe_id))];
       const names = await fetchNames(itemIds, recipeIds);
@@ -56,6 +59,7 @@ export default function LogPage({ onOpenRecipe }) {
         setDate(today);
         setEntries(rows);
         setMyFoods(foods);
+        setCookbook(cb);
         setState({ loading: false, now, today, names });
       }
     })().catch((e) => alive && setState({ loading: false, error: e.message || String(e) }));
@@ -64,12 +68,18 @@ export default function LogPage({ onOpenRecipe }) {
 
   const daily = useMemo(() => dailyTotals(entries), [entries]);
   const favSet = useMemo(() => new Set(myFoods.filter((f) => f.is_favourite).map((f) => f.id)), [myFoods]);
-  const quickFoods = useMemo(() => {
-    const byId = Object.fromEntries(myFoods.map((f) => [f.id, f]));
-    const favs = myFoods.filter((f) => f.is_favourite);
-    const recents = recentsFrom(entries).map((id) => byId[id]).filter((f) => f && !f.is_favourite);
-    return [...favs, ...recents].slice(0, 10);
-  }, [myFoods, entries]);
+  // Quick-add = recent MEALS + favourited MEALS + favourited FOODS (meals-first; NEVER recent foods).
+  // Meal items carry per-serving macros so a one-tap re-log can freeze the snapshot. (V2 P5, decision-3.)
+  const quickItems = useMemo(() => {
+    const byId = Object.fromEntries(cookbook.recipes.map((r) => [r.id, r]));
+    const mealItem = (r, fav) => ({ type: "meal", recipe: r, favourite: !!fav, perServing: recipeMacros(cookbook.ingredientsByRecipe[r.id] || [], r.servings || 1, cookbook.itemsById).perServing });
+    const seen = new Set();
+    const meals = [];
+    for (const id of recentMealsFrom(entries)) { const r = byId[id]; if (r && !seen.has(id)) { seen.add(id); meals.push(mealItem(r, r.is_favourite)); } }
+    for (const r of cookbook.recipes) { if (r.is_favourite && !seen.has(r.id)) { seen.add(r.id); meals.push(mealItem(r, true)); } }
+    const favFoods = myFoods.filter((f) => f.is_favourite).map((row) => ({ type: "food", row }));
+    return [...meals, ...favFoods].slice(0, 12);
+  }, [cookbook, entries, myFoods]);
 
   if (state.loading) {
     return (<div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Reading your food log…</span></div>);
@@ -89,6 +99,15 @@ export default function LogPage({ onOpenRecipe }) {
 
   const openAdd = (slot) => setAddModal({ slot: slot || slotForHour(Math.floor(amsClockMinutes(state.now) / 60)) });
   const openQuickAdd = (food) => setAddModal({ preset: food, slot: slotForHour(Math.floor(amsClockMinutes(state.now) / 60)) });
+
+  // One-tap re-log a MEAL (V2 P5): freeze the meal's per-serving snapshot into a recipe_cook entry
+  // (1 serving) via the optimistic add (a logEntry wrapper — the logger's equivalent of logSnapshot;
+  // appears in the ledger + undo). Never re-reads the recipe after this — the snapshot is frozen here.
+  const onRelogMeal = (item) => {
+    const snap = {};
+    for (const k of NUTRIENTS) snap[k] = item.perServing?.[k] || 0;
+    fw.addEntry({ entry_date: date, meal_slot: slotForHour(Math.floor(amsClockMinutes(state.now) / 60)), food_item_id: null, recipe_id: item.recipe.id, amount: 1, unit: "serving", ...snap, entry_source: "recipe_cook", is_estimated: false, entry_label: null, is_alcohol: false });
+  };
 
   // Resolve a food candidate → its food_items row (cache OFF/USDA, insert manual, or reuse).
   async function resolveFood(food) {
@@ -142,8 +161,8 @@ export default function LogPage({ onOpenRecipe }) {
         isToday={range === "day" && date === state.today} atToday={atToday} onPrev={() => go(-1)} onNext={() => go(1)} />
 
       {range === "day" ? (
-        <DayView entries={entries} goalMap={goalMap} day={date} names={state.names} quickFoods={quickFoods} favSet={favSet}
-          onAdd={openAdd} onQuickAdd={openQuickAdd} onEditEntry={setEditing} onToggleFav={toggleFav} onOpenRecipe={onOpenRecipe}
+        <DayView entries={entries} goalMap={goalMap} day={date} names={state.names} quickItems={quickItems} favSet={favSet}
+          onAdd={openAdd} onQuickAdd={openQuickAdd} onRelogMeal={onRelogMeal} onEditEntry={setEditing} onToggleFav={toggleFav} onOpenRecipe={onOpenRecipe}
           onOpenGoals={() => setGoalOpen(true)} onSaveMeal={onSaveMeal} />
       ) : (
         <WeekMonthView daily={daily} days={step} end={date} goalMap={goalMap} today={state.today} onDrillDay={(ymd) => { setRange("day"); setDate(ymd); }} />
