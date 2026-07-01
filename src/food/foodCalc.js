@@ -229,3 +229,36 @@ export function rangeTotals(daily, days, { end } = {}) {
   }
   return { days, start, end, perNutrient };
 }
+
+// ── rangeAdherence (V2 P0) ─────────────────────────────────────────────────────
+// How many LOGGED days in a window were "on target". The rule (LOCKED): a day counts iff its
+// CALORIES are goaled AND 'on' (within the ±10% inclusive band — read from the EXISTING vsGoal,
+// the band is NOT re-implemented here), AND every OTHER macro THAT HAS A GOAL SET is also 'on'.
+// A macro with NO goal is SKIPPED, never a failure — so a calories-only day CAN be on target.
+//   • `daily`   = dailyTotals() output (one summed row per logged day: { ymd, kcal, protein, … }).
+//   • `goalMap` = the resolved goals Map (get(type)?.target_value); goal_type 'calories' ↔ the
+//                 kcal column. vsGoal returns null when a type has no goal → that macro is skipped.
+//   • window    = { start, end } Amsterdam-day strings, inclusive.
+// → { onTarget, total } where total = LOGGED days in the window (a day with no log has no daily
+//   row and is not counted — mirrors rangeTotals averaging over logged days only). The "X of N"
+//   presentation is the caller's, at P4.  [DENOMINATOR CHOICE — flagged for confirmation.]
+const ADHERENCE_MACROS = [["protein", "protein"], ["carbs", "carbs"], ["fat", "fat"]];
+export function rangeAdherence(daily, goalMap, { start, end } = {}) {
+  const inWindow = (daily || []).filter(
+    (d) => d?.ymd && (start == null || d.ymd >= start) && (end == null || d.ymd <= end),
+  );
+  let onTarget = 0;
+  for (const day of inWindow) {
+    // Calories must be goaled AND 'on' (vsGoal → null when calories has no goal → day fails).
+    const cal = vsGoal(day.kcal, goalMap?.get?.("calories")?.target_value);
+    if (!cal || cal.status !== "on") continue;
+    // Every OTHER goaled macro must be 'on'; an ungoaled macro → vsGoal null → skipped, not a fail.
+    let ok = true;
+    for (const [type, key] of ADHERENCE_MACROS) {
+      const s = vsGoal(day[key], goalMap?.get?.(type)?.target_value);
+      if (s && s.status !== "on") { ok = false; break; }
+    }
+    if (ok) onTarget += 1;
+  }
+  return { onTarget, total: inWindow.length };
+}
