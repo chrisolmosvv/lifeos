@@ -28,6 +28,28 @@ export function recipeKind(recipe) {
   return nStep === 0 ? "meal" : "recipe";
 }
 
+// ── lastCookedFor (V2 P0) ──────────────────────────────────────────────────────
+// The COMPUTED "last cooked" day for a recipe: MAX(entry_date) over that recipe's
+// recipe_cook-source log entries. GATED on recipeKind === 'recipe' — a stepless meal is never
+// "cooked" (there is nothing to cook), so it returns null even if a cook entry somehow exists.
+// entry_date is already the Amsterdam day (the write layer sets it), so a lexical string MAX is
+// the correct latest day — no Date parsing, no timezone helper needed here.
+// This is the compute-on-read value that REPLACES the stored recipes.last_cooked_at + the
+// stampLastCooked write; the cutover (wiring + deleting the stamp) is P3 — here it is only
+// ADDED, alongside the still-live stored column.  → 'YYYY-MM-DD' | null.
+export function lastCookedFor(recipe, entries) {
+  if (recipeKind(recipe) !== "recipe") return null;
+  const id = recipe?.id;
+  if (id == null) return null;
+  let max = null;
+  for (const e of entries || []) {
+    if (e?.entry_source !== "recipe_cook" || e?.recipe_id !== id) continue;
+    const d = e.entry_date;
+    if (typeof d === "string" && d && (max == null || d > max)) max = d;
+  }
+  return max;
+}
+
 // recipeMacros(ingredients, servings, itemsById) →
 //   { total, perServing, servings, unestimatedCount, ingredientCount }
 // servings ≤ 0 / absent → perServing = total (no divide-by-zero; caller can flag it).
