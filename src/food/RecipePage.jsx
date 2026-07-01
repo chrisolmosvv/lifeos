@@ -7,7 +7,7 @@ import { fmtNum, fmtFull } from "./foodFormat";
 import { setRecipeFavourite } from "./recipeWrite";
 import { useCookLog } from "./useCookLog";
 import CookPage from "./CookPage";
-import LogMealPanel from "./LogMealPanel";
+import LogMealSheet from "./LogMealSheet";
 import RecipeActionBar from "./RecipeActionBar";
 import Toast from "../kit/Toast";
 import "./cookbook.css";
@@ -27,7 +27,7 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   const [cooking, setCooking] = useState(false);
   const [menu, setMenu] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
-  const [staging, setStaging] = useState(false);
+  const [staging, setStaging] = useState(null); // null | 'log' | 'cooked' (cooked = from the cook exit)
   const [macMore, setMacMore] = useState(false);
   const [openSteps, setOpenSteps] = useState({});
   const [fav, setFav] = useState(false);
@@ -52,7 +52,7 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   const cookedLabel = cookedDate(lastCookedFor({ id: recipe.id, ingredients, steps }, cookEntries));
   const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
 
-  if (cooking) return <CookPage recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging(true); }} />;
+  if (cooking) return <CookPage recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging("cooked"); }} />;
 
   const toggleFav = () => { const next = !fav; setFav(next); setRecipeFavourite(recipe.id, next).catch(() => setFav(!next)); };
 
@@ -166,10 +166,12 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
         </>
       )}
 
-      <RecipeActionBar kind={kind} onCook={() => setCooking(true)} onLog={() => setStaging((v) => !v)} onEdit={() => onEdit(recipeId)} />
+      <RecipeActionBar kind={kind} onCook={() => setCooking(true)} onLog={() => setStaging((v) => (v ? null : "log"))} onEdit={() => onEdit(recipeId)} />
 
       {staging && (
-        <LogMealPanel perServing={macros.perServing} unestimatedCount={macros.unestimatedCount} defaultSlot={slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60))} onLog={onLogMeal} onClose={() => setStaging(false)} />
+        <LogMealSheet perServing={macros.perServing} unestimatedCount={macros.unestimatedCount}
+          defaultSlot={slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60))} cookedEyebrow={staging === "cooked"}
+          onLog={onLogMeal} onClose={() => setStaging(null)} />
       )}
       {cl.toast && <Toast text={cl.toast.text} onUndo={cl.toast.undo} onDismiss={cl.dismiss} />}
     </div>

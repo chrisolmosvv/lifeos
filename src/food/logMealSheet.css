@@ -1,0 +1,104 @@
+/* LifeOS — Food → the cook→log staging SHEET (V2 P8). Calm broadsheet: it rises from the bottom over a
+   dimmed page and lifts via the BACKDROP + a hairline top edge — NO shadow. Fraunces for the numbers,
+   terracotta only on the confirm. */
+
+.lms-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 70;
+  animation: lms-dim 200ms ease;
+}
+@keyframes lms-dim { from { opacity: 0; } to { opacity: 1; } }
+
+.lms {
+  width: 100%;
+  max-width: 520px;
+  background: var(--paper);
+  border-top: 1px solid var(--ink); /* the hairline top edge — the elevation cue, not a shadow */
+  border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+  border-radius: 16px 16px 0 0;
+  padding: 10px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: lms-rise 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes lms-rise { from { transform: translateY(100%); } to { transform: none; } }
+
+.lms-grip { width: 40px; height: 4px; border-radius: 2px; background: var(--rule); margin: 0 0 14px; }
+.lms-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 16px;
+}
+
+.lms-serv { display: flex; align-items: baseline; gap: 16px; margin-bottom: 14px; }
+.lms-step {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.lms-step:hover { border-color: var(--ink-muted); }
+.lms-serv-n {
+  font-family: var(--font-serif);
+  font-size: 3.2rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: center;
+}
+.lms-serv-label { font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink-muted); }
+
+.lms-preview {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 4px;
+  animation: lms-roll 240ms ease; /* the one motion — rolls as servings step */
+}
+@keyframes lms-roll { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+.lms-approx {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--ink-muted);
+  margin: 0 0 6px;
+}
+
+.lms-slot {
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 8px 4px 16px;
+}
+.lms-slot:hover { color: var(--ink); }
+.lms-log {
+  width: 100%;
+  background: var(--accent);
+  color: var(--paper);
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.lms-log:hover { opacity: 0.92; }

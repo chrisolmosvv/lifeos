@@ -18,6 +18,7 @@ import Finder from "./finder/Finder";
 import { loggerFinderConfig } from "./finder/finderConfig";
 import EditEntryPanel from "./EditEntryPanel";
 import EstimateMealPanel from "./EstimateMealPanel";
+import LogMealSheet from "./LogMealSheet";
 import NutritionGoalsEditor from "./NutritionGoalsEditor";
 import Toast from "../kit/Toast";
 import "./foodLog.css";
@@ -40,6 +41,7 @@ export default function LogPage({ onOpenRecipe }) {
   const [addModal, setAddModal] = useState(null); // { slot, preset?, swapEntry?, title? }
   const [editing, setEditing] = useState(null); //   the entry being edited
   const [estimate, setEstimate] = useState(null); // { slot } — Feature-B estimate panel open
+  const [mealSheet, setMealSheet] = useState(null); // { item } — the P8 quick-add long-press staging sheet
   const [goalOpen, setGoalOpen] = useState(false);
   const fw = useFoodWrites(entries, setEntries);
   const gw = useGoalWrites(goalMap, setGoalMap);
@@ -103,10 +105,11 @@ export default function LogPage({ onOpenRecipe }) {
   // One-tap re-log a MEAL (V2 P5): freeze the meal's per-serving snapshot into a recipe_cook entry
   // (1 serving) via the optimistic add (a logEntry wrapper — the logger's equivalent of logSnapshot;
   // appears in the ledger + undo). Never re-reads the recipe after this — the snapshot is frozen here.
-  const onRelogMeal = (item) => {
+  const onRelogMeal = (item, servings = 1, slot) => {
+    const s = slot || slotForHour(Math.floor(amsClockMinutes(state.now) / 60));
     const snap = {};
-    for (const k of NUTRIENTS) snap[k] = item.perServing?.[k] || 0;
-    fw.addEntry({ entry_date: date, meal_slot: slotForHour(Math.floor(amsClockMinutes(state.now) / 60)), food_item_id: null, recipe_id: item.recipe.id, amount: 1, unit: "serving", ...snap, entry_source: "recipe_cook", is_estimated: false, entry_label: null, is_alcohol: false });
+    for (const k of NUTRIENTS) snap[k] = (item.perServing?.[k] || 0) * servings; // FROZEN here — logSnapshot's sibling path
+    fw.addEntry({ entry_date: date, meal_slot: s, food_item_id: null, recipe_id: item.recipe.id, amount: servings, unit: "serving", ...snap, entry_source: "recipe_cook", is_estimated: false, entry_label: null, is_alcohol: false });
   };
 
   // Resolve a food candidate → its food_items row (cache OFF/USDA, insert manual, or reuse).
@@ -162,7 +165,7 @@ export default function LogPage({ onOpenRecipe }) {
 
       {range === "day" ? (
         <DayView entries={entries} goalMap={goalMap} day={date} names={state.names} quickItems={quickItems} favSet={favSet}
-          onAdd={openAdd} onQuickAdd={openQuickAdd} onRelogMeal={onRelogMeal} onEditEntry={setEditing} onToggleFav={toggleFav} onOpenRecipe={onOpenRecipe}
+          onAdd={openAdd} onQuickAdd={openQuickAdd} onRelogMeal={onRelogMeal} onLongPressMeal={(item) => setMealSheet({ item })} onEditEntry={setEditing} onToggleFav={toggleFav} onOpenRecipe={onOpenRecipe}
           onOpenGoals={() => setGoalOpen(true)} onSaveMeal={onSaveMeal} />
       ) : (
         <WeekMonthView daily={daily} days={step} end={date} goalMap={goalMap} today={state.today} onDrillDay={(ymd) => { setRange("day"); setDate(ymd); }} />
@@ -178,6 +181,12 @@ export default function LogPage({ onOpenRecipe }) {
         <EstimateMealPanel defaultSlot={estimate.slot}
           onLog={(snap, slot, label) => { setEstimate(null); fw.addEntry({ entry_date: date, meal_slot: slot, food_item_id: null, recipe_id: null, amount: 1, unit: "serving", kcal: snap.kcal, protein: snap.protein, carbs: snap.carbs, fat: snap.fat, fibre: null, sugar: null, sodium: null, entry_source: "manual", is_estimated: true, entry_label: label || null, is_alcohol: false }); }}
           onClose={() => setEstimate(null)} />
+      )}
+      {mealSheet && (
+        <LogMealSheet perServing={mealSheet.item.perServing} unestimatedCount={0}
+          defaultSlot={slotForHour(Math.floor(amsClockMinutes(state.now) / 60))}
+          onLog={(servings, slot) => { onRelogMeal(mealSheet.item, servings, slot); setMealSheet(null); }}
+          onClose={() => setMealSheet(null)} />
       )}
       {editing && (
         <EditEntryPanel entry={editing} name={nameFor(editing)} onApply={(patch) => { fw.editEntry(editing.id, patch); setEditing(null); }}

@@ -11,7 +11,7 @@ import SaveAsMealPanel from "./SaveAsMealPanel";
 // micros → quick-add (OR, in save-as-meal mode, the builder). RIGHT column: "+ Log food" (P2 finder)
 // + "Save a meal" toggle → the ledger. Save-as-meal (P5, Feature A) is a local multi-select over
 // today's FOOD entries → onSaveMeal (the caller writes a stepless recipe); it does NOT log.
-export default function DayView({ entries, goalMap, day, names, quickItems, favSet, onAdd, onQuickAdd, onRelogMeal, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals, onSaveMeal }) {
+export default function DayView({ entries, goalMap, day, names, quickItems, favSet, onAdd, onQuickAdd, onRelogMeal, onLongPressMeal, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals, onSaveMeal }) {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
 
@@ -48,7 +48,7 @@ export default function DayView({ entries, goalMap, day, names, quickItems, favS
         {selectMode ? (
           <SaveAsMealPanel entries={selectedEntries} onSave={save} onCancel={exitSelect} />
         ) : (
-          <QuickAddStrip items={quickItems} onPickMeal={onRelogMeal} onPickFood={onQuickAdd} />
+          <QuickAddStrip items={quickItems} onPickMeal={onRelogMeal} onLongPressMeal={onLongPressMeal} onPickFood={onQuickAdd} />
         )}
       </aside>
 
