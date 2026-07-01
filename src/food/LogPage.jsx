@@ -9,7 +9,8 @@ import { cacheFoodOnLog, insertManualFood, setFavourite } from "./foodWrite";
 import { useFoodWrites } from "./useFoodWrites";
 import DayView from "./DayView";
 import FoodRange from "./FoodRange";
-import AddFoodModal from "./AddFoodModal";
+import Finder from "./finder/Finder";
+import { loggerFinderConfig } from "./finder/finderConfig";
 import EditEntryPanel from "./EditEntryPanel";
 import NutritionGoalsEditor from "./NutritionGoalsEditor";
 import Popover from "../kit/Popover";
@@ -142,7 +143,8 @@ export default function LogPage({ onOpenRecipe }) {
       )}
 
       {addModal && (
-        <AddFoodModal defaultSlot={addModal.slot} presetFood={addModal.preset} title={addModal.title} onLog={onLog} onClose={() => setAddModal(null)} />
+        <Finder finderConfig={loggerFinderConfig} defaultSlot={addModal.slot} presetFood={addModal.preset} title={addModal.title}
+          onResolve={(food, d) => onLog(food, d.amount, d.unit, d.slot)} onClose={() => setAddModal(null)} />
       )}
       {editing && (
         <EditEntryPanel entry={editing} name={nameFor(editing)} onApply={(patch) => { fw.editEntry(editing.id, patch); setEditing(null); }}
