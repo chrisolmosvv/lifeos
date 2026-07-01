@@ -194,35 +194,13 @@ export function calorieArc(kcal, goalKcal) {
   };
 }
 
-// ── recentsFrom (the quick-add layer) ────────────────────────────────────────
-// The most-recently-logged DISTINCT foods, newest first — derived from the log (no recents
-// table). Returns food_item_ids in recency order; the caller maps them to food_items rows.
-// Entries with no food_item_id (legacy/manual-less) are skipped. `limit` caps the list.
-export function recentsFrom(entries, limit = 12) {
-  const seen = new Set();
-  const out = [];
-  const byNewest = [...(entries || [])].sort((a, b) =>
-    (a.created_at || "") < (b.created_at || "") ? 1 : (a.created_at || "") > (b.created_at || "") ? -1 : 0,
-  );
-  for (const e of byNewest) {
-    const id = e?.food_item_id;
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    out.push(id);
-    if (out.length >= limit) break;
-  }
-  return out;
-}
-
 // ── recentMealsFrom (V2 P0) ───────────────────────────────────────────────────
-// The most-recently-COOKED distinct MEALS (recipe_id), newest first — the new quick-add
-// "Log again" source. Mirrors recentsFrom, but for cooked recipes instead of single foods:
-// ONLY entry_source==='recipe_cook' entries count (a single-food entry — food_item_id set,
-// recipe_id null — is skipped). Distinct by recipe_id (a recipe cooked several times appears
-// once, at its most recent). `limit` caps the list. → recipe_ids in recency order; the caller
-// maps them to recipes rows.
-// ADDED ALONGSIDE recentsFrom (single foods) — recentsFrom is left untouched; the quick-add
-// consumer cuts over at P5.
+// The most-recently-COOKED distinct MEALS (recipe_id), newest first — the quick-add "Log again"
+// source (V2 P5). ONLY entry_source==='recipe_cook' entries count (a single-food entry —
+// food_item_id set, recipe_id null — is skipped). Distinct by recipe_id (a recipe cooked several
+// times appears once, at its most recent). `limit` caps the list. → recipe_ids in recency order.
+// (Succeeded recentsFrom, the P0 foods-only quick-add source, which was prove-dead deleted at P5
+// once quick-add flipped to meals + favourites.)
 export function recentMealsFrom(entries, limit = 12) {
   const seen = new Set();
   const out = [];
