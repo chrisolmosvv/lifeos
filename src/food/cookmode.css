@@ -180,3 +180,8 @@
   transition: stroke-dashoffset 1s linear;
 }
 .cm-ring.is-done .cm-ring-arc { stroke: var(--ink-muted); }
+
+/* V2 P7 (a) — tickable ingredient in cook mode (folds into the persisted session). */
+.cm-ing-tick { background: none; border: none; color: var(--ink); font-family: inherit; font-size: inherit; cursor: pointer; text-align: left; padding: 2px 0; }
+.cm-ing-tick.is-on { color: var(--ink-muted); text-decoration: line-through; }
+.cm-tick-box { color: var(--ink-muted); margin-right: 4px; }

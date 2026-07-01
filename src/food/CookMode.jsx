@@ -1,31 +1,35 @@
 import { useEffect, useState } from "react";
 import { parseDuration, fmtClock } from "./cookTimers";
 import { useWakeLock } from "./useWakeLock";
+import { useCookSession } from "./useCookSession";
 import "./cookmode.css";
 
-// CookMode — cooking mode is a REFLOW (a toggle, not a route): bigger steps, ingredients
-// collapsed but reachable, timers active. Step timers auto-detected from the step text (lower-end
-// on ranges) + a FREE MANUAL timer; all run CONCURRENTLY in a floating summary. Tap a step to mark
-// it done (struck). Wake Lock keeps the screen on (graceful fallback note if unsupported). Cook
-// progress is EPHEMERAL — it lives in this component's state and resets on exit/reload (no DB).
+// CookMode — cooking mode (a REFLOW). V2 P7 (a): cook progress now PERSISTS via cook_session (resume-a-
+// cook) — struck steps, ticked ingredients, and running timers survive exit/reload. Timers store an
+// ABSOLUTE END timestamp, so a countdown resumes from where it really is (not reset). Step timers are
+// parsed from the step text (lower-end on ranges) + a free manual timer, all concurrent. Wake Lock
+// keeps the screen on. (This is the interim surface proving persistence; the kanban marquee/layout is
+// P7 (c)(d) on the SAME useCookSession hook.)
 export default function CookMode({ recipe, steps, ingredients, onExit }) {
-  const [done, setDone] = useState({}); // step index → true
-  const [timers, setTimers] = useState([]); // { id, label, total, remaining, running }
+  const { state, ready, update } = useCookSession(recipe.id);
   const [showIngredients, setShowIngredients] = useState(false);
   const [manualMin, setManualMin] = useState("5");
+  const [now, setNow] = useState(Date.now());
   const wake = useWakeLock(true);
 
-  // One ticker drives every running timer (concurrent).
-  useEffect(() => {
-    const id = setInterval(() => {
-      setTimers((ts) => ts.map((t) => (t.running && t.remaining > 0 ? { ...t, remaining: t.remaining - 1 } : t)));
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
+  // One ticker re-renders every second; remaining is computed from each timer's absolute end.
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
 
-  const addTimer = (label, secs) => setTimers((ts) => [...ts, { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, label, total: secs, remaining: secs, running: true }]);
-  const dismiss = (id) => setTimers((ts) => ts.filter((t) => t.id !== id));
-  const running = timers.filter((t) => t.remaining > 0);
+  if (!ready) return <div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Resuming your cook…</span></div>;
+
+  const isStruck = (i) => state.struck.includes(i);
+  const toggleStep = (i) => update({ struck: isStruck(i) ? state.struck.filter((x) => x !== i) : [...state.struck, i] });
+  const isTicked = (i) => state.ticked.includes(i);
+  const toggleTick = (i) => update({ ticked: isTicked(i) ? state.ticked.filter((x) => x !== i) : [...state.ticked, i] });
+  const remainingOf = (t) => Math.max(0, Math.round((t.end - now) / 1000));
+  const running = state.timers.filter((t) => remainingOf(t) > 0);
+  const addTimer = (label, secs) => update({ timers: [...state.timers, { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, label, total: secs, end: Date.now() + secs * 1000 }] });
+  const dismiss = (id) => update({ timers: state.timers.filter((t) => t.id !== id) });
 
   return (
     <div className="cm">
@@ -44,7 +48,11 @@ export default function CookMode({ recipe, steps, ingredients, onExit }) {
       {showIngredients && (
         <ul className="cm-ings">
           {(ingredients || []).map((ing, i) => (
-            <li key={i}>{ing.raw_text || "ingredient"}</li>
+            <li key={i}>
+              <button type="button" className={isTicked(i) ? "cm-ing-tick is-on" : "cm-ing-tick"} onClick={() => toggleTick(i)}>
+                <span className="cm-tick-box">{isTicked(i) ? "☑" : "☐"}</span> {ing.raw_text || "ingredient"}
+              </button>
+            </li>
           ))}
         </ul>
       )}
@@ -53,15 +61,13 @@ export default function CookMode({ recipe, steps, ingredients, onExit }) {
         {steps.map((s, i) => {
           const secs = parseDuration(s.text);
           return (
-            <li key={i} className={done[i] ? "cm-step is-done" : "cm-step"}>
-              <button type="button" className="cm-step-text" onClick={() => setDone((d) => ({ ...d, [i]: !d[i] }))}>
+            <li key={i} className={isStruck(i) ? "cm-step is-done" : "cm-step"}>
+              <button type="button" className="cm-step-text" onClick={() => toggleStep(i)}>
                 <span className="cm-step-n">{i + 1}</span>
                 <span>{s.text}</span>
               </button>
               {secs != null && (
-                <button type="button" className="cm-step-timer" onClick={() => addTimer(`Step ${i + 1}`, secs)}>
-                  ⏱ {fmtClock(secs)}
-                </button>
+                <button type="button" className="cm-step-timer" onClick={() => addTimer(`Step ${i + 1}`, secs)}>⏱ {fmtClock(secs)}</button>
               )}
             </li>
           );
@@ -78,9 +84,9 @@ export default function CookMode({ recipe, steps, ingredients, onExit }) {
         <div className="cm-summary">
           {running.map((t) => (
             <div key={t.id} className="cm-timer">
-              <TimerRing remaining={t.remaining} total={t.total} />
+              <TimerRing remaining={remainingOf(t)} total={t.total} />
               <span className="cm-timer-label">{t.label}</span>
-              <span className="cm-timer-clock">{fmtClock(t.remaining)}</span>
+              <span className="cm-timer-clock">{fmtClock(remainingOf(t))}</span>
               <button type="button" className="cm-timer-x" aria-label="Dismiss" onClick={() => dismiss(t.id)}>×</button>
             </div>
           ))}
