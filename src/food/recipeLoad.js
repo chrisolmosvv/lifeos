@@ -21,7 +21,7 @@ async function fetchAll(table, columns, apply = (q) => q) {
 // The recipe library (newest first) — title/servings/times for the cards. The per-serving macros
 // for a card need its ingredients; the card fetches those lazily (or the grid resolves on open).
 export function fetchRecipeList() {
-  return fetchAll("recipes", "id,title,servings,prep_minutes,cook_minutes,last_cooked_at,created_at,updated_at", (q) =>
+  return fetchAll("recipes", "id,title,servings,prep_minutes,cook_minutes,last_cooked_at,is_favourite,created_at,updated_at", (q) =>
     q.order("created_at", { ascending: false }),
   );
 }
