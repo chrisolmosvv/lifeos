@@ -33,6 +33,28 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Shared header — weather removed, Year/Day moved right. SRC/ ONLY.
+WHAT CHANGED:
+- Removed the top-right city/temp/weather block from the shared logged-in header.
+  The centre is now just the LifeOS wordmark; the top right now shows two lines:
+  `Year XX` and `Day XX`.
+- Moved the nav band upward by tightening the masthead spacing, and removed the
+  now-unused weather fetch helper.
+- Tightened the phone header nav and added a tiny Food phone fit rule so Food's
+  macro labels do not push the page sideways after the header check.
+FILES TOUCHED: `EditionHeader.jsx`, `editionHeader.css`, deleted `useWeather.js`,
+  `LogPage.jsx`, new `foodLogResponsive.css`, plus roadmap/decisions/handoff docs.
+HOW TO VERIFY: open the app and check Today, Calendar, Health, Food, Settings, and
+  Planning. The top right should read `Year 24` / `Day 94` on 2026-07-01, with no
+  city, temperature, or condition. The nav line should sit higher and the pages
+  below should have more vertical space. Build passes; browser checks at desktop
+  and 390px phone width had no fresh errors and no horizontal overflow.
+KNOWN GAPS / RISKS: none known. The removed weather helper was only used by the
+  header.
+NEXT: return to the current Health V2 P5 / chosen next track.
+FOR THE CHECKER: verify the shared header on all top-level pages and confirm the
+  deleted weather helper has no remaining import.
+
 ### 2026-07-01 — Planning — blank page on Planning button fixed. SRC/ ONLY.
 WHAT CHANGED:
 - Found the crash in the live browser: Planning opened blank because `TodayTaskRow`

@@ -8,6 +8,15 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-01 — Shared header compacted
+The shared masthead no longer shows live city/weather in the top right. The
+right side now carries the personal edition mark as two lines (`Year XX` /
+`Day XX`), the LifeOS wordmark stands alone in the centre, and the nav band
+sits higher to give the app below more height. Also added a tiny Food phone
+fit rule so the macro labels do not create horizontal overflow. Build passes;
+Today, Calendar, Health, Food, Settings, and Planning were checked at desktop
+and phone width with no fresh browser errors or horizontal overflow.
+
 ## Session note — 2026-07-01 — Planning blank-page repair
 Planning's entry from Today was opening a blank page because the shared task row
 expected the category lookup map used for shaded colours, but Planning time/category
@@ -323,9 +332,11 @@ it rather than dig (see the Piece-1c decision).
   header** + the **Today** screen to match `today-mockup.html`. Masthead → 3 columns: a live
   `HH:MM Weekday` / `D Month YYYY` dateline (left, replaces the big clock), the LifeOS wordmark +
   `YEAR {age} · DAY {n}` from birthday 29 Mar 2002 (centre; topline + tagline dropped), and
-  **live** city-over-weather (right). City + weather are pulled for real — free, no-key, HTTPS:
-  **ipapi.co** (city/coords) + **Open-Meteo** (temp + condition), sealed in `src/useWeather.js`;
-  the personal-edition + dateline maths are pure (no network) in `src/personalEdition.js`. Nav →
+  **live** city-over-weather (right). **Superseded 2026-07-01:** the live weather slot was removed;
+  the right side now shows the two-line Year/Day mark and `src/useWeather.js` is gone. Originally,
+  city + weather were pulled for real — free, no-key, HTTPS: **ipapi.co** (city/coords) +
+  **Open-Meteo** (temp + condition). The personal-edition + dateline maths are pure (no network)
+  in `src/personalEdition.js`. Nav →
   centred small-caps, ruled top+bottom, terracotta on the active item (Settings subtitle dropped).
   Today body → full-width (56px side frame); the `‹ ›` arrows pinned as **one fixed cluster** left
   of the day title. Colophon footer deleted. **Shared header changes show on Calendar + Settings

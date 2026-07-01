@@ -15,6 +15,7 @@ import NutritionGoalsEditor from "./NutritionGoalsEditor";
 import Popover from "../kit/Popover";
 import Toast from "../kit/Toast";
 import "./foodLog.css";
+import "./foodLogResponsive.css";
 
 const START = "2026-01-01";
 const RANGES = [{ id: "day", label: "Day" }, { id: "week", label: "Week" }, { id: "month", label: "Month" }];

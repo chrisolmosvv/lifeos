@@ -9,6 +9,24 @@
 
 ---
 
+## Shared masthead — weather retired; personal edition moves right (2026-07-01)
+
+- **[No live weather/location in the top-right header.]** The shared logged-in
+  masthead now keeps only local date math: left dateline, centre LifeOS wordmark,
+  right `Year XX` / `Day XX`. The old city/temp/condition widget and its fetch
+  helper were removed. **Why:** the owner wanted the header calmer and the app
+  below to gain vertical room; removing weather also removes a network/location
+  dependency from every screen. **Trade-off:** no at-a-glance weather in LifeOS.
+- **[The personal edition mark is now two-line, not under the wordmark.]** The
+  centre nameplate is just `LifeOS`; the personal year/day sits as a compact
+  right-side mark. **Why:** balances the dateline visually and lets the nav rule
+  move up. **Trade-off:** the edition mark is less central than before.
+- **[Phone nav gets its own tighter fit rule.]** At small widths the five top
+  nav items use `space-between` with smaller tracking, so the shared header
+  does not create sideways scroll. **Why:** the header is global; a global
+  polish must be clean on phone too. **Trade-off:** the phone nav is a little
+  denser than desktop.
+
 ## Calendar V2 — motion-led upgrade, COMPLETE (2026-06-30)
 
 > Full as-built contract: `calendar-v2-spec.md` (§18 has the swipe arc). 8 pieces, each its own
@@ -1509,6 +1527,10 @@ Direction-aware goal engine handles down / up / by_time.
   the destination composition without anything faked.
 
 ## Phase 7 — Today desktop re-skin: masthead, nav, full-width, live weather (DESK-1, 2026-06-23)
+
+> Superseded 2026-07-01 for the weather part only: the top-right live weather/location was removed,
+> `src/useWeather.js` was deleted, and the right side now carries the two-line `Year XX` / `Day XX`
+> mark. The historical DESK-1 record below explains the original choice.
 
 - **[Masthead = 3 columns; the big clock becomes a small dateline]** — Left: a live two-line
   dateline (`HH:MM` 24-hour + weekday / `D Month YYYY`). Centre: the blackletter "LifeOS"

@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react'
 import Masthead from './kit/Masthead'
 import { mastTime, mastWeekday, mastDate, personalEdition } from './personalEdition'
-import { useWeather } from './useWeather'
 import './editionHeader.css'
 
 // The edition header — the personal-broadsheet top frame, shared by every
-// logged-in screen (Today / Calendar / Settings). Three columns over a centred,
+// logged-in screen (Today / Calendar / Health / Food / Settings). Three columns over a centred,
 // ruled nav band:
 //   left   — a live two-line dateline: "HH:MM Weekday" / "D Month YYYY"
-//   centre — the blackletter "LifeOS" wordmark + "YEAR {age} · DAY {n}"
-//   right  — the current city over its weather (temp + short condition)
-// The dateline + edition line are pure date math (no network); the city + weather
-// come from useWeather (its own sealed fetch). NOTHING here reads/writes app data.
+//   centre — the blackletter "LifeOS" wordmark
+//   right  — the personal edition mark: "Year {age}" / "Day {n}"
+// The dateline + edition mark are pure date math (no network, no app data).
 // `view`/`onNavigate` drive which screen shows — nav behaviour is unchanged.
 
 const NAV = [
@@ -31,7 +29,6 @@ export default function EditionHeader({ view, onNavigate }) {
   }, [])
 
   const { age, day } = personalEdition(now)
-  const wx = useWeather()
 
   return (
     <header className="masthead">
@@ -46,22 +43,11 @@ export default function EditionHeader({ view, onNavigate }) {
 
         <div className="mast-center">
           <Masthead />
-          <div className="mast-edition">
-            YEAR {age} · DAY {day}
-          </div>
         </div>
 
-        <div className="mast-weather">
-          {!wx.loading && !wx.error && (
-            <>
-              <div className="mast-city">{wx.city}</div>
-              <div className="mast-temp tnum">{wx.temp}°</div>
-              <div className="mast-cond">
-                <span className={wx.sunny ? 'mast-dot mast-dot--sun' : 'mast-dot'} />
-                {wx.condition}
-              </div>
-            </>
-          )}
+        <div className="mast-edition-mark" aria-label={`Year ${age}, day ${day}`}>
+          <div>Year <span className="tnum">{age}</span></div>
+          <div>Day <span className="tnum">{day}</span></div>
         </div>
       </div>
 
