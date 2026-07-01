@@ -9,7 +9,7 @@ import { cacheFoodOnLog, insertManualFood, setFavourite } from "./foodWrite";
 import { useFoodWrites } from "./useFoodWrites";
 import LoggerMasthead from "./LoggerMasthead";
 import DayView from "./DayView";
-import FoodRange from "./FoodRange";
+import WeekMonthView from "./WeekMonthView";
 import Finder from "./finder/Finder";
 import { loggerFinderConfig } from "./finder/finderConfig";
 import EditEntryPanel from "./EditEntryPanel";
@@ -131,7 +131,7 @@ export default function LogPage({ onOpenRecipe }) {
           onAdd={openAdd} onQuickAdd={openQuickAdd} onEditEntry={setEditing} onToggleFav={toggleFav} onOpenRecipe={onOpenRecipe}
           onOpenGoals={(el) => { goalAnchor.current = el; setGoalOpen(true); }} />
       ) : (
-        <FoodRange daily={daily} days={step} end={date} goalMap={goalMap} onDrillDay={(ymd) => { setRange("day"); setDate(ymd); }} />
+        <WeekMonthView daily={daily} days={step} end={date} goalMap={goalMap} today={state.today} onDrillDay={(ymd) => { setRange("day"); setDate(ymd); }} />
       )}
 
       {addModal && (
