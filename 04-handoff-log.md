@@ -33,6 +33,52 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P4: the logger READ side rebuild. SRC/ ONLY. (Build-verified; owner accepted by proceeding to P5.)
+
+P4 is the biggest VISUAL rebuild, LOW structural risk — pure display over existing/proven getters
+(dayLedger, calorieArc, macroSplit, vsGoal, rangeTotals, dailyTotals, rangeAdherence all reused; NO
+new getter). The empty/sparse states are first-class (owner's data is near-empty: 1 logged day + 2
+cooks). Body's chart code untouched.
+
+COMMIT CHAIN (all src-only — two-track held):
+- a121f5c — Day: new LoggerMasthead (eyebrow + serif date/range headline + Day/Week/Month switcher +
+  date-nav). DayView → two-column broadsheet (left rail: 270° arc → MacroBar → micros → QuickAddStrip
+  foods-only; right: terracotta "+ Log food" summons the P2 finder → ledger). Drinks-line RENDER
+  dropped (dayLedger alcohol read getter retained). MealLedger rebuilt: always-on P·C·F shorthand,
+  empty slots shown with an invitation, "Meal" tag + ↗ on cooked entries (name from recipes.title, ↗
+  off recipe_id), ★/↗ on hover; the old 4-row cap / "+N more" / tap-expand-to-7 removed in the rewrite.
+- 944b218 — Week/Month: WeekMonthView = SummaryStrip (avg cal·P·C·F + on-target N/total via
+  rangeAdherence) + a 2×2 FoodBarChart grid (daily bars + terracotta dashed goal line + ink avg line +
+  hover; bar = per-day drill). Sparse-safe (fixed axes, goal line always drawn, gap-day = no bar,
+  footnote). Day-proportion vs aggregate-avg split preserved. Food-owned charts.
+- e59f8a8 — prove-dead delete FoodRange + FoodTrend (superseded; reference sweep clean; CalorieArc kept).
+- 1a932c0 — Goals: popover → full-screen editor; calories required + optional P/C/F (blank "—", per-
+  field Clear); ±10% band surfaced (diagram + "on target within ±10% — lo–hi kcal"); Save/Clear via the
+  SHARED S9 path (extended UX only, not forked); kit/Popover untouched (still shared).
+- d80f35e — Edit: modal → full-screen; amount + slot + swap + remove + the FULL 7-number breakdown
+  (moved off the ledger row). Rescales the STORED snapshot via entryToFood + entryMacros; cooked-meal
+  variant = servings stepper, swap hidden, rescales the P3 snapshot — NEVER re-reads the live recipe.
+
+VERIFY STATUS: build-verified (all 5 pieces compile + build) and getter/logic-verified; every file
+<250; LogPage slimmed to 155. Owner's visual pass (two-column Day, chart grid, full-screen panels) is
+the layout check — accepted by proceeding to P5. HOW TO VERIFY: empty day reads READY (arc "0 of
+2,500", slot invitations, "+ Log food"); no-goals calm; Week/Month with 1–2 days reads "not much
+logged yet"; Day 06-29 (~565 of 2,500) + Day 07-01 (2 cooks, "Meal" tag + ↗); log/goals/edit work +
+persist; the sacred check holds; Body/Sleep untouched.
+
+CARRY-FORWARDS (status):
+- QuickAddStrip is FOODS-ONLY at P4 (recentsFrom) — the interim state; meals-in-quick-add
+  (recentMealsFrom) flips at P5 (needs the bridge write path).
+- The logger WRITE surfaces the finder feeds — save-as-meal, estimate-a-meal (Feature B), meals-in-
+  quick-add, the manual-hatch split — are ALL P5. P4 drew the read side + Goals + Edit only.
+- Dead CSS after the rebuild (flog-header, flog-secondary, flog-empty, flog-add-primary) → P9 sweep
+  (harmless).
+
+NEXT: P5 — the logger WRITE side (save-as-meal, estimate-a-meal + 2nd Gemini touch with AI-off
+fallback, meals-in-quick-add, manual-hatch split), wiring the P0/P2/P3 primitives.
+
+---
+
 ### 2026-07-01 — Track F — Food V2 P3: logSnapshot + last_cooked_at stored→computed. SRC/ ONLY. (Entry-gate cleared on real cook history; verified on Mac.)
 
 P3 consolidates the cook→log write into ONE primitive and converts "last cooked" from a stored stamp
