@@ -1,0 +1,9 @@
+{
+  "recipes": [
+    { "id": "78916309-93f7-4801-a18f-e77e8c596b96", "title": "apple raw", "last_cooked_at": null, "ingredient_count": 1, "step_count": 0 },
+    { "id": "6e0b6334-bd94-4f6b-8d7e-478648e124fb", "title": "Air Fryer Chicken Breasts", "last_cooked_at": null, "ingredient_count": 12, "step_count": 9 },
+    { "id": "de1a7da4-89c5-4d92-b82b-cf9e319c43bb", "title": "Blackened Chicken and Street Corn Bowls", "last_cooked_at": null, "ingredient_count": 9, "step_count": 9 },
+    { "id": "28a9749b-4797-4dc6-a89c-b4dfcfa26ed2", "title": "Scrumptious strawberry pavlova", "last_cooked_at": null, "ingredient_count": 10, "step_count": 5 }
+  ],
+  "entries": []
+}

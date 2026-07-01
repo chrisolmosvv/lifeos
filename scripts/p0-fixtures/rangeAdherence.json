@@ -1,0 +1,17 @@
+{
+  "window": { "start": "2026-06-28", "end": "2026-07-04", "today": "2026-07-01" },
+  "goals": [
+    { "goal_type": "calories", "target_value": 2500, "unit": "kcal", "direction": null, "set_at": "2026-06-29T09:38:34.6Z", "active": true },
+    { "goal_type": "carbs", "target_value": 100, "unit": "g", "direction": null, "set_at": "2026-06-29T09:38:34.58Z", "active": true },
+    { "goal_type": "protein", "target_value": 120, "unit": "g", "direction": null, "set_at": "2026-06-29T09:38:34.57Z", "active": true },
+    { "goal_type": "fat", "target_value": 100, "unit": "g", "direction": null, "set_at": "2026-06-29T09:38:34.57Z", "active": true }
+  ],
+  "entries": [
+    { "entry_date": "2026-06-29", "kcal": 116.8, "protein": 15.92, "carbs": 6.304, "fat": 3.072, "fibre": 0, "sugar": 5.696, "sodium": 54.4 },
+    { "entry_date": "2026-06-29", "kcal": 151.6, "protein": 5.26, "carbs": 27.08, "fat": 2.608, "fibre": 4.04, "sugar": 0.396, "sodium": 2.4 },
+    { "entry_date": "2026-06-29", "kcal": 22.2, "protein": 0.252, "carbs": 3.3, "fat": 0.9, "fibre": 0.12, "sugar": 0.78, "sodium": 14.4 },
+    { "entry_date": "2026-06-29", "kcal": 109.5, "protein": 20.4, "carbs": 3.6, "fat": 1.5, "fibre": null, "sugar": 1.5, "sodium": 72 },
+    { "entry_date": "2026-06-29", "kcal": 0, "protein": 0, "carbs": 0, "fat": 0, "fibre": 0, "sugar": 0, "sodium": 0 },
+    { "entry_date": "2026-06-29", "kcal": 165, "protein": 0, "carbs": 18, "fat": 9.75, "fibre": 0.75, "sugar": 16.5, "sodium": 22.5 }
+  ]
+}
