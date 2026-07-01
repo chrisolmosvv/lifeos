@@ -1,60 +1,47 @@
 import { useState } from "react";
 import { logEntry, removeEntry } from "./foodWrite";
-import { stampLastCooked } from "./recipeWrite";
 
-// useCookLog — the F9 cook→log write. It COMPOSES the F6 primitives (logEntry / removeEntry) for the
-// recipe-page context: there's no live ledger array to mutate here (the Log tab refetches and shows
-// the new entry when opened), so "optimistic" lives in the caller's "last cooked" line + this toast.
-// NOT a forked write path — the same DB primitives, plus the small last_cooked_at stamp.
+// useCookLog → logSnapshot (V2 P3): the ONE shared write primitive for every snapshot log — the
+// cook→log bridge (P3) and, at P5, log-a-saved-meal / re-log / the Feature-B estimate. It COMPOSES
+// the F6 primitives (logEntry / removeEntry) into a SINGLE-INSERT write with an optimistic/undo
+// toast. NO fork, NO branches: the caller builds the whole food_log_entries `row` — its 7-macro
+// snapshot ALREADY FROZEN at build time (the sacred snapshot-not-live contract) — and this primitive
+// just inserts it. It NEVER reads a live recipe, so editing a recipe later cannot touch logged history.
 //
-// ALL-OR-NOTHING ordering: write the ENTRY first; if it fails → revert, last_cooked_at never touched.
-// Then stamp last_cooked_at; if THAT fails after the entry wrote → delete the entry too. Net of any
-// failure: no entry, timestamp unchanged.
+// last_cooked_at is now COMPUTE-ON-READ (lastCookedFor), so there is NO stamp and NO follow-up write:
+// the V1 all-or-nothing entry-then-stamp ordering and the undo-restore-prior-stamp logic are GONE.
+// Undo is simply "remove the entry".
 //
-// THE UNDO RULE: the caller captures the recipe's PRIOR last_cooked_at and passes it in; undo deletes
-// the entry AND writes the prior value back (the earlier real date — or null only if this was the
-// recipe's first-ever cook). onRevert(ts) puts the caller's live "last cooked" line back.
-//
-// logCook(row, { recipeId, prior, now, onRevert }):
-//   row     — the food_log_entries row (frozen snapshot + recipe_id + entry_source='recipe_cook' +
-//             amount=servings + unit='serving' + food_item_id null), already minus last_cooked_at.
-//   prior   — recipe.last_cooked_at BEFORE this log (for undo/failure restore).
-//   now     — the ISO instant to stamp (the same value the caller optimistically showed).
-//   onRevert(ts) — restore the caller's "last cooked" display to ts.
+// logSnapshot(row, { onRevert }):
+//   row        — the fully-formed food_log_entries row (frozen snapshot + entry_source + recipe_id? +
+//                is_estimated? + amount + unit + food_item_id null). Nothing here recomputes it.
+//   onRevert() — restore the caller's optimistic UI on failure OR undo (e.g. drop the just-added
+//                entry from a local list so a computed "last cooked" reverts).
 export function useCookLog() {
   const [toast, setToast] = useState(null); // { text, undo? } | null
   const dismiss = () => setToast(null);
 
-  async function logCook(row, { recipeId, prior, now, onRevert }) {
+  async function logSnapshot(row, { onRevert } = {}) {
     let saved;
     try {
       saved = await logEntry(row);
     } catch {
-      onRevert?.(prior); // the entry never wrote — last_cooked_at untouched
+      onRevert?.(); // the entry never wrote — restore the optimistic UI
       setToast({ text: "Couldn’t log — try again." });
       return;
     }
-    try {
-      await stampLastCooked(recipeId, now);
-    } catch {
-      try { await removeEntry(saved.id); } catch { /* reload reveals the truth */ }
-      onRevert?.(prior); // rolled the entry back — no entry, timestamp unchanged
-      setToast({ text: "Couldn’t log — try again." });
-      return;
-    }
-    setToast({ text: "Logged", undo: () => undo(saved.id, recipeId, prior, onRevert) });
+    setToast({ text: "Logged", undo: () => undo(saved.id, onRevert) });
   }
 
-  async function undo(entryId, recipeId, prior, onRevert) {
-    onRevert?.(prior); // restore the PRIOR last-cooked date (may be null only if it was the first cook)
+  async function undo(entryId, onRevert) {
     setToast(null);
+    onRevert?.(); // revert the caller's optimistic echo (remove the appended entry)
     try {
       await removeEntry(entryId);
-      await stampLastCooked(recipeId, prior); // write the earlier real date back, NOT null
     } catch {
       /* reload reveals the truth */
     }
   }
 
-  return { toast, dismiss, logCook };
+  return { toast, dismiss, logSnapshot };
 }

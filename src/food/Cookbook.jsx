@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchCookbook } from "./recipeLoad";
+import { lastCookedFor } from "./recipeCalc";
 import { useRecipeWrites } from "./useRecipeWrites";
 import RecipeCard from "./RecipeCard";
 import RecipePage from "./RecipePage";
@@ -42,24 +43,36 @@ export default function Cookbook({ openRecipeId, onConsumeOpen }) {
   // Returning to the grid: if a cook was logged while away, re-read so the cooked sort + dates are current.
   const backToGrid = () => { setView({ kind: "grid" }); if (dirty) { setDirty(false); load(); } };
 
+  // "Last cooked" is now COMPUTE-ON-READ (V2 P3): lastCookedFor = MAX(entry_date) over the recipe's
+  // recipe_cook entries, GATED on recipeKind==='recipe' (a stepless meal → null, never "cooked").
+  // recipeKind needs ingredient + step counts, so we build a minimal recipe from the loaded data.
+  const lastCookedMap = useMemo(() => {
+    const m = {};
+    for (const r of data.recipes) {
+      const kindRecipe = { id: r.id, ingredients: data.ingredientsByRecipe[r.id] || [], steps: Array(data.stepCountByRecipe?.[r.id] || 0) };
+      m[r.id] = lastCookedFor(kindRecipe, data.cookEntries || []);
+    }
+    return m;
+  }, [data]);
+
   const sorted = useMemo(() => {
     const rs = [...data.recipes];
     if (sort === "az") rs.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
     else if (sort === "cooked") {
-      // Cooked recipes by last_cooked_at desc; never-cooked AFTER them in added order (the fetch
-      // order — created_at desc). No dead-end: never-cooked are kept + faintly tagged on the card.
-      const ts = (r) => (r.last_cooked_at ? Date.parse(r.last_cooked_at) : null);
+      // Cooked recipes by computed last-cooked day (lexical, newest first); never-cooked AFTER them
+      // in added order. No dead-end: never-cooked are kept + faintly tagged on the card.
+      const d = (r) => lastCookedMap[r.id]; // 'YYYY-MM-DD' | null
       rs.sort((a, b) => {
-        const ta = ts(a), tb = ts(b);
-        if (ta && tb) return tb - ta;
-        if (ta) return -1;
-        if (tb) return 1;
+        const da = d(a), db = d(b);
+        if (da && db) return da < db ? 1 : da > db ? -1 : 0;
+        if (da) return -1;
+        if (db) return 1;
         return 0; // both never-cooked: preserve fetch (added) order
       });
     }
     // "added" = the fetch order (created_at desc).
     return rs;
-  }, [data.recipes, sort]);
+  }, [data.recipes, sort, lastCookedMap]);
 
   const onSave = async (recipe, ingredients, steps) => {
     const res = await rw.save(view.id ?? null, recipe, ingredients, steps);
@@ -132,7 +145,7 @@ export default function Cookbook({ openRecipeId, onConsumeOpen }) {
         <div className="cb-grid">
           {sorted.map((r) => (
             <RecipeCard key={r.id} recipe={r} ingredients={data.ingredientsByRecipe[r.id]} itemsById={data.itemsById}
-              notYetCooked={sort === "cooked" && !r.last_cooked_at} onOpen={() => setView({ kind: "recipe", id: r.id })} />
+              notYetCooked={sort === "cooked" && !lastCookedMap[r.id]} onOpen={() => setView({ kind: "recipe", id: r.id })} />
           ))}
         </div>
       )}

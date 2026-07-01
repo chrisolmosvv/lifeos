@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { amsTodayYMD, amsClockMinutes } from "../gym/gymDates";
 import { fetchRecipe } from "./recipeLoad";
-import { recipeMacros } from "./recipeCalc";
+import { recipeMacros, lastCookedFor } from "./recipeCalc";
 import { entryMacros, slotForHour, NUTRIENTS } from "./foodCalc";
 import { fmtNum, fmtFull } from "./foodFormat";
 import { useCookLog } from "./useCookLog";
@@ -10,8 +10,9 @@ import LogMealPanel from "./LogMealPanel";
 import Toast from "../kit/Toast";
 import "./cookbook.css";
 
-// 28 Jun 2026 — a calm "last cooked" date from a stored timestamp (null → nothing shown).
-const cookedDate = (ts) => (ts ? new Date(ts).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null);
+// A calm "last cooked" date from a computed Amsterdam-day YMD (null → nothing shown). Noon-anchored
+// parse so the label never flips a day across the timezone. (V2 P3 — was a stored timestamp.)
+const cookedDate = (ymd) => (ymd ? new Date(ymd + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null);
 
 // RecipePage — the long-form recipe (scroll is fine here). Breadcrumb (Cookbook ▸ Recipe), the
 // full per-serving macro block, ingredients with their kcal + an unmatched MARK, and a SUBTLE
@@ -27,12 +28,12 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   const [menu, setMenu] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
   const [staging, setStaging] = useState(false);
-  const [lastCookedAt, setLastCookedAt] = useState(null);
+  const [cookEntries, setCookEntries] = useState([]); // this recipe's recipe_cook entries (compute-on-read source)
   const cl = useCookLog();
 
   useEffect(() => {
     let alive = true;
-    fetchRecipe(recipeId).then((r) => { if (alive) { setData(r); setServings(r.recipe.servings || 1); setLastCookedAt(r.recipe.last_cooked_at || null); } }).catch(() => alive && setData({ error: true }));
+    fetchRecipe(recipeId).then((r) => { if (alive) { setData(r); setServings(r.recipe.servings || 1); setCookEntries(r.cookEntries || []); } }).catch(() => alive && setData({ error: true }));
     return () => { alive = false; };
   }, [recipeId]);
 
@@ -44,25 +45,27 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   const macros = recipeMacros(ingredients, base, itemsById); // per-serving = canonical
   const approx = macros.unestimatedCount > 0;
   const scale = servings / base; // view-only rescale of the ingredient list
-  const cookedLabel = cookedDate(lastCookedAt);
+  // "Last cooked" COMPUTE-ON-READ (V2 P3): lastCookedFor = MAX(entry_date) over this recipe's
+  // recipe_cook entries, gated on recipeKind==='recipe' (a stepless meal → null, never "cooked").
+  const cookedLabel = cookedDate(lastCookedFor({ id: recipe.id, ingredients, steps }, cookEntries));
 
   // Cook mode's "Done cooking" exits AND offers to log — it opens the SAME staging panel (one panel,
   // two triggers). offerLog is true only from that button, so a bare exit wouldn't pop the panel.
   if (cooking) return <CookMode recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging(true); }} />;
 
-  // Cook→log: freeze recipeMacros.perServing × servings into the 7-number snapshot, write it as a
-  // food_log_entries row (recipe_id, entry_source='recipe_cook', amount=servings, unit='serving',
-  // food_item_id null), and stamp last_cooked_at = now. We capture the PRIOR date so undo restores
-  // it; the "last cooked" line updates LIVE (and reverts on undo/failure via setLastCookedAt).
+  // Cook→log (V2 P3): FREEZE recipeMacros.perServing × servings into the 7-number snapshot (the
+  // sacred snapshot-not-live line), write it as one food_log_entries row via logSnapshot (recipe_id,
+  // entry_source='recipe_cook', amount=servings, unit='serving', food_item_id null). No stamp —
+  // "last cooked" is computed from cookEntries. We optimistically APPEND a lightweight cook entry so
+  // the computed line updates at once; onRevert drops it on failure/undo. The real row (with its id)
+  // lands on the Log tab's refetch.
   const onLogMeal = (eaten, slot) => {
     setStaging(false);
-    const now = new Date().toISOString();
-    const prior = lastCookedAt;
-    setLastCookedAt(now); // optimistic — the line updates at once
+    const today = amsTodayYMD(Date.now());
     const snap = {};
-    for (const k of NUTRIENTS) snap[k] = (macros.perServing[k] || 0) * eaten;
+    for (const k of NUTRIENTS) snap[k] = (macros.perServing[k] || 0) * eaten; // FROZEN here — never re-read
     const row = {
-      entry_date: amsTodayYMD(Date.now()),
+      entry_date: today,
       meal_slot: slot,
       food_item_id: null,
       recipe_id: recipeId,
@@ -72,7 +75,9 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
       entry_source: "recipe_cook",
       is_alcohol: false,
     };
-    cl.logCook(row, { recipeId, prior, now, onRevert: setLastCookedAt });
+    const optimistic = { recipe_id: recipeId, entry_source: "recipe_cook", entry_date: today };
+    setCookEntries((cur) => [...cur, optimistic]);
+    cl.logSnapshot(row, { onRevert: () => setCookEntries((cur) => cur.filter((e) => e !== optimistic)) });
     onCooked?.(); // tell the cookbook to refresh its grid (the cooked sort) on return
   };
 
