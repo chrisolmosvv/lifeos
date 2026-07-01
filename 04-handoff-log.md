@@ -33,6 +33,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-01 — Track F — Food V2 P2: the CONVERGED FINDER (logger context). SRC/ ONLY. (Verified on local dev — 5 checks pass.)
+
+P2 replaces the logger's add-food UI with ONE converged finder — the keystone component both faces
+mount. Config-injection seam (no if(context) tangle): the consumer passes a finderConfig + onResolve.
+Logger context wired end-to-end; recipe context designed but not mounted.
+
+COMMIT CHAIN (both src-only — two-track held):
+- 5849f0b — BUILD + logger cutover: new src/food/finder/ (Finder shell · FinderResults zones ·
+  FinderRow · FinderAmount · finderConfig · finder.css). Reads P1's FLAT results + additive envelope
+  {top3, dbSuppressed, note}; never reshapes/mutates a record. LogPage swaps AddFoodModal→Finder via a
+  1-line onResolve adapter (the onLog write path untouched). Reuses searchFoods/entryMacros/
+  resolvePortion/ManualForm — nothing forked.
+- a818324 — PROVE-DEAD deletion: AddFoodModal.jsx + AmountStep.jsx retired after the cutover verified.
+  Reference sweep clean (only a lineage comment in Finder.jsx mentions them). ManualForm KEPT (now
+  consumed by Finder); QuickAddStrip stays.
+
+WHAT SHIPPED: search → zoned results (Basics leads · "From the databases" = the AI top-3 · "more →" ·
+"chicken" collapses the DB zone behind "search the databases →") → shared amount step (unit selector,
+100g default, live macros, slot in logger context) → onResolve. Enter-picks-top; ↑/↓ move the highlight.
+Both loggerFinderConfig + recipeFinderConfig exist; only the LOGGER is mounted.
+
+CARRY-FORWARDS (status):
+- RECIPE CONTEXT — DESIGNED, NOT MOUNTED. recipeFinderConfig exists (portions on, no_macros hatch,
+  no slot). Wiring it into RecipeEditor + the prove-dead deletion of IngredientPicker are P6.
+- includeMeals = FALSE (logger). The meals-in-results source (fetchRecipeList by title) + the
+  meal-pick write (via the bridge's logSnapshot, not built until P3) land at P5.
+- MANUAL HATCH: only the plain "+ enter manually" (ManualForm) is wired. The manual-hatch SPLIT
+  ("add a food" reusable vs "estimate this meal" one-off) + the Feature-B estimate panel are P5 —
+  the estimate entry point is NOT exposed yet.
+- isBasic CLIENT PREDICATE: finderConfig.js holds BASICS_PREFIX='basics:' + isBasicCandidate, with a
+  comment that it MIRRORS supabase/functions/food-search/normalize.ts isBasic(). The prefix string is
+  necessarily DUPLICATED (client can't import the Deno function module) — guarded by the change-both
+  comment, per the P2 decision.
+
+CHECKER NOTE: pure UI, NO schema, no checker gate. Both commits src-only — no db//supabase/ rode
+along. Two-track held.
+
+HOW TO VERIFY (owner, DONE on local dev): (b) a logged food PERSISTS through reload (real
+food_log_entries row); recipe IngredientPicker still searches+adds; ManualForm + quick-add work.
+(a) Basics leads on "chicken breast"/"milk"; top-3 + more; "chicken" collapses the DB zone; amount
+step unit selector + 100g default + live macros; Enter-picks-top. App behaves as V1 everywhere P2
+didn't touch.
+
+NEXT: P3 — logSnapshot write-primitive + last_cooked_at stored→computed. STANDING HARD P3 ENTRY-GATE:
+before P3 deletes stampLastCooked / recipes.last_cooked_at, cook-log 1-2 real recipes and RE-RUN the
+lastCookedFor stored-vs-computed match on genuine cook history — it must be clean first.
+
+---
+
 ### 2026-07-01 — Track F — Food V2 P1: food-search reranker + Basics + deterministic fallback. TWO-TRACK (supabase + data). (Deployed live on Frankfurt; gateway verified, app searches confirmed.)
 
 P1 upgrades the food-search Edge Function — the pillar's single highest-coupling surface (one
