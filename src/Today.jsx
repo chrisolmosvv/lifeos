@@ -12,10 +12,12 @@ import { useSwipe } from './kit/useSwipe'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
 import QuickAddInput from './kit/QuickAddInput'
-import TodayTaskRow from './kit/TodayTaskRow'
+import TodayRow from './kit/TodayRow'
 import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
 import { useTodayFocus } from './focus/useTodayFocus'
+import { useFocusSessionCtx } from './focus/focusSessionContext'
+import { requestFocus } from './focus/focusNav'
 import { formatDuration } from './focus/focusFormat'
 import './today.css'
 
@@ -29,6 +31,8 @@ export default function Today({ onOpenPlanning }) {
   const [viewed, setViewed] = useState(() => startOfDay(new Date()))
   const isToday = isSameDay(viewed, realToday)
   const focusToday = useTodayFocus() // seconds focused today (Focus module, P6)
+  const fs = useFocusSessionCtx() // the running-session engine, for the ▶ block-nudge
+  const focusRunning = fs && (fs.status === 'running' || fs.status === 'paused')
 
   const [tasks, setTasks] = useState(null)
   const [cats, setCats] = useState([])
@@ -254,6 +258,25 @@ export default function Today({ onOpenPlanning }) {
     const task = (tasks || []).find((t) => t.id === id)
     if (task) setForm({ kind: 'task', item: task, create: false })
   }
+  // ▶ on a row → the Focus SETUP screen, prefilled with this task + its category
+  // snapshot. Reuses the EXACT trigger the task form uses (requestFocus). Blocked
+  // with the existing gentle nudge while a session runs — no silent switching.
+  const startFocus = (task, cat) => {
+    if (focusRunning) {
+      setToast({ text: "A session's already running — stop it first" })
+      return
+    }
+    requestFocus({
+      mode: 'setup',
+      taskId: task.id,
+      prefill: {
+        task_id: task.id,
+        task_title_snapshot: task.title,
+        category_id: cat ? cat.id : task.category_id ?? null,
+        category_snapshot: cat ? { id: cat.id, name: cat.name, color: cat.color ?? null } : null,
+      },
+    })
+  }
   const openEvent = (id) => {
     const ev = events.find((e) => e.id === id)
     if (ev) setForm({ kind: 'event', item: ev, create: false })
@@ -389,7 +412,7 @@ export default function Today({ onOpenPlanning }) {
                   todayItems.map((t) =>
                     t.parent_task_id ? (
                       // a standalone subtask row (due/scheduled today)
-                      <TodayTaskRow
+                      <TodayRow
                         key={t.id}
                         task={t}
                         cat={dispCat(t)}
@@ -401,12 +424,13 @@ export default function Today({ onOpenPlanning }) {
                         badge={scheduledBadge(t)}
                         busy={busy}
                         onSetStatus={(status) => onUpdate(t.id, { status })}
+                        onPlay={() => startFocus(t, dispCat(t))}
                         onOpen={() => openTask(t.id)}
                         trayBind={grid.trayBind}
                       />
                     ) : (
                       <Fragment key={t.id}>
-                        <TodayTaskRow
+                        <TodayRow
                           task={t}
                           cat={dispCat(t)}
                           catsById={catById}
@@ -418,6 +442,7 @@ export default function Today({ onOpenPlanning }) {
                           expanded={expandedToday.has(t.id)}
                           onToggleExpand={progress(t) ? () => toggleToday(t.id) : undefined}
                           onSetStatus={(status) => onUpdate(t.id, { status })}
+                          onPlay={() => startFocus(t, dispCat(t))}
                           onOpen={() => openTask(t.id)}
                           trayBind={grid.trayBind}
                         />
@@ -425,7 +450,7 @@ export default function Today({ onOpenPlanning }) {
                           (byParent.get(t.id) || [])
                             .filter((s) => !standaloneIds.has(s.id))
                             .map((s) => (
-                              <TodayTaskRow
+                              <TodayRow
                                 key={s.id}
                                 task={s}
                                 cat={dispCat(s)}
@@ -435,6 +460,7 @@ export default function Today({ onOpenPlanning }) {
                                 subLabel={t.title}
                                 busy={busy}
                                 onSetStatus={(status) => onUpdate(s.id, { status })}
+                                onPlay={() => startFocus(s, dispCat(s))}
                                 onOpen={() => openTask(s.id)}
                               />
                             ))}
@@ -454,25 +480,30 @@ export default function Today({ onOpenPlanning }) {
                 ) : (
                   <>
                     {next7.map((t) => (
-                      <TodayTaskRow
+                      <TodayRow
                         key={t.id}
                         task={t}
                         cat={catFor(t)}
                         catsById={catById}
                         inboxColor={inboxColor}
-                        hideDue
+                        busy={busy}
+                        onSetStatus={(status) => onUpdate(t.id, { status })}
+                        onPlay={() => startFocus(t, catFor(t))}
                         onOpen={() => openTask(t.id)}
                         trayBind={grid.trayBind}
                       />
                     ))}
                     {undated.map((t) => (
-                      <TodayTaskRow
+                      <TodayRow
                         key={t.id}
                         task={t}
                         cat={catFor(t)}
                         catsById={catById}
                         inboxColor={inboxColor}
                         badge={{ text: 'undated' }}
+                        busy={busy}
+                        onSetStatus={(status) => onUpdate(t.id, { status })}
+                        onPlay={() => startFocus(t, catFor(t))}
                         onOpen={() => openTask(t.id)}
                         trayBind={grid.trayBind}
                       />
