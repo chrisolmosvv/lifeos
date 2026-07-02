@@ -12,6 +12,23 @@ import { computeLive, reconstructIntervals, sumKind, isSingleFocusBlock, chime }
 // status: 'loading' | 'idle' | 'stale' | 'running' | 'paused' | 'saving'
 const STALE_HOURS = 12; // a running row older than this, or from a past day, is orphaned
 
+// Persist the running row's segments in the background (D2 reload fidelity) — reuses the
+// segments-update path, best-effort: a failed write never blocks the phase switch (the
+// save card still corrects at Stop, as today). The row stays running (ended_at NULL).
+function persistRunning(id, segments) {
+  finalizeSession(id, { segments }).catch(() => {});
+}
+
+// Split a running row's persisted segments (D2) into closed phases + the open phase (the
+// entry with no `end`). null = no persisted split yet (a legacy/empty row → reconstruct).
+function splitPersisted(row) {
+  const raw = Array.isArray(row.segments) ? row.segments : [];
+  if (!raw.length) return null;
+  const closed = raw.filter((s) => s && s.end);
+  const marker = raw.find((s) => s && !s.end);
+  return { closed, open: marker ? { kind: marker.kind, start: marker.start } : { kind: "focus", start: row.started_at } };
+}
+
 export function useFocusSession() {
   const [status, setStatus] = useState("loading");
   const [session, setSession] = useState(null); // the running/finishing row
@@ -35,8 +52,14 @@ export function useFocusSession() {
   const resumeRow = useCallback((row) => {
     setSession(row);
     if (row.mode === "intervals") {
-      const r = reconstructIntervals(new Date(row.started_at).getTime(), row.target_seconds, row.break_seconds, Date.now());
-      setSegments(r.segments); setOpenSeg(r.open);
+      // D2: restore the TRUE hand-set split from the persisted segments; only fall back to
+      // the even reconstruction for a legacy pre-D2 row that has none.
+      const split = splitPersisted(row);
+      if (split) { setSegments(split.closed); setOpenSeg(split.open); }
+      else {
+        const r = reconstructIntervals(new Date(row.started_at).getTime(), row.target_seconds, row.break_seconds, Date.now());
+        setSegments(r.segments); setOpenSeg(r.open);
+      }
     } else {
       setSegments([]); setOpenSeg({ kind: "focus", start: row.started_at });
     }
@@ -90,8 +113,12 @@ export function useFocusSession() {
   // ── Controls ────────────────────────────────────────────────────────────────
   const start = useCallback(async (fields) => {
     const row = await startSession({ ...fields, started_at: new Date().toISOString() });
-    setSession(row); setSegments([]); setOpenSeg({ kind: "focus", start: row.started_at });
+    const open = { kind: "focus", start: row.started_at };
+    setSession(row); setSegments([]); setOpenSeg(open);
     chimedRef.current = false; phaseChimedRef.current = false; setStatus("running");
+    // Mark the open phase on the running row (D2) so a reload restores THIS split, not an
+    // even re-guess. Intervals only; single-block modes stay segments:[].
+    if (row.mode === "intervals") persistRunning(row.id, [{ ...open, end: null }]);
     return row;
   }, []);
 
@@ -102,10 +129,15 @@ export function useFocusSession() {
     if (!openSeg) return;
     const now = new Date().toISOString();
     const next = openSeg.kind === "focus" ? "break" : "focus";
-    setSegments((s) => [...s, { ...openSeg, end: now }]);
-    setOpenSeg({ kind: next, start: now });
+    const closed = [...segments, { ...openSeg, end: now }];
+    const nextOpen = { kind: next, start: now };
+    setSegments(closed);
+    setOpenSeg(nextOpen);
     phaseChimedRef.current = false; // the new phase gets its own target chime
-  }, [openSeg]);
+    // Persist the true split (closed phases + the new open marker) to the running row so a
+    // mid-session reload restores this hand-set boundary. Background / best-effort (D2).
+    if (session?.id) persistRunning(session.id, [...closed, { ...nextOpen, end: null }]);
+  }, [openSeg, segments, session]);
 
   const pause = useCallback(() => {
     if (!openSeg) return;
@@ -159,8 +191,13 @@ export function useFocusSession() {
     const end = Date.now();
     let finalSegs;
     if (row.mode === "intervals") {
-      const r = reconstructIntervals(new Date(row.started_at).getTime(), row.target_seconds, row.break_seconds, end);
-      finalSegs = [...r.segments, { ...r.open, end: new Date(end).toISOString() }];
+      // Prefer the persisted hand-set split (D2); reconstruct only for a legacy row.
+      const split = splitPersisted(row);
+      if (split) finalSegs = [...split.closed, { ...split.open, end: new Date(end).toISOString() }];
+      else {
+        const r = reconstructIntervals(new Date(row.started_at).getTime(), row.target_seconds, row.break_seconds, end);
+        finalSegs = [...r.segments, { ...r.open, end: new Date(end).toISOString() }];
+      }
     } else {
       finalSegs = [{ kind: "focus", start: row.started_at, end: new Date(end).toISOString() }];
     }
