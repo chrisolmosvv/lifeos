@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { useWeekData } from './useWeekData'
+import { fetchSessions } from './focus/focusLoad'
+import { focusSpans } from './focus/focusCalc'
 import { useGridDrag } from './kit/useGridDrag'
 import { useBandDrag } from './kit/useBandDrag'
 import { useSwipe } from './kit/useSwipe'
@@ -19,7 +21,7 @@ import Toast from './kit/Toast'
 // stably mounted (the per-week remount is gone — useWeekData reloads on the week
 // key); so we explicitly clear the open form + toast on a week change, which the
 // remount used to do. No schema; writes via existing paths.
-export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad, navToken, navIntent, onSwipe }) {
+export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad, navToken, navIntent, onSwipe, showActual }) {
   const { events, scheduled, tray, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask, onAddLooseTask } =
     useWeekData(days)
   const [form, setForm] = useState(null) // {kind,item,create}
@@ -35,6 +37,21 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
     setForm(null)
     setToast(null)
   }, [weekKey])
+
+  // Focus actual-layer (P7): fetch this week's focus ONLY when the toggle is on, and
+  // refetch on a week change. Off → empty spans (WeekGrid gets undefined → the grid is
+  // byte-for-byte unchanged). Isolated: nothing else in the week read is touched.
+  const [actualSpans, setActualSpans] = useState([])
+  useEffect(() => {
+    if (!showActual) { setActualSpans([]); return }
+    let live = true
+    const end = new Date(days[6]); end.setDate(end.getDate() + 1)
+    fetchSessions(days[0].toISOString(), end.toISOString())
+      .then((rows) => { if (live) setActualSpans(focusSpans(rows)) })
+      .catch(() => { /* the overlay is optional — never break the calendar over it */ })
+    return () => { live = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showActual, weekKey])
 
   // V2-6: while the tray squeeze animates (~220ms), gate the grid's pointer-events
   // off so a drag can't start/drop while the x→day geometry is mid-transition. The
@@ -185,6 +202,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
           staggerLoad={staggerLoad}
           navToken={navToken}
           navIntent={navIntent}
+          actual={showActual ? actualSpans : undefined}
         />
         {/* V2-6: always mounted (so close animates too); `open` drives the squeeze. */}
         <TrayDrawer

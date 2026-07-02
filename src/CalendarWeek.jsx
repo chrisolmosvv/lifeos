@@ -39,6 +39,16 @@ export default function CalendarWeek() {
   // V2-4: arms the Week↔Month zoom — stays false on the first open (no zoom then).
   const [viewZoom, setViewZoom] = useState(false)
   const requestAdd = useRef(null)
+  // Focus module P7: show/hide the actual-focus overlay. Default OFF (opt-in) and
+  // persisted, so the calendar opens exactly as before until you turn it on.
+  const [showActual, setShowActual] = useState(() => {
+    try { return localStorage.getItem('lifeos.cal.focus') === '1' } catch { return false }
+  })
+  const toggleActual = () => setShowActual((v) => {
+    const n = !v
+    try { localStorage.setItem('lifeos.cal.focus', n ? '1' : '0') } catch { /* private mode */ }
+    return n
+  })
 
   const days = navDays(nav, today)
   const home = isHome(nav)
@@ -98,6 +108,15 @@ export default function CalendarWeek() {
             <button className={'cw-toggle-seg' + (isMonth ? ' is-on' : '')} onClick={toMonth}>Month</button>
           </div>
           <button
+            className={'cw-tool cw-tool-live' + (showActual ? ' is-on' : '')}
+            aria-pressed={showActual}
+            disabled={isMonth}
+            onClick={toggleActual}
+            title="Show the focus time you actually logged"
+          >
+            Focus
+          </button>
+          <button
             className={'cw-tool cw-tool-live' + (trayOpen ? ' is-on' : '')}
             aria-pressed={trayOpen}
             disabled={isMonth}
@@ -137,6 +156,7 @@ export default function CalendarWeek() {
             navToken={navToken}
             navIntent={navIntent}
             onSwipe={swipeWeek}
+            showActual={showActual}
           />
         )}
       </div>

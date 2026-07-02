@@ -38,6 +38,7 @@ export default function WeekGrid({
   staggerLoad = false,
   navToken = 0,
   navIntent = null,
+  actual, // Focus module P7: actual-focus spans [{startMs,endMs}] | undefined (toggle off)
 }) {
   const [now, setNow] = useState(() => new Date())
 
@@ -177,6 +178,7 @@ export default function WeekGrid({
                   blockBind={blockBind}
                   backgroundBind={backgroundBind}
                   appearing={appearing}
+                  actual={actual && actual.filter((sp) => sp.startMs >= ds && sp.startMs < ds + 86400000)}
                 />
               )
             })}

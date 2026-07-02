@@ -27,6 +27,9 @@ export default function WeekColumn({
   blockBind,
   backgroundBind,
   appearing,
+  actual, // Focus module P7: this day's actual-focus spans [{startMs,endMs}] | undefined.
+          // Rendered as a terracotta hatch OVER the planned blocks. Undefined (the
+          // default, toggle off) → nothing renders → this column is byte-for-byte.
 }) {
   // This column's own blocks, adjusted live for a drag: the dragged block leaves
   // its source column and joins whichever column it's currently over, so the
@@ -93,6 +96,15 @@ export default function WeekColumn({
       {isToday && nowH >= 0 && nowH < 24 && (
         <div className="wk-now" style={{ top: nowH * HOUR_HEIGHT }} />
       )}
+
+      {/* Focus actual-layer (P7): a terracotta hatch over the times you actually
+          focused. pointer-events:none → drag/create pass straight through. */}
+      {actual && actual.map((sp, i) => {
+        const top = ((sp.startMs - dayStart) / 3600000) * HOUR_HEIGHT
+        const end = Math.min(sp.endMs, dayStart + 86400000)
+        const height = Math.max(2, ((end - sp.startMs) / 3600000) * HOUR_HEIGHT)
+        return <div key={'actual:' + i} className="wk-actual" style={{ top, height }} aria-hidden="true" />
+      })}
     </div>
   )
 }

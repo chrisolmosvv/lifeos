@@ -151,6 +151,18 @@ export function dayArcs(sessions, ymd) {
   return { focus, rest };
 }
 
+// FOCUS spans as ABSOLUTE-ms {startMs, endMs} across all given sessions — for the
+// Calendar actual-layer, which positions by real time in the week grid (unlike the
+// clock-minute, day-scoped dayArcs). Focus segments only; running + archived skipped.
+export function focusSpans(sessions) {
+  const out = [];
+  for (const s of sessions || []) {
+    if (!s || s.archived_at || isRunning(s)) continue;
+    for (const seg of sessionSegments(s)) if (seg.kind === "focus") out.push({ startMs: seg.start, endMs: seg.end });
+  }
+  return out;
+}
+
 // ── Per-task (the reverse view: row tag + the form's Focus section) ───────────
 // All-time logged FOCUS seconds for one task across all history (running + archived
 // excluded). No subtree roll-up — a task shows only its own focus.

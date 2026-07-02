@@ -266,3 +266,22 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/* Focus module (P7): the actual-focus overlay — a terracotta diagonal hatch drawn
+   over the times you actually focused. pointer-events:none so drag/create pass
+   straight through; z-index 4 sits above planned blocks + the past veil, below the
+   now-line. Only rendered while the Calendar's Focus toggle is on. */
+.wk-actual {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  z-index: 4;
+  pointer-events: none;
+  border-left: 2px solid var(--accent);
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(200, 100, 61, 0.30) 0, rgba(200, 100, 61, 0.30) 3px,
+    transparent 3px, transparent 7px
+  );
+}
