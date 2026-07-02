@@ -15,6 +15,8 @@ import QuickAddInput from './kit/QuickAddInput'
 import TodayTaskRow from './kit/TodayTaskRow'
 import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
+import { useTodayFocus } from './focus/useTodayFocus'
+import { formatDuration } from './focus/focusFormat'
 import './today.css'
 
 // The Today home (Phase 7). T8 adds date arrows: a `viewed` day (defaulting to the
@@ -26,6 +28,7 @@ export default function Today({ onOpenPlanning }) {
   const realToday = new Date()
   const [viewed, setViewed] = useState(() => startOfDay(new Date()))
   const isToday = isSameDay(viewed, realToday)
+  const focusToday = useTodayFocus() // seconds focused today (Focus module, P6)
 
   const [tasks, setTasks] = useState(null)
   const [cats, setCats] = useState([])
@@ -367,6 +370,9 @@ export default function Today({ onOpenPlanning }) {
       </section>
 
       <div className="today-right">
+        {isToday && focusToday > 0 && (
+          <div className="today-focus-line">focused today · {formatDuration(focusToday)}</div>
+        )}
         <QuickAddInput onAdd={quickAdd} busy={busy} />
         {tasks === null ? (
           <p className="today-loading">Loading…</p>
