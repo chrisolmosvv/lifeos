@@ -1,6 +1,7 @@
 import { useState } from "react";
 import LogPage from "./LogPage";
 import Cookbook from "./Cookbook";
+import ResumeCookBanner from "./ResumeCookBanner";
 import "./foodPage.css";
 
 // FoodPage — the Food pillar shell (F4). Food lands on the Log; a Log | Cookbook toggle
@@ -22,10 +23,12 @@ export default function FoodPage() {
   const [tab, setTab] = useState("log"); // 'log' | 'cookbook' — Food lands on the Log
   const [loading] = useState(false); // F5 will drive this during its load; inert in F4
   const [openRecipeId, setOpenRecipeId] = useState(null); // a Log→Cookbook "View recipe" jump (F9)
-  const openRecipe = (id) => { setOpenRecipeId(id); setTab("cookbook"); };
+  const [openCook, setOpenCook] = useState(false); // resume-banner deep-link: open the recipe INTO cook (B)
+  const openRecipe = (id, cook = false) => { setOpenRecipeId(id); setOpenCook(!!cook); setTab("cookbook"); };
 
   return (
     <div className="food-page">
+      <ResumeCookBanner onResume={(id) => openRecipe(id, true)} refreshKey={tab} />
       <div className="food-tabs" role="tablist" aria-label="Food">
         {TABS.map((t) => (
           <button
@@ -52,7 +55,7 @@ export default function FoodPage() {
         </section>
       ) : (
         <section className="food-pane" role="tabpanel" aria-label="Cookbook">
-          <Cookbook openRecipeId={openRecipeId} onConsumeOpen={() => setOpenRecipeId(null)} />
+          <Cookbook openRecipeId={openRecipeId} cookOnOpen={openCook} onConsumeOpen={() => { setOpenRecipeId(null); setOpenCook(false); }} />
         </section>
       )}
     </div>

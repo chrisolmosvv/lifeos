@@ -80,3 +80,10 @@
     transform: rotate(360deg);
   }
 }
+
+/* Session-surfacing B — the resume-cook banner above the Food tabs (calm one line; terracotta cue). */
+.rcb { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; border-bottom: 1px solid var(--rule); padding: 9px 4px; cursor: pointer; text-align: left; font-family: var(--font-sans); }
+.rcb-dot { color: var(--accent); font-size: 0.6rem; }
+.rcb-text { flex: 1; font-size: 0.82rem; color: var(--ink); }
+.rcb-go { color: var(--accent); font-size: 0.82rem; }
+.rcb:hover .rcb-go { text-decoration: underline; }

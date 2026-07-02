@@ -23,7 +23,7 @@ const cookedDate = (ymd) => (ymd ? new Date(ymd + "T12:00:00").toLocaleDateStrin
 const LEAD = [["protein", "Protein"], ["carbs", "Carbs"], ["fat", "Fat"]];
 const MORE = [["fibre", "Fibre"], ["sugar", "Sugar"], ["sodium", "Sodium"]];
 
-export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooked }) {
+export default function RecipePage({ recipeId, cookOnOpen, onBack, onEdit, onDelete, onCooked }) {
   const [data, setData] = useState(null);
   const [servings, setServings] = useState(1);
   const [cooking, setCooking] = useState(false);
@@ -45,6 +45,10 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   }, [recipeId]);
 
   const dismissDone = () => { if (doneSession) saveSession(doneSession.id, { dismissed: true }).catch(() => {}); setDoneSession(null); };
+
+  // Resume-banner deep-link (B): open straight into cook. The loading guard holds until the recipe
+  // loads, then the cooking branch renders CookPage — so this is safe before data arrives.
+  useEffect(() => { if (cookOnOpen) setCooking(true); }, [cookOnOpen]);
 
   if (!data) return <div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Reading recipe…</span></div>;
   if (data.error) return <p className="flog-error">Couldn’t load that recipe.</p>;
