@@ -33,6 +33,43 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-02 — Track F — Session-surfacing (A route persistence + B resume banner + C done-card). SRC/ ONLY. (Owner-verified.)
+
+The last tracked piece of the Food V2 upgrade. Three surfaces, different risk, each its own commit; the
+risky app-wide change (A) shipped + verified ALONE before B/C rode on it.
+
+COMMIT CHAIN (src-only — NO schema; cook_session READ for B/C + the existing dismissed write):
+- dd9f1ae — A ROUTE/VIEW PERSISTENCE (app-wide): LoggedIn persists the top-level pillar to localStorage
+  (VIEW_KEY 'lifeos.view', the Cookbook toggle pattern) + hydrates on init, validated against the pillar
+  set; unknown/garbage → 'today'; try/catch → private-mode falls back to in-memory. SHALLOW by design
+  (pillar only; the deep cook-restore is B). The ONLY app-shell touch.
+- 255d610 — C DONE-CARD: DoneCookCard on the recipe page when a cook_session is status='done' +
+  dismissed=false (fetchDoneSession). 'Log it' → dismiss + staging sheet; 'Dismiss' → the existing
+  dismissed flag (saveSession); never auto-clears. READ + dismiss write only (P7 wrote status='done').
+- 553ceb4 — B RESUME BANNER: ResumeCookBanner above the Food tabs reads the single active non-dismissed
+  session (fetchAnyActiveSession, recipe title via the FK embed); tap → openRecipe(recipe_id, cook=true)
+  threaded FoodPage→Cookbook→RecipePage (cookOnOpen → auto-enter cook, loading-guard-safe). Null → no
+  banner (graceful gone-cook). Banner/done-card mutually exclusive by status.
+
+OWNER-VERIFIED: A holds across all 7 pillars (garbage → Today, never blank); C shows/persists/dismisses
++ [Log it] opens the sheet; B shows after reload-mid-cook + taps back into the cook with P7 state intact.
+
+DEPTH DECISION (recorded): A is SHALLOW (pillar only); the deep cook-restore is B's job — keeps the risky
+app-wide change tiny and the fragile vanished-target handling contained in B (null session → no banner).
+App-level banner reach (cross-pillar) is a possible small later extension, NOT built.
+
+CONCURRENT NOTE (honest): a parallel FOCUS module (shipped same day, entry below) added a 'focus' pillar
+— it correctly extended the PILLARS set in LoggedIn, so A's route persistence covers Focus automatically
+(no conflict with the A change). The owner's 7-pillar A verify predated the Focus addition.
+
+SCHEMA: none. Two-track: src-only. CLOSES the P9 open loop: db/35 (last_cooked_at DROP) RUN LIVE +
+CONFIRMED — column gone (0 rows), "last cooked" still shows via lastCookedFor.
+
+FOOD V2 UPGRADE FULLY CLOSED: P0–P8 + P9 cleanup (incl. the db/35 drop) + session-surfacing A/B/C. No
+tracked Food work remains.
+
+---
+
 ### 2026-07-02 — Focus module — SHIPPED (pieces 1–8, all owner-verified)
 WHAT CHANGED: New **Focus** pillar (time/focus tracker) inserted after Today. Records real
 focus into a new `focus_sessions` table and integrates across the app — the task form's Focus

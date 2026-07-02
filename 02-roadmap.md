@@ -1121,13 +1121,9 @@ a trustworthy dep source exists; scheduler built dep-ready), P8 (cook→log stag
 done: dead recipes.last_cooked_at column dropped (db/35, checker-gated; P3 entry-gate re-cleared on
 real data first), dead-code sweep, brain-doc amendments recorded (03-decisions.md).
 
-- ⬜ SESSION-SURFACING (the last tracked piece; own recon + commits — a FEATURE build, not cleanup):
-  A. ROUTE/VIEW PERSISTENCE — app-wide (LoggedIn.view is useState('today'), no persistence → every
-     reload drops to Today from anywhere). RISKY (touches core nav); build + verify ALONE across every
-     pillar before the two cook surfaces ride on it.
-  B. RESUME-COOK BANNER — reads the active non-dismissed cook_session; returns you into the cook.
-  C. DONE-CARD-UNTIL-DISMISSED — reads cook_session status='done' + the dismissed flag (P7 wired the
-     write); shows the card + the dismiss action; never auto-clears.
+- ✅ SESSION-SURFACING — DONE (owner-verified): A route/view persistence (dd9f1ae; app-wide, shipped +
+     verified alone across every pillar) + C done-card (255d610) + B resume banner (553ceb4). db/35
+     last_cooked_at drop confirmed live. **FOOD V2 UPGRADE FULLY CLOSED — no tracked Food work remains.**
 
 OPEN: caching live API hits into food_items (the cache-on-select write) lands at F6, not F2
       (F2 is read-only).   F4 — nav order of the five pillars.
