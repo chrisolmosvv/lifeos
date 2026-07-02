@@ -6,7 +6,7 @@
 
 import { readFileSync } from "node:fs";
 import { recipeKind, lastCookedFor } from "../src/food/recipeCalc.js";
-import { dailyTotals, rangeAdherence, vsGoal, recentMealsFrom, recentsFrom } from "../src/food/foodCalc.js";
+import { dailyTotals, rangeAdherence, vsGoal, recentMealsFrom } from "../src/food/foodCalc.js";
 import { resolveGoals } from "../src/health/healthGoals.js";
 import { amsYMD, shiftYMD } from "../src/gym/gymDates.js";
 
