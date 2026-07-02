@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { weekDays } from './dateUtils'
 import { FocusTotalsProvider } from './focus/focusTotalsContext'
+import { FocusSessionProvider } from './focus/focusSessionContext'
+import FocusGlobalLayer from './focus/FocusGlobalLayer'
 import CalendarWeek from './CalendarWeek'
 import DayAgenda from './DayAgenda'
 import EditionHeader from './EditionHeader'
@@ -48,6 +50,7 @@ export default function LoggedIn({ email }) {
   if (typeof window !== 'undefined' && window.location.hash === '#health-debug-v2') return <HealthDebugV2 />
 
   return (
+    <FocusSessionProvider>
     <FocusTotalsProvider>
     <div className="app">
       <EditionHeader view={view} onNavigate={setView} />
@@ -90,7 +93,9 @@ export default function LoggedIn({ email }) {
           <Settings email={email} onOpenArchive={() => setView('archive')} />
         </div>
       )}
+      <FocusGlobalLayer />
     </div>
     </FocusTotalsProvider>
+    </FocusSessionProvider>
   )
 }

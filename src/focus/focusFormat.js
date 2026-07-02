@@ -28,6 +28,14 @@ export function formatDurationShort(seconds) {
   return `${mm}m`;
 }
 
+// Ticking elapsed clock for the header marker: "M:SS" (or "H:MM:SS" past an hour).
+export function elapsedClock(seconds) {
+  const s = Math.max(0, Math.floor(seconds || 0));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const p = (n) => String(n).padStart(2, "0");
+  return h ? `${h}:${p(m)}:${p(sec)}` : `${m}:${p(sec)}`;
+}
+
 // "14:30" from minutes-after-midnight (Amsterdam). null → "" (a running row).
 export function clockFromMin(min) {
   if (min == null || !Number.isFinite(min)) return "";

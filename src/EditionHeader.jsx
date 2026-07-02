@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Masthead from './kit/Masthead'
+import Popover from './kit/Popover'
 import { mastTime, mastWeekday, mastDate, personalEdition } from './personalEdition'
+import { useFocusSessionCtx } from './focus/focusSessionContext'
+import { elapsedClock } from './focus/focusFormat'
 import './editionHeader.css'
 
 // The edition header — the personal-broadsheet top frame, shared by every
@@ -30,6 +33,14 @@ export default function EditionHeader({ view, onNavigate }) {
   }, [])
 
   const { age, day } = personalEdition(now)
+
+  // The global focus live-marker (P5): only rendered while a session runs, pinned
+  // far-right of the nav band (absolute → the centred nav never shifts). No session =
+  // nothing rendered = the header is byte-for-byte its previous self.
+  const fs = useFocusSessionCtx()
+  const markerRef = useRef(null)
+  const [popOpen, setPopOpen] = useState(false)
+  const running = fs && (fs.status === 'running' || fs.status === 'paused') && fs.live
 
   return (
     <header className="masthead">
@@ -63,7 +74,31 @@ export default function EditionHeader({ view, onNavigate }) {
             {item.label}
           </button>
         ))}
+
+        {running && (
+          <button
+            ref={markerRef}
+            className="mast-focus-marker"
+            onClick={() => setPopOpen(true)}
+            aria-label={`Focus session running · ${elapsedClock(fs.live.focusSeconds)}`}
+          >
+            <span className="mast-focus-dot" aria-hidden="true" />
+            <span className="tnum">{elapsedClock(fs.live.focusSeconds)}</span>
+          </button>
+        )}
       </nav>
+
+      {popOpen && running && (
+        <Popover anchorRef={markerRef} title="Focus session" onClose={() => setPopOpen(false)}>
+          <div className="mast-focus-pop">
+            <div className="mast-focus-elapsed tnum">{elapsedClock(fs.live.focusSeconds)} focused</div>
+            <div className="mast-focus-popacts">
+              <button className="mast-focus-open" onClick={() => { setPopOpen(false); onNavigate('focus') }}>Open</button>
+              <button className="mast-focus-stop" onClick={() => { setPopOpen(false); fs.stop() }}>Stop</button>
+            </div>
+          </div>
+        </Popover>
+      )}
     </header>
   )
 }

@@ -5,6 +5,7 @@ import { perTaskTotal, taskSessions } from "../focus/focusCalc.js";
 import { finalizeSession, archiveSession, unarchiveSession, markTaskDone } from "../focus/focusWrite.js";
 import { formatDuration, stars } from "../focus/focusFormat.js";
 import { requestFocus } from "../focus/focusNav.js";
+import { useFocusSessionCtx } from "../focus/focusSessionContext.jsx";
 import SaveCard from "../focus/SaveCard";
 import Toast from "./Toast";
 import "../focus/focusSection.css";
@@ -34,7 +35,18 @@ export default function FocusSection({ taskId, taskTitle, categoryId, categorySn
   const list = taskSessions(raw, taskId);
   const prefill = { task_id: taskId, task_title_snapshot: taskTitle, category_id: categoryId, category_snapshot: categorySnapshot };
 
-  const go = (mode) => { requestFocus({ mode, prefill, taskId }); onClose?.(); };
+  const fs = useFocusSessionCtx();
+  const running = fs && (fs.status === "running" || fs.status === "paused");
+  const go = (mode) => {
+    // ▶ Start a live session is BLOCKED while one runs (spec §2 — no silent switching).
+    // "add past" / "see all" are read/back-fill, never blocked.
+    if (mode === "setup" && running) {
+      setToast({ text: "A session's already running — stop it first" });
+      return;
+    }
+    requestFocus({ mode, prefill, taskId });
+    onClose?.();
+  };
 
   async function onEditSave(form) {
     const r = raw.find((x) => x.id === editing.id);

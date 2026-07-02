@@ -11,7 +11,7 @@ import { takePendingFocus } from "./focusNav.js";
 import { fetchGoals } from "../health/healthLoad.js";
 import { resolveGoals } from "../health/healthGoals.js";
 import { setGoal, clearGoal } from "../health/healthGoalsWrite.js";
-import { useFocusSession } from "./useFocusSession.js";
+import { useFocusSessionCtx } from "./focusSessionContext.jsx";
 import Setup from "./Setup";
 import ManualEntry from "./ManualEntry";
 import InFocus from "./InFocus";
@@ -35,7 +35,7 @@ const RANGES = [
 ];
 
 export default function FocusPage() {
-  const fs = useFocusSession();
+  const fs = useFocusSessionCtx();
   const [cats, setCats] = useState([]);
   const [rawRows, setRawRows] = useState([]);
   const [goals, setGoals] = useState(new Map());
@@ -88,6 +88,14 @@ export default function FocusPage() {
     return () => window.removeEventListener("lifeos:focus-open", h);
   }, []);
 
+  // Keep the overview fresh when focus data changes anywhere (e.g. a Stop→Save from
+  // the header marker on another screen finalises via the global save card).
+  useEffect(() => {
+    const h = () => refresh();
+    window.addEventListener("lifeos:focus-changed", h);
+    return () => window.removeEventListener("lifeos:focus-changed", h);
+  }, [refresh]);
+
   const subjectLabel = (s) => s?.task_title_snapshot || s?.category_snapshot?.name || "No label";
 
   async function onStart(fields) {
@@ -100,12 +108,6 @@ export default function FocusPage() {
     try { await addManualSession(fields); setPrefill(null); setView("overview"); await refresh(); }
     catch (e) { setCardError(e.message || "Couldn't add — check your connection."); } finally { setBusy(false); }
   }
-  async function onSave(form) {
-    setBusy(true); setCardError("");
-    try { await fs.save(form); await refresh(); }
-    catch (e) { setCardError(e.message || "Couldn't save — check your connection and try again."); } finally { setBusy(false); }
-  }
-  async function onDiscard() { setBusy(true); try { await fs.discard(); await refresh(); } finally { setBusy(false); } }
 
   async function onEditSave(form) {
     const raw = rawRows.find((r) => r.id === editing.id);
@@ -183,11 +185,8 @@ export default function FocusPage() {
     <div className="focus-page">
       {body}
 
-      {fs.status === "saving" && fs.pending && (
-        <SaveCard title={subjectLabel(fs.pending.session)} taskId={fs.pending.session?.task_id} mode="save"
-          durationEditable={fs.pending.simple} initialDurationSeconds={fs.pending.focusSeconds}
-          busy={busy} error={cardError} onSubmit={onSave} onSecondary={onDiscard} />
-      )}
+      {/* The running-session save card is a GLOBAL overlay (FocusGlobalLayer) so it can
+          appear over any screen; FocusPage only owns the edit-a-saved-session card. */}
       {editing && (
         <SaveCard title={editing.taskTitle || editing.categorySnapshot?.name || "No label"} taskId={editRaw?.task_id} mode="edit"
           durationEditable={editRaw && editRaw.mode !== "intervals" && (!editRaw.segments || editRaw.segments.length === 0)}
