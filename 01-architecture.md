@@ -20,6 +20,10 @@ Build tool: **Claude Code** on the owner's Claude Max plan.
 > in `src/kit/` (sealed, prefixed blocks: the masthead/folio, the day grid + tinted
 > blocks, task rows, the status pill, the form + drill-in category picker, toast,
 > etc.). See the decisions doc ("component kit, not Tailwind/plain-CSS-per-screen").
+> **Task rows are NOT a single block (corrected 2026-07-02):** Today's two modules use
+> the converged **`TodayRow`** + the cycling **`StatusCycle`** control; the older
+> **`TodayTaskRow`** + the 3-segment **`StatusPill`** stay in use for Planning's Time +
+> Category views and the task form / subtask rows (so `TodayTaskRow` is NOT Today-only).
 
 > **Front-end shape (Phase 7 rebuild — Calendar rebuild COMPLETE).** The logged-in
 > app is a single shell (`LoggedIn`) over four views switched by state — **Today**

@@ -107,10 +107,12 @@
   but isn't completed automatically.
 - **Now-line** — the thin terracotta line across today's calendar column showing
   the current time (like Apple Calendar's red line).
-- **Status (3 states)** — a task is **To do → In progress → Done**. The little
-  connected **status pill** on a task row sets it in one tap; "in progress" is an
-  optional middle step. Marking done greys + strikes the row till midnight (undo
-  always there).
+- **Status (3 states)** — a task is **To do → In progress → Done**. Two controls set
+  it (corrected 2026-07-02): the **task form + subtask rows** use the connected
+  **3-segment status pill** (one tap per segment). The **Today task rows** use a single
+  **cycling status control** — one tap advances To do → In progress → Done → back to To
+  do (the wrap is the undo). Same states underneath; marking done greys + strikes the row
+  till midnight (undo always there).
 - **Component kit** — the reusable, sealed building blocks the screens are made of
   (`src/kit/`): the masthead, hairline rules, the day grid, tinted calendar blocks,
   task rows, the status pill, the form + category picker, toasts. Change a block in

@@ -9,6 +9,48 @@
 
 ---
 
+## Today task rows converged (small fix, src-only) — 2026-07-02
+
+Both Today modules (Tasks Today + The Next 7 Days) now render ONE identical row via a
+new Today-only row piece. Today-only — Planning's Time + Category rows and the form's
+StatusPill left untouched. New Today-only kit pieces: TodayRow + StatusCycle. The old
+TodayTaskRow + StatusPill were left intact and are now used by Planning (Time + Category)
+and the form/subtasks respectively. Src-only, 3 commits, no schema, no Checker.
+
+- [NEW BEHAVIOUR] ▶ now lives on task rows — openly reopens the Focus lock "rows stay
+  clean, ▶ in the form only" (12-focus.md). Reuses the existing requestFocus({mode:'setup',
+  prefill, taskId}) shim → Focus Setup prefilled with the task; blocked with the existing
+  running-session nudge. Row ▶ is a quiet INK glyph, NOT terracotta (the form's ▶ stays the
+  accent). Why: owner wanted start-from-the-row. Trade-off: rows slightly less bare —
+  mitigated by the quiet glyph.
+
+- [NEW BEHAVIOUR + LOOK] A single cycling status control replaces the 3-segment pill ON ROWS
+  — one tap target, cycles To do → In progress → Done → back to To do (the wrap is the
+  existing undo), via the existing status write path (the DB trigger still owns completed_at).
+  Look = state glyph + word: open ring / half ring / filled dot, ink/muted, states by TYPE
+  (To do muted · In progress ink · Done struck+greyed), no box/pill/fill. Makes In progress a
+  FORCED middle step (reverses the old "one tap To do → Done; in progress optional"). A NEW
+  row-only piece (StatusCycle); StatusPill kept for the task form + subtask rows (unchanged).
+  Why: owner wanted one box, not three. Trade-off: a second status component — accepted.
+
+- [NEW BEHAVIOUR] The Next 7 Days gains the status control + ▶ + a shown due date — it had no
+  pill, no ▶, and hid its due dates before. Reverses "pill on Tasks Today only" and the
+  hidden-due. Undated tasks keep the "undated" tag. Why: convergence.
+
+- [LOOK] Priority removed from the row — no HIGH/MED kicker, and the bold high-priority title
+  dropped too (a priority-derived render). Display-only: priority stays in the data + the task
+  form; sorting/ordering UNCHANGED. Why: calm — matches the Planning card.
+
+- Drag UNCHANGED on both (Ruling A) — recon corrected a wrong belief that Next 7 didn't drag;
+  it already did (trayBind). Drag was exempt from convergence, so nothing was added or removed;
+  both keep the grip → truly identical rows.
+
+- [DEBT LOGGED] `todayKit.css` reached ~466 lines (over the ~250 guide) — this fix added the
+  row + status-control styles modestly rather than split it. Joins the parked CSS/JS
+  split-candidate debt (`Today.jsx`, `todayForm.css`). Split deferred, not done here.
+
+---
+
 ## Focus module (time tracker) — 2026-07-02
 
 - **[New Focus pillar = additive, spine-protected.]** A new `focus_sessions` table (checker
@@ -807,6 +849,13 @@ Direction-aware goal engine handles down / up / by_time.
 - Verify writes by updated_at, NOT by the value looking right — a stale row with correct-
   looking totals nearly sent us debugging the wrong layer (the "segments null" saga was
   really an auth-wall + stale-row mirage, not a storage bug).
+  → CAVEAT (2026-07-02): this is tasks-SPECIFIC gotcha — the **`tasks`** table has NO
+    `updated_at` column (only `created_at` + `completed_at`; a live `order by updated_at`
+    on tasks errors 42703 "column updated_at does not exist"). So to verify a **tasks** row
+    changed, identify it by **title or id** (or `completed_at` for done-state), NEVER by
+    updated_at. Do NOT assume other tables lack it — `focus_sessions`, `food_log_entries`,
+    `recipes` etc. DO have `updated_at`; the verify-by-the-row rule itself stands. If unsure
+    which tables have the column, confirm from the live schema first.
 - After ALTER TABLE ADD COLUMN, PostgREST may need `notify pgrst, 'reload schema'` before
   the new column accepts writes (the schema cache lags the DB).
 - Read-only real-data check from the CLI (avoids the stale SUPABASE_ACCESS_TOKEN wrong-
