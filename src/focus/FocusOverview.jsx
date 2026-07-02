@@ -1,9 +1,10 @@
-import { amsClockMinutes } from "../gym/gymDates.js";
+import { amsClockMinutes, humanDayShort } from "../gym/gymDates.js";
 import { dayArcs, dayLedger, dayFocusTotal, dayRestTotal } from "./focusCalc.js";
-import { weekRingStrip, weekVsTrailingAvg } from "./focusTrend.js";
+import { rangeBars, weekRingStrip, weekVsTrailingAvg } from "./focusTrend.js";
 import { formatDuration } from "./focusFormat.js";
 import FocusDial from "./FocusDial";
 import FocusChart from "./FocusChart";
+import FocusRangeControls from "./FocusRangeControls";
 import FocusLedger from "./FocusLedger";
 import WeekRingStrip from "./WeekRingStrip";
 
@@ -23,7 +24,15 @@ import WeekRingStrip from "./WeekRingStrip";
 export default function FocusOverview({
   rawRows, today, now, colorFor, nameFor, catRank, filterCat, onPickCategory, onClear, onSeeAll,
   dailySeconds, weeklySeconds, onSetTarget, onStart, onAddPast, targetsRef,
+  range, windowNow, canForward, onRange, onStepBack, onStepFwd, onExpand,
 }) {
+  // The chart's rolling window (mode + how far back) is owned by the page; we just draw
+  // it. One rangeBars call feeds both the chart and the window label under it.
+  const chartData = rangeBars(rawRows, { range, now: windowNow });
+  const windowLabel = chartData.days.length
+    ? `${humanDayShort(chartData.days[0].ymd)} – ${humanDayShort(chartData.days[chartData.days.length - 1].ymd)}`
+    : "";
+
   const arcs = dayArcs(rawRows, today);
   const allRows = dayLedger(rawRows, today);
   const rows = filterCat ? allRows.filter((r) => r.categoryId === filterCat) : allRows;
@@ -78,8 +87,10 @@ export default function FocusOverview({
         </div>
 
         <div className="focus-ovw-right">
-          <FocusChart rawRows={rawRows} today={today} now={now} colorFor={colorFor}
+          <FocusChart data={chartData} today={today} colorFor={colorFor}
             nameFor={nameFor} catRank={catRank} filterCat={filterCat} onPickCategory={onPickCategory} />
+          <FocusRangeControls range={range} windowLabel={windowLabel} canForward={canForward}
+            onStepBack={onStepBack} onStepFwd={onStepFwd} onRange={onRange} onExpand={onExpand} />
           <FocusLedger rows={rows} colorFor={colorFor} onPickCategory={onPickCategory}
             onSeeAll={onSeeAll} filterActive={filterCat != null} onClear={onClear} />
         </div>

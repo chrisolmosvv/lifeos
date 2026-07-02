@@ -75,6 +75,13 @@ export function humanDayShort(ymd) {
   return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric", month: "short" }).format(d);
 }
 
+// "2026-06-18" → "T" (narrow weekday initial, Amsterdam). For chart day-letters.
+export function weekdayNarrow(ymd) {
+  const d = new Date(`${ymd}T12:00:00Z`);
+  if (!Number.isFinite(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "narrow" }).format(d);
+}
+
 // "2026-06-18" → "Thursday 18 June 2026" (Amsterdam). For the session-report header.
 export function humanDayLong(ymd) {
   const d = new Date(`${ymd}T12:00:00Z`);
