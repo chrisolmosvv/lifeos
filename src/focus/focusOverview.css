@@ -88,17 +88,11 @@
 .dial-arc.is-dim { opacity: 0.12; }
 @media (prefers-reduced-motion: reduce) { .dial-arc { transition: opacity 0.3s ease; stroke-dashoffset: 0; } }
 
-.dial-goal-track { stroke: var(--rule-faint); stroke-width: 3; }
-.dial-goal { stroke: var(--ink-muted); stroke-width: 3; stroke-linecap: round; }
-.dial-goal.is-met { stroke: var(--accent); }
-.dial-goal-tick { stroke: var(--ink-muted); stroke-width: 2; }
-.dial-goal-tick.is-met { stroke: var(--accent); }
 .dial-now { stroke: var(--accent); stroke-width: 1.5; opacity: 0.55; }
 
 .dial-centre { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: var(--font-sans); }
 .dial-total { font-family: var(--font-serif); font-size: 20px; line-height: 1; color: var(--ink); }
 .dial-total.is-met { color: var(--accent); }
-.dial-goal-label { color: var(--ink-muted); font-size: 8.5px; margin-top: 2px; }
 .dial-settarget { background: none; border: 0; color: var(--ink-muted); font-size: 8px; cursor: pointer; text-decoration: underline; margin-top: 2px; }
 .dial-sub { color: var(--ink-muted); font-size: 7px; margin-top: 4px; }
 .dial-invite { color: var(--ink-muted); font-size: 8px; line-height: 1.4; }
