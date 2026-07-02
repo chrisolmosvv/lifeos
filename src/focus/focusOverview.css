@@ -2,12 +2,29 @@
    fills the pillar height; only the dial's ledger caps (→ "see all") and the full
    ledger page scrolls. House style — hairlines, no boxes/shadows, terracotta sparingly. */
 
-.focus-overview { height: 100%; display: flex; flex-direction: column; padding: 14px 24px 12px; box-sizing: border-box; overflow: hidden; }
-.focus-ovw-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.focus-ovw-actions { display: flex; align-items: center; gap: 18px; }
+.focus-overview { height: 100%; display: flex; flex-direction: column; padding: 16px 24px 12px; box-sizing: border-box; overflow: hidden; }
 
-.focus-ovw-body { flex: 1; min-height: 0; display: flex; gap: 36px; align-items: center; }
-.focus-ovw-dial { height: 100%; aspect-ratio: 1; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 8px 0; }
+/* ── Two columns: dial + Start (left) | chart + ledger (right), split by a hairline ── */
+.focus-ovw-body { flex: 1; min-height: 0; display: flex; align-items: stretch; }
+.focus-ovw-left { flex: 0 0 auto; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding-right: 28px; }
+.focus-ovw-dialwrap { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.focus-ovw-dial { height: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+.focus-ovw-start { background: none; border: 0; cursor: pointer; color: var(--accent); font-family: var(--font-sans); font-size: 14px; letter-spacing: 0.06em; padding: 2px 4px; }
+.focus-ovw-quicklinks { display: flex; align-items: center; gap: 8px; color: var(--ink-muted); font-size: 11px; }
+
+.focus-ovw-right { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; padding-left: 28px; border-left: 1px solid var(--rule); }
+
+/* ── Overview chart (top of the right column; the detail arrives in a later piece) ── */
+.focus-chart { flex: 3 1 0; min-height: 0; display: flex; flex-direction: column; padding-bottom: 8px; }
+.focus-chart-plot { flex: 1; min-height: 0; display: flex; align-items: flex-end; gap: 6px; }
+.focus-chart-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; min-width: 0; }
+.focus-chart-bar { width: 68%; max-width: 30px; display: flex; flex-direction: column-reverse; overflow: hidden; border-radius: 3px 3px 0 0; }
+.focus-chart-seg { width: 100%; display: block; }
+.focus-chart-seg.is-dim { opacity: 0.2; }
+.focus-chart-lbl { font-size: 10px; color: var(--ink-muted); }
+
+/* The ledger sits UNDER the chart in the right column — shorter (chart-led), hairline above. */
+.focus-ovw-right .focus-ledger { flex: 2 1 0; height: auto; min-height: 0; border-top: 1px solid var(--rule); padding-top: 8px; }
 
 /* ── Dial ─────────────────────────────────────────────────────────────────── */
 .focus-dial { display: block; height: 100%; width: 100%; }

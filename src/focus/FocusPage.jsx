@@ -5,7 +5,6 @@ import { colorHex, INBOX_COLOR } from "../palette";
 import { amsTodayYMD } from "../gym/gymDates.js";
 import { fetchSessions } from "./focusLoad.js";
 import { ledgerAll } from "./focusCalc.js";
-import { rangeBars, weekVsTrailingAvg } from "./focusTrend.js";
 import { finalizeSession, archiveSession, unarchiveSession, markTaskDone, addManualSession } from "./focusWrite.js";
 import { takePendingFocus, peekPendingFocus } from "./focusNav.js";
 import { fetchGoals } from "../health/healthLoad.js";
@@ -17,10 +16,8 @@ import ManualEntry from "./ManualEntry";
 import InFocus from "./InFocus";
 import SaveCard from "./SaveCard";
 import FocusOverview from "./FocusOverview";
-import RangeView from "./RangeView";
 import FullLedgerPage from "./FullLedgerPage";
 import FocusGoalsEditor from "./FocusGoalsEditor";
-import RangeSwitcher from "../kit/RangeSwitcher";
 import Popover from "../kit/Popover";
 import Toast from "../kit/Toast";
 import "./focus.css";
@@ -29,10 +26,6 @@ import "./focusOverview.css";
 // FocusPage — the Focus pillar shell (pieces 2+3). Hosts the write loop (Setup →
 // In-focus → save card) AND the read Overview (dial + ledger + week strip + range).
 const isInbox = (c) => c.parent_id == null && c.name === "Inbox";
-const RANGES = [
-  { id: "today", label: "Today" }, { id: "week", label: "Week" },
-  { id: "month", label: "Month" }, { id: "ninety", label: "90d" },
-];
 
 export default function FocusPage() {
   const fs = useFocusSessionCtx();
@@ -47,7 +40,6 @@ export default function FocusPage() {
   const [view, setView] = useState(
     req0 ? (req0.mode === "manual" ? "manual" : req0.mode === "full" ? "full" : "setup") : "overview",
   ); // 'overview' | 'setup' | 'manual' | 'full'
-  const [range, setRange] = useState("today");
   const [filterCat, setFilterCat] = useState(null);
   const [prefill, setPrefill] = useState(req0 && req0.mode !== "full" ? req0.prefill || null : null); // task prefill for Setup / manual (from ▶)
   const [fullTaskFilter, setFullTaskFilter] = useState(req0 && req0.mode === "full" ? req0.taskId || null : null); // see-all filtered to a task
@@ -168,23 +160,12 @@ export default function FocusPage() {
   else
     body = (
       <div className="focus-overview">
-        <div className="focus-ovw-top">
-          <div className="focus-ovw-actions">
-            <button className="focus-btn-start" onClick={() => { setPrefill(null); setView("setup"); }}>Start a session</button>
-            <button className="focus-linkbtn" onClick={() => { setPrefill(null); setView("manual"); }}>Add past</button>
-            <button ref={goalsRef} className="focus-linkbtn" onClick={() => setGoalsOpen(true)}>Targets</button>
-          </div>
-          <RangeSwitcher ranges={RANGES} value={range} onChange={setRange} ariaLabel="Focus range" />
-        </div>
-        {range === "today" ? (
-          <FocusOverview rawRows={rawRows} today={today} now={now} colorFor={colorFor}
-            filterCat={filterCat} onPickCategory={pickCat} onClear={() => setFilterCat(null)}
-            onSeeAll={() => setView("full")} dailySeconds={dailySeconds} weeklySeconds={weeklySeconds}
-            onSetTarget={() => setGoalsOpen(true)} />
-        ) : (
-          <RangeView data={rangeBars(rawRows, { range, now })} trend={weekVsTrailingAvg(rawRows, { now })}
-            colorFor={colorFor} range={range} filterCat={filterCat} onPickCategory={pickCat} />
-        )}
+        <FocusOverview rawRows={rawRows} today={today} now={now} colorFor={colorFor}
+          filterCat={filterCat} onPickCategory={pickCat} onClear={() => setFilterCat(null)}
+          onSeeAll={() => setView("full")} dailySeconds={dailySeconds} weeklySeconds={weeklySeconds}
+          onSetTarget={() => setGoalsOpen(true)} targetsRef={goalsRef}
+          onStart={() => { setPrefill(null); setView("setup"); }}
+          onAddPast={() => { setPrefill(null); setView("manual"); }} />
       </div>
     );
 
