@@ -6,12 +6,14 @@ import { amsTodayYMD } from "../gym/gymDates.js";
 import { fetchSessions } from "./focusLoad.js";
 import { ledgerAll } from "./focusCalc.js";
 import { rangeBars, weekVsTrailingAvg } from "./focusTrend.js";
-import { finalizeSession, archiveSession, unarchiveSession, markTaskDone } from "./focusWrite.js";
+import { finalizeSession, archiveSession, unarchiveSession, markTaskDone, addManualSession } from "./focusWrite.js";
+import { takePendingFocus } from "./focusNav.js";
 import { fetchGoals } from "../health/healthLoad.js";
 import { resolveGoals } from "../health/healthGoals.js";
 import { setGoal, clearGoal } from "../health/healthGoalsWrite.js";
 import { useFocusSession } from "./useFocusSession.js";
 import Setup from "./Setup";
+import ManualEntry from "./ManualEntry";
 import InFocus from "./InFocus";
 import SaveCard from "./SaveCard";
 import FocusOverview from "./FocusOverview";
@@ -37,9 +39,11 @@ export default function FocusPage() {
   const [cats, setCats] = useState([]);
   const [rawRows, setRawRows] = useState([]);
   const [goals, setGoals] = useState(new Map());
-  const [view, setView] = useState("overview"); // 'overview' | 'setup' | 'full'
+  const [view, setView] = useState("overview"); // 'overview' | 'setup' | 'manual' | 'full'
   const [range, setRange] = useState("today");
   const [filterCat, setFilterCat] = useState(null);
+  const [prefill, setPrefill] = useState(null); // task prefill for Setup / manual (from ▶)
+  const [fullTaskFilter, setFullTaskFilter] = useState(null); // see-all filtered to a task
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
   const [cardError, setCardError] = useState("");
@@ -70,12 +74,31 @@ export default function FocusPage() {
     refresh(); refreshGoals();
   }, [refresh, refreshGoals]);
 
+  // Consume a parked ▶ / add-past / see-all request (routed from a task form).
+  useEffect(() => {
+    const apply = (p) => {
+      if (!p) return;
+      if (p.mode === "manual") { setPrefill(p.prefill || null); setView("manual"); }
+      else if (p.mode === "full") { setFullTaskFilter(p.taskId || null); setView("full"); }
+      else { setPrefill(p.prefill || null); setView("setup"); }
+    };
+    apply(takePendingFocus());
+    const h = () => apply(takePendingFocus());
+    window.addEventListener("lifeos:focus-open", h);
+    return () => window.removeEventListener("lifeos:focus-open", h);
+  }, []);
+
   const subjectLabel = (s) => s?.task_title_snapshot || s?.category_snapshot?.name || "No label";
 
   async function onStart(fields) {
     setBusy(true); setCardError("");
-    try { await fs.start(fields); setView("overview"); }
+    try { await fs.start(fields); setPrefill(null); setView("overview"); }
     catch (e) { setCardError(e.message || "Couldn't start."); } finally { setBusy(false); }
+  }
+  async function onManualSubmit(fields) {
+    setBusy(true); setCardError("");
+    try { await addManualSession(fields); setPrefill(null); setView("overview"); await refresh(); }
+    catch (e) { setCardError(e.message || "Couldn't add — check your connection."); } finally { setBusy(false); }
   }
   async function onSave(form) {
     setBusy(true); setCardError("");
@@ -125,15 +148,21 @@ export default function FocusPage() {
   else if (fs.status === "running" || fs.status === "paused" || (fs.status === "saving" && fs.session))
     body = <InFocus live={fs.live} subjectLabel={subjectLabel(fs.session)} paused={fs.status === "paused"} onPause={fs.pause} onResume={fs.resume} onStop={fs.stop} />;
   else if (view === "setup")
-    body = <Setup cats={cats} inboxColor={cats.find(isInbox)?.color || INBOX_COLOR} busy={busy} onStart={onStart} onCancel={() => setView("overview")} />;
+    body = <Setup prefill={prefill} cats={cats} inboxColor={cats.find(isInbox)?.color || INBOX_COLOR} busy={busy}
+      onStart={onStart} onCancel={() => { setPrefill(null); setView("overview"); }} />;
+  else if (view === "manual")
+    body = <ManualEntry prefill={prefill} cats={cats} inboxColor={cats.find(isInbox)?.color || INBOX_COLOR} busy={busy}
+      onSubmit={onManualSubmit} onCancel={() => { setPrefill(null); setView("overview"); }} />;
   else if (view === "full")
-    body = <FullLedgerPage rows={ledgerAll(rawRows)} colorFor={colorFor} busy={busy} onBack={() => setView("overview")} onEdit={setEditing} onDelete={onDelete} />;
+    body = <FullLedgerPage rows={ledgerAll(rawRows)} colorFor={colorFor} busy={busy} initialTaskFilter={fullTaskFilter}
+      onBack={() => { setFullTaskFilter(null); setView("overview"); }} onEdit={setEditing} onDelete={onDelete} />;
   else
     body = (
       <div className="focus-overview">
         <div className="focus-ovw-top">
           <div className="focus-ovw-actions">
-            <button className="focus-btn-start" onClick={() => setView("setup")}>Start a session</button>
+            <button className="focus-btn-start" onClick={() => { setPrefill(null); setView("setup"); }}>Start a session</button>
+            <button className="focus-linkbtn" onClick={() => { setPrefill(null); setView("manual"); }}>Add past</button>
             <button ref={goalsRef} className="focus-linkbtn" onClick={() => setGoalsOpen(true)}>Targets</button>
           </div>
           <RangeSwitcher ranges={RANGES} value={range} onChange={setRange} ariaLabel="Focus range" />

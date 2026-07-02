@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { weekDays } from './dateUtils'
+import { FocusTotalsProvider } from './focus/focusTotalsContext'
 import CalendarWeek from './CalendarWeek'
 import DayAgenda from './DayAgenda'
 import EditionHeader from './EditionHeader'
@@ -34,10 +35,20 @@ export default function LoggedIn({ email }) {
   const [view, setViewState] = useState(initialView)
   const setView = (v) => { setViewState(v); try { window.localStorage.setItem(VIEW_KEY, v) } catch { /* private mode / disabled → in-memory only */ } }
 
+  // Cross-pillar "open Focus" (P4): the task form's ▶ / add-past / see-all park a
+  // request (focusNav) and fire this event; we switch to the Focus pillar, which then
+  // picks the request up on mount. A stray pending request is cleared so it can't leak.
+  useEffect(() => {
+    const open = () => setView('focus')
+    window.addEventListener('lifeos:focus-open', open)
+    return () => window.removeEventListener('lifeos:focus-open', open)
+  }, [])
+
   // THROWAWAY (V2 P0c verify): open <app>/#health-debug-v2 to read the calc readout. Delete with the import above.
   if (typeof window !== 'undefined' && window.location.hash === '#health-debug-v2') return <HealthDebugV2 />
 
   return (
+    <FocusTotalsProvider>
     <div className="app">
       <EditionHeader view={view} onNavigate={setView} />
 
@@ -80,5 +91,6 @@ export default function LoggedIn({ email }) {
         </div>
       )}
     </div>
+    </FocusTotalsProvider>
   )
 }

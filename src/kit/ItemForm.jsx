@@ -2,6 +2,7 @@ import { useState } from 'react'
 import CategoryTag from '../CategoryTag'
 import CategoryPicker from './CategoryPicker'
 import ItemTypeFields from './ItemTypeFields'
+import FocusSection from './FocusSection'
 import './todayForm.css'
 
 // ItemForm — the ONE shared create/edit form (Phase 7, C3), used by BOTH Today and
@@ -188,6 +189,13 @@ export default function ItemForm({ kind, item, create, cats, inboxColor, busy, o
               <div className="tk-form-more">
                 <ItemTypeFields slot="more" {...typeProps} />
               </div>
+            )}
+
+            {/* Focus section (P4) — task EDITS only (needs a saved id); never create/event. */}
+            {k === 'task' && !create && t.id && (
+              <FocusSection taskId={t.id} taskTitle={title} categoryId={categoryId}
+                categorySnapshot={selectedCat ? { id: selectedCat.id, name: selectedCat.name, color: selectedCat.color ?? null } : null}
+                onClose={onClose} />
             )}
 
             {err && <p className="tk-form-err">{err}</p>}

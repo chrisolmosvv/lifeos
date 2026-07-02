@@ -460,3 +460,6 @@
   opacity: 0.6;
   cursor: progress;
 }
+
+/* Focus module (P4): the per-task all-time focus tag on a task row. */
+.tk-focus-tag { color: var(--ink-muted); font-size: 12px; white-space: nowrap; }

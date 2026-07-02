@@ -160,6 +160,18 @@ export function perTaskTotal(sessions, taskId) {
     .filter((s) => s && !s.archived_at && !isRunning(s) && s.task_id === taskId)
     .reduce((t, s) => t + sessionFocusSeconds(s), 0);
 }
+// All-time focus seconds keyed by task_id, over the given rows — a bulk map for the
+// per-task row tags (avoids calling perTaskTotal once per row). Running + archived +
+// task-less sessions are skipped. → Map<taskId, seconds>.
+export function taskTotals(sessions) {
+  const m = new Map();
+  for (const s of sessions || []) {
+    if (!s || s.archived_at || isRunning(s) || !s.task_id) continue;
+    m.set(s.task_id, (m.get(s.task_id) || 0) + sessionFocusSeconds(s));
+  }
+  return m;
+}
+
 // That task's finished sessions, NEWEST FIRST, shaped for the form's session list.
 export function taskSessions(sessions, taskId) {
   if (!taskId) return [];

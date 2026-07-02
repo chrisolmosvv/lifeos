@@ -7,9 +7,11 @@ import { clockRange, formatDuration, stars } from "./focusFormat.js";
 // the overview). Newest first, grouped by day, with a category filter; each row keeps
 // Edit + Delete (so that capability survives the piece-3 removal of the scaffold list).
 //
-// Props: rows (ledgerAll output), colorFor(id), busy, onBack, onEdit(row), onDelete(row).
-export default function FullLedgerPage({ rows, colorFor, busy, onBack, onEdit, onDelete }) {
+// Props: rows (ledgerAll output), colorFor(id), busy, initialTaskFilter (taskId|null,
+//   from the form's "see all"), onBack, onEdit(row), onDelete(row).
+export default function FullLedgerPage({ rows, colorFor, busy, initialTaskFilter, onBack, onEdit, onDelete }) {
   const [filter, setFilter] = useState(null); // categoryId | null (all)
+  const [taskFilter, setTaskFilter] = useState(initialTaskFilter || null);
 
   // Distinct categories present, for the filter chips (name from the snapshot).
   const cats = useMemo(() => {
@@ -18,7 +20,9 @@ export default function FullLedgerPage({ rows, colorFor, busy, onBack, onEdit, o
     return [...m.entries()];
   }, [rows]);
 
-  const shown = filter ? rows.filter((r) => r.categoryId === filter) : rows;
+  const taskTitle = taskFilter ? rows.find((r) => r.taskId === taskFilter)?.taskTitle : null;
+  let shown = taskFilter ? rows.filter((r) => r.taskId === taskFilter) : rows;
+  if (filter) shown = shown.filter((r) => r.categoryId === filter);
 
   // Group consecutively by ymd (rows are already newest-first).
   const groups = [];
@@ -36,7 +40,10 @@ export default function FullLedgerPage({ rows, colorFor, busy, onBack, onEdit, o
       </div>
 
       <div className="focus-full-filters">
-        <button className={"focus-chip" + (filter == null ? " is-on" : "")} onClick={() => setFilter(null)}>All</button>
+        {taskFilter && (
+          <button className="focus-chip is-on" onClick={() => setTaskFilter(null)}>{taskTitle || "This task"} ✕</button>
+        )}
+        <button className={"focus-chip" + (filter == null ? " is-on" : "")} onClick={() => setFilter(null)}>All categories</button>
         {cats.map(([id, name]) => (
           <button key={id} className={"focus-chip" + (filter === id ? " is-on" : "")} onClick={() => setFilter(id)}>
             <span className="focus-dot" style={{ background: colorFor(id) }} />{name}

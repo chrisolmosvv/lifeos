@@ -1,0 +1,17 @@
+/* LifeOS — the task form's Focus section (piece 4). Sits below the form fields as a
+   hairline-topped block. House style; calm; no boxes. */
+
+.tk-focus { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--rule); }
+.tk-focus-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.tk-focus-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); }
+.tk-focus-total { text-transform: none; letter-spacing: 0; color: var(--ink); }
+.tk-focus-acts { display: flex; align-items: center; gap: 14px; }
+.tk-focus-start { background: none; border: 0; color: var(--accent); font-size: 13px; cursor: pointer; padding: 0; }
+
+.tk-focus-empty { color: var(--ink-muted); font-size: 13px; margin: 0; }
+.tk-focus-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--rule-faint); font-size: 13px; }
+.tk-focus-date { color: var(--ink-muted); min-width: 64px; }
+.tk-focus-stars { color: var(--accent); font-size: 11px; letter-spacing: 0.5px; }
+.tk-focus-note { color: var(--ink-muted); width: 14px; text-align: center; cursor: default; }
+.tk-focus-rowacts { margin-left: auto; display: flex; gap: 12px; }
+.tk-focus-seeall { margin-top: 10px; }

@@ -3,6 +3,8 @@ import StatusPill from './StatusPill'
 import { dueStatus, formatDue } from '../dueDate'
 import { resolveColor } from '../colorModel'
 import { colorHex } from '../palette'
+import { useFocusTotals } from '../focus/focusTotalsContext'
+import { formatDurationShort } from '../focus/focusFormat'
 import './todayKit.css'
 
 // TodayTaskRow — one task line for the Today modules: an optional status pill on
@@ -34,6 +36,9 @@ export default function TodayTaskRow({
 }) {
   const done = task.status === 'done'
   const high = !done && task.priority === 'high'
+  // Additive focus tag (P4): the task's all-time focus, from the shared totals context.
+  // No provider / no focus → nothing renders, so every existing row stays unchanged.
+  const focusSecs = useFocusTotals()?.get(task.id) || 0
   // V2-1: the tag's dot uses the shared colour model (resolveColor) so a derived
   // sub-category shows the SAME shaded branch colour as its grid block. Top-level
   // / Inbox resolve to the same hex as before → pixel-identical.
@@ -73,6 +78,7 @@ export default function TodayTaskRow({
           {high && <span className="tk-pri is-high">High</span>}
           {!done && task.priority === 'med' && <span className="tk-pri">Med</span>}
           <CategoryTag name={tagName} hex={tagHex} />
+          {focusSecs > 0 && <span className="tk-focus-tag tnum">· {formatDurationShort(focusSecs)}</span>}
           {badge && (
             <span className={'tk-when' + (badge.overdue ? ' is-overdue' : '')}>
               {badge.text}
