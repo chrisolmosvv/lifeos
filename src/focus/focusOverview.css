@@ -36,12 +36,17 @@
 .focus-chart-col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; }
 .focus-chart-total { flex: 0 0 12px; font-size: 9px; line-height: 12px; color: var(--ink-muted); }
 .focus-chart-barwrap { flex: 1 1 0; min-height: 0; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-.focus-chart-bar { width: 68%; max-width: 30px; display: flex; flex-direction: column-reverse; overflow: hidden; }
+.focus-chart-bar { width: 68%; max-width: 30px; display: flex; flex-direction: column-reverse; overflow: hidden; transform-origin: bottom; animation: focus-bar-in 0.45s ease both; }
+@keyframes focus-bar-in { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .focus-chart-bar { animation: none; } } /* draw-in off → instant */
 .focus-chart-seg { width: 100%; display: block; border-top: 1px solid var(--paper); }
 .focus-chart-seg.is-dim { opacity: 0.2; }
 .focus-chart-lbl { flex: 0 0 16px; font-size: 10px; line-height: 16px; color: var(--ink-muted); }
 .focus-chart-col.is-today .focus-chart-lbl { color: var(--accent); }
 .focus-chart-col.is-daydim { opacity: 0.3; } /* a week-strip day is selected — dim the rest */
+
+/* Empty window — a quiet invite centred over the faint gridlines (no bars to draw). */
+.focus-chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-muted); font-size: 12px; pointer-events: none; }
 
 /* Hover breakdown — a quiet BORDERLESS readout, top-right of the plot: text on paper,
    no box/rule. The category names double as the colour key (no separate legend). */

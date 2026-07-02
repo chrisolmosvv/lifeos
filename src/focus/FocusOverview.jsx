@@ -24,7 +24,7 @@ import WeekRingStrip from "./WeekRingStrip";
 export default function FocusOverview({
   rawRows, today, now, colorFor, nameFor, catRank, filterCat, onPickCategory, onClear, onSeeAll,
   filterDay, onPickDay, onClearDay,
-  dailySeconds, onSetTarget, onStart, onAddPast, targetsRef,
+  dailySeconds, weeklySeconds, onSetTarget, onStart, onAddPast, targetsRef,
   range, windowNow, canForward, onRange, onStepBack, onStepFwd, onExpand,
 }) {
   // The chart's rolling window (mode + how far back) is owned by the page; we just draw
@@ -91,7 +91,7 @@ export default function FocusOverview({
         </div>
 
         <div className="focus-ovw-right">
-          <FocusChart data={chartData} today={today} colorFor={colorFor} nameFor={nameFor} catRank={catRank}
+          <FocusChart data={chartData} today={today} range={range} colorFor={colorFor} nameFor={nameFor} catRank={catRank}
             filterCat={filterCat} onPickCategory={onPickCategory} filterDay={filterDay} />
           <FocusRangeControls range={range} windowLabel={windowLabel} canForward={canForward}
             onStepBack={onStepBack} onStepFwd={onStepFwd} onRange={onRange} onExpand={onExpand} />
@@ -100,8 +100,8 @@ export default function FocusOverview({
         </div>
       </div>
 
-      <WeekRingStrip strip={strip} dailyGoalSeconds={dailySeconds} trend={trend} todayYmd={today}
-        selectedDay={filterDay} onPickDay={onPickDay} onClearDay={onClearDay} />
+      <WeekRingStrip strip={strip} dailyGoalSeconds={dailySeconds} weeklyGoalSeconds={weeklySeconds} trend={trend}
+        todayYmd={today} selectedDay={filterDay} onPickDay={onPickDay} onClearDay={onClearDay} />
     </>
   );
 }

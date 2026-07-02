@@ -1,5 +1,5 @@
 import { weekdayNarrow } from "../gym/gymDates.js";
-import { hoursMins, trendLine } from "./focusFormat.js";
+import { formatDuration, hoursMins, trendLine } from "./focusFormat.js";
 
 // WeekRingStrip (redesign P5) — the full-width week glance under the chart: one ring per
 // rolling day. The ring ARC = that day's progress toward the daily goal; the day's focus
@@ -11,7 +11,7 @@ import { hoursMins, trendLine } from "./focusFormat.js";
 //
 // Props: strip [{ymd, focusSeconds}] (oldest→today), dailyGoalSeconds (|null), trend
 //   (weekVsTrailingAvg result), todayYmd, selectedDay (|null), onPickDay(ymd), onClearDay.
-export default function WeekRingStrip({ strip, dailyGoalSeconds, trend, todayYmd, selectedDay, onPickDay, onClearDay }) {
+export default function WeekRingStrip({ strip, dailyGoalSeconds, weeklyGoalSeconds, trend, todayYmd, selectedDay, onPickDay, onClearDay }) {
   const peak = Math.max(1, ...strip.map((d) => d.focusSeconds));
   const denom = dailyGoalSeconds || peak; // arc vs the daily goal, else vs the week's peak
   const tl = trendLine(trend);
@@ -33,7 +33,7 @@ export default function WeekRingStrip({ strip, dailyGoalSeconds, trend, todayYmd
         })}
       </div>
       <div className="focus-weekstrip-foot">
-        <span className="tnum">{tl.total} this week</span>
+        <span className="tnum">{tl.total}{weeklyGoalSeconds != null ? ` / ${formatDuration(weeklyGoalSeconds)}` : " this week"}</span>
         <span className="focus-weektrend"> · {tl.delta || tl.note}</span>
         {selectedDay && <button type="button" className="focus-linkbtn focus-weekstrip-clear" onClick={onClearDay}>clear day</button>}
       </div>

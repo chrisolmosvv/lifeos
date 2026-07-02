@@ -149,7 +149,7 @@ export default function FocusPage() {
           nameFor={nameFor} catRank={catRank}
           filterCat={filterCat} onPickCategory={pickCat} onClear={() => setFilterCat(null)}
           filterDay={filterDay} onPickDay={pickDay} onClearDay={() => setFilterDay(null)}
-          onSeeAll={() => setView("full")} dailySeconds={dailySeconds}
+          onSeeAll={() => setView("full")} dailySeconds={dailySeconds} weeklySeconds={weeklySeconds}
           onSetTarget={() => setGoalsOpen(true)} targetsRef={goalsRef}
           onStart={() => { setPrefill(null); setView("setup"); }}
           onAddPast={() => { setPrefill(null); setView("manual"); }}
