@@ -19,3 +19,12 @@ export function takePendingFocus() {
   pending = null;
   return p;
 }
+
+// Peek at the parked request WITHOUT clearing it. FocusPage reads this while deciding
+// its FIRST screen so the right destination paints immediately (no overview flash);
+// the mount effect still consumes-and-clears it once (via takePendingFocus), so a
+// later plain visit to Focus shows the overview, never a stale Setup. Pure by design
+// (no mutation) — safe to call during render, incl. React StrictMode's double pass.
+export function peekPendingFocus() {
+  return pending;
+}

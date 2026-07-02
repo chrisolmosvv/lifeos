@@ -7,7 +7,7 @@ import { fetchSessions } from "./focusLoad.js";
 import { ledgerAll } from "./focusCalc.js";
 import { rangeBars, weekVsTrailingAvg } from "./focusTrend.js";
 import { finalizeSession, archiveSession, unarchiveSession, markTaskDone, addManualSession } from "./focusWrite.js";
-import { takePendingFocus } from "./focusNav.js";
+import { takePendingFocus, peekPendingFocus } from "./focusNav.js";
 import { fetchGoals } from "../health/healthLoad.js";
 import { resolveGoals } from "../health/healthGoals.js";
 import { setGoal, clearGoal } from "../health/healthGoalsWrite.js";
@@ -39,11 +39,18 @@ export default function FocusPage() {
   const [cats, setCats] = useState([]);
   const [rawRows, setRawRows] = useState([]);
   const [goals, setGoals] = useState(new Map());
-  const [view, setView] = useState("overview"); // 'overview' | 'setup' | 'manual' | 'full'
+  // Pick the FIRST screen from any parked ▶ / add-past / see-all request (PEEKED, not
+  // consumed) so its destination paints immediately — no overview flash. With no parked
+  // request (a plain tap on Focus) we start on the overview, exactly as before. The
+  // mount effect below still consumes-and-clears the request once.
+  const req0 = peekPendingFocus();
+  const [view, setView] = useState(
+    req0 ? (req0.mode === "manual" ? "manual" : req0.mode === "full" ? "full" : "setup") : "overview",
+  ); // 'overview' | 'setup' | 'manual' | 'full'
   const [range, setRange] = useState("today");
   const [filterCat, setFilterCat] = useState(null);
-  const [prefill, setPrefill] = useState(null); // task prefill for Setup / manual (from ▶)
-  const [fullTaskFilter, setFullTaskFilter] = useState(null); // see-all filtered to a task
+  const [prefill, setPrefill] = useState(req0 && req0.mode !== "full" ? req0.prefill || null : null); // task prefill for Setup / manual (from ▶)
+  const [fullTaskFilter, setFullTaskFilter] = useState(req0 && req0.mode === "full" ? req0.taskId || null : null); // see-all filtered to a task
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
   const [cardError, setCardError] = useState("");

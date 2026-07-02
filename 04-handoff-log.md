@@ -33,6 +33,42 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-02 — Focus — ▶ / add-past / see-all land on their screen with NO overview flash. SRC-ONLY. (Awaiting owner QA.)
+
+Small isolated bug fix. Pressing ▶ (or "add past" / "see all") in a task's Focus section used to
+flash the Focus overview (the dial) for one frame before landing on the right screen. Root cause: the
+Focus tab always painted the overview first, then switched a beat later. Now it picks the right first
+screen up front. One src-only commit, no schema — nothing for the Checker.
+
+WHAT CHANGED:
+- The Focus tab now decides its FIRST screen from the parked request (▶ → Setup, "add past" → the
+  add-past screen, "see all" → the full ledger), so that screen paints immediately — no dial flash.
+- With no parked request (a plain tap on "Focus" in the nav), it still opens on the overview as before.
+- Added a "peek" (look-without-clearing) read so the first screen can be chosen during draw safely;
+  the existing mount step still consumes-and-clears the request once, so a later plain visit to Focus
+  can never show a stale Setup.
+
+FILES TOUCHED: src/focus/FocusPage.jsx, src/focus/focusNav.js
+
+HOW TO VERIFY (on the 13" MacBook, by eye — this is a visual-timing fix; nothing is written to the DB):
+- On Today, open a task's edit form → press ▶ (Start a session). You should land DIRECTLY on Setup —
+  NO flash of the dial/overview first.
+- Same form → "add past": lands directly on the add-past screen, no overview flash.
+- Same form → "see all" (in the Focus section, if the task has enough sessions): lands directly on the
+  full ledger, no overview flash.
+- Then tap "Focus" in the top nav directly (no ▶): you should see the OVERVIEW (the dial) as normal —
+  proving no stale request lingers.
+
+KNOWN GAPS / RISKS: none expected. Verified by clean production build + a full code trace (incl. React
+StrictMode's double-draw, which is why the read is a pure "peek"); the owner confirms the no-flash by eye.
+
+NEXT: the Focus overview redesign (the larger set of five changes — dial midnight-at-bottom, the
+right-side chart+ledger split, the prettier Start control, the interval no-auto-switch, etc.).
+
+FOR THE CHECKER: none — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-02 — Today — Converged task row across both Today modules. SRC-ONLY. (Awaiting owner QA.)
 
 Both Today modules ("Tasks today" + "The next 7 days") now render ONE identical row, redesigned to
