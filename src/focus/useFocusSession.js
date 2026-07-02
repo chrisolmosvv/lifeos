@@ -21,13 +21,14 @@ export function useFocusSession() {
   const [pending, setPending] = useState(null); // stop → the save-card draft
   const [, setTick] = useState(0);
   const chimedRef = useRef(false); // count_down zero-chime fired once
+  const phaseChimedRef = useRef(false); // interval: this phase's target-chime fired once
   const pausedKind = useRef("focus");
 
   const nowMs = () => Date.now();
 
   const reset = useCallback(() => {
     setSession(null); setSegments([]); setOpenSeg(null); setPending(null);
-    chimedRef.current = false; setStatus("idle");
+    chimedRef.current = false; phaseChimedRef.current = false; setStatus("idle");
   }, []);
 
   // Resume a fresh running row (rebuilds the timeline; pause history is not persisted).
@@ -41,6 +42,7 @@ export function useFocusSession() {
     }
     chimedRef.current =
       row.mode === "count_down" && Date.now() - new Date(row.started_at).getTime() >= (row.target_seconds || 0) * 1000;
+    phaseChimedRef.current = false; // the resumed open phase is mid-way; let its target chime once
     setStatus("running");
   }, []);
 
@@ -62,19 +64,18 @@ export function useFocusSession() {
     return () => { live = false; };
   }, [resumeRow]);
 
-  // 1s tick while running: re-render + auto-advance intervals + count_down chime.
+  // 1s tick while running: re-render + the target chimes. Intervals are HAND-BOUNDED —
+  // NO auto-switch; the tick only chimes ONCE when the open phase hits its target (the
+  // phase then holds + counts on until Enter/End break). count_down keeps its zero-chime.
   useEffect(() => {
     if (status !== "running") return;
     const id = setInterval(() => {
       const t = Date.now();
       setTick((n) => n + 1);
-      if (session?.mode === "intervals" && openSeg) {
+      if (session?.mode === "intervals" && openSeg && !phaseChimedRef.current) {
         const phaseLen = (openSeg.kind === "focus" ? session.target_seconds : session.break_seconds) * 1000;
         if (phaseLen > 0 && t - new Date(openSeg.start).getTime() >= phaseLen) {
-          const end = new Date(new Date(openSeg.start).getTime() + phaseLen).toISOString();
-          setSegments((s) => [...s, { ...openSeg, end }]);
-          setOpenSeg({ kind: openSeg.kind === "focus" ? "break" : "focus", start: end });
-          chime();
+          chime(); phaseChimedRef.current = true;
         }
       }
       if (session?.mode === "count_down" && !chimedRef.current) {
@@ -90,9 +91,21 @@ export function useFocusSession() {
   const start = useCallback(async (fields) => {
     const row = await startSession({ ...fields, started_at: new Date().toISOString() });
     setSession(row); setSegments([]); setOpenSeg({ kind: "focus", start: row.started_at });
-    chimedRef.current = false; setStatus("running");
+    chimedRef.current = false; phaseChimedRef.current = false; setStatus("running");
     return row;
   }, []);
+
+  // Hand-bounded interval phase switch (Enter break / End break) — close the open phase
+  // and open the OPPOSITE kind (the pause/resume close-one/open-next move, opposite kind).
+  // The recorded segment is the phase's REAL start→end (overage included as plain time).
+  const switchPhase = useCallback(() => {
+    if (!openSeg) return;
+    const now = new Date().toISOString();
+    const next = openSeg.kind === "focus" ? "break" : "focus";
+    setSegments((s) => [...s, { ...openSeg, end: now }]);
+    setOpenSeg({ kind: next, start: now });
+    phaseChimedRef.current = false; // the new phase gets its own target chime
+  }, [openSeg]);
 
   const pause = useCallback(() => {
     if (!openSeg) return;
@@ -164,5 +177,5 @@ export function useFocusSession() {
     ? computeLive(session, segments, openSeg, nowMs())
     : null;
 
-  return { status, session, live, pending, staleRow, start, pause, resume, stop, save, discard, resolveStale };
+  return { status, session, live, pending, staleRow, start, pause, resume, switchPhase, stop, save, discard, resolveStale };
 }

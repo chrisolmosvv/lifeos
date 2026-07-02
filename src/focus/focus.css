@@ -79,6 +79,13 @@
 .focus-live--break .focus-progress-fill { background: var(--ink-muted); }
 .focus-controls { display: flex; gap: 14px; }
 
+/* Intervals: the flap + a muted "+over" beside it; the terracotta-OUTLINE Enter/End break
+   button (Stop is already terracotta-filled, so the phase control is outlined to stay
+   distinct without restyling Stop). */
+.focus-flap-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.focus-over { font-family: var(--font-serif); font-size: 30px; color: var(--ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.focus-btn-phase { background: none; border: 1px solid var(--accent); border-radius: 8px; padding: 10px 18px; font-size: 15px; cursor: pointer; color: var(--accent); }
+
 /* ── Save card / stale prompt (centred overlay) ────────────────────────────── */
 .focus-scrim { position: fixed; inset: 0; background: rgba(28, 25, 22, 0.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
 .focus-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 12px; padding: 24px; width: min(420px, 92vw); }

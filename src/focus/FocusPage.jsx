@@ -122,7 +122,7 @@ export default function FocusPage() {
       </div>
     );
   else if (fs.status === "running" || fs.status === "paused" || (fs.status === "saving" && fs.session))
-    body = <InFocus live={fs.live} subjectLabel={subjectLabel(fs.session)} paused={fs.status === "paused"} onPause={fs.pause} onResume={fs.resume} onStop={fs.stop} />;
+    body = <InFocus live={fs.live} subjectLabel={subjectLabel(fs.session)} paused={fs.status === "paused"} onPause={fs.pause} onResume={fs.resume} onSwitchPhase={fs.switchPhase} onStop={fs.stop} />;
   else if (view === "setup")
     body = <Setup prefill={prefill} cats={cats} inboxColor={cats.find(isInbox)?.color || INBOX_COLOR} busy={busy}
       onStart={onStart} onCancel={() => { setPrefill(null); setView("overview"); }} />;

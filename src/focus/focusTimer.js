@@ -49,29 +49,39 @@ export function computeLive(session, segments, openSeg, nowMs) {
   const target = session.target_seconds || 0;
   const brk = session.break_seconds || 0;
 
+  // `over` = the muted "+M:SS" overage shown beside the flap (intervals only); `phase` =
+  // 'focus'|'break' drives the Enter/End break button (null = no button, non-intervals).
   if (session.mode === "count_up") {
-    return { focusSeconds, breakSeconds, display: focusSeconds, register: "focus", slim: "Counting up", progress: null };
+    return { focusSeconds, breakSeconds, display: focusSeconds, register: "focus", slim: "Counting up", progress: null, over: null, phase: null };
   }
 
   if (session.mode === "count_down") {
     const remaining = target - focusSeconds;
     if (remaining > 0)
-      return { focusSeconds, breakSeconds, display: remaining, register: "focus", slim: "Counting down", progress: target ? focusSeconds / target : 0 };
-    return { focusSeconds, breakSeconds, display: -remaining, register: "overtime", slim: "Overtime — stop when ready", progress: 1 };
+      return { focusSeconds, breakSeconds, display: remaining, register: "focus", slim: "Counting down", progress: target ? focusSeconds / target : 0, over: null, phase: null };
+    return { focusSeconds, breakSeconds, display: -remaining, register: "overtime", slim: "Overtime — stop when ready", progress: 1, over: null, phase: null };
   }
 
-  // intervals — the live phase is the OPEN segment's kind + its countdown.
+  // intervals — HAND-BOUNDED (no auto-switch). The open phase counts UP elapsed; with a
+  // set length the flap HOLDS at the target and the overage shows as a muted "+over"; a
+  // blank length (0/null) is a free hand-run stopwatch (no target, no over, no chime).
+  // register stays the phase's own tone (focus/break) — NOT count-down's terracotta.
   const kind = openSeg ? openSeg.kind : "focus";
   const openSecs = openSeg ? Math.max(0, (nowMs - ms(openSeg.start)) / 1000) : 0;
-  const phaseLen = kind === "focus" ? target : brk;
-  const remaining = Math.max(0, phaseLen - openSecs);
+  const phaseLen = kind === "focus" ? target : brk; // 0/null = hand-run, no target
+  const hasTarget = phaseLen > 0;
+  const over = hasTarget ? Math.max(0, openSecs - phaseLen) : 0;
+  const isBreak = kind === "break";
+  const base = isBreak ? "Break" : "Focus";
   return {
     focusSeconds,
     breakSeconds,
-    display: remaining,
-    register: kind === "break" ? "break" : "focus",
-    slim: kind === "break" ? "Break" : "Focus",
-    progress: phaseLen ? Math.min(1, openSecs / phaseLen) : 0,
+    display: hasTarget ? Math.min(openSecs, phaseLen) : openSecs, // hold at the target
+    over: over > 0 ? over : null,
+    register: isBreak ? "break" : "focus",
+    phase: kind,
+    slim: over > 0 ? (isBreak ? "break over — end break when ready" : "target reached — enter break when ready") : base,
+    progress: hasTarget ? Math.min(1, openSecs / phaseLen) : null,
   };
 }
 
