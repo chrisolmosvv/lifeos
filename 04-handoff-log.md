@@ -33,6 +33,94 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-02 — Focus — OVERVIEW REDESIGN (pieces P1–P6). SRC-ONLY, no schema. (Owner-verified P1–P5; P6 pending final eyeball.)
+
+A full redesign of the Focus tab's Overview screen only. Built piece-by-piece, each its own
+commit + owner eyeball. NOT touched: the in-focus timer/interval behaviour, the task-form Focus
+section, the header running-marker, the Calendar overlay, Today's focus line. No database change,
+nothing for the Checker.
+
+WHAT CHANGED (end to end):
+- STRIP REMOVED + SPLIT (P1): retired the top strip (title + Start/Add-past/Targets cluster + the
+  top-right range switcher). The tab now opens straight into a TWO-COLUMN overview. The chart was
+  pulled into its own component; later the read/data layer was pulled into a hook (see FILES).
+- LAYOUT + DIAL (P2): equal 50/50 columns with a centred vertical hairline; the dial fills the
+  left column height (bigger). Dial rotated so MIDNIGHT is at the BOTTOM (noon top, 06 left, 18
+  right) via the ONE clock→screen offset — arcs + now-tick move together. Added eight 3-hour
+  hairline ticks with only the four cardinals labelled (00/06/12/18). Dropped the dial's goal
+  ring; centre is two lines (big total + muted "of 6h · 35m rest").
+- CHART DETAIL (P3): faint 2h gridlines with left-end labels; ceiling = tallest day in the window
+  rounded up to the next 2h (bars never clip); fixed stack order (stable per-category rank at draw
+  time, 1px paper hairline between segments); always-on day totals in H:MM; hover a bar → that
+  day's per-category name + duration (borderless readout; the names are the colour key).
+- RANGE CONTROLS (P4): a quiet line under the chart — window label + ‹ › arrows (roll by the
+  window's length; forward clamps at current), a Week·Month·90d toggle, and "expand" → the
+  existing full-screen RangeView (reused as-is). Fed by the existing rangeBars getter (shifted
+  "now"); the window state lives on the page so it survives expand+back. Fixed a day-letter bug
+  (were day-of-month digits; now weekday initials via a new weekdayNarrow helper).
+- WEEK STRIP (P5): each day-ring shows its total INSIDE as H:MM; the arc = daily-goal progress and
+  fills terracotta when met; TODAY = a subtle hairline outline (not terracotta). Tapping a ring
+  filters the chart + ledger to that day (ledger shows that day; the dial stays on today), with a
+  "clear day" — a SECOND filter alongside the category filter, each with its own clear.
+- FOOT + STATES + MOTION (P6): foot shows the weekly target with the trend ("5h 10m / 12h · +40m
+  vs avg"); empty window → a quiet invite over the faint gridlines; bars draw in on load
+  (staggered, eased; reduced-motion → instant).
+- RUNNING-TRANSFORM: DROPPED BY DECISION (Planner, not a bug/gap). What it was for — blocking a
+  second start + jumping to the running session — already works (a running session shows the timer
+  directly; the header "Open" works app-wide). Building it would need reopening the locked header
+  marker + the running-swap flow (both out of scope) for negligible gain. Possible future
+  standalone piece — would need its own recon (it touches the header).
+
+FILES TOUCHED:
+- src/focus/FocusOverview.jsx (two-column orchestrator; owns the day-filter + window plumbing)
+- src/focus/FocusChart.jsx — NEW (the overview chart: bars, gridlines, hover, totals, empty, motion)
+- src/focus/FocusRangeControls.jsx — NEW (the window/mode/expand line)
+- src/focus/useFocusData.js — NEW (the read layer split out of FocusPage for headroom)
+- src/focus/FocusPage.jsx (strip removed; window + day-filter state; expand→RangeView route; slimmer)
+- src/focus/FocusDial.jsx (rotation + hour ticks/labels; goal ring removed)
+- src/focus/WeekRingStrip.jsx (H:MM-in-ring, terracotta=met, today outline, tap-filter, foot)
+- src/focus/FocusLedger.jsx (a title prop so it can show the selected day)
+- src/focus/focusFormat.js (hoursMins "2:15" helper); src/gym/gymDates.js (weekdayNarrow helper)
+- src/focus/focusOverview.css (all the layout/chart/controls/strip/motion styles)
+- src/focus/RangeView.jsx — REUSED unchanged as the "expand" target.
+Commits: afb0026 (P1), 431ac02 (P2), ca6ea4f (P3), c49ea3b (P4), 267079f (split), 16705b1 (P5),
+806f1b0 (P6 part).
+
+HOW TO VERIFY (13" MacBook, all by eye + your own data; nothing is written to the DB):
+- Open Focus: no top strip; equal columns split by a centred hairline; big dial with 00 at the
+  bottom + cardinal labels; chart (gridlines, per-bar H:MM totals on Week, weekday letters, today
+  terracotta) over a shorter ledger; controls line; week ring-strip foot.
+- Chart totals match: today's bar total = the sum of today's ledger rows; hover a past bar and
+  cross-check its categories/times against that day in "see all".
+- Arrows step the window (Week ‹ → the prior 7 days; forward greys out at current); Week/Month/90d
+  redraw + rescale; "expand" opens the full-screen bars (the plainer view); back returns.
+- Rings: H:MM inside matches real days; a goal-met day is terracotta, today has the outline; tap a
+  past ring → ledger shows that day + chart dims the rest + "clear day" resets; category filter and
+  day filter coexist with separate clears.
+- Empty window → gridlines + "No focus … yet"; bars draw in on load; Reduce Motion → instant.
+
+KNOWN GAPS / RISKS (all accepted decisions, not defects):
+- Running-transform DROPPED by decision (rationale above) — a possible future standalone piece.
+- "Expand" opens the plainer RangeView (no gridlines/totals/hover, biggest-first stacks) — accepted.
+- Month/90d suppress per-bar totals + day-letters (too dense for the half-width column) — accepted;
+  so "expand" mainly earns its keep on Week.
+- The hover readout is borderless (text on paper); the gridline "2h" labels keep a small paper
+  backing so they read over bars — both accepted fills.
+- Expand+back preserves the window (state on the page); but the WEEK-STRIP day-filter is cleared on
+  any FocusPage remount (e.g. leaving+returning to the tab) — expected, minor.
+
+FOR THE CLEANUP STAGE (list only — do NOT act; the prove-dead sweep confirms next):
+- kit/RangeSwitcher is no longer imported by Focus (still used by Health/Body/Sleep — do not remove
+  the component). Confirm no other now-orphaned range-screen wiring remains after the switcher's
+  retirement. (RangeView is NOT dead — it's the "expand" target.)
+
+NEXT: owner's final eyeball on P6; then close-out on the Planner's word (prove-dead sweep +
+brain-docs update). The deferred Marty focus-control track is still not built.
+
+FOR THE CHECKER: none — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-02 — Focus — ▶ / add-past / see-all land on their screen with NO overview flash. SRC-ONLY. (Awaiting owner QA.)
 
 Small isolated bug fix. Pressing ▶ (or "add past" / "see all") in a task's Focus section used to
