@@ -1,15 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../supabaseClient.js";
-import { resolveColor } from "../colorModel";
-import { colorHex, INBOX_COLOR } from "../palette";
+import { useEffect, useRef, useState } from "react";
+import { INBOX_COLOR } from "../palette";
 import { amsTodayYMD } from "../gym/gymDates.js";
-import { fetchSessions } from "./focusLoad.js";
 import { ledgerAll } from "./focusCalc.js";
 import { finalizeSession, archiveSession, unarchiveSession, markTaskDone, addManualSession } from "./focusWrite.js";
 import { takePendingFocus, peekPendingFocus } from "./focusNav.js";
-import { fetchGoals } from "../health/healthLoad.js";
-import { resolveGoals } from "../health/healthGoals.js";
 import { setGoal, clearGoal } from "../health/healthGoalsWrite.js";
+import { useFocusData } from "./useFocusData.js";
 import { useFocusSessionCtx } from "./focusSessionContext.jsx";
 import Setup from "./Setup";
 import ManualEntry from "./ManualEntry";
@@ -32,9 +28,7 @@ const RANGE_DAYS = { week: 7, month: 30, ninety: 90 }; // window lengths (days) 
 
 export default function FocusPage() {
   const fs = useFocusSessionCtx();
-  const [cats, setCats] = useState([]);
-  const [rawRows, setRawRows] = useState([]);
-  const [goals, setGoals] = useState(new Map());
+  const { cats, rawRows, refresh, refreshGoals, colorFor, nameFor, catRank, dailySeconds, weeklySeconds } = useFocusData();
   // Pick the FIRST screen from any parked ▶ / add-past / see-all request (PEEKED, not
   // consumed) so its destination paints immediately — no overview flash. With no parked
   // request (a plain tap on Focus) we start on the overview, exactly as before. The
@@ -59,37 +53,6 @@ export default function FocusPage() {
   const now = Date.now();
   // The chart's rolling window ends here — stepped back by whole window-lengths.
   const windowNow = now - chartOffset * (RANGE_DAYS[chartRange] || 7) * 86400000;
-  const byId = useMemo(() => new Map(cats.map((c) => [c.id, c])), [cats]);
-  const colorFor = useCallback((id) => {
-    if (!id) return "var(--ink-muted)";
-    const c = byId.get(id);
-    return c ? resolveColor(c, byId) : (colorHex(INBOX_COLOR) || "#9A9384");
-  }, [byId]);
-  const nameFor = useCallback((id) => {
-    if (!id) return "No category";
-    return byId.get(id)?.name || "No category";
-  }, [byId]);
-  // A STABLE per-category rank (by the category's own sort position) so the chart can
-  // draw each category in the same stack slot on every day. Uncategorised sorts last.
-  const catRank = useMemo(() => {
-    const ordered = [...cats].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || String(a.id).localeCompare(String(b.id)));
-    const m = new Map(ordered.map((c, i) => [c.id, i]));
-    return (id) => (id != null && m.has(id) ? m.get(id) : Number.MAX_SAFE_INTEGER);
-  }, [cats]);
-  const dailySeconds = goals.get("focus_daily")?.target_value ?? null;
-  const weeklySeconds = goals.get("focus_weekly")?.target_value ?? null;
-
-  const refresh = useCallback(async () => {
-    const t = Date.now();
-    setRawRows(await fetchSessions(new Date(t - 100 * 86400000).toISOString(), new Date(t + 86400000).toISOString()));
-  }, []);
-  const refreshGoals = useCallback(async () => setGoals(resolveGoals(await fetchGoals())), []);
-
-  useEffect(() => {
-    supabase.from("categories").select("id, name, parent_id, color, sort_order").is("archived_at", null)
-      .then(({ data }) => setCats(data || []));
-    refresh(); refreshGoals();
-  }, [refresh, refreshGoals]);
 
   // Consume a parked ▶ / add-past / see-all request (routed from a task form).
   useEffect(() => {
@@ -104,14 +67,6 @@ export default function FocusPage() {
     window.addEventListener("lifeos:focus-open", h);
     return () => window.removeEventListener("lifeos:focus-open", h);
   }, []);
-
-  // Keep the overview fresh when focus data changes anywhere (e.g. a Stop→Save from
-  // the header marker on another screen finalises via the global save card).
-  useEffect(() => {
-    const h = () => refresh();
-    window.addEventListener("lifeos:focus-changed", h);
-    return () => window.removeEventListener("lifeos:focus-changed", h);
-  }, [refresh]);
 
   const subjectLabel = (s) => s?.task_title_snapshot || s?.category_snapshot?.name || "No label";
 
