@@ -5,6 +5,15 @@
 > known gaps are recorded in `03-decisions.md` (Focus, 2026-07-02) and `04-handoff-log.md`
 > (2026-07-02). The DEFERRED Marty focus-control track is not built. Below is the LOCKED
 > SPEC v3 as-signed-off.
+>
+> **Corrected 2026-07-02 — OVERVIEW REDESIGN (src-only):** the Overview screen was
+> restructured after ship — the top-strip range switcher is retired, the stacked-bar chart
+> now lives INSIDE the overview (two columns: dial left, chart-over-ledger right), the dial
+> puts MIDNIGHT at the BOTTOM with hour markers and no goal ring, and the week strip carries
+> H:MM-in-ring + a day filter. The §L/§6/§9 composition below is SUPERSEDED for the overview;
+> the full redesign + trade-offs are in `03-decisions.md` (Focus overview redesign, 2026-07-02).
+> New files: `FocusChart`, `FocusRangeControls`, `useFocusData`; `FocusOverview` orchestrates
+> the two columns; `RangeView` is now only the "expand" target.
 
 ---
 
@@ -107,10 +116,12 @@ focus_sessions
 ```
 
 - **Intervals + breaks:** an interval session is focus + break *segments*, not one
-  block. Recon settles the shape — leaning **raw segments stored** (a child
-  `focus_segments` table, or a `segments jsonb`), each `kind 'focus' | 'break'`,
-  so nothing is derived. **Only focus segments count** toward logged time + the dial;
-  **breaks render as distinct rest arcs**, and today's "focused" total is focus-only.
+  block. *(Corrected 2026-07-02: SETTLED — it shipped as a `segments jsonb` COLUMN on
+  `focus_sessions` (confirmed live), NOT a child `focus_segments` table; each block is
+  `{ kind:'focus'|'break', start, end }`; count_up/count_down store `segments: []` and the
+  single focus block is `started_at → ended_at`.)* **Only focus segments count** toward
+  logged time + the dial; **breaks render as distinct rest arcs**, and today's "focused"
+  total is focus-only.
 - **Duration is compute-on-read** (never stored). **A running session = `ended_at`
   NULL**; the dial excludes running rows; the **header marker = "a running row
   exists."** Survives reload.
@@ -176,11 +187,18 @@ focus_sessions
   **category-own-colour arcs** (matches Calendar/Today); **rest** as quiet
   **ghost/hatched** arcs; a **faint now-tick** on the rim (no hand); the **focus
   total** in the centre (rest shown as a separate secondary stat).
+  *(Corrected 2026-07-02: the ring now puts **MIDNIGHT at the BOTTOM** (noon top, 06 left,
+  18 right) via the single time→position offset — arcs + now-tick rotate together; it carries
+  **eight 3-hour hour ticks** with only the four cardinals labelled (00/06/12/18); the centre
+  is two lines — big total + a muted "of 6h · 35m rest".)*
 - **Arcs sweep in clockwise, drawn like a pen** (staggered) on open.
 - **Running session is NOT on the dial** (it lives in the in-focus view); first-ever
   / empty day = a **faint empty ring + a quiet invite**.
 - **Daily goal notch** on the rim, terracotta when met; unmet = simply not filled
   (never red, never a nag). No-target = a muted "set a target" in its place.
+  *(Corrected 2026-07-02: the goal ring/notch was DROPPED from the dial — the daily goal now
+  lives ONLY in the centre text ("of 6h", no-target → "set a target"). Daily-goal progress +
+  the terracotta "met" cue moved to the week strip's day-rings.)*
 
 ## 7. The ledger (beside the dial)
 

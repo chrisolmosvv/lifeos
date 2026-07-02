@@ -9,6 +9,52 @@
 
 ---
 
+## Focus OVERVIEW redesign (src-only, P1–P6) — 2026-07-02
+
+A full redesign of the Focus tab's Overview screen (commits afb0026 → 806f1b0, cleanup 4a7297b).
+Overview-only; the in-focus timer, task-form Focus section, header marker, Calendar overlay and
+Today's focus line were left untouched. No schema, no Checker.
+
+- **[LAYOUT] Top-strip range switcher retired from the overview.** The tab opens straight into a
+  two-column overview; the full-screen range view (RangeView) survives ONLY as the "expand" target.
+  **Why:** frees vertical height for zero-scroll + the chart now lives in the overview. **Trade-off:**
+  the switcher's Today/Week/Month/90 chrome is gone from the tab (kit/RangeSwitcher still used by Health).
+- **[LAYOUT] The bar chart now lives INSIDE the overview** (was a separate switcher screen). **Why:**
+  glance the week beside the dial. **Trade-off:** the chart shares a half-width column with the ledger.
+- **[LAYOUT] The ledger is intentionally SHORTER** (chart-led right column). **Why:** the chart is the
+  hero on the right. **Trade-off:** fewer ledger rows before "see all".
+- **[CHART] Gridlines added** — faint 2h hairlines behind the bars (against the usual no-gridlines
+  rule), kept hairline-faint; the "2h/4h" labels keep a small paper backing so they read behind bars.
+  **Why:** a readable scale. **Trade-off:** one earned exception to "no gridlines / minimal fills."
+- **[CHART] Day totals ALWAYS shown above the bars** (not hover-only); hover adds per-segment category
+  NAME + duration — the names are the colour key, so there is NO separate legend. **Why:** read the day
+  at rest; name the colours on demand. **Trade-off:** hover carries the key (no always-on legend).
+- **[CHART] Fixed category stack order at DRAW time** (a colour holds the same slot in every bar);
+  rangeBars itself untouched. **Why:** stable reading across days. **Trade-off:** a draw-time re-sort.
+- **[CHART] Rolling windows** (Week = last 7 ending today, Month ≈ 30, 90 ≈ 90) with arrow-stepping by
+  the window's length. Month/90d SUPPRESS per-bar totals + day-letters (too many bars for the half-width
+  column). **Why:** honest density over collision. **Trade-off:** "expand" mainly earns its keep on Week.
+- **[CHART] "expand" reuses the PLAINER RangeView** (no gridlines/totals/hover) — a visible mismatch
+  with the inline chart, consciously accepted. **Why:** reuse over rebuild. **Trade-off:** the two charts
+  don't match; a later parity pass is optional.
+- **[CHART] Hover readout is BORDERLESS** (text on paper). **Why:** calm. **Trade-off:** none.
+- **[DIAL] Midnight moved to the BOTTOM** (noon top, 6am left, 6pm right) via the SINGLE time→position
+  offset (arcs + now-tick move together); eight 3-hour ticks with only the four cardinals labelled
+  (00/06/12/18); the separate goal ring/notch DROPPED from the dial — the goal now lives in the centre
+  text only. **Why:** a clock that reads like a day + a calmer dial. **Trade-off:** the goal is a number,
+  not a rim mark.
+- **[WEEK STRIP] H:MM shown INSIDE each day ring**; TERRACOTTA now means "day goal MET" (reassigned from
+  "today"); TODAY = a subtle grey outline; the foot shows weekly target + trend ("X / weekly-goal · +Y
+  vs avg"); tapping a day ring filters the chart + ledger to that day — a SECOND filter coexisting with
+  the category filter, each with its OWN clear; the dial always stays "today" (not re-keyed). **Why:**
+  the strip is the home for daily-goal progress + a quick day pivot. **Trade-off:** two independent
+  filters to reason about.
+- **[DROPPED BY DECISION] The running-transform** ("Start a session" → "Open the running session" under
+  the dial). **Why:** it collides with the tab's running-swap AND the header "Open" marker, both out of
+  this fix's scope; what it would have done (prevent a second start / redirect to the running session)
+  already works today. **Trade-off:** negligible gain vs reopening a locked, verified module — a possible
+  future STANDALONE piece that would need its own recon (it touches the header).
+
 ## Today task rows converged (small fix, src-only) — 2026-07-02
 
 Both Today modules (Tasks Today + The Next 7 Days) now render ONE identical row via a

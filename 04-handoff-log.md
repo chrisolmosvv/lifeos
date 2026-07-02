@@ -109,13 +109,16 @@ KNOWN GAPS / RISKS (all accepted decisions, not defects):
 - Expand+back preserves the window (state on the page); but the WEEK-STRIP day-filter is cleared on
   any FocusPage remount (e.g. leaving+returning to the tab) — expected, minor.
 
-FOR THE CLEANUP STAGE (list only — do NOT act; the prove-dead sweep confirms next):
-- kit/RangeSwitcher is no longer imported by Focus (still used by Health/Body/Sleep — do not remove
-  the component). Confirm no other now-orphaned range-screen wiring remains after the switcher's
-  retirement. (RangeView is NOT dead — it's the "expand" target.)
+CLEANUP (DONE — prove-dead sweep, commit 4a7297b):
+- The switcher wiring (kit/RangeSwitcher import, RANGES, range state, .focus-ovw-top/-actions CSS)
+  was already removed during P1 — grep confirmed nothing left to sweep there. kit/RangeSwitcher the
+  component stays (Health/Body/Sleep still use it); RangeView stays (the "expand" target).
+- Removed the ONE genuinely-orphaned leftover: the dial's goal-ring CSS (.dial-goal-track/.dial-goal/
+  .dial-goal-tick/.dial-goal-label + is-met variants), dead since P2 dropped the ring. Zero JS refs.
+- Docs updated (this session): 03-decisions.md (redesign amendments), 12-focus.md (drift corrections).
 
-NEXT: owner's final eyeball on P6; then close-out on the Planner's word (prove-dead sweep +
-brain-docs update). The deferred Marty focus-control track is still not built.
+NEXT: owner's final eyeball on P6. The overview redesign + close-out (prove-dead + brain-docs) are
+done. The deferred Marty focus-control track is still not built.
 
 FOR THE CHECKER: none — src-only, no schema, no database, no edge function.
 
