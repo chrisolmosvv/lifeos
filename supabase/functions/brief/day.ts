@@ -17,7 +17,7 @@
 // because the tasks table has NO updated_at column (created_at is the only signal);
 // so moving a task between buckets does NOT reset its clock. See the handoff.
 
-import { clockLabel, daysBetweenYMD, humanDate } from "../_shared/datetime.ts";
+import { addDaysYMD, clockLabel, daysBetweenYMD, humanDate, localToUtc } from "../_shared/datetime.ts";
 import { dayConfigured, owner, select, todayWindow } from "./sb.ts";
 import type { GapOffer } from "./gap.ts";
 
@@ -38,6 +38,27 @@ export interface DayData {
   todayTasks: NamedItem[];
   dueToday: NamedItem[];
   overdue: OverdueItem[];
+  focusYesterdaySeconds: number; // Focus module (P6): yesterday's logged focus, 0 if none/unread
+}
+
+// Focus seconds of one focus_sessions row (mirrors the app's compute-on-read rule):
+// interval sessions store raw focus/break segments — only focus counts; a plain
+// count-up/down has no segments, so it's simply ended_at − started_at.
+function focusSecondsOf(row: Record<string, unknown>): number {
+  const segs = (Array.isArray(row.segments) ? row.segments : []) as Array<{ kind?: string; start?: string; end?: string }>;
+  const span = (a: unknown, b: unknown) => {
+    const s = new Date(String(a)).getTime(), e = new Date(String(b)).getTime();
+    return e > s ? (e - s) / 1000 : 0;
+  };
+  if (segs.length) return segs.reduce((t, seg) => t + (seg.kind === "focus" ? span(seg.start, seg.end) : 0), 0);
+  return span(row.started_at, row.ended_at);
+}
+
+// "3h 40m" / "40m" / "3h" — a calm whole-minute duration for the brief line.
+function focusDuration(seconds: number): string {
+  const m = Math.round(seconds / 60), h = Math.floor(m / 60), mm = m % 60;
+  if (h && mm) return `${h}h ${mm}m`;
+  return h ? `${h}h` : `${mm}m`;
 }
 
 // Read today's real data. Returns null if ANY read failed (so we never show a
@@ -65,6 +86,16 @@ export async function gatherDay(): Promise<DayData | null> {
 
   if ([events, blocked, todayTasks, dueToday, overdue].some((r) => r === null)) return null;
 
+  // Yesterday's focus (Focus module, P6) — a calm, read-only extra. Gathered AFTER the
+  // core reads and NOT part of the null-check: a focus read failure must never stop the
+  // brief, it just omits the line (→ 0). Finished, non-archived sessions started
+  // yesterday (Amsterdam); focus-only via focusSecondsOf.
+  const yStartUtc = localToUtc(addDaysYMD(today, -1), "00:00").toISOString();
+  const focusRows = await select(
+    `focus_sessions?${owner()}&ended_at=not.is.null&started_at=gte.${yStartUtc}&started_at=lt.${startUtc}&select=started_at,ended_at,segments`,
+  );
+  const focusYesterdaySeconds = focusRows ? focusRows.reduce((t, r) => t + focusSecondsOf(r), 0) : 0;
+
   // Merge events + time-blocked tasks and sort by their time.
   const timed: { time: number; item: TimedItem }[] = [];
   for (const e of events!) {
@@ -86,6 +117,7 @@ export async function gatherDay(): Promise<DayData | null> {
       const dueYMD = String(t.due_date);
       return { id: String(t.id), title: String(t.title), dueYMD, daysOverdue: daysBetweenYMD(dueYMD, today) };
     }),
+    focusYesterdaySeconds,
   };
 }
 
@@ -153,6 +185,9 @@ export function formatChecklist(d: DayData, forgotten: string | null = null, gap
   if (gap && !gap.isForgotten) {
     parts.push("", `FREE WINDOW\n• ${gap.startClock}–${gap.endClock} — could tackle: ${gap.taskTitle}`);
   }
+  if (d.focusYesterdaySeconds > 0) {
+    parts.push("", `Yesterday you focused for ${focusDuration(d.focusYesterdaySeconds)}.`);
+  }
   return parts.join("\n");
 }
 
@@ -188,6 +223,9 @@ export function factsForGemini(d: DayData, forgotten: string | null = null, gap:
     out += gap.sameItem
       ? `\n\nThe owner has a clear stretch today from ${gap.startClock} to ${gap.endClock}. Offer it as a chance to deal with the task already noted above ("${gap.taskTitle}") — fold this into ONE coherent thought; do not mention that task a second time as if new.`
       : `\n\nThe owner has a clear stretch today from ${gap.startClock} to ${gap.endClock} — a good chance to tackle "${gap.taskTitle}". Offer it gently, as an option, never a command.`;
+  }
+  if (d.focusYesterdaySeconds > 0) {
+    out += `\n\nYesterday the owner focused for ${focusDuration(d.focusYesterdaySeconds)} (from the focus timer). You may add this as ONE calm, encouraging aside — optional, never a command, and never invent a number.`;
   }
   return out;
 }
