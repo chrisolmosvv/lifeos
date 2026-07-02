@@ -20,9 +20,12 @@ import { formatDuration, hoursMins } from "./focusFormat.js";
 //   catRank(id), filterCat, onPickCategory.
 const STEP = 7200; // 2 hours in seconds — the gridline + ceiling step
 
-export default function FocusChart({ data, today, colorFor, nameFor, catRank, filterCat, onPickCategory }) {
+export default function FocusChart({ data, today, colorFor, nameFor, catRank, filterCat, onPickCategory, filterDay }) {
   const [hoverYmd, setHoverYmd] = useState(null);
   const dense = data.days.length > 10; // many bars (Month/90d) → drop per-bar labels
+  // Reflect a week-strip day selection by dimming the other bars — only if that day is
+  // actually in the current window (else nothing to highlight; leave the chart alone).
+  const dayInWindow = filterDay != null && data.days.some((d) => d.ymd === filterDay);
 
   const maxTotal = Math.max(0, ...data.days.map((d) => d.total));
   const ceiling = Math.max(STEP, Math.ceil(maxTotal / STEP) * STEP);
@@ -46,7 +49,7 @@ export default function FocusChart({ data, today, colorFor, nameFor, catRank, fi
 
         <div className={"focus-chart-cols" + (dense ? " is-dense" : "")}>
           {data.days.map((d) => (
-            <div key={d.ymd} className={"focus-chart-col" + (d.ymd === today ? " is-today" : "")}
+            <div key={d.ymd} className={"focus-chart-col" + (d.ymd === today ? " is-today" : "") + (dayInWindow && d.ymd !== filterDay ? " is-daydim" : "")}
               onMouseEnter={() => setHoverYmd(d.ymd)} onMouseLeave={() => setHoverYmd((y) => (y === d.ymd ? null : y))}>
               <span className="focus-chart-total tnum">{!dense && d.total > 0 ? hoursMins(d.total) : ""}</span>
               <div className="focus-chart-barwrap">

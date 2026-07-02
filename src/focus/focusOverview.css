@@ -41,6 +41,7 @@
 .focus-chart-seg.is-dim { opacity: 0.2; }
 .focus-chart-lbl { flex: 0 0 16px; font-size: 10px; line-height: 16px; color: var(--ink-muted); }
 .focus-chart-col.is-today .focus-chart-lbl { color: var(--accent); }
+.focus-chart-col.is-daydim { opacity: 0.3; } /* a week-strip day is selected — dim the rest */
 
 /* Hover breakdown — a quiet BORDERLESS readout, top-right of the plot: text on paper,
    no box/rule. The category names double as the colour key (no separate legend). */
@@ -115,15 +116,19 @@
 /* ── Week ring-strip (foot) ────────────────────────────────────────────────── */
 .focus-weekstrip { flex: 0 0 auto; padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--rule); }
 .focus-weekstrip-rings { display: flex; justify-content: space-between; gap: 8px; }
-.focus-mini { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
-.focus-mini-svg { width: 28px; height: 28px; }
-.focus-mini-track { stroke: var(--rule-faint); stroke-width: 3; }
-.focus-mini-fill { stroke: var(--ink-muted); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+.focus-mini { flex: 1; background: none; border: 0; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.focus-mini-svg { width: 40px; height: 40px; }
+.focus-mini-track { stroke: var(--rule-faint); stroke-width: 2.5; }
+.focus-mini-fill { stroke: var(--ink-muted); stroke-width: 2.5; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
 .focus-mini-fill.is-met { stroke: var(--accent); }
+.focus-mini-val { fill: var(--ink); font-family: var(--font-sans); font-size: 6.5px; }
+.focus-mini-today { stroke: var(--ink-muted); stroke-width: 1; opacity: 0.55; } /* today = a subtle outline (NOT terracotta — that means "met") */
+.focus-mini-sel { stroke: var(--ink); stroke-width: 1.5; } /* the tapped day = a stronger ink outline */
 .focus-mini-day { font-size: 11px; color: var(--ink-muted); }
-.focus-mini.is-today .focus-mini-day { color: var(--ink); font-weight: 600; }
-.focus-weekstrip-foot { display: flex; gap: 6px; justify-content: center; margin-top: 6px; font-size: 12px; color: var(--ink-muted); }
-.focus-weektarget.is-met { color: var(--accent); }
+.focus-mini.is-today .focus-mini-day { color: var(--ink); }
+.focus-weekstrip-foot { display: flex; align-items: baseline; gap: 4px; justify-content: center; margin-top: 6px; font-size: 12px; color: var(--ink-muted); }
+.focus-weektrend { color: var(--ink-muted); }
+.focus-weekstrip-clear { margin-left: 10px; }
 
 /* ── Range view (Week/Month/90) ────────────────────────────────────────────── */
 .focus-range { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 8px; }

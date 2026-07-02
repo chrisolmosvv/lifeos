@@ -23,7 +23,8 @@ import WeekRingStrip from "./WeekRingStrip";
 //   targetsRef (anchors the Targets popover, owned by the page).
 export default function FocusOverview({
   rawRows, today, now, colorFor, nameFor, catRank, filterCat, onPickCategory, onClear, onSeeAll,
-  dailySeconds, weeklySeconds, onSetTarget, onStart, onAddPast, targetsRef,
+  filterDay, onPickDay, onClearDay,
+  dailySeconds, onSetTarget, onStart, onAddPast, targetsRef,
   range, windowNow, canForward, onRange, onStepBack, onStepFwd, onExpand,
 }) {
   // The chart's rolling window (mode + how far back) is owned by the page; we just draw
@@ -33,8 +34,11 @@ export default function FocusOverview({
     ? `${humanDayShort(chartData.days[0].ymd)} – ${humanDayShort(chartData.days[chartData.days.length - 1].ymd)}`
     : "";
 
+  // The ledger follows the week-strip day selection (the DIAL stays on today, ruling B).
+  const selectedDay = filterDay || today;
+  const ledgerTitle = filterDay && filterDay !== today ? humanDayShort(filterDay) : "Today";
   const arcs = dayArcs(rawRows, today);
-  const allRows = dayLedger(rawRows, today);
+  const allRows = dayLedger(rawRows, selectedDay);
   const rows = filterCat ? allRows.filter((r) => r.categoryId === filterCat) : allRows;
   const focusTotal = dayFocusTotal(rawRows, today);
   const restTotal = dayRestTotal(rawRows, today);
@@ -87,17 +91,17 @@ export default function FocusOverview({
         </div>
 
         <div className="focus-ovw-right">
-          <FocusChart data={chartData} today={today} colorFor={colorFor}
-            nameFor={nameFor} catRank={catRank} filterCat={filterCat} onPickCategory={onPickCategory} />
+          <FocusChart data={chartData} today={today} colorFor={colorFor} nameFor={nameFor} catRank={catRank}
+            filterCat={filterCat} onPickCategory={onPickCategory} filterDay={filterDay} />
           <FocusRangeControls range={range} windowLabel={windowLabel} canForward={canForward}
             onStepBack={onStepBack} onStepFwd={onStepFwd} onRange={onRange} onExpand={onExpand} />
-          <FocusLedger rows={rows} colorFor={colorFor} onPickCategory={onPickCategory}
+          <FocusLedger rows={rows} title={ledgerTitle} colorFor={colorFor} onPickCategory={onPickCategory}
             onSeeAll={onSeeAll} filterActive={filterCat != null} onClear={onClear} />
         </div>
       </div>
 
-      <WeekRingStrip strip={strip} dailyGoalSeconds={dailySeconds} weeklyGoalSeconds={weeklySeconds}
-        weekTotalSeconds={trend.thisWeekSeconds} todayYmd={today} />
+      <WeekRingStrip strip={strip} dailyGoalSeconds={dailySeconds} trend={trend} todayYmd={today}
+        selectedDay={filterDay} onPickDay={onPickDay} onClearDay={onClearDay} />
     </>
   );
 }

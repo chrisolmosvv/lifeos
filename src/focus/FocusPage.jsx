@@ -38,6 +38,7 @@ export default function FocusPage() {
     req0 ? (req0.mode === "manual" ? "manual" : req0.mode === "full" ? "full" : "setup") : "overview",
   ); // 'overview' | 'setup' | 'manual' | 'full'
   const [filterCat, setFilterCat] = useState(null);
+  const [filterDay, setFilterDay] = useState(null); // a week-strip day selection (chart + ledger)
   const [prefill, setPrefill] = useState(req0 && req0.mode !== "full" ? req0.prefill || null : null); // task prefill for Setup / manual (from ▶)
   const [fullTaskFilter, setFullTaskFilter] = useState(req0 && req0.mode === "full" ? req0.taskId || null : null); // see-all filtered to a task
   const [editing, setEditing] = useState(null);
@@ -103,6 +104,7 @@ export default function FocusPage() {
   async function onClearGoals() { await clearGoal("focus_daily"); await clearGoal("focus_weekly"); setGoalsOpen(false); await refreshGoals(); }
 
   const pickCat = (id) => setFilterCat((cur) => (cur === id ? null : id));
+  const pickDay = (ymd) => setFilterDay((cur) => (cur === ymd ? null : ymd)); // tap-again clears
   const editRaw = editing && rawRows.find((r) => r.id === editing.id);
 
   // ── Body by status/view ─────────────────────────────────────────────────────
@@ -146,7 +148,8 @@ export default function FocusPage() {
         <FocusOverview rawRows={rawRows} today={today} now={now} colorFor={colorFor}
           nameFor={nameFor} catRank={catRank}
           filterCat={filterCat} onPickCategory={pickCat} onClear={() => setFilterCat(null)}
-          onSeeAll={() => setView("full")} dailySeconds={dailySeconds} weeklySeconds={weeklySeconds}
+          filterDay={filterDay} onPickDay={pickDay} onClearDay={() => setFilterDay(null)}
+          onSeeAll={() => setView("full")} dailySeconds={dailySeconds}
           onSetTarget={() => setGoalsOpen(true)} targetsRef={goalsRef}
           onStart={() => { setPrefill(null); setView("setup"); }}
           onAddPast={() => { setPrefill(null); setView("manual"); }}

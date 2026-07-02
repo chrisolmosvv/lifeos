@@ -8,11 +8,11 @@ import { clockRange, formatDuration, stars } from "./focusFormat.js";
 //
 // Props: rows (dayLedger output, already category-filtered if active), colorFor(id),
 //   onPickCategory(id), onSeeAll, filterActive, onClear.
-export default function FocusLedger({ rows, colorFor, onPickCategory, onSeeAll, filterActive, onClear }) {
+export default function FocusLedger({ rows, title = "Today", colorFor, onPickCategory, onSeeAll, filterActive, onClear }) {
   return (
     <div className="focus-ledger">
       <div className="focus-ledger-head">
-        <span className="focus-ledger-title">Today</span>
+        <span className="focus-ledger-title">{title}</span>
         {filterActive
           ? <button className="focus-linkbtn" onClick={onClear}>clear</button>
           : <button className="focus-linkbtn" onClick={onSeeAll}>see all ›</button>}
