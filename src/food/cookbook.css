@@ -629,3 +629,11 @@
 .red-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
 .red-col { min-width: 0; }
 @media (max-width: 640px) { .red-cols { grid-template-columns: 1fr; gap: 16px; } }
+
+/* Session-surfacing C — the done-cook card on the recipe page (calm hairline; terracotta on "Log it"). */
+.dcc { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; margin: 4px 0 14px; }
+.dcc-text { font-family: var(--font-sans); font-size: 0.85rem; color: var(--ink); }
+.dcc-actions { display: flex; gap: 14px; align-items: center; }
+.dcc-log { background: none; border: none; color: var(--accent); font-family: var(--font-sans); font-size: 0.85rem; cursor: pointer; }
+.dcc-dismiss { background: none; border: none; color: var(--ink-muted); font-family: var(--font-sans); font-size: 0.8rem; cursor: pointer; }
+.dcc-dismiss:hover { color: var(--ink); }

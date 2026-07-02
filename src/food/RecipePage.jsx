@@ -6,7 +6,9 @@ import { entryMacros, slotForHour, NUTRIENTS } from "./foodCalc";
 import { fmtNum, fmtFull } from "./foodFormat";
 import { setRecipeFavourite } from "./recipeWrite";
 import { useCookLog } from "./useCookLog";
+import { fetchDoneSession, saveSession } from "./cookSession";
 import CookPage from "./CookPage";
+import DoneCookCard from "./DoneCookCard";
 import LogMealSheet from "./LogMealSheet";
 import RecipeActionBar from "./RecipeActionBar";
 import Toast from "../kit/Toast";
@@ -32,13 +34,17 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
   const [openSteps, setOpenSteps] = useState({});
   const [fav, setFav] = useState(false);
   const [cookEntries, setCookEntries] = useState([]);
+  const [doneSession, setDoneSession] = useState(null); // session-surfacing C — the done-card
   const cl = useCookLog();
 
   useEffect(() => {
     let alive = true;
     fetchRecipe(recipeId).then((r) => { if (alive) { setData(r); setServings(r.recipe.servings || 1); setCookEntries(r.cookEntries || []); setFav(!!r.recipe.is_favourite); } }).catch(() => alive && setData({ error: true }));
+    fetchDoneSession(recipeId).then((s) => { if (alive) setDoneSession(s); }).catch(() => {});
     return () => { alive = false; };
   }, [recipeId]);
+
+  const dismissDone = () => { if (doneSession) saveSession(doneSession.id, { dismissed: true }).catch(() => {}); setDoneSession(null); };
 
   if (!data) return <div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Reading recipe…</span></div>;
   if (data.error) return <p className="flog-error">Couldn’t load that recipe.</p>;
@@ -116,6 +122,7 @@ export default function RecipePage({ recipeId, onBack, onEdit, onDelete, onCooke
         {recipe.source_url && (<> · <a className="rp-source" href={recipe.source_url} target="_blank" rel="noreferrer">{(() => { try { return `from ${new URL(recipe.source_url).hostname}`; } catch { return "source"; } })()}</a></>)}
       </p>
       {cookedLabel && <p className="rp-cooked">Last cooked {cookedLabel}</p>}
+      {doneSession && <DoneCookCard onLog={() => { dismissDone(); setStaging("cooked"); }} onDismiss={dismissDone} />}
 
       <div className="rp-macros">
         <div className="rp-kcal">{approx ? "~" : ""}{fmtNum("kcal", macros.perServing.kcal)} <span>kcal / serving</span></div>
