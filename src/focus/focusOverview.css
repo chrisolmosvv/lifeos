@@ -1,0 +1,88 @@
+/* LifeOS — Focus Overview (piece 3): strict zero-scroll, full-width. The overview
+   fills the pillar height; only the dial's ledger caps (→ "see all") and the full
+   ledger page scrolls. House style — hairlines, no boxes/shadows, terracotta sparingly. */
+
+.focus-overview { height: 100%; display: flex; flex-direction: column; padding: 14px 24px 12px; box-sizing: border-box; overflow: hidden; }
+.focus-ovw-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.focus-ovw-actions { display: flex; align-items: center; gap: 18px; }
+
+.focus-ovw-body { flex: 1; min-height: 0; display: flex; gap: 36px; align-items: center; }
+.focus-ovw-dial { height: 100%; aspect-ratio: 1; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 8px 0; }
+
+/* ── Dial ─────────────────────────────────────────────────────────────────── */
+.focus-dial { display: block; height: 100%; width: 100%; }
+.dial-track, .dial-empty { stroke: var(--rule-faint); stroke-width: 12; }
+.dial-arc {
+  stroke-width: 12; stroke-linecap: butt; cursor: pointer;
+  stroke-dasharray: 100; stroke-dashoffset: 100;
+  transition: stroke-dashoffset 0.7s ease, opacity 0.3s ease;
+}
+.dial-arc.is-in { stroke-dashoffset: 0; }
+.dial-arc.is-rest { stroke-width: 7; opacity: 0.28; }
+.dial-arc.is-dim { opacity: 0.12; }
+@media (prefers-reduced-motion: reduce) { .dial-arc { transition: opacity 0.3s ease; stroke-dashoffset: 0; } }
+
+.dial-goal-track { stroke: var(--rule-faint); stroke-width: 3; }
+.dial-goal { stroke: var(--ink-muted); stroke-width: 3; stroke-linecap: round; }
+.dial-goal.is-met { stroke: var(--accent); }
+.dial-goal-tick { stroke: var(--ink-muted); stroke-width: 2; }
+.dial-goal-tick.is-met { stroke: var(--accent); }
+.dial-now { stroke: var(--accent); stroke-width: 1.5; opacity: 0.55; }
+
+.dial-centre { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: var(--font-sans); }
+.dial-total { font-family: var(--font-serif); font-size: 20px; line-height: 1; color: var(--ink); }
+.dial-total.is-met { color: var(--accent); }
+.dial-goal-label { color: var(--ink-muted); font-size: 8.5px; margin-top: 2px; }
+.dial-settarget { background: none; border: 0; color: var(--ink-muted); font-size: 8px; cursor: pointer; text-decoration: underline; margin-top: 2px; }
+.dial-sub { color: var(--ink-muted); font-size: 7px; margin-top: 4px; }
+.dial-invite { color: var(--ink-muted); font-size: 8px; line-height: 1.4; }
+.dial-invite span { color: var(--accent); }
+
+/* ── Ledger (right, height-filling, capped) ────────────────────────────────── */
+.focus-ledger { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; }
+.focus-ledger-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+.focus-ledger-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); }
+.focus-ledger-list { flex: 1; min-height: 0; overflow: hidden; }
+.focus-ledger-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--rule-faint); font-size: 14px; }
+.focus-ledger-time { color: var(--ink-muted); font-size: 12px; min-width: 96px; }
+.focus-ledger-dotbtn { background: none; border: 0; padding: 0; cursor: pointer; display: flex; }
+.focus-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+.focus-ledger-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.focus-ledger-dur { font-size: 13px; }
+.focus-ledger-stars { color: var(--accent); font-size: 11px; letter-spacing: 0.5px; }
+.focus-ledger-note { color: var(--ink-muted); width: 14px; text-align: center; cursor: default; }
+
+/* ── Week ring-strip (foot) ────────────────────────────────────────────────── */
+.focus-weekstrip { flex: 0 0 auto; padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--rule); }
+.focus-weekstrip-rings { display: flex; justify-content: space-between; gap: 8px; }
+.focus-mini { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+.focus-mini-svg { width: 28px; height: 28px; }
+.focus-mini-track { stroke: var(--rule-faint); stroke-width: 3; }
+.focus-mini-fill { stroke: var(--ink-muted); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+.focus-mini-fill.is-met { stroke: var(--accent); }
+.focus-mini-day { font-size: 11px; color: var(--ink-muted); }
+.focus-mini.is-today .focus-mini-day { color: var(--ink); font-weight: 600; }
+.focus-weekstrip-foot { display: flex; gap: 6px; justify-content: center; margin-top: 6px; font-size: 12px; color: var(--ink-muted); }
+.focus-weektarget.is-met { color: var(--accent); }
+
+/* ── Range view (Week/Month/90) ────────────────────────────────────────────── */
+.focus-range { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 8px; }
+.focus-range-chart { flex: 1; min-height: 0; display: flex; align-items: flex-end; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+.focus-bar-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; min-width: 0; }
+.focus-bar { width: 70%; max-width: 34px; display: flex; flex-direction: column-reverse; border-radius: 3px 3px 0 0; overflow: hidden; }
+.focus-bar-seg { width: 100%; display: block; }
+.focus-bar-seg.is-dim { opacity: 0.2; }
+.focus-bar-lbl { font-size: 10px; color: var(--ink-muted); }
+.focus-range-foot { flex: 0 0 auto; display: flex; justify-content: space-between; padding-top: 8px; font-size: 13px; color: var(--ink-muted); }
+
+/* ── Full ledger page (the ONE scrollable surface) ─────────────────────────── */
+.focus-full { height: 100%; display: flex; flex-direction: column; padding: 16px 24px; box-sizing: border-box; }
+.focus-full-head { display: flex; align-items: baseline; gap: 16px; }
+.focus-full-title { font-family: var(--font-serif); font-size: 22px; }
+.focus-full-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.focus-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule); border-radius: 14px; padding: 4px 12px; background: none; cursor: pointer; font-size: 13px; color: var(--ink-muted); }
+.focus-chip.is-on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.focus-full-list { flex: 1; min-height: 0; overflow-y: auto; }
+.focus-full-group { margin-bottom: 14px; }
+.focus-full-daylabel { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); padding: 8px 0 4px; border-bottom: 1px solid var(--rule); }
+.focus-full-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--rule-faint); font-size: 14px; }

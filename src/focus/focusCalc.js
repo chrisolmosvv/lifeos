@@ -94,28 +94,43 @@ export function dayCategoryTotals(sessions, ymd) {
   return out;
 }
 
-// The ledger: one entry per day-session, NEWEST FIRST. Pure shape for the UI to
-// render (time range, category, task, duration, stars, note). Clock minutes come
-// from the shared Amsterdam helper.
+// One ledger entry from a session (time range, category, task, duration, stars,
+// note). Clock minutes come from the shared Amsterdam helper. Shared by the day
+// ledger and the full "see all" ledger so their rows never drift.
+function ledgerRow(s) {
+  return {
+    id: s.id,
+    ymd: amsYMD(s.started_at),
+    startMin: amsClockMinutes(s.started_at),
+    endMin: amsClockMinutes(s.ended_at),
+    categoryId: s.category_id ?? null,
+    categorySnapshot: s.category_snapshot ?? null,
+    taskId: s.task_id ?? null,
+    taskTitle: s.task_title_snapshot ?? null,
+    mode: s.mode,
+    source: s.source,
+    focusSeconds: sessionFocusSeconds(s),
+    restSeconds: sessionRestSeconds(s),
+    rating: s.rating ?? null,
+    note: s.note ?? null,
+  };
+}
+
+// The day ledger: one entry per day-session, NEWEST FIRST.
 export function dayLedger(sessions, ymd) {
   return sessionsOnDay(sessions, ymd)
     .slice()
     .sort((a, b) => ms(b.started_at) - ms(a.started_at))
-    .map((s) => ({
-      id: s.id,
-      startMin: amsClockMinutes(s.started_at),
-      endMin: amsClockMinutes(s.ended_at),
-      categoryId: s.category_id ?? null,
-      categorySnapshot: s.category_snapshot ?? null,
-      taskId: s.task_id ?? null,
-      taskTitle: s.task_title_snapshot ?? null,
-      mode: s.mode,
-      source: s.source,
-      focusSeconds: sessionFocusSeconds(s),
-      restSeconds: sessionRestSeconds(s),
-      rating: s.rating ?? null,
-      note: s.note ?? null,
-    }));
+    .map(ledgerRow);
+}
+
+// The full ledger for the "see all" page: every finished, non-archived session in
+// the given rows, NEWEST FIRST (each row carries its ymd). Not day-scoped.
+export function ledgerAll(sessions) {
+  return (sessions || [])
+    .filter((s) => s && !s.archived_at && !isRunning(s))
+    .sort((a, b) => ms(b.started_at) - ms(a.started_at))
+    .map(ledgerRow);
 }
 
 // Dial arcs for the day: focus arcs (category colour) + rest arcs (ghost/hatched),
