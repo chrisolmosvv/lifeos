@@ -14,6 +14,7 @@ import './editionHeader.css'
 
 const NAV = [
   { id: 'today', label: 'Today' },
+  { id: 'focus', label: 'Focus' },
   { id: 'calendar', label: 'Calendar' },
   { id: 'health', label: 'Health' },
   { id: 'food', label: 'Food' },

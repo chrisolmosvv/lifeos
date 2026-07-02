@@ -9,6 +9,7 @@ import Planning from './Planning'
 import ArchiveScreen from './ArchiveScreen'
 import HealthHub from './health/HealthHub'
 import FoodPage from './food/FoodPage'
+import FocusPage from './focus/FocusPage'
 import HealthDebugV2 from './health/HealthDebugV2' // THROWAWAY (V2 P0c verify) — delete with the hook below
 import './calendar.css'
 
@@ -16,7 +17,7 @@ import './calendar.css'
 // grid/list toggle). SHALLOW by design: only the top-level pillar is remembered (a reload returns you
 // to the right pillar, its default sub-view); the deep restore into a cook is the resume banner's job.
 // A garbage/unknown stored value falls back to 'today' — never a blank screen.
-const PILLARS = ['today', 'planning', 'archive', 'calendar', 'health', 'food', 'settings']
+const PILLARS = ['today', 'focus', 'planning', 'archive', 'calendar', 'health', 'food', 'settings']
 const VIEW_KEY = 'lifeos.view'
 function initialView() {
   if (typeof window === 'undefined') return 'today'
@@ -43,6 +44,10 @@ export default function LoggedIn({ email }) {
       {view === 'today' ? (
         <div className="cal-wrap">
           <Today onOpenPlanning={() => setView('planning')} />
+        </div>
+      ) : view === 'focus' ? (
+        <div className="cal-wrap">
+          <FocusPage />
         </div>
       ) : view === 'planning' ? (
         <div className="cal-wrap">

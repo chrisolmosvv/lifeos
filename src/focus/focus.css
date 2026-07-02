@@ -1,0 +1,105 @@
+/* LifeOS — Focus module (piece 2): the write-loop surfaces. House style — paper/ink,
+   terracotta sparingly, Fraunces for the hero numerals, Inter for UI, hairlines, no
+   boxes/shadows. Setup + In-focus are centred, zero-scroll columns. */
+
+.focus-page {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+
+/* ── Home scaffold (temporary — piece 3 replaces it with the dial) ─────────── */
+.focus-home-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.focus-home-title { font-family: var(--font-serif); font-weight: 400; font-size: 32px; margin: 0; }
+
+.focus-list { list-style: none; margin: 24px 0 0; padding: 0; }
+.focus-list-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--rule-faint);
+}
+.focus-list-time { color: var(--ink-muted); font-size: 13px; min-width: 108px; }
+.focus-list-subject { flex: 1; font-size: 15px; }
+.focus-list-dur { font-size: 14px; }
+.focus-list-stars { color: var(--accent); font-size: 12px; letter-spacing: 1px; }
+.focus-list-note { color: var(--ink-muted); cursor: default; }
+.focus-list-actions { display: flex; gap: 10px; }
+.focus-linkbtn { background: none; border: 0; color: var(--ink-muted); font-size: 13px; cursor: pointer; padding: 0; }
+.focus-linkbtn:hover { color: var(--accent); }
+.focus-empty { color: var(--ink-muted); font-size: 14px; margin: 24px 0 0; }
+
+/* ── Setup ─────────────────────────────────────────────────────────────────── */
+.focus-setup { max-width: 460px; margin: 8vh auto 0; text-align: left; }
+.focus-setup-title { font-family: var(--font-serif); font-weight: 400; font-size: 26px; margin: 0 0 24px; text-align: center; }
+.focus-back { background: none; border: 0; color: var(--ink-muted); cursor: pointer; font-size: 14px; margin-bottom: 12px; }
+
+.focus-field { margin-bottom: 20px; }
+.focus-label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); margin-bottom: 8px; }
+
+.focus-catbtn {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: none; border: 1px solid var(--rule); border-radius: 8px;
+  padding: 10px 12px; cursor: pointer; color: var(--ink); font-size: 15px;
+}
+.focus-nolabel { color: var(--ink-muted); }
+.focus-chev { margin-left: auto; color: var(--ink-muted); }
+.focus-subject-chip { display: flex; align-items: center; gap: 8px; }
+.focus-subject-task { font-size: 16px; }
+.focus-chip-x { background: none; border: 0; color: var(--ink-muted); cursor: pointer; font-size: 18px; line-height: 1; }
+
+.focus-modes { display: flex; gap: 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.focus-mode { flex: 1; background: none; border: 0; border-right: 1px solid var(--rule); padding: 10px 8px; cursor: pointer; color: var(--ink-muted); font-size: 14px; }
+.focus-mode:last-child { border-right: 0; }
+.focus-mode.is-on { background: var(--ink); color: var(--paper); }
+
+.focus-mins { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.focus-mins input { width: 76px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; font-size: 15px; font-family: var(--font-sans); background: var(--paper); color: var(--ink); }
+.focus-mins span { color: var(--ink-muted); font-size: 14px; }
+
+.focus-err { color: var(--overdue); font-size: 13px; margin: 8px 0 0; }
+.focus-setup-actions, .focus-card-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; }
+
+.focus-btn-start { background: var(--ink); color: var(--paper); border: 0; border-radius: 8px; padding: 10px 20px; font-size: 15px; cursor: pointer; }
+.focus-btn-start:disabled { opacity: 0.5; cursor: default; }
+.focus-btn-ghost { background: none; border: 1px solid var(--rule); border-radius: 8px; padding: 10px 18px; font-size: 15px; cursor: pointer; color: var(--ink); }
+.focus-btn-danger { color: var(--overdue); border-color: transparent; }
+.focus-btn-stop { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 10px 24px; font-size: 15px; cursor: pointer; }
+
+/* ── In-focus (split-flap) ─────────────────────────────────────────────────── */
+.focus-live { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 22px; }
+.focus-subject-line { font-size: 15px; color: var(--ink-muted); }
+
+.flap { display: flex; align-items: center; gap: 10px; font-family: var(--font-serif); }
+.flap--break { color: var(--ink-muted); }
+.flap--overtime { color: var(--accent); }
+.flap-group { display: flex; gap: 4px; }
+.flap-colon { align-self: center; font-size: 48px; color: var(--ink-muted); margin: 0 2px; }
+.flap-cell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 68px; height: 96px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.flap-digit { font-size: 72px; line-height: 1; font-variant-numeric: tabular-nums; }
+.flap-seam { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--rule); }
+.flap-cell.is-flip .flap-digit { animation: flap-flip 0.3s ease; }
+@keyframes flap-flip { 0% { transform: translateY(-4px) scaleY(0.9); opacity: 0.5; } 100% { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .flap-cell.is-flip .flap-digit { animation: none; } }
+
+.focus-slim { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 260px; }
+.focus-slim-label { font-size: 13px; color: var(--ink-muted); letter-spacing: 0.04em; }
+.focus-progress { width: 100%; height: 3px; background: var(--rule-faint); border-radius: 2px; overflow: hidden; }
+.focus-progress-fill { display: block; height: 100%; background: var(--accent); transition: width 0.4s linear; }
+.focus-live--break .focus-progress-fill { background: var(--ink-muted); }
+.focus-controls { display: flex; gap: 14px; }
+
+/* ── Save card / stale prompt (centred overlay) ────────────────────────────── */
+.focus-scrim { position: fixed; inset: 0; background: rgba(28, 25, 22, 0.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.focus-card { background: var(--paper); border: 1px solid var(--rule); border-radius: 12px; padding: 24px; width: min(420px, 92vw); }
+.focus-card--inline { margin: 12vh auto 0; }
+.focus-card-title { font-family: var(--font-serif); font-weight: 400; font-size: 22px; margin: 0 0 4px; }
+.focus-card-subject { color: var(--ink-muted); font-size: 14px; margin: 0 0 20px; }
+.focus-card-field { margin-bottom: 18px; }
+.focus-card-fixed { font-family: var(--font-serif); font-size: 22px; }
+.focus-stars { display: flex; gap: 6px; }
+.focus-star { background: none; border: 0; cursor: pointer; font-size: 26px; line-height: 1; color: var(--rule); padding: 0; }
+.focus-star.is-on { color: var(--accent); }
+.focus-done-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; font-size: 14px; cursor: pointer; }
+.focus-note { width: 100%; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-family: var(--font-sans); font-size: 14px; resize: vertical; background: var(--paper); color: var(--ink); box-sizing: border-box; }
