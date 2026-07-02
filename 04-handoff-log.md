@@ -33,6 +33,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-02 — Today — Converged task row across both Today modules. SRC-ONLY. (Awaiting owner QA.)
+
+Both Today modules ("Tasks today" + "The next 7 days") now render ONE identical row, redesigned to
+the Planner's spec. Two src-only commits, no schema — nothing for the Checker.
+
+WHAT CHANGED:
+- New converged row (Today-ONLY): title first (Fraunces lead), the category dot+tag + the "· 2h 15m"
+  focus tag underneath on a quiet meta line, a ▶, one status control, and the due date far right.
+- The 3-segment status pill on the row is replaced by ONE cycling control: tap cycles To do → In
+  progress → Done → back to To do (open ring / half ring / filled dot; ink/muted, no colour). Writes
+  through the SAME status path; the DB trigger still owns completed_at.
+- ▶ (quiet ink glyph, not terracotta) reuses the existing Focus-Setup trigger — opens Setup prefilled
+  with the task; blocked with the gentle nudge if a session is already running.
+- Next 7 days GAINED the status control + ▶ + its due date (the due was hidden before); undated tasks
+  keep the "undated" tag at the bottom. Priority no longer shows on the row (still in the data + form).
+
+FILES TOUCHED: src/kit/TodayRow.jsx (new), src/kit/StatusCycle.jsx (new), src/kit/todayKit.css,
+src/Today.jsx. (TodayTaskRow.jsx + StatusPill.jsx deliberately UNTOUCHED — see risks.)
+
+HOW TO VERIFY (13" MacBook, logged in):
+1. Open Today. Both modules' rows line up in the same columns: title, category+dot underneath, ▶,
+   status, due far right. Rows with no logged focus stay clean.
+2. Tap a row's status control repeatedly → To do → In progress → Done → back to To do. Confirm it
+   SAVED (not just the screen): in the SQL editor run
+   `select id, title, status, completed_at from tasks where title = '<that task's exact title>';`
+   after each tap — status advances open → in_progress → done (completed_at fills) → open (empties).
+3. A Done row greys + strikes through and stays put; reload the page → still Done. Tap once more
+   (the wrap) → back To do, un-done.
+4. Click a row's ▶ → the Focus Setup screen opens already filled with that task. Start it, then go
+   back to Today and click another row's ▶ → you get "A session's already running — stop it first"
+   (no silent switch).
+5. Open any task in the form → priority is still there and editable, even though it's off the row.
+6. Eyeball Planning → Time and Planning → Category: their rows must look + behave EXACTLY as before
+   (unchanged). The task form + subtask rows still show the old 3-segment pill.
+
+KNOWN GAPS / RISKS:
+- TodayTaskRow is a SHARED block (Planning Time + Category use it too), so the new row is a separate
+  Today-only component rather than an edit to the shared one — nothing should leak to Planning, but
+  that's the thing to eyeball (step 6).
+- todayKit.css was already ~466 lines (over the ~250 guide); I added ~130 lines modestly rather than
+  split it — the split is parked debt (with Today.jsx / todayForm.css), not done here.
+- Not yet driven on real data by me — owner QA on live Supabase is the gate (steps 2–4).
+- Mobile/responsive layout of the new row not specifically tuned (the row uses fixed column widths;
+  narrow screens may want a follow-up).
+
+NEXT: owner QA the six steps above; if good, the Planner locks the four amendments in the decisions
+doc (▶-on-rows, cycling-status-replaces-pill, Next-7-gains-controls, priority-off-row).
+
+FOR THE CHECKER: nothing — src-only, no schema.
+
+---
+
 ### 2026-07-02 — Track F — Session-surfacing (A route persistence + B resume banner + C done-card). SRC/ ONLY. (Owner-verified.)
 
 The last tracked piece of the Food V2 upgrade. Three surfaces, different risk, each its own commit; the
