@@ -8,6 +8,24 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-02 — FOCUS pillar shipped (pieces 1–8) ✅
+The new **Focus** pillar (a time/focus tracker) is built end-to-end and owner-verified,
+inserted in the nav after Today. It records real focus into a new `focus_sessions` table
+and integrates across the app. Delivered in 8 owner-verified pieces — the schema was
+checker-gated in its OWN commit, and the Calendar layer was isolated + snapshot-guarded:
+1) foundation (schema + pure calc, proven vs real rows); 2) record a session (Setup → the
+split-flap in-focus → the save card; running row = `ended_at` NULL; discard/finalise; the
+stale guard); 3) the Overview (dial + height-filling ledger + week ring-strip + targets +
+trend + range view — strict zero-scroll on the 13", owner-confirmed); 4) task↔focus (the
+form's Focus section + the per-task row tag + manual back-fill); 5) the global running layer
+(header marker + popover + global save overlay + the ▶ block-nudge); 6) the Today
+"focused today" line + the morning-brief "yesterday's focus" line (two-track); 7) the
+Calendar actual-layer (a terracotta hatched overlay, isolated behind a toggle, default off);
+8) polish (accent audit — compliant; dead-code sweep; this close-out).
+Commit chain: `efc32ff`→`524d5f1`→`38af3e4`→`2408d4c`→`c6b0328`→`10f8e63`→`353ce7b`→
+`78f3b9a`→`8f2d3d9`→`1835853`→(this docs commit). The full contract lives in `12-focus.md`.
+**NEXT:** the DEFERRED Marty focus-control track (start/stop/report by chat), when wanted.
+
 ## Session note — 2026-07-01 — Calendar create cursor polished
 The empty create areas in Today and Calendar no longer use the operating system's
 `copy` cursor, which could show as a green plus on hover. They now share a small

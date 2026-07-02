@@ -33,6 +33,44 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-02 — Focus module — SHIPPED (pieces 1–8, all owner-verified)
+WHAT CHANGED: New **Focus** pillar (time/focus tracker) inserted after Today. Records real
+focus into a new `focus_sessions` table and integrates across the app — the task form's Focus
+section, the per-task row tag, the header running-marker, the Today line, the morning-brief
+line, and an isolated Calendar overlay. REPLACES nothing; every touched screen unchanged when
+no session runs / the toggle is off.
+FILES TOUCHED: `db/36_focus_sessions.sql`; `src/focus/*` (focusCalc/Trend/Format/Load/Write/
+Timer + Overview/FocusDial/FocusLedger/WeekRingStrip/RangeView/FullLedgerPage + Setup/InFocus/
+SplitFlap/SaveCard/ManualEntry + useFocusSession/useTodayFocus + focusSessionContext/
+focusTotalsContext/focusNav + FocusGlobalLayer + css); `kit/FocusSection`, `kit/TodayTaskRow`
+(tag), `kit/ItemForm` (mount), `kit/WeekGrid`+`kit/WeekColumn`+`weekGrid.css` (overlay);
+`EditionHeader`(+css) (marker), `LoggedIn` (providers+route), `Today`(+css) (line),
+`CalendarWeek`/`WeekView` (toggle+layer); `supabase/functions/brief/day.ts` (yesterday line).
+COMMIT CHAIN: `efc32ff` schema (checker approved) · `524d5f1` calc · `38af3e4` P2 record ·
+`2408d4c` P3 overview · `c6b0328` P4 task↔focus · `10f8e63` P5 global layer · `353ce7b` P6
+Today line · `78f3b9a` P6 brief (supabase) · `8f2d3d9` P7 Calendar layer · `1835853` P8
+dead-code sweep · (this docs commit).
+HOW TO VERIFY: Focus in the nav → record a session (3 modes) → Stop → save card → RELOAD
+persists → edit → delete+undo; running row = `ended_at` NULL, finalised on save; forced Wi-Fi
+failure on save reverts. Overview dial/ledger/range = strict zero-scroll on the 13". Task form
+Focus section + the "· 2h15" tag on Today AND Planning (focus-less rows byte-for-byte). Header
+marker rides every screen while running; Stop overlays any screen. Today shows "focused today
+· …". Text "brief" → the brief includes "Yesterday you focused …" (needs the brief REDEPLOYED).
+Calendar → "Focus" toggle ON = terracotta hatch; OFF = byte-for-byte. Watch:
+`select started_at, ended_at, segments, updated_at from focus_sessions order by updated_at desc;`
+KNOWN GAPS / RISKS: (1) the spec's "per-category total surfaces on filter" DISPLAY isn't built —
+the ledger filter narrows rows but shows no category subtotal (the `dayCategoryTotals` getter was
+removed as dead; re-add if we build the display). (2) mid-session pause/segment history isn't
+persisted across a reload — resumes from `started_at`, the save card's editable duration corrects.
+(3) the brief line only appears after the `brief` function is REDEPLOYED. (4) the Calendar overlay
+is week-view desktop only (the phone DayAgenda is untouched). (5) `▶` while a STALE (not running)
+row exists routes to the finish/discard prompt, not a fresh Setup — intended.
+NEXT: DEFERRED — Marty focus-control (start/stop/report by chat).
+FOR THE CHECKER: `db/36` was checker-approved before running live (schema its own commit, never
+mixed with src). The `health_goals` reuse for focus goals needed NO schema change (`goal_type`
+is free `text`) and was flagged — no other schema this module. The brief (supabase) was its own
+commit; `verify_jwt` untouched (the brief stays private/jwt-verified).
+
 ### 2026-07-01 — Track F — Food V2 P9 CLEANUP SWEEP (three tracks, none mixed). (src + schema + docs.)
 
 The tail of the Food V2 upgrade. Three DISTINCT kinds of work, each its own commit(s):

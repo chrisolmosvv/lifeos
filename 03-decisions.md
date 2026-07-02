@@ -9,6 +9,42 @@
 
 ---
 
+## Focus module (time tracker) — 2026-07-02
+
+- **[New Focus pillar = additive, spine-protected.]** A new `focus_sessions` table (checker
+  approved, `db/36`), owner-only RLS, NO foreign key into tasks/events/categories — `task_id`/
+  `category_id` are plain soft references alongside name/colour snapshots. **Why:** the
+  established added-module pattern (Marty/gym/food). **Trade-off:** a deleted spine row leaves a
+  stale pointer that's simply reported "already gone" — accepted.
+- **[Interval segments stored as `segments jsonb` on the row, not a child table.]** **Why:** one
+  atomic write, so a failed save (Wi-Fi off) reverts cleanly. **Trade-off:** no relational query
+  over segments — not needed.
+- **[A running session = a real row with `ended_at` NULL, written at Start.]** **Why:** the only
+  way the header marker rides every screen and survives a reload cheaply. **Trade-off:** in-memory
+  pause/segment history isn't persisted — a mid-session reload resumes from `started_at`, and the
+  save card's editable duration corrects it. **Discard HARD-deletes** the unsaved running row;
+  deleting a SAVED session **soft-archives** (`archived_at`) with an undo toast.
+- **[Duration is compute-on-read, never stored.]** Only FOCUS time counts toward totals + the
+  dial; interval BREAKS are logged as separate rest.
+- **[Daily/weekly focus GOALS reuse the existing `health_goals` table]** (`goal_type`
+  `focus_daily`/`focus_weekly`, direction `up`, unit `seconds`). **Why (ruling C, condition 1):**
+  `health_goals` is a GENERIC append-only goals log already read by `resolveGoals`/`vsGoal`;
+  reusing it avoids a parallel goals system. **No schema change was needed** — `health_goals.
+  goal_type` is free `text` with NO check/enum, so the focus goal-types are just new VALUES the
+  app writes (confirmed live; the Checker was told). **Trade-off:** a "health" table now also
+  holds focus goals — purely additive, nothing about health changed.
+- **[Calendar actual-layer = a terracotta hatched overlay, owner-chosen, isolated behind a toggle
+  (default OFF).]** **Why:** highest regression risk (touches locked Calendar V2); OFF = the grid
+  is byte-for-byte unchanged; the overlay is `pointer-events:none` so drag/create pass through.
+  **Trade-off:** opt-in — hidden until the toggle is turned on.
+- **[Cross-pillar wiring via window events + small module providers]** (`focusNav`,
+  `FocusSessionProvider`, `FocusTotalsProvider`) instead of prop-drilling through Today/Planning/
+  Calendar. **Why:** keeps those screens byte-for-byte; the row tag reads a context (null → no tag).
+- **Amendments to prior locks (from the spec, called out openly):** Pomodoro REINSTATED as the
+  "intervals" mode + count-down added → three modes; deep/shallow → a 1–5 star quality rating;
+  the save card gains "mark task done?" — via the EXISTING status→`done` path (the trigger stamps
+  `completed_at`), no new spine writer; delete = snapshot / soft-archive (block-delete parked).
+
 ## Calendar create cursor — no system green plus (2026-07-01)
 
 - **[Empty calendar space uses a LifeOS cursor, not the OS `copy` cursor.]** The
