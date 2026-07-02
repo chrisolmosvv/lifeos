@@ -28,6 +28,14 @@ export function formatDurationShort(seconds) {
   return `${mm}m`;
 }
 
+// "2:15" hours:minutes from seconds — the chart's always-on day totals + hover
+// per-category durations (distinct from formatDuration's "2h 15m" wording).
+export function hoursMins(seconds) {
+  const m = Math.round((Number(seconds) || 0) / 60);
+  const h = Math.floor(m / 60);
+  return `${h}:${String(m % 60).padStart(2, "0")}`;
+}
+
 // Ticking elapsed clock for the header marker: "M:SS" (or "H:MM:SS" past an hour).
 export function elapsedClock(seconds) {
   const s = Math.max(0, Math.floor(seconds || 0));

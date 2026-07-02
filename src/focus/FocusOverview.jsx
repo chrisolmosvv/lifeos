@@ -21,7 +21,7 @@ import WeekRingStrip from "./WeekRingStrip";
 //   onClear, onSeeAll, dailySeconds, weeklySeconds, onSetTarget, onStart, onAddPast,
 //   targetsRef (anchors the Targets popover, owned by the page).
 export default function FocusOverview({
-  rawRows, today, now, colorFor, filterCat, onPickCategory, onClear, onSeeAll,
+  rawRows, today, now, colorFor, nameFor, catRank, filterCat, onPickCategory, onClear, onSeeAll,
   dailySeconds, weeklySeconds, onSetTarget, onStart, onAddPast, targetsRef,
 }) {
   const arcs = dayArcs(rawRows, today);
@@ -79,7 +79,7 @@ export default function FocusOverview({
 
         <div className="focus-ovw-right">
           <FocusChart rawRows={rawRows} today={today} now={now} colorFor={colorFor}
-            filterCat={filterCat} onPickCategory={onPickCategory} />
+            nameFor={nameFor} catRank={catRank} filterCat={filterCat} onPickCategory={onPickCategory} />
           <FocusLedger rows={rows} colorFor={colorFor} onPickCategory={onPickCategory}
             onSeeAll={onSeeAll} filterActive={filterCat != null} onClear={onClear} />
         </div>

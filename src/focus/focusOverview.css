@@ -21,14 +21,33 @@
 .dial-hour { stroke: var(--ink-muted); stroke-width: 1; opacity: 0.45; }
 .dial-hourlbl { fill: var(--ink-muted); font-family: var(--font-sans); font-size: 9px; opacity: 0.7; }
 
-/* ── Overview chart (top of the right column; the detail arrives in a later piece) ── */
+/* ── Overview chart (top of the right column) ──────────────────────────────────── */
 .focus-chart { flex: 3 1 0; min-height: 0; display: flex; flex-direction: column; padding-bottom: 8px; }
-.focus-chart-plot { flex: 1; min-height: 0; display: flex; align-items: flex-end; gap: 6px; }
-.focus-chart-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; min-width: 0; }
-.focus-chart-bar { width: 68%; max-width: 30px; display: flex; flex-direction: column-reverse; overflow: hidden; border-radius: 3px 3px 0 0; }
-.focus-chart-seg { width: 100%; display: block; }
+.focus-chart-plot { position: relative; flex: 1; min-height: 0; }
+
+/* Faint 2h gridlines behind the bars. The band is inset to match the columns' reserved
+   total row (top) + day-letter row (bottom), so a line's height reads true against a bar. */
+.focus-chart-grid { position: absolute; left: 0; right: 0; top: 12px; bottom: 16px; pointer-events: none; }
+.focus-chart-gridline { position: absolute; left: 0; right: 0; border-top: 1px solid var(--rule-faint); }
+.focus-chart-gridline span { position: absolute; left: 0; top: -0.75em; font-size: 8px; color: var(--ink-muted); opacity: 0.7; background: var(--paper); padding-right: 3px; }
+
+.focus-chart-cols { position: relative; height: 100%; display: flex; align-items: stretch; gap: 6px; }
+.focus-chart-col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; }
+.focus-chart-total { flex: 0 0 12px; font-size: 9px; line-height: 12px; color: var(--ink-muted); }
+.focus-chart-barwrap { flex: 1 1 0; min-height: 0; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.focus-chart-bar { width: 68%; max-width: 30px; display: flex; flex-direction: column-reverse; overflow: hidden; }
+.focus-chart-seg { width: 100%; display: block; border-top: 1px solid var(--paper); }
 .focus-chart-seg.is-dim { opacity: 0.2; }
-.focus-chart-lbl { font-size: 10px; color: var(--ink-muted); }
+.focus-chart-lbl { flex: 0 0 16px; font-size: 10px; line-height: 16px; color: var(--ink-muted); }
+.focus-chart-col.is-today .focus-chart-lbl { color: var(--accent); }
+
+/* Hover breakdown — a small contained readout, top-right of the plot (paper, like the
+   app's popovers). The category names double as the colour key (no separate legend). */
+.focus-chart-hover { position: absolute; top: 0; right: 0; pointer-events: none; background: var(--paper); border: 1px solid var(--rule); padding: 5px 8px; max-width: 62%; }
+.focus-chart-hover-day { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); margin-bottom: 3px; }
+.focus-chart-hover-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.focus-chart-hover-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.focus-chart-hover-dur { color: var(--ink-muted); }
 
 /* The ledger sits UNDER the chart in the right column — shorter (chart-led), hairline above. */
 .focus-ovw-right .focus-ledger { flex: 2 1 0; height: auto; min-height: 0; border-top: 1px solid var(--rule); padding-top: 8px; }

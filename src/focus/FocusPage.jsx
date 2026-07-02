@@ -58,6 +58,17 @@ export default function FocusPage() {
     const c = byId.get(id);
     return c ? resolveColor(c, byId) : (colorHex(INBOX_COLOR) || "#9A9384");
   }, [byId]);
+  const nameFor = useCallback((id) => {
+    if (!id) return "No category";
+    return byId.get(id)?.name || "No category";
+  }, [byId]);
+  // A STABLE per-category rank (by the category's own sort position) so the chart can
+  // draw each category in the same stack slot on every day. Uncategorised sorts last.
+  const catRank = useMemo(() => {
+    const ordered = [...cats].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || String(a.id).localeCompare(String(b.id)));
+    const m = new Map(ordered.map((c, i) => [c.id, i]));
+    return (id) => (id != null && m.has(id) ? m.get(id) : Number.MAX_SAFE_INTEGER);
+  }, [cats]);
   const dailySeconds = goals.get("focus_daily")?.target_value ?? null;
   const weeklySeconds = goals.get("focus_weekly")?.target_value ?? null;
 
@@ -161,6 +172,7 @@ export default function FocusPage() {
     body = (
       <div className="focus-overview">
         <FocusOverview rawRows={rawRows} today={today} now={now} colorFor={colorFor}
+          nameFor={nameFor} catRank={catRank}
           filterCat={filterCat} onPickCategory={pickCat} onClear={() => setFilterCat(null)}
           onSeeAll={() => setView("full")} dailySeconds={dailySeconds} weeklySeconds={weeklySeconds}
           onSetTarget={() => setGoalsOpen(true)} targetsRef={goalsRef}
