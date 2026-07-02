@@ -80,20 +80,6 @@ export function dayRestTotal(sessions, ymd) {
   return sessionsOnDay(sessions, ymd).reduce((t, s) => t + sessionRestSeconds(s), 0);
 }
 
-// Focus + rest seconds per category for the day → Map<categoryId|null, {focus,rest}>.
-// (Drives the tap-to-filter per-category totals; null = no-category sessions.)
-export function dayCategoryTotals(sessions, ymd) {
-  const out = new Map();
-  for (const s of sessionsOnDay(sessions, ymd)) {
-    const key = s.category_id ?? null;
-    const b = out.get(key) || { focus: 0, rest: 0 };
-    b.focus += sessionFocusSeconds(s);
-    b.rest += sessionRestSeconds(s);
-    out.set(key, b);
-  }
-  return out;
-}
-
 // One ledger entry from a session (time range, category, task, duration, stars,
 // note). Clock minutes come from the shared Amsterdam helper. Shared by the day
 // ledger and the full "see all" ledger so their rows never drift.
