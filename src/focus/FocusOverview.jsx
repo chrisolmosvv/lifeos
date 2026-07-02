@@ -1,7 +1,7 @@
 import { amsClockMinutes } from "../gym/gymDates.js";
 import { dayArcs, dayLedger, dayFocusTotal, dayRestTotal } from "./focusCalc.js";
 import { weekRingStrip, weekVsTrailingAvg } from "./focusTrend.js";
-import { formatDuration, trendLine } from "./focusFormat.js";
+import { formatDuration } from "./focusFormat.js";
 import FocusDial from "./FocusDial";
 import FocusChart from "./FocusChart";
 import FocusLedger from "./FocusLedger";
@@ -30,24 +30,23 @@ export default function FocusOverview({
   const focusTotal = dayFocusTotal(rawRows, today);
   const restTotal = dayRestTotal(rawRows, today);
   const trend = weekVsTrailingAvg(rawRows, { now });
-  const tl = trendLine(trend);
   const strip = weekRingStrip(rawRows, { now });
 
   const nowMin = amsClockMinutes(now);
-  const goalFraction = dailySeconds ? focusTotal / dailySeconds : null;
   const goalMet = dailySeconds != null && focusTotal >= dailySeconds;
   const dialEmpty = focusTotal === 0 && arcs.focus.length === 0 && arcs.rest.length === 0;
 
+  // Centre = two lines: the big focus total (Fraunces) + one muted line "of 6h · 35m rest"
+  // (goal, if set; rest, if any). No target yet → a quiet "set a target" in the goal's place.
   const centre = (
     <>
       <div className={"dial-total" + (goalMet ? " is-met" : "")}>{formatDuration(focusTotal)}</div>
-      {dailySeconds != null ? (
-        <div className="dial-goal-label">/ {formatDuration(dailySeconds)}</div>
-      ) : (
-        <button className="dial-settarget" onClick={onSetTarget}>set a target</button>
-      )}
       <div className="dial-sub">
-        {tl.delta ? tl.delta : tl.note}
+        {dailySeconds != null ? (
+          <span>of {formatDuration(dailySeconds)}</span>
+        ) : (
+          <button className="dial-settarget" onClick={onSetTarget}>set a target</button>
+        )}
         {restTotal > 0 && <span className="dial-rest"> · {formatDuration(restTotal)} rest</span>}
       </div>
     </>
@@ -60,12 +59,12 @@ export default function FocusOverview({
           <div className="focus-ovw-dialwrap">
             {dialEmpty ? (
               <FocusDial focusArcs={[]} restArcs={[]} nowMin={nowMin} colorFor={colorFor}
-                filterCat={null} onPickCategory={onPickCategory} goalFraction={goalFraction} goalMet={goalMet}>
+                filterCat={null} onPickCategory={onPickCategory}>
                 <div className="dial-invite">No focus yet today<br /><span>press Start a session</span></div>
               </FocusDial>
             ) : (
               <FocusDial focusArcs={arcs.focus} restArcs={arcs.rest} nowMin={nowMin} colorFor={colorFor}
-                filterCat={filterCat} onPickCategory={onPickCategory} goalFraction={goalFraction} goalMet={goalMet}>
+                filterCat={filterCat} onPickCategory={onPickCategory}>
                 {centre}
               </FocusDial>
             )}
