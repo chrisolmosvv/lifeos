@@ -33,6 +33,49 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Calendar/Today — DRAG-END bug fixed (SRC-ONLY, no schema). (Owner-verified, both screens.)
+
+The deferred drag-END bug is fixed. Releasing the mouse over the open tray (or after the dragged
+block was removed mid-drag going off-grid) now reliably ENDS the drag — the block no longer follows
+the unpressed cursor, and the stray next-click no longer saves/opens anything. As a direct result,
+dragging a TASK onto the tray now UNSCHEDULES it and it lands back in the tray (the original #3a
+want — the tray is a sibling outside the grid, so it already counted as "off-grid"; the existing
+unschedule rule just never got to run because the release was being swallowed). One commit.
+
+WHAT CHANGED:
+- Root cause: the drag's move/release listeners lived on the individual blocks/columns, and the
+  "pointer capture" safety net was pinned to the dragged block — which is REMOVED from the screen
+  the instant it goes off-grid. So once the block vanished (crossing toward the tray), no element
+  heard the release and the drag never ended.
+- Fix: the move / release / cancel listeners now live on the WINDOW for the hook's life (attached
+  once via a ref that always points at the freshest handlers), so a release anywhere is heard.
+  Elements now only START a gesture (pointer-down) + handle clicks. Pointer capture removed (no
+  longer needed). The handlers early-return when no drag is active, so always-on is harmless.
+
+FILES TOUCHED: src/kit/useGridDrag.js (the ONE shared drag engine — Today + Calendar week). Now 250
+lines (was 236; at the ~250 ceiling — no split). Commit: 142379c + this docs commit.
+
+HOW TO VERIFY (behavioural, real items — no new stored-data shape; the unschedule is the same
+schedule-clear that already existed). On BOTH Today AND the Calendar week: CREATE (drag empty →
+form on that slot), MOVE (drag to new time; week: new day too), RESIZE (drag top/bottom edge),
+OFF-GRID (week: task off → unschedules + returns to tray, or files under its due week if different;
+event off → snaps back. Today: block off onto a module → re-buckets), TRAY→SCHEDULE (drag a tray
+row onto the grid, week), TAPS (click a block/tray row → its form opens; a drag must NOT then fire
+a stray tap). THE MAIN WIN: drag a task, release over the OPEN tray → drag fully ends, task
+unschedules + lands in the tray; move the mouse back over the grid (button up) → nothing follows,
+no stray click. (Owner-verified the full matrix on both screens.)
+
+KNOWN GAPS / RISKS: the dragged task still VANISHES at the grid's right edge (clipped) and reappears
+in the tray on release — no off-grid ghost was built (Ruling A, minimal fix). Accepted for now; if
+the vanish feels abrupt it's a tiny optional follow-up (a faint drag ghost) — NOT built.
+
+NEXT: the Calendar follow-up pile — a visual event/task distinction; repeating events; timed
+multi-day rendering across columns; (optional) the faint off-grid drag ghost.
+
+FOR THE CHECKER: nothing — no schema this fix.
+
+---
+
 ### 2026-07-03 — Calendar/Today — six display + interaction fixes (SRC-ONLY, no schema). (Owner-verified each.)
 
 Six small Calendar-week + Today fixes, shipped one commit each (plus a cleanup deletion), each
