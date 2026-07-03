@@ -33,6 +33,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Recurring events + tasks — PIECE 3b: DELETE three-mode model (SRC-ONLY). (Owner-to-verify.)
+
+Deleting an occurrence of a repeat now asks "Delete… This one / This and following / All" (reusing
+3a's prompt with delete wording). Completes Piece 3. No schema; nothing for the Checker.
+
+WHAT CHANGED:
+- Deleting a series occurrence shows the scope prompt; a one-off deletes as before (single-row
+  archive, no prompt). Cancel aborts.
+- THIS ONE → archive that occurrence (one row, one Undo); the rest of the series stays.
+- THIS AND FOLLOWING → bound the recipe before this date + archive this + all LATER occurrences
+  (INCLUDING detached) as ONE batch; the past is untouched.
+- ALL → archive EVERY occurrence (INCLUDING detached) as ONE batch + RETIRE the recipe (bound it so
+  it never tops up or regenerates). The whole series is gone in one undoable action.
+- KEY RULING (owner-locked, deliberately different from edit): a series-scope DELETE removes
+  customised (detached) occurrences too — delete is a clean sweep; edit preserves them. Everything is
+  undoable: one Undo un-archives the batch and restores the recipe's end (so 'All' doesn't stay
+  retired / silently regenerate).
+- REFACTOR (turned earlier debt into a win): the three hosts' create/edit/delete handlers are unified
+  in one factory (src/recur/seriesForm.js), so WeekView went 263 → 248 (back UNDER 250), Today and
+  Planning shrank too.
+
+FILES: src/recur/series.js (deleteOccurrenceScope + undoSeriesDelete; now 244), new src/recur/
+seriesForm.js (41), src/kit/SeriesScopePrompt.jsx (delete mode), src/kit/ItemForm.jsx (delete
+wiring; 245), src/WeekView.jsx (248), src/Today.jsx (584), src/Planning.jsx (215). Commit 9f4352e +
+this docs.
+
+HOW TO VERIFY (13" Mac; make a weekly series first, e.g. Mon+Wed a few weeks):
+- Delete a MIDDLE occurrence → "This one" → only that one goes; the rest remain; one Undo restores it.
+- Delete a middle occurrence → "This and following" → that one + all later go, earlier remain; ONE
+  Undo cleanly restores the removed future (no duplicates/gaps); confirm it doesn't keep generating
+  past the delete point.
+- Customise one occurrence (3a "This one" EDIT), THEN delete the series with "All" → the customised
+  one is ALSO deleted (the ruling), nothing of the series remains; one Undo restores EVERYTHING incl.
+  the customised one.
+- Delete a ONE-OFF event → no prompt, archives as before.
+- A repeating TASK series deletes the same way (prompt says "task"/"tasks").
+After each multi-delete + Undo, confirm no leftover or duplicated occurrences.
+
+KNOWN GAPS / RISKS: changing the repeat PATTERN via edit is still deferred (delete + recreate). No
+loop-glyph marker + Today's all-day/overlap fetch fix are Piece 5. Today.jsx (584) is still oversized
+— its split is scheduled for Piece 5. The delete's supabase orchestration wasn't unit-run headless
+(auth'd client); it reuses the proven archive-batch mechanism + the same date math as 3a's split —
+owner verifies the live delete matrix.
+
+NEXT: PIECE 4 — lazy top-up (extend a "forever" series' rolling window when navigating near its end).
+FOR THE CHECKER: nothing — src-only.
+
+---
+
 ### 2026-07-03 — Recurring events + tasks — PIECE 3a: EDIT three-mode model (SRC-ONLY). (Owner-to-verify.)
 
 Editing an occurrence of a repeat now asks "apply to… This one / This and following / All". No
