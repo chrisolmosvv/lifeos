@@ -1,0 +1,35 @@
+/* Today's all-day strip (T10 P5B). Calm row of tinted bars above the day grid;
+   reuses the week band's bar language. Collapses when empty (component returns null). */
+.tad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--rule-faint);
+  margin-bottom: 4px;
+}
+.tad-bar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 22px;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: 3px;
+  font: inherit;
+  cursor: pointer;
+}
+.tad-title {
+  font-size: 0.72rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tad-loop {
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--ink-muted);
+}

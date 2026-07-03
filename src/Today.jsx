@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
@@ -6,9 +6,11 @@ import { isSameDay, dayNameFull, formatMastheadDate } from './dateUtils'
 import { buildToday } from './todayModel'
 import { activeTotal } from './allTasksModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
-import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive'
+import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
+import { useTodayData, startOfDay, addDays, localDateStr, friendly } from './useTodayData'
 import { seriesFormHandlers } from './recur/seriesForm'
 import { useGridDrag } from './kit/useGridDrag'
+import TodayAllDay from './kit/TodayAllDay'
 import { useSwipe } from './kit/useSwipe'
 import DayGrid from './kit/DayGrid'
 import ModuleHeader from './kit/ModuleHeader'
@@ -35,11 +37,9 @@ export default function Today({ onOpenPlanning }) {
   const fs = useFocusSessionCtx() // the running-session engine, for the ▶ block-nudge
   const focusRunning = fs && (fs.status === 'running' || fs.status === 'paused')
 
-  const [tasks, setTasks] = useState(null)
-  const [cats, setCats] = useState([])
-  const [events, setEvents] = useState([]) // the viewed day's events
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
+  // Today's data layer lives in its own hook (T10 P5B split): fetch (all-day +
+  // overlap + series_id + lazy top-up) + the write primitives.
+  const { tasks, events, cats, busy, setBusy, error, setError, load, writeTask, writeEvent } = useTodayData(viewed)
   const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
   const [expandedToday, setExpandedToday] = useState(new Set()) // parent ids expanded in tasks-today
@@ -71,70 +71,9 @@ export default function Today({ onOpenPlanning }) {
     },
   })
 
-  async function load() {
-    const dayStart = startOfDay(viewed)
-    const dayEnd = addDays(dayStart, 1)
-
-    const [taskRes, catRes, evRes] = await Promise.all([
-      activeOnly(
-        supabase
-          .from('tasks')
-          .select(
-            'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, parent_task_id, scheduled_start, scheduled_end, created_at, series_id, series_detached',
-          )
-          .order('created_at', { ascending: true }),
-      ),
-      activeOnly(
-        supabase
-          .from('categories')
-          .select('id, name, parent_id, color, sort_order, created_at')
-          .order('sort_order', { ascending: true })
-          .order('created_at', { ascending: true }),
-      ),
-      activeOnly(
-        supabase
-          .from('events')
-          .select('id, title, notes, start_at, end_at, location, category_id, series_id, series_detached')
-          .gte('start_at', dayStart.toISOString())
-          .lt('start_at', dayEnd.toISOString())
-          .order('start_at', { ascending: true }),
-      ),
-    ])
-    if (taskRes.error) {
-      setError(friendly(taskRes.error))
-      setTasks([])
-      return
-    }
-    setError('')
-    setTasks(taskRes.data)
-    setCats(catRes.data || [])
-    setEvents(evRes.data || [])
-  }
-
-  // Re-load whenever the viewed day changes (and on mount).
-  useEffect(() => {
-    load()
-  }, [viewed]) // eslint-disable-line react-hooks/exhaustive-deps
-
   // The bucket a date belongs to: only the real today is the "Today" bucket.
   const bucketFor = (d) => (isSameDay(d, realToday) ? 'Today' : 'This Week')
 
-  async function writeTask(query) {
-    setBusy(true)
-    const { error } = await query
-    setBusy(false)
-    if (error) return friendly(error)
-    await load()
-    return null
-  }
-  async function writeEvent(query) {
-    setBusy(true)
-    const { error } = await query
-    setBusy(false)
-    if (error) return friendlyEvent(error)
-    await load()
-    return null
-  }
   const onUpdate = (id, fields) =>
     writeTask(supabase.from('tasks').update(fields).eq('id', id))
 
@@ -361,6 +300,11 @@ export default function Today({ onOpenPlanning }) {
     },
   })
 
+  // All-day items go to the Today all-day strip; only timed events hit the grid (so
+  // an all-day / multi-day item never renders as a broken 24h block). (T10 P5B)
+  const timedEvents = events.filter((e) => !e.all_day)
+  const allDayEvents = events.filter((e) => e.all_day)
+
   return (
     <div className="today">
       <section className="today-day">
@@ -377,8 +321,9 @@ export default function Today({ onOpenPlanning }) {
             </button>
           )}
         </div>
+        <TodayAllDay events={allDayEvents} cats={cats} onOpen={openEvent} />
         <DayGrid
-          events={events}
+          events={timedEvents}
           scheduledTasks={gridTasks}
           cats={cats}
           today={viewed}
@@ -560,25 +505,4 @@ export default function Today({ onOpenPlanning }) {
 function clock(iso) {
   const d = new Date(iso)
   return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0')
-}
-function startOfDay(d) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
-}
-function addDays(d, n) {
-  const x = new Date(d)
-  x.setDate(x.getDate() + n)
-  return x
-}
-function localDateStr(d) {
-  const p = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
-}
-
-function friendly(error) {
-  return error.message || 'Something went wrong.'
-}
-function friendlyEvent(error) {
-  if (error.code === '23514')
-    return 'That event ends before it starts — check the times.'
-  return error.message || 'Something went wrong.'
 }
