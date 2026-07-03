@@ -269,6 +269,9 @@ Per §11, prefer shared-kit changes so both screens move together.
   tint-deepen, eased now-line. ⚠️Today.
 - **V2-3 — Drag feel:** firmer drop + drag-lift elevation (Amend. 1) + full-span gutter highlight.
   ⚠️Today (directed: behaviour identical, feel changed).
+  *(Corrected 2026-07-03: the full-span gutter highlight was REMOVED from both screens — it
+  contradicted its own no-gutter-elevation amendment. The drag-lift elevation on the block itself
+  stays.)*
 - **V2-4 — Nav transitions (Calendar-only):** content-only arrow slide + true Week↔Month zoom +
   zoom-settle. **REPLACE → paired deletion commit.**
 - **V2-5 — ⚠️Interactive swipe + free-offset nav (heavy slice).** Own recon/feasibility gate first

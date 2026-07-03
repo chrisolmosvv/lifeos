@@ -8,6 +8,27 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-03 — Calendar/Today six-fix bundle ✅ (src-only)
+Six small Calendar-week + Today display/interaction fixes, one commit each + a cleanup deletion,
+each owner-verified (commits `08d893f`→`c553d69`, cleanup `9be564b`, + docs). No schema. Shipped:
+today's column tint removed + weekend wash 4%→6%; the terracotta gutter-highlight removed on both
+screens; the week gutter halved 52→26px; timed week blocks now show start–end times (shared
+`timeRange`); the tray hides completed tasks; the week fetch is overlap-based + multi-day all-day
+bars show a date range. Full detail in the handoff log + `03-decisions.md`.
+**FOLLOW-UPS / DEBT (Calendar pile):**
+- **Drag-END bug** — releasing over the OPEN tray doesn't end the drag; the block then follows the
+  unpressed cursor back onto the grid and the next click saves it + opens the editor. A pointer-up
+  capture bug (NOT the off-grid clearing logic, which is intact). Its own diagnostic piece next.
+- **Timed multi-day rendering** — the overlap fetch now loads timed multi-day events that began
+  before the week, but the grid only draws a block on its start day (no cross-column split), so an
+  off-screen-start timed event is fetched-but-not-drawn. The all-day case shipped; this is a
+  separate, bigger piece.
+- Also on the pile: a visual event/task distinction; repeating events.
+- **File sizes:** `todayKit.css` 588 and `weekGrid.css` 275 lines — both still over ~250 but this
+  bundle NET-SHRANK both (FIX 6 + FIX 7 were deletions). Don't grow them; prefer trimming.
+- Minor future tidy (not urgent): `Today.jsx` still has its own local `clock()` duplicating
+  `dateUtils.clock` — pre-existing, left as-is (out of this bundle's scope).
+
 ## Session note — 2026-07-02 — FOCUS pillar shipped (pieces 1–8) ✅
 The new **Focus** pillar (a time/focus tracker) is built end-to-end and owner-verified,
 inserted in the nav after Today. It records real focus into a new `focus_sessions` table

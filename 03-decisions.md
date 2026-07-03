@@ -9,6 +9,42 @@
 
 ---
 
+## Calendar/Today six-fix bundle (src-only) — 2026-07-03
+
+Six small display + interaction fixes on the Calendar week + Today (commits 08d893f → c553d69,
+cleanup 9be564b). All front-end; no schema, nothing for the Checker.
+
+- **[REVERSAL] The "blocks never show a time" rule is RETIRED** — the week's timed blocks now show
+  start–end times, reusing Today's single `timeRange` formatter (lifted into dateUtils). **Why:**
+  Today already showed times, so the rule was already false in practice; one engine, one look.
+  **Trade-off:** none (all-day bars still carry no time).
+- **[REMOVED] The V2-3 full-span gutter highlight is gone from BOTH screens.** **Why:** it
+  contradicted its own amendment (the gutter carries no elevation/shadow) — the amendment now holds
+  literally. **Trade-off:** slightly less drag feedback in the gutter; the dragged block's own lift
+  remains.
+- **[SHADING] Today's column background tint REMOVED; weekend tint 4% → 6%; today keeps its date
+  circle + now-line.** **Why:** today (5%) and weekend (4%) were near-identical; this gives three
+  distinct column looks with terracotta still rare. **Trade-off:** today no longer carries a column
+  wash, only its circle + now-line.
+- **[DATA] The week EVENTS fetch is now OVERLAP-based** (start < week-end AND end > week-start),
+  not start-in-week. **Why:** an event starting before the visible week could never load; overlap
+  is the correct general test. **Trade-off:** it also loads timed multi-day events the grid can't
+  yet draw (see follow-up below).
+- **[DISPLAY] Multi-day ALL-DAY bars show a date range** — title first, lighter/smaller range on
+  the same one thin line, title truncates first; full month name; en-dash; the end-exclusive stored
+  end has one day subtracted so it reads e.g. "July 3 – July 5"; single-day all-day = no date text.
+  **Why:** an off-screen start can still communicate its true span. **Trade-off:** none.
+- **[TRAY] The unscheduled tray now EXCLUDES completed (done) tasks.** **Why:** completed loose
+  tasks cluttered the unscheduled drawer. **Trade-off:** none.
+- **[FOLLOW-UP] Timed multi-day RENDERING (splitting a block across day columns) is accepted as
+  out-of-scope for now** — the all-day case shipped. **Why:** it's a materially bigger piece and
+  wasn't the request. **Trade-off:** a timed event whose start is off-screen is fetched but not
+  drawn.
+- **[DEFERRED] The drag-END bug is deferred to its own diagnostic piece** — releasing over the open
+  tray doesn't end the drag (a pointer-up capture bug, NOT the off-grid clearing logic, which was
+  proven intact). **Why:** a real bug needing focused root-cause; not ridden alongside six clean
+  fixes. **Trade-off:** drag-off-to-unschedule doesn't work in practice until it lands.
+
 ## Focus INTERVALS hand-bounded (src-only, D1–D3) — 2026-07-02
 
 The in-focus INTERVAL timer no longer auto-advances; the owner hand-bounds every phase (commits

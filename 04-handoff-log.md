@@ -33,6 +33,67 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Calendar/Today — six display + interaction fixes (SRC-ONLY, no schema). (Owner-verified each.)
+
+Six small Calendar-week + Today fixes, shipped one commit each (plus a cleanup deletion), each
+owner-verified on the Mac before the next. All front-end — no database, nothing for the Checker.
+
+WHAT CHANGED:
+- FIX 7 (shading): today's COLUMN background tint removed (its terracotta date-circle + now-line
+  KEPT); weekend column wash nudged 4% → 6%, so today / weekend / weekday now read as three
+  distinct looks.
+- FIX 6: the terracotta "gutter highlight" (the faint band that lit the left hour column during a
+  drag/create) removed on BOTH the week sheet AND Today — it contradicted the no-gutter-elevation
+  law. Net deletion; the sanctioned lift on the actively-dragged block stays.
+- FIX 5: the week's hour gutter halved 52 → 26px, kept in sync across all four spots (.wk-gutter,
+  .wk-corner, .adb-gutter, and the GUTTER drag constant) so header / all-day band / hour rows /
+  drag day-math stay aligned.
+- FIX 1: the week's timed blocks now show start–end times, reusing Today's `timeRange` helper
+  (lifted into dateUtils so there is ONE formatter). The short-block rule already lives in the
+  shared block, so the week matches Today exactly. Today byte-for-byte unchanged; all-day bars
+  unaffected.
+- FIX 4: the unscheduled tray now EXCLUDES completed (`status = 'done'`) tasks.
+- FIX 2: the week EVENTS fetch is now OVERLAP-based (start < week-end AND end > week-start) instead
+  of start-in-week, so a multi-day event that began before the visible week still loads. Multi-day
+  ALL-DAY bars now show a date range after the title (lighter/smaller, same one thin line, title
+  truncates first; the end-exclusive stored end has one day subtracted so it reads "July 3 – July
+  5"; single-day = no range).
+- CLEANUP: removed the now-dead `is-today` class the week column stamped on itself (FIX 7 deleted
+  its only CSS rule; the `isToday` prop stays — it drives the past-veil + now-line).
+
+FILES TOUCHED: src/kit/weekGrid.css, src/kit/WeekGrid.jsx, src/kit/WeekColumn.jsx, src/kit/
+DayGrid.jsx, src/kit/todayKit.css, src/kit/AllDayBand.jsx, src/kit/allDayBand.css, src/WeekView.jsx,
+src/useWeekData.js, src/dateUtils.js. Commits: 08d893f (F7), ca6c999 (F6), 363e41d (F5), 41a42c6
+(F1), 386a7a7 (F4), c553d69 (F2), 9be564b (cleanup), + this docs commit.
+
+HOW TO VERIFY: all VISUAL / BEHAVIOURAL on real items — nothing changed stored data, so there is no
+row-read or updated_at ordering involved. Week: today's column is plain paper but keeps its date
+circle + now-line; weekend reads as a distinct gentle wash; no terracotta band on the hour column
+during any drag (Today too); the hour gutter is half width and everything still aligns + drags land
+on the correct day; timed blocks show times matching Today; complete a loose task → it leaves the
+tray; a multi-day all-day event starting before the week now shows with a correct "Mon D – Mon D"
+range (not off-by-one); a single-day all-day bar shows title only.
+
+KNOWN GAPS / RISKS:
+- DRAG-END BUG (deferred to its own piece): releasing the mouse over the OPEN tray does NOT end the
+  drag; the block then follows the released (unpressed) cursor back onto the grid, and the next
+  click saves it there + auto-opens the editor. This is a drag-END / pointer-up capture bug — NOT
+  the off-grid CLEARING logic (that was traced and proven intact). Owner repro: "pick up a task,
+  drag it toward the tray; it won't cross the cal/tray barrier; release over the open tray does
+  nothing; move back over the cal (mouse not pressed) and the block follows the cursor; any click
+  on the cal saves it there and auto-opens the edit menu."
+- TIMED MULTI-DAY RENDERING (accepted follow-up): the overlap fetch now LOADS timed multi-day
+  events that began before the week, but the timed grid only draws a block on its own start day (it
+  does not split a block across columns), so a timed event whose start is off-screen is
+  fetched-but-not-drawn. The ALL-DAY multi-day case (the actual ask) fully works.
+
+NEXT: the Calendar follow-up pile — the drag-END bug (its own diagnostic piece); timed multi-day
+rendering across columns; a visual event/task distinction; repeating events.
+
+FOR THE CHECKER: nothing — no schema this bundle.
+
+---
+
 ### 2026-07-02 — Focus — INTERVALS hand-bounded (D1–D3). SRC-ONLY, no schema. (Owner-verified D1–D3.)
 
 The in-focus INTERVAL timer no longer auto-advances between focus and break — the owner hand-bounds

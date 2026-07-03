@@ -62,10 +62,12 @@
   the full day).
 - **24-hour time everywhere** time text appears (gutter, form, drag tooltip):
   gutter reads `07, 08 … 23, 00`. Matches the masthead clock.
-- **Today's column** carries a faint terracotta tint and a terracotta date
-  circle in its header. **Now-line: today's column only** — a terracotta line +
-  dot at the current time, which **ticks** as time passes (not on any other
-  column).
+- **Today's column** carries a terracotta date circle in its header and the
+  now-line — but **no column background tint** (corrected 2026-07-03; the faint
+  today-column wash was removed, and the weekend wash raised to 6%, so today is
+  read from its circle + now-line, not a tint). **Now-line: today's column only**
+  — a terracotta line + dot at the current time, which **ticks** as time passes
+  (not on any other column).
 - **The past goes quiet:** finished blocks grey down (like a done task), past
   hours dim subtly; the current and future stay full ink.
 
@@ -77,8 +79,11 @@
   left bar (Apple-Calendar style, kept soft so it still reads as paper).
 - **Tinted by the item's OWN category**, including sub-categories — a task filed
   deep uses its **shaded branch colour**, not the parent's.
-- **Title only — blocks never show a time.** The block's position on the grid
-  *is* the time. (This also removes any "tiny block can't fit its text" problem.)
+- **Timed blocks show their start–end time** (corrected 2026-07-03; was "title only — blocks never
+  show a time"). Today always showed times; the week now matches, via the one shared `timeRange`
+  helper. The time only appears when the block is tall enough (the shared short-block rule), so a
+  very short block still falls back to title-only — which keeps the old "tiny block can't fit its
+  text" problem solved. All-day bars carry no time.
 - **Tasks vs events on the grid:**
   - A **scheduled task** behaves like on Today — its block can be **ticked done
     right on the grid** (greys + strikethrough till midnight, then rolls off);
@@ -137,7 +142,11 @@
   never nudges the clock.
 - **Drag a block OFF the grid to unschedule it** → it drops back into the **tray
   as a loose task.** **Only tasks can be unscheduled this way** — an **event
-  dragged off snaps back** (an event must have a time).
+  dragged off snaps back** (an event must have a time). *(Corrected 2026-07-03:
+  the off-grid CLEARING logic is intact, but a separate drag-END bug — the mouse
+  release over the open tray doesn't end the drag — currently stops this working
+  in practice. Deferred to its own piece; don't treat as fully working until it
+  lands.)*
 - **Drag feedback: a faint ghost** of where the block will land **+ a live time
   label** (`14:15–15:15`), updating on the 15-min snap.
 - **Paper-true lift while dragging:** the grabbed block **scales up a hair + gets
@@ -277,7 +286,7 @@
 | Off-home arrows | Standard Monday–Sunday weeks |
 | Window | Full 24h, internal scroll, 07:00 at top |
 | Time format | 24h everywhere; blocks show **no** time |
-| Block | Title only, tinted by its own (sub-)category |
+| Block | Start–end time + title, tinted by its own (sub-)category (corrected 2026-07-03; was title-only) |
 | Now-line | Today's column only, ticking |
 | Past | Greyed/dimmed |
 | Grid click | 1-hour block, event (toggle to task) |
@@ -287,7 +296,7 @@
 | Overlap | Even split |
 | All-day band | Auto-height; collapses when empty; fully interactive |
 | Re-day drag | Keeps time (horizontal = day, vertical = time) |
-| Drag off grid | Tasks → tray (unschedule); events → snap back |
+| Drag off grid | Tasks → tray (unschedule); events → snap back (corrected 2026-07-03: blocked in practice by a deferred drag-END bug) |
 | Drag look | Paper-true lift (scale + hairline, no shadow) |
 | Open to edit | One click → full form, quiet selected outline |
 | Repeat field | Shown, disabled ("coming soon") — recurrence = T10 |
