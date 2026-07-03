@@ -20,7 +20,7 @@ import './todayForm.css'
 // Props: kind, item, create, cats, inboxColor, busy,
 //        onSave(fields,kind)=>msg|null, onDelete()=>void, onClose(),
 //        subtasks?, onSubtask?, parentLabel?  (Today-only subtask wiring; optional).
-export default function ItemForm({ kind, item, create, cats, inboxColor, busy, onSave, onSaveSeries, onSaveSeriesEdit, onDelete, onClose, subtasks, onSubtask, parentLabel }) {
+export default function ItemForm({ kind, item, create, cats, inboxColor, busy, onSave, onSaveSeries, onSaveSeriesEdit, onDelete, onDeleteSeries, onClose, subtasks, onSubtask, parentLabel }) {
   const t = item || {}
   // A subtask's own form: no category (it inherits the parent's), no priority, and
   // no nested-subtasks section. One level — enforced here and in the DB.
@@ -67,6 +67,10 @@ export default function ItemForm({ kind, item, create, cats, inboxColor, busy, o
   // create saves straight through as a single row.
   const isSeriesOcc = !create && !!t.series_id && !t.series_detached && !!onSaveSeriesEdit
   const [scopeFields, setScopeFields] = useState(null)
+  // Deleting any series occurrence (detached or not) asks the scope — delete is a
+  // clean sweep. A one-off deletes as today.
+  const isSeriesDelete = !create && !!t.series_id && !!onDeleteSeries
+  const [showDelScope, setShowDelScope] = useState(false)
   // Progressive disclosure (Piece 3a): "more" is collapsed on CREATE, but on EDIT
   // it AUTO-EXPANDS when a behind-"more" field already holds data, so populated
   // fields are never silently hidden. Status + the disabled Repeat don't count
@@ -106,11 +110,13 @@ export default function ItemForm({ kind, item, create, cats, inboxColor, busy, o
     if (msg) setErr(msg)
   }
 
-  // The scope choice for a series-occurrence edit → apply via the parent, then close.
+  // The scope choice from the prompt → apply the delete, or the edit, via the parent.
   async function pickScope(scope) {
-    const msg = await onSaveSeriesEdit(scope, scopeFields)
+    if (showDelScope) { setShowDelScope(false); const m = await onDeleteSeries(scope); if (m) setErr(m); return }
+    const f = scopeFields
     setScopeFields(null)
-    if (msg) setErr(msg)
+    const m = await onSaveSeriesEdit(scope, f)
+    if (m) setErr(m)
   }
 
   const heading = (create ? 'New ' : 'Edit ') + k
@@ -199,7 +205,7 @@ export default function ItemForm({ kind, item, create, cats, inboxColor, busy, o
 
             <div className="tk-form-actions">
               {!create ? (
-                <button className="tk-form-del" onClick={onDelete} disabled={busy}>Delete</button>
+                <button className="tk-form-del" onClick={isSeriesDelete ? () => setShowDelScope(true) : onDelete} disabled={busy}>Delete</button>
               ) : (
                 <span />
               )}
@@ -211,8 +217,9 @@ export default function ItemForm({ kind, item, create, cats, inboxColor, busy, o
           </div>
         )}
       </div>
-      {scopeFields && (
-        <SeriesScopePrompt kind={k} onPick={pickScope} onCancel={() => setScopeFields(null)} />
+      {(scopeFields || showDelScope) && (
+        <SeriesScopePrompt kind={k} mode={showDelScope ? 'delete' : 'edit'} onPick={pickScope}
+          onCancel={() => { setScopeFields(null); setShowDelScope(false) }} />
       )}
     </div>
   )

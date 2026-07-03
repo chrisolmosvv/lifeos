@@ -197,3 +197,48 @@ export async function undoSeriesSplit({ kind, newSeriesId, oldSeriesId, oldEnd, 
   await supabase.from('recurrences').update(oldEnd).eq('id', oldSeriesId)
   if (batchId) await unarchiveBatch(batchId)
 }
+
+// --- deleting a materialised occurrence (Piece 3b) -------------------------
+// Delete is a CLEAN SWEEP: a series-scope delete removes EVERYTHING in scope,
+// INCLUDING customised (detached) occurrences (contrast the edit, which preserves
+// them). All via the soft-delete archive batch, so every delete is one undoable
+// unit. Returns { error } | { undo }.
+export async function deleteOccurrenceScope(scope, kind, occ) {
+  const table = tableFor(kind)
+  if (scope === 'one') {
+    const r = await archiveRows(kind === 'task' ? 'Task' : 'Event', kind, [{ table, ids: [occ.id] }])
+    return r.error ? { error: friendly(r.error) } : { undo: { batchId: r.batchId } }
+  }
+  const seriesId = occ.series_id
+  const { data: rec, error: re } = await supabase.from('recurrences').select('*').eq('id', seriesId).single()
+  if (re) return { error: friendly(re) }
+  const tz = rec.timezone || 'Europe/Amsterdam'
+  const oldEnd = { end_kind: rec.end_kind, end_count: rec.end_count, end_until: rec.end_until, generated_until: rec.generated_until }
+  const dateCol = kind === 'event' ? 'start_at' : 'due_date'
+  const { data: occs, error: qe } = await supabase.from(table).select(`id, ${dateCol}`).eq('series_id', seriesId).is('archived_at', null)
+  if (qe) return { error: friendly(qe) }
+
+  let ids
+  let recipeUpdate
+  if (scope === 'following') {
+    const occYMD = occYMDof(kind, occ, tz)
+    recipeUpdate = { end_kind: 'until', end_until: addDaysYMD(occYMD, -1), end_count: null } // stop generating on/after this date
+    ids = (occs || []).filter((o) => occYMDof(kind, o, tz) >= occYMD).map((o) => o.id)
+  } else { // all → retire the recipe so it never tops up / regenerates
+    const dead = addDaysYMD(rec.start_date, -1)
+    recipeUpdate = { end_kind: 'until', end_until: dead, end_count: null, generated_until: dead }
+    ids = (occs || []).map((o) => o.id)
+  }
+  const { error: ue } = await supabase.from('recurrences').update(recipeUpdate).eq('id', seriesId)
+  if (ue) return { error: friendly(ue) }
+  const r = ids.length ? await archiveRows(scope === 'all' ? 'Repeat (all)' : 'Repeat (following)', kind, [{ table, ids }]) : { batchId: null }
+  if (r.error) return { error: friendly(r.error) }
+  return { undo: { batchId: r.batchId, recipeRestore: { id: seriesId, fields: oldEnd } } }
+}
+
+// Reverse a scoped delete: un-archive the batch and (for series scopes) restore the
+// recipe's end so it isn't left retired/bounded.
+export async function undoSeriesDelete({ batchId, recipeRestore }) {
+  if (batchId) await unarchiveBatch(batchId)
+  if (recipeRestore) await supabase.from('recurrences').update(recipeRestore.fields).eq('id', recipeRestore.id)
+}

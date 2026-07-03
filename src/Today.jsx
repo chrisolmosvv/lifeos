@@ -7,7 +7,7 @@ import { buildToday } from './todayModel'
 import { activeTotal } from './allTasksModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive'
-import { createSeriesAndMaterialise, applyOccurrenceEdit, undoSeriesSplit } from './recur/series'
+import { seriesFormHandlers } from './recur/seriesForm'
 import { useGridDrag } from './kit/useGridDrag'
 import { useSwipe } from './kit/useSwipe'
 import DayGrid from './kit/DayGrid'
@@ -154,23 +154,8 @@ export default function Today({ onOpenPlanning }) {
     return msg
   }
 
-  // Create a repeat → materialise its occurrences, then close + reload (T10).
-  async function handleSaveSeries(recipe) {
-    const msg = await createSeriesAndMaterialise(recipe)
-    if (!msg) { setForm(null); await load() }
-    return msg
-  }
-
-  // Edit an occurrence with the chosen scope; "this and following" → one Undo toast.
-  async function handleSaveSeriesEdit(scope, fields) {
-    const { kind, item } = form
-    const r = await applyOccurrenceEdit(scope, kind, item, fields)
-    if (r.error) return r.error
-    setForm(null)
-    await load()
-    if (r.undo) setToast({ text: 'Repeat split', onUndo: async () => { setToast(null); await undoSeriesSplit(r.undo); await load() } })
-    return null
-  }
+  // Create / edit / delete a repeat, wired one way for every host (T10).
+  const series = seriesFormHandlers({ form, setForm, reload: load, setToast })
 
   // Delete = ARCHIVE (soft-delete): stamp the row(s) with archived_at + a batch.
   // A task archives its subtasks in the same batch. Undo reverses the batch.
@@ -558,8 +543,9 @@ export default function Today({ onOpenPlanning }) {
           onSubtask={formOnSubtask}
           parentLabel={formParentLabel}
           onSave={handleSave}
-          onSaveSeries={handleSaveSeries}
-          onSaveSeriesEdit={handleSaveSeriesEdit}
+          onSaveSeries={series.onSaveSeries}
+          onSaveSeriesEdit={series.onSaveSeriesEdit}
+          onDeleteSeries={series.onDeleteSeries}
           onDelete={handleDelete}
           onClose={() => setForm(null)}
         />
