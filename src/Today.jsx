@@ -7,6 +7,7 @@ import { buildToday } from './todayModel'
 import { activeTotal } from './allTasksModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive'
+import { createSeriesAndMaterialise } from './recur/series'
 import { useGridDrag } from './kit/useGridDrag'
 import { useSwipe } from './kit/useSwipe'
 import DayGrid from './kit/DayGrid'
@@ -150,6 +151,13 @@ export default function Today({ onOpenPlanning }) {
         : await writeEvent(supabase.from('events').update(fields).eq('id', item.id))
     }
     if (!msg) setForm(null)
+    return msg
+  }
+
+  // Create a repeat → materialise its occurrences, then close + reload (T10).
+  async function handleSaveSeries(recipe) {
+    const msg = await createSeriesAndMaterialise(recipe)
+    if (!msg) { setForm(null); await load() }
     return msg
   }
 
@@ -539,6 +547,7 @@ export default function Today({ onOpenPlanning }) {
           onSubtask={formOnSubtask}
           parentLabel={formParentLabel}
           onSave={handleSave}
+          onSaveSeries={handleSaveSeries}
           onDelete={handleDelete}
           onClose={() => setForm(null)}
         />

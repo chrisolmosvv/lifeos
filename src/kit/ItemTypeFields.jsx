@@ -1,5 +1,6 @@
 import StatusPill from './StatusPill'
 import SubtaskList from './SubtaskList'
+import RepeatField from './RepeatField'
 
 // The type-specific fields of the shared ItemForm (Phase 7, C3; Today V2 Piece 3a:
 // progressive disclosure). Rendered TWICE by ItemForm via `slot`:
@@ -32,7 +33,7 @@ function NotesField({ notes, setNotes }) {
   )
 }
 
-export default function ItemTypeFields({ k, slot, isSubtask, create, busy, task, event, subtask, notes }) {
+export default function ItemTypeFields({ k, slot, isSubtask, create, busy, task, event, subtask, notes, repeat }) {
   const isCore = slot === 'core'
 
   if (k === 'task') {
@@ -101,6 +102,7 @@ export default function ItemTypeFields({ k, slot, isSubtask, create, busy, task,
           <span className="tk-form-fieldlabel">Status</span>
           <StatusPill status={status} onSet={setStatus} />
         </div>
+        <RepeatField {...repeat} />
       </>
     )
   }
@@ -147,14 +149,7 @@ export default function ItemTypeFields({ k, slot, isSubtask, create, busy, task,
         <input className="tk-form-input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Optional" />
       </label>
       <NotesField {...notes} />
-      {/* Repeat — DISABLED placeholder; recurrence is its own later piece (T10). */}
-      <label className="tk-form-field tk-form-soonrow">
-        <span className="tk-form-fieldlabel">Repeat</span>
-        <select className="tk-form-select" disabled aria-disabled="true">
-          <option>Does not repeat</option>
-        </select>
-        <span className="tk-form-soon">coming soon</span>
-      </label>
+      <RepeatField {...repeat} />
     </>
   )
 }

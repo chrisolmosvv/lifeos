@@ -3,6 +3,8 @@ import CategoryTag from '../CategoryTag'
 import CategoryPicker from './CategoryPicker'
 import ItemTypeFields from './ItemTypeFields'
 import FocusSection from './FocusSection'
+import { useRepeat } from './RepeatField'
+import { buildRecipe } from '../recur/recipe'
 import './todayForm.css'
 
 // ItemForm — the ONE shared create/edit form (Phase 7, C3), used by BOTH Today and
@@ -17,7 +19,7 @@ import './todayForm.css'
 // Props: kind, item, create, cats, inboxColor, busy,
 //        onSave(fields,kind)=>msg|null, onDelete()=>void, onClose(),
 //        subtasks?, onSubtask?, parentLabel?  (Today-only subtask wiring; optional).
-export default function ItemForm({ kind, item, create, cats, inboxColor, busy, onSave, onDelete, onClose, subtasks, onSubtask, parentLabel }) {
+export default function ItemForm({ kind, item, create, cats, inboxColor, busy, onSave, onSaveSeries, onDelete, onClose, subtasks, onSubtask, parentLabel }) {
   const t = item || {}
   // A subtask's own form: no category (it inherits the parent's), no priority, and
   // no nested-subtasks section. One level — enforced here and in the DB.
@@ -54,6 +56,11 @@ export default function ItemForm({ kind, item, create, cats, inboxColor, busy, o
   const [endDate, setEndDate] = useState(
     t.all_day && t.end_at ? dateOf(new Date(new Date(t.end_at).getTime() - 1)) : dateOf(t.start_at) || todayStr(),
   )
+  // Repeat (T10, create-only): offered only on CREATE, when the parent wired
+  // series creation, and never for a subtask. A repeat on save materialises
+  // occurrences via onSaveSeries instead of the one-off insert. State in one group.
+  const canRepeat = create && !!onSaveSeries && !isSubtask
+  const repeat = useRepeat(t, canRepeat)
   // Progressive disclosure (Piece 3a): "more" is collapsed on CREATE, but on EDIT
   // it AUTO-EXPANDS when a behind-"more" field already holds data, so populated
   // fields are never silently hidden. Status + the disabled Repeat don't count
@@ -70,6 +77,20 @@ export default function ItemForm({ kind, item, create, cats, inboxColor, busy, o
   async function save() {
     const ttl = title.trim()
     if (!ttl) return setErr('Give it a title.')
+
+    // Repeat → build the recipe from the same fields and materialise occurrences.
+    if (repeat.enabled && repeat.freq !== 'none') {
+      const { recipe, error } = buildRecipe(k, {
+        title: ttl, notes, categoryId,
+        freq: repeat.freq, weekdays: repeat.weekdays, endKind: repeat.endKind, endCount: repeat.endCount, endUntil: repeat.endUntil,
+        allDay, startDate, startAt, endAt, due, bucket, schStart, schEnd, location,
+      })
+      if (error) return setErr(error)
+      const msg = await onSaveSeries(recipe)
+      if (msg) setErr(msg)
+      return
+    }
+
     let fields
     if (k === 'task') {
       let ss = null
@@ -129,6 +150,7 @@ export default function ItemForm({ kind, item, create, cats, inboxColor, busy, o
     event: { allDay, setAllDay, startAt, setStartAt, endAt, setEndAt, startDate, setStartDate, endDate, setEndDate, location, setLocation },
     subtask: { subtasks, onSubtask },
     notes: { notes, setNotes },
+    repeat,
   }
 
   return (

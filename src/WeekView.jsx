@@ -8,6 +8,7 @@ import { useGridDrag } from './kit/useGridDrag'
 import { useBandDrag } from './kit/useBandDrag'
 import { useSwipe } from './kit/useSwipe'
 import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
+import { createSeriesAndMaterialise } from './recur/series'
 import WeekGrid from './kit/WeekGrid'
 import TrayDrawer from './kit/TrayDrawer'
 import ItemForm from './kit/ItemForm'
@@ -153,6 +154,13 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
     return msg
   }
 
+  // Create a repeat → materialise its occurrences, then close + reload (T10).
+  async function handleSaveSeries(recipe) {
+    const msg = await createSeriesAndMaterialise(recipe)
+    if (!msg) { setForm(null); await reload() }
+    return msg
+  }
+
   // Delete = ARCHIVE + Undo toast (existing archive.js path), matching Today and
   // replacing Calendar's old hard delete. [CHECKER: the one data-write change.]
   async function handleDelete() {
@@ -231,6 +239,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
           inboxColor={inboxColor}
           busy={busy}
           onSave={handleSave}
+          onSaveSeries={handleSaveSeries}
           onDelete={handleDelete}
           onClose={() => setForm(null)}
         />
