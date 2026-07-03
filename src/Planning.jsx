@@ -4,7 +4,7 @@ import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, unarchiveBatch, activeOnly } from './archive'
-import { createSeriesAndMaterialise } from './recur/series'
+import { createSeriesAndMaterialise, applyOccurrenceEdit, undoSeriesSplit } from './recur/series'
 import PlanningModes from './kit/PlanningModes'
 import PlanningTime from './kit/PlanningTime'
 import PlanningBoard from './kit/PlanningBoard'
@@ -33,7 +33,7 @@ export default function Planning({ onBack }) {
         supabase
           .from('tasks')
           .select(
-            'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, parent_task_id, scheduled_start, scheduled_end, created_at',
+            'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, parent_task_id, scheduled_start, scheduled_end, created_at, series_id, series_detached',
           )
           .order('created_at', { ascending: true }),
       ),
@@ -83,6 +83,16 @@ export default function Planning({ onBack }) {
     const msg = await createSeriesAndMaterialise(recipe)
     if (!msg) { setForm(null); await load() }
     return msg
+  }
+  // Edit an occurrence with the chosen scope; "this and following" → one Undo toast.
+  async function handleSaveSeriesEdit(scope, fields) {
+    const { kind, item } = form
+    const r = await applyOccurrenceEdit(scope, kind, item, fields)
+    if (r.error) return r.error
+    setForm(null)
+    await load()
+    if (r.undo) setToast({ text: 'Repeat split', onUndo: async () => { setToast(null); await undoSeriesSplit(r.undo); await load() } })
+    return null
   }
   // Delete = ARCHIVE (a task + its subtasks as one batch); undo reverses the batch.
   async function handleDelete() {
@@ -203,6 +213,7 @@ export default function Planning({ onBack }) {
           parentLabel={formParentLabel}
           onSave={handleSave}
           onSaveSeries={handleSaveSeries}
+          onSaveSeriesEdit={handleSaveSeriesEdit}
           onDelete={handleDelete}
           onClose={() => setForm(null)}
         />

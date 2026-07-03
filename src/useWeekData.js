@@ -35,7 +35,7 @@ export function useWeekData(days) {
       activeOnly(
         supabase
           .from('events')
-          .select('id, title, notes, start_at, end_at, location, category_id, all_day')
+          .select('id, title, notes, start_at, end_at, location, category_id, all_day, series_id, series_detached')
           .lt('start_at', weekEnd.toISOString())
           .gt('end_at', weekStart.toISOString()),
       ).order('start_at', { ascending: true }),
@@ -43,7 +43,7 @@ export function useWeekData(days) {
         inWeek(
           supabase
             .from('tasks')
-            .select('id, title, notes, status, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end'),
+            .select('id, title, notes, status, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end, series_id, series_detached'),
           'scheduled_start',
         ),
       ),
@@ -53,7 +53,7 @@ export function useWeekData(days) {
       activeOnly(
         supabase
           .from('tasks')
-          .select('id, title, notes, status, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end, parent_task_id, created_at')
+          .select('id, title, notes, status, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end, parent_task_id, created_at, series_id, series_detached')
           .is('scheduled_start', null)
           .is('parent_task_id', null)
           .neq('status', 'done')

@@ -18,7 +18,7 @@ export const activeOnly = (query) => query.is('archived_at', null)
 // batch row — so we never leave a half-archived batch behind. The error is
 // returned to the caller (surfaced in the UI), never swallowed.
 
-async function archiveRows(label, sourceType, sets) {
+export async function archiveRows(label, sourceType, sets) {
   const total = sets.reduce((n, s) => n + s.ids.length, 0)
   if (total === 0) return { batchId: null, empty: true }
 

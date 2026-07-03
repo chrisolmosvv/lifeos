@@ -1,0 +1,35 @@
+/* The series-scope prompt (T10). Broadsheet-calm: paper, hairline rules between
+   choices, no box/shadow/fill. Reuses the form scrim (.tk-form-scrim) as backdrop. */
+.ssp {
+  width: min(20rem, calc(100vw - 3rem));
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+}
+.ssp-q {
+  margin: 0;
+  padding: 0.7rem 1rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+.ssp-opt,
+.ssp-cancel {
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule-faint);
+  padding: 0.7rem 1rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.ssp-opt:hover,
+.ssp-cancel:hover {
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.ssp-cancel {
+  color: var(--ink-muted);
+}

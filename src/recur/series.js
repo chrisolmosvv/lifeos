@@ -1,51 +1,34 @@
 import { supabase } from '../supabaseClient'
-import { occurrencesBetween, wallTimeToInstant, addDaysYMD } from './engine'
+import { archiveRows, unarchiveBatch } from '../archive'
+import { occurrencesBetween, wallTimeToInstant, wallOfInstant, ymdInZone, addDaysYMD } from './engine'
 
-// LifeOS — series creation + materialisation (T10, Piece 2B). Approach A: on
-// creating a repeat we (1) insert the recipe row (recurrences), (2) generate the
-// occurrence DATES with the engine, (3) batch-insert the occurrence ROWS (real
-// events/tasks), each stamped series_id = the recipe id, series_detached = false —
-// so they render through the existing pipeline with no new drawing code. Writes go
-// through the same client the rest of the app uses; user_id fills from the DB
-// default (auth.uid()) per row, exactly like the one-off inserts.
-
-// "Forever" repeats materialise a rolling window of ~12 months and record how far
-// they've been generated (generated_until); Piece 4 will extend it lazily. Bounded
-// repeats (count / until) generate fully up front.
+// LifeOS — series creation, materialisation + editing (T10, Pieces 2B + 3a).
+// Approach A: a recipe (recurrences row) generates real events/tasks ("occurrences")
+// that render through the existing pipeline. Writes go through the same client the
+// rest of the app uses (user_id fills from the DB default per row). Editing an
+// occurrence has three scopes: this one / this and following / all.
 const HORIZON_DAYS = 365
 
+const tableFor = (kind) => (kind === 'event' ? 'events' : 'tasks')
 const midnightIso = (ymd) => { const [y, m, d] = ymd.split('-').map(Number); return new Date(y, m - 1, d).toISOString() }
-const friendly = (e) => (e?.code === '23514' ? 'That repeat has times that end before they start — check them.' : e?.message || 'Could not create the repeat.')
+const durMin = (a, b) => Math.max(1, Math.round((new Date(b) - new Date(a)) / 60000))
+const friendly = (e) => (e?.code === '23514' ? 'That repeat has times that end before they start — check them.' : e?.message || 'Could not save the repeat.')
 
-// Build one occurrence ROW for a given date, from the recipe's template. Returns
-// an events-shaped or tasks-shaped object (minus series_id, added by the caller).
+// One occurrence ROW for a date, from the recipe's template (minus series_id).
 function occurrenceRow(recipe, ymd) {
   const { target_kind, all_day, wall_time, duration_minutes, timezone } = recipe
   const dur = duration_minutes || 60
   if (target_kind === 'event') {
     if (all_day || !wall_time) {
-      // All-day occurrence: one day, end-EXCLUSIVE midnight (the existing convention).
-      return {
-        title: recipe.title, notes: recipe.notes || null, category_id: recipe.category_id || null,
-        location: recipe.location || null, all_day: true,
-        start_at: midnightIso(ymd), end_at: midnightIso(addDaysYMD(ymd, 1)),
-      }
+      return { title: recipe.title, notes: recipe.notes || null, category_id: recipe.category_id || null,
+        location: recipe.location || null, all_day: true, start_at: midnightIso(ymd), end_at: midnightIso(addDaysYMD(ymd, 1)) }
     }
     const start = wallTimeToInstant(ymd, wall_time, timezone)
-    const end = new Date(start.getTime() + dur * 60000)
-    return {
-      title: recipe.title, notes: recipe.notes || null, category_id: recipe.category_id || null,
-      location: recipe.location || null, all_day: false,
-      start_at: start.toISOString(), end_at: end.toISOString(),
-    }
+    return { title: recipe.title, notes: recipe.notes || null, category_id: recipe.category_id || null,
+      location: recipe.location || null, all_day: false, start_at: start.toISOString(), end_at: new Date(start.getTime() + dur * 60000).toISOString() }
   }
-  // TASK occurrence: always due-dated + open + the recipe's bucket; ALSO calendar-
-  // scheduled when the recipe carries a wall-clock time (the owner's "depends on
-  // time" rule).
-  const row = {
-    title: recipe.title, notes: recipe.notes || null, category_id: recipe.category_id || null,
-    due_date: ymd, status: 'open', time_bucket: recipe.time_bucket || 'Today',
-  }
+  const row = { title: recipe.title, notes: recipe.notes || null, category_id: recipe.category_id || null,
+    due_date: ymd, status: 'open', time_bucket: recipe.time_bucket || 'Today' }
   if (wall_time) {
     const start = wallTimeToInstant(ymd, wall_time, timezone)
     row.scheduled_start = start.toISOString()
@@ -54,22 +37,21 @@ function occurrenceRow(recipe, ymd) {
   return row
 }
 
-// Insert the recipe + all its occurrences. Returns null on success, or a plain
-// error message (for the form panel). Best-effort cleanup: if the occurrence
-// batch fails, the just-created recipe is removed so no empty series is left.
-export async function createSeriesAndMaterialise(recipe) {
-  // 1) the window to generate now + how far we record having generated.
+// Insert the recipe + its occurrences. `excludeDates` (a Set of YMD) skips dates
+// that already hold a preserved (detached) occurrence — used by a split so a
+// customised occurrence is never duplicated. Returns { seriesId } or { error }.
+async function materialiseSeries(recipe, excludeDates) {
   let toYMD
   let generatedUntil
   if (recipe.end_kind === 'until') { toYMD = recipe.end_until; generatedUntil = recipe.end_until }
-  else if (recipe.end_kind === 'count') { toYMD = '2999-12-31' } // the count itself stops it
+  else if (recipe.end_kind === 'count') { toYMD = '2999-12-31' }
   else { toYMD = addDaysYMD(recipe.start_date, HORIZON_DAYS); generatedUntil = toYMD }
 
-  const dates = occurrencesBetween(recipe, recipe.start_date, toYMD)
+  let dates = occurrencesBetween(recipe, recipe.start_date, toYMD)
+  if (excludeDates && excludeDates.size) dates = dates.filter((d) => !excludeDates.has(d))
   if (recipe.end_kind === 'count') generatedUntil = dates.length ? dates[dates.length - 1] : recipe.start_date
-  if (!dates.length) return 'That repeat produces no dates — check the pattern.'
+  if (!dates.length) return { error: 'That repeat produces no dates — check the pattern.' }
 
-  // 2) insert the recipe row (all recurrences columns), get its id.
   const recipeRow = {
     target_kind: recipe.target_kind, freq: recipe.freq, weekdays: recipe.weekdays || null,
     end_kind: recipe.end_kind, end_count: recipe.end_count ?? null, end_until: recipe.end_until ?? null,
@@ -78,19 +60,140 @@ export async function createSeriesAndMaterialise(recipe) {
     title: recipe.title, notes: recipe.notes || null, category_id: recipe.category_id || null,
     location: recipe.location || null, all_day: !!recipe.all_day,
     time_bucket: recipe.target_kind === 'task' ? (recipe.time_bucket || 'Today') : null,
-    generated_until: generatedUntil,
+    generated_until: generatedUntil, split_parent_id: recipe.split_parent_id || null,
   }
   const { data: made, error: recErr } = await supabase.from('recurrences').insert(recipeRow).select('id').single()
-  if (recErr) return friendly(recErr)
-  const seriesId = made.id
+  if (recErr) return { error: friendly(recErr) }
 
-  // 3) batch-insert the occurrence rows, each linked to the recipe.
-  const table = recipe.target_kind === 'event' ? 'events' : 'tasks'
-  const rows = dates.map((ymd) => ({ ...occurrenceRow(recipe, ymd), series_id: seriesId, series_detached: false }))
+  const table = tableFor(recipe.target_kind)
+  const rows = dates.map((ymd) => ({ ...occurrenceRow(recipe, ymd), series_id: made.id, series_detached: false }))
   const { error: occErr } = await supabase.from(table).insert(rows)
-  if (occErr) {
-    await supabase.from('recurrences').delete().eq('id', seriesId) // drop the orphan recipe
-    return friendly(occErr)
+  if (occErr) { await supabase.from('recurrences').delete().eq('id', made.id); return { error: friendly(occErr) } }
+  return { seriesId: made.id }
+}
+
+// Piece 2 entry: create a repeat → null on success, or a plain error message.
+export async function createSeriesAndMaterialise(recipe) {
+  const r = await materialiseSeries(recipe)
+  return r.error || null
+}
+
+// --- editing a materialised occurrence (Piece 3a) --------------------------
+// The recipe template implied by an edited occurrence's saved fields.
+function templateFromFields(kind, f, tz) {
+  if (kind === 'event') {
+    const all_day = !!f.all_day
+    return { title: f.title, notes: f.notes ?? null, category_id: f.category_id ?? null, location: f.location ?? null,
+      all_day, wall_time: all_day ? null : wallOfInstant(f.start_at, tz), duration_minutes: all_day ? null : durMin(f.start_at, f.end_at) }
+  }
+  const timed = !!f.scheduled_start
+  return { title: f.title, notes: f.notes ?? null, category_id: f.category_id ?? null, time_bucket: f.time_bucket || 'Today',
+    wall_time: timed ? wallOfInstant(f.scheduled_start, tz) : null, duration_minutes: timed ? (f.scheduled_end ? durMin(f.scheduled_start, f.scheduled_end) : 60) : null }
+}
+// Content-only fields to stamp on sibling occurrences (no time, no status).
+const contentFields = (kind, f) => kind === 'event'
+  ? { title: f.title, notes: f.notes ?? null, category_id: f.category_id ?? null, location: f.location ?? null }
+  : { title: f.title, notes: f.notes ?? null, category_id: f.category_id ?? null, time_bucket: f.time_bucket || 'Today' }
+// Time fields for a sibling occurrence on `ymd`, from a template.
+function timeFields(kind, ymd, t, tz) {
+  if (kind === 'event') {
+    if (t.all_day || !t.wall_time) return { all_day: true, start_at: midnightIso(ymd), end_at: midnightIso(addDaysYMD(ymd, 1)) }
+    const s = wallTimeToInstant(ymd, t.wall_time, tz)
+    return { all_day: false, start_at: s.toISOString(), end_at: new Date(s.getTime() + (t.duration_minutes || 60) * 60000).toISOString() }
+  }
+  if (!t.wall_time) return { scheduled_start: null, scheduled_end: null }
+  const s = wallTimeToInstant(ymd, t.wall_time, tz)
+  return { scheduled_start: s.toISOString(), scheduled_end: new Date(s.getTime() + (t.duration_minutes || 60) * 60000).toISOString() }
+}
+const timeChanged = (rec, t) => (!!rec.all_day) !== (!!t.all_day)
+  || (rec.wall_time ? rec.wall_time.slice(0, 5) : null) !== (t.wall_time || null)
+  || (rec.duration_minutes ?? null) !== (t.duration_minutes ?? null)
+const occYMDof = (kind, occ, tz) => (kind === 'event' ? ymdInZone(occ.start_at, tz) : occ.due_date)
+
+// "This one": edit just this occurrence + DETACH it (series edits skip it after).
+export async function editThisOccurrence(kind, occId, fields) {
+  const { error } = await supabase.from(tableFor(kind)).update({ ...fields, series_detached: true }).eq('id', occId)
+  return error ? friendly(error) : null
+}
+
+// "All": update the recipe template + every NON-DETACHED occurrence. Content in one
+// batch; if the time/all-day changed, recompute each occurrence's time per its own
+// date (DST-correct). Detached occurrences are left alone. Task status is untouched.
+export async function editWholeSeries(kind, seriesId, fields) {
+  const table = tableFor(kind)
+  const { data: rec, error: re } = await supabase.from('recurrences').select('*').eq('id', seriesId).single()
+  if (re) return friendly(re)
+  const tz = rec.timezone || 'Europe/Amsterdam'
+  const t = templateFromFields(kind, fields, tz)
+  const { error: ue } = await supabase.from('recurrences').update(t).eq('id', seriesId)
+  if (ue) return friendly(ue)
+  const { error: ce } = await supabase.from(table).update(contentFields(kind, fields)).eq('series_id', seriesId).eq('series_detached', false).is('archived_at', null)
+  if (ce) return friendly(ce)
+  if (!timeChanged(rec, t)) return null
+  const dateCol = kind === 'event' ? 'start_at' : 'due_date'
+  const { data: occs, error: fe } = await supabase.from(table).select(`id, ${dateCol}`).eq('series_id', seriesId).eq('series_detached', false).is('archived_at', null)
+  if (fe) return friendly(fe)
+  for (const o of occs || []) {
+    const { error } = await supabase.from(table).update(timeFields(kind, occYMDof(kind, o, tz), t, tz)).eq('id', o.id)
+    if (error) return friendly(error)
   }
   return null
+}
+
+// "This and following": keep the past, make this-and-forward a NEW series with the
+// change. (1) bound the old recipe before this date; (2) archive this + later
+// non-detached occurrences as ONE batch; (3) create the new recipe (split_parent_id,
+// remaining end), skipping dates that already hold a preserved detached occurrence.
+// Returns { error } or { undo } — a complete reversal for the toast.
+export async function editThisAndFollowing(kind, occurrence, fields) {
+  const table = tableFor(kind)
+  const seriesId = occurrence.series_id
+  const { data: rec, error: re } = await supabase.from('recurrences').select('*').eq('id', seriesId).single()
+  if (re) return { error: friendly(re) }
+  const tz = rec.timezone || 'Europe/Amsterdam'
+  const occYMD = occYMDof(kind, occurrence, tz)
+  const dayBefore = addDaysYMD(occYMD, -1)
+
+  const oldEnd = { end_kind: rec.end_kind, end_count: rec.end_count, end_until: rec.end_until, generated_until: rec.generated_until }
+  const { error: be } = await supabase.from('recurrences').update({ end_kind: 'until', end_until: dayBefore, end_count: null }).eq('id', seriesId)
+  if (be) return { error: friendly(be) }
+
+  const dateCol = kind === 'event' ? 'start_at' : 'due_date'
+  const { data: occs, error: qe } = await supabase.from(table).select(`id, ${dateCol}, series_detached`).eq('series_id', seriesId).is('archived_at', null)
+  if (qe) return { error: friendly(qe) }
+  const futureIds = (occs || []).filter((o) => !o.series_detached && occYMDof(kind, o, tz) >= occYMD).map((o) => o.id)
+  const keepDates = new Set((occs || []).filter((o) => o.series_detached && occYMDof(kind, o, tz) >= occYMD).map((o) => occYMDof(kind, o, tz)))
+  const arch = futureIds.length ? await archiveRows('Repeat split', kind, [{ table, ids: futureIds }]) : { batchId: null }
+  if (arch.error) return { error: friendly(arch.error) }
+
+  const t = templateFromFields(kind, fields, tz)
+  const before = occurrencesBetween(rec, rec.start_date, dayBefore).length
+  const newRecipe = {
+    target_kind: kind, freq: rec.freq, weekdays: rec.weekdays,
+    end_kind: rec.end_kind, end_count: rec.end_kind === 'count' ? Math.max(1, (rec.end_count || 0) - before) : null,
+    end_until: rec.end_kind === 'until' ? rec.end_until : null,
+    start_date: occYMD, timezone: tz, split_parent_id: seriesId,
+    title: t.title, notes: t.notes, category_id: t.category_id, location: t.location ?? null,
+    all_day: !!t.all_day, wall_time: t.wall_time, duration_minutes: t.duration_minutes,
+    time_bucket: kind === 'task' ? t.time_bucket : null,
+  }
+  const made = await materialiseSeries(newRecipe, keepDates)
+  if (made.error) return { error: made.error }
+  return { undo: { kind, newSeriesId: made.seriesId, oldSeriesId: seriesId, oldEnd, batchId: arch.batchId } }
+}
+
+// Dispatch an occurrence edit by the chosen scope. Returns { error } | { undo? }.
+export async function applyOccurrenceEdit(scope, kind, occ, fields) {
+  if (scope === 'one') { const e = await editThisOccurrence(kind, occ.id, fields); return e ? { error: e } : {} }
+  if (scope === 'all') { const e = await editWholeSeries(kind, occ.series_id, fields); return e ? { error: e } : {} }
+  return editThisAndFollowing(kind, occ, fields)
+}
+
+// Reverse a "this and following" split completely: drop the new occurrences + new
+// recipe, restore the old recipe's end, and un-archive the old future occurrences.
+export async function undoSeriesSplit({ kind, newSeriesId, oldSeriesId, oldEnd, batchId }) {
+  await supabase.from(tableFor(kind)).delete().eq('series_id', newSeriesId)
+  await supabase.from('recurrences').delete().eq('id', newSeriesId)
+  await supabase.from('recurrences').update(oldEnd).eq('id', oldSeriesId)
+  if (batchId) await unarchiveBatch(batchId)
 }

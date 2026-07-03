@@ -7,7 +7,7 @@ import { buildToday } from './todayModel'
 import { activeTotal } from './allTasksModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from './subtasks'
 import { archiveTask, archiveEvent, unarchiveBatch, activeOnly } from './archive'
-import { createSeriesAndMaterialise } from './recur/series'
+import { createSeriesAndMaterialise, applyOccurrenceEdit, undoSeriesSplit } from './recur/series'
 import { useGridDrag } from './kit/useGridDrag'
 import { useSwipe } from './kit/useSwipe'
 import DayGrid from './kit/DayGrid'
@@ -80,7 +80,7 @@ export default function Today({ onOpenPlanning }) {
         supabase
           .from('tasks')
           .select(
-            'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, parent_task_id, scheduled_start, scheduled_end, created_at',
+            'id, title, notes, status, completed_at, category_id, priority, time_bucket, due_date, parent_task_id, scheduled_start, scheduled_end, created_at, series_id, series_detached',
           )
           .order('created_at', { ascending: true }),
       ),
@@ -94,7 +94,7 @@ export default function Today({ onOpenPlanning }) {
       activeOnly(
         supabase
           .from('events')
-          .select('id, title, notes, start_at, end_at, location, category_id')
+          .select('id, title, notes, start_at, end_at, location, category_id, series_id, series_detached')
           .gte('start_at', dayStart.toISOString())
           .lt('start_at', dayEnd.toISOString())
           .order('start_at', { ascending: true }),
@@ -159,6 +159,17 @@ export default function Today({ onOpenPlanning }) {
     const msg = await createSeriesAndMaterialise(recipe)
     if (!msg) { setForm(null); await load() }
     return msg
+  }
+
+  // Edit an occurrence with the chosen scope; "this and following" → one Undo toast.
+  async function handleSaveSeriesEdit(scope, fields) {
+    const { kind, item } = form
+    const r = await applyOccurrenceEdit(scope, kind, item, fields)
+    if (r.error) return r.error
+    setForm(null)
+    await load()
+    if (r.undo) setToast({ text: 'Repeat split', onUndo: async () => { setToast(null); await undoSeriesSplit(r.undo); await load() } })
+    return null
   }
 
   // Delete = ARCHIVE (soft-delete): stamp the row(s) with archived_at + a batch.
@@ -548,6 +559,7 @@ export default function Today({ onOpenPlanning }) {
           parentLabel={formParentLabel}
           onSave={handleSave}
           onSaveSeries={handleSaveSeries}
+          onSaveSeriesEdit={handleSaveSeriesEdit}
           onDelete={handleDelete}
           onClose={() => setForm(null)}
         />

@@ -107,6 +107,20 @@ function tzOffsetMs(instantMs, tz) {
   return asUTC - instantMs
 }
 
+// A UTC instant (ISO string / Date) → its calendar date "YYYY-MM-DD" in zone `tz`.
+export function ymdInZone(value, tz = 'Europe/Amsterdam') {
+  const d = value instanceof Date ? value : new Date(value)
+  return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d)
+}
+// A UTC instant → its wall clock "HH:MM" in zone `tz` (the inverse of the below).
+export function wallOfInstant(value, tz = 'Europe/Amsterdam') {
+  const d = value instanceof Date ? value : new Date(value)
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(d)
+  let h = 0, mi = 0
+  for (const p of parts) { if (p.type === 'hour') h = Number(p.value); if (p.type === 'minute') mi = Number(p.value) }
+  return `${pad(h % 24)}:${pad(mi)}`
+}
+
 // A calendar date "YYYY-MM-DD" + a wall-clock time ("HH:MM" or "HH:MM:SS") in zone
 // `tz` → the exact UTC instant, as a Date. DST-correct: the offset is resolved at
 // the target instant, so 09:00 local maps to 07:00Z in summer and 08:00Z in winter.
