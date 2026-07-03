@@ -33,6 +33,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Recurring events + tasks — PIECE 3a: EDIT three-mode model (SRC-ONLY). (Owner-to-verify.)
+
+Editing an occurrence of a repeat now asks "apply to… This one / This and following / All". No
+schema; nothing for the Checker. DELETE still behaves as a single-row archive (that's Piece 3b, next).
+
+WHAT CHANGED:
+- A calm hairline scope prompt (src/kit/SeriesScopePrompt.jsx) appears only when saving an edit to a
+  LIVE series occurrence; a one-off (or an already-detached occurrence) saves straight through, no
+  prompt. Cancel discards.
+- THIS ONE → edits just that occurrence + sets series_detached = true (later series edits skip it).
+- ALL → updates the recipe template + every NON-DETACHED occurrence: content in one batch; if the
+  time/all-day changed, each occurrence's time is recomputed from its OWN date (DST-correct), not
+  shifted by a fixed amount. Detached occurrences are preserved; task status is untouched.
+- THIS AND FOLLOWING → keeps the past; makes this-and-forward a NEW recipe carrying the change:
+  bound the old recipe before this date, archive this + later non-detached occurrences as ONE batch
+  (single Undo), create a new recipe (split_parent_id, remaining count/until) and materialise it from
+  this date — skipping any date that already holds a preserved detached occurrence (no duplicate).
+  Fully reversible: one Undo toast drops the new occurrences + recipe, restores the old recipe's end,
+  and un-archives the old future ones.
+- Occurrence edits are wired in all three form hosts (WeekView, Today, Planning); the fetchers now
+  select series_id + series_detached so the form knows an item is a series occurrence.
+
+FILES: new src/kit/SeriesScopePrompt.jsx (+css); src/recur/series.js (edit-mode functions +
+applyOccurrenceEdit + undoSeriesSplit + a materialiseSeries refactor); src/recur/engine.js
+(ymdInZone, wallOfInstant); src/recur/recipe.js (buildOneOffFields — lifted out of ItemForm);
+src/kit/ItemForm.jsx (scope wiring; back to 237 lines, UNDER 250); src/archive.js (export
+archiveRows); the three hosts' selects + handlers. Commit 69b4685 + this docs.
+
+HOW TO VERIFY (13" Mac; make a weekly event series first, e.g. Mon+Wed a few weeks):
+- Edit one occurrence's title → "This one" → only that one changes; a LATER "All" edit does NOT
+  overwrite it (it's detached/preserved).
+- Edit another's title/time → "All" → every non-detached occurrence updates (the customised one
+  stays); if you changed the time, all occurrences move to the new time (DST holds across a boundary).
+- Edit a middle occurrence → "This and following" → that one + all later reflect the change; earlier
+  don't; ONE Undo restores the old future ones (and removes the new series) with no duplicates/orphans.
+- A one-off (non-repeating) event edits exactly as before — no prompt.
+
+KNOWN GAPS / RISKS: DELETE modes are Piece 3b (delete still single-row archive, no prompt). Changing
+the repeat PATTERN via edit (daily↔weekly, weekdays, end) is DEFERRED — for now delete + recreate;
+the Repeat control doesn't render on an edit form. No loop-glyph marker yet + Today's all-day/overlap
+fetch fix are Piece 5. The split's supabase orchestration wasn't unit-run headless (auth'd client);
+its date bookkeeping was verified with the engine (kept+new reconstruct the series, no overlap/gap),
+build + lint pass — owner verifies the live edit matrix.
+
+NEXT: PIECE 3b — the DELETE three-mode model.
+FOR THE CHECKER: nothing — src-only.
+
+---
+
 ### 2026-07-03 — Recurring events + tasks — PIECE 2: GENERATOR + create-a-repeat (SRC-ONLY). (Owner-to-verify.)
 
 Create-a-repeat now works: choose a repeat in the form and it saves the "recipe" + generates real
