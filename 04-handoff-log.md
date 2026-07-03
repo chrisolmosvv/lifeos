@@ -33,6 +33,52 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Recurring events + tasks — PIECE 5: loop marker + Today all-day fix + Today split (SRC-ONLY). (Owner-to-verify.)
+
+Three sub-steps: a repeat marker on blocks, Today's all-day/overlap fetch fix, and the Today.jsx data-
+layer split. No schema; nothing for the Checker.
+
+WHAT CHANGED:
+- 5A — a small NEUTRAL-ink loop glyph (↻) pinned top-right of the shared block when it's a repeat
+  occurrence (repeats={!!ev.series_id}), same spot on events + tasks so it never crowds the
+  title/time/ring. Styling in blockKit.css. buildDayItems now carries a task's series_id. Month
+  selects series_id but the tiny cells keep NO marker (calm law) — noted, owner can revisit.
+- 5B — Today's events now fetch by OVERLAP (start < dayEnd AND end > dayStart) and select all_day +
+  series_id, so all-day / multi-day events (incl. all-day repeats) that cover the day render. All-day
+  items show in a new calm Today all-day strip (src/kit/TodayAllDay.jsx, reusing the week's tinted-bar
+  look); only timed events hit the grid (no more broken 24h block). Done VIA the split: Today's data
+  layer moved into src/useTodayData.js (fetch + write primitives + the Piece-4 top-up), which is where
+  the fetch fix lives.
+- FILE SIZE: Today.jsx 584 → 508. The data layer is out; the remaining bulk is RENDER — the two
+  module lists (Tasks today / Next 7 days) and the drag-config are the next split candidates (would
+  get it under ~250) but that's a separate render-componentisation refactor, not forced here.
+
+FILES: src/kit/TintedBlock.jsx + blockKit.css (loop); src/kit/WeekColumn.jsx + DayGrid.jsx (pass
+repeats); src/eventLayout.js (task series_id); src/useMonthData.js (select series_id); new
+src/useTodayData.js (97) + src/kit/TodayAllDay.jsx (32) + todayAllDay.css; src/Today.jsx (508).
+Commits 93dba59 (5A) + c513f4e (5B) + this docs.
+
+HOW TO VERIFY (13" Mac, real data):
+- 5A: a repeating event AND a repeating task each show the quiet loop top-right on the Week and Today;
+  a one-off shows NO loop; it doesn't crowd short blocks. (Month cells intentionally show no loop.)
+- 5B: on Today — an all-day event renders as a bar in the new strip (not a broken block); a MULTI-DAY
+  all-day event that started before today still shows today; an all-day REPEAT shows on its days;
+  timed events/tasks look unchanged.
+- 5C (regression — the split moved a lot): on Today, create an event, create a task, edit one, delete
+  one (incl. a repeat → the scope prompt still appears), drag a block, drag a task to/from a module,
+  tap to open, quick-add, subtasks, ▶ focus. ALL must behave exactly as before the split.
+
+KNOWN GAPS / RISKS: changing the repeat PATTERN via edit is still deferred. No all-day DRAG on Today's
+strip (click-to-open only; create all-day via the form's all-day toggle) — the week's band has drag,
+Today's strip is view-only for now. Today.jsx still 508 (render bulk) — next split candidate noted
+above. The Today split moved a lot of wiring; build + lint pass and refs were checked, but the
+behavioural 5C matrix is the owner's confirm.
+
+NEXT: PIECE 6 — Month display polish + accent/design audit + dead-code sweep + the full brain-doc pass.
+FOR THE CHECKER: nothing — src-only.
+
+---
+
 ### 2026-07-03 — Recurring events + tasks — PIECE 4: lazy TOP-UP of forever series (SRC-ONLY). (Owner-to-verify.)
 
 "Forever" repeats now keep generating as you navigate forward, entirely client-side (no cron, no edge
