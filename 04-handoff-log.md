@@ -33,6 +33,47 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Cookbook V2 Piece 1: schema — step enrichment columns (DB ONLY, checker approved)
+
+WHAT CHANGED:
+- Three new nullable columns added to the Food module's recipe tables. These prepare the data layer
+  for parallel cook timing lanes, ingredients-by-step grouping, and per-step activity tags — all
+  built in later pieces. Until then every column is NULL; existing screens work exactly as today.
+  - `recipe_ingredients.step_position` (smallint, null) — links an ingredient to the step that uses
+    it, by step position number. NULL = ungrouped (today's flat list).
+  - `recipe_steps.tag` (text, null, CHECK hands_on/hands_free/active_heat) — an activity label the
+    AI parser will infer. NULL = untagged.
+  - `recipe_steps.depends_on` (jsonb, null) — predecessor step positions for parallel scheduling.
+    NULL = sequential (today's behaviour).
+- No new table, no new FK, no new RLS, no new index. All additive + nullable.
+
+FILE: db/38_recipe_step_enrichment.sql
+
+HOW VERIFIED:
+- Ran live on Frankfurt (cntlptuacsujbdtwvbis). PostgREST schema cache reloaded (`NOTIFY pgrst`).
+- Throwaway-write test: created a recipe with one step (tag='hands_free', depends_on=[0],
+  timer_seconds=600) and one ingredient (step_position=0). Read back via API — all three columns
+  persisted and returned exactly as written. Throwaway deleted (children CASCADEd).
+
+FOR THE CHECKER: approved. The exact phrase "checker approved" was received from a fresh Checker chat
+before the file was committed or run live.
+
+KNOWN GAPS / RISKS: None for this piece. The columns are inert until the parser + data layer wire
+them (Piece 2).
+
+BANKED FACTS FOR PIECE 2 (AI parser + data layer):
+- recipe-import verify_jwt = true (config.toml:402, must re-pin on redeploy).
+- recipeWrite EDIT = delete-all-children then reinsert (the F7 pattern). Piece 2 must carry the new
+  fields through so an unrelated edit doesn't wipe tags/deps/step-links.
+- cookSchedule accepts deps as `{ deps: number[] }` per step — the depends_on jsonb maps directly.
+  The finish-together critical-path branch is already built + verified at P7.
+- Two break points when steps later become objects: importClient.js:50 (wraps strings, breaks on
+  objects) and RecipeEditor.jsx:44+88 (strips to text-only, loses new fields on load/save).
+
+NEXT: Piece 2 — AI parser upgrade + data-layer wiring (no new UI).
+
+---
+
 ### 2026-07-03 — Global cook-session header marker (SRC-ONLY)
 
 WHAT CHANGED:
