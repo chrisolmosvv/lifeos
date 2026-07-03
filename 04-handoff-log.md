@@ -33,6 +33,47 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Recurring events + tasks — PIECE 1: SCHEMA (checker-gated, DB-only). (Verified live on Frankfurt.)
+
+The database groundwork for repeating events + tasks (T10). SCHEMA ONLY — no consuming code this
+piece (two-track: the schema commit, alone). Approach A / materialise: a "recipe" row describes a
+repeat; the app will later generate real event/task rows ("occurrences") from it. This piece just
+lays the tables.
+
+WHAT CHANGED:
+- NEW table `recurrences` (the repeat recipe): pattern (freq daily/weekly/monthly/yearly + weekdays
+  for weekly + end_kind never/count/until), DST-safe time (start_date + wall_time + duration_minutes
+  + timezone default 'Europe/Amsterdam'), and the template stamped onto each occurrence (target_kind
+  event|task, title, notes, category_id [on delete set null — the existing pattern], location,
+  all_day, time_bucket), plus bookkeeping (generated_until, split_parent_id). Two CHECKs enforce
+  end_count/end_until presence. Owner-only RLS (the standard four policies).
+- TWO additive, nullable columns on BOTH events AND tasks: `series_id` (uuid → recurrences on delete
+  set null; null = a one-off, unchanged behaviour) and `series_detached` (boolean not null default
+  false; the "customised occurrence" flag). Purely additive — existing rows default null/false and
+  behave exactly as before; the link points OUT to the new table (no new FK into the spine, no
+  cascade). The dormant events.repeat_rule column is left untouched.
+
+FILE: db/37_recurrences.sql (next after 36_focus_sessions). Committed ALONE (4e2f22f) — two-track,
+no src.
+
+HOW VERIFIED (live, Frankfurt cntlptuacsujbdtwvbis, via supabase db query --linked): table exists
+with 21 columns + 4 owner-only policies + RLS on; both new columns present on events AND tasks. Ran
+the file, reloaded the PostgREST cache (notify pgrst, 'reload schema'). REAL-WRITE test: inserted a
+throwaway recipe + a throwaway events occurrence linking to it with series_detached=true, read back
+→ series_id persisted + series_detached=true; then deleted both throwaways (matched by a distinctive
+marker title) — 0 remaining, no owner data touched. REST API confirms the new columns are visible
+(a select on series_id/series_detached returns [] rather than a cache-miss error).
+
+FOR THE CHECKER: approved — the Checker replied the exact words "checker approved" before this
+committed/ran. Nothing further for the Checker unless a later piece changes schema (none planned;
+Pieces 2–6 are src-only).
+
+NEXT: PIECE 2 — the recurrence generator + "create a repeat" (src-only): a hand-rolled generator
+(no rrule.js; Intl-based DST math reusing the gymDates.js pattern) + wiring the form's Repeat control
+to materialise occurrences on save. Held until the owner brings the go.
+
+---
+
 ### 2026-07-03 — Calendar/Today — EVENT vs TASK block distinction (SRC-ONLY, no schema). (Owner-verified, both screens.)
 
 The shared calendar/Today block now shows events and tasks differently (they were identical before).
