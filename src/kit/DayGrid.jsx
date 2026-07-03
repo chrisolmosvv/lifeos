@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { HOUR_HEIGHT, formatHour } from '../dateUtils'
+import { HOUR_HEIGHT, formatHour, timeRange } from '../dateUtils'
 import { buildDayItems, layoutEvents } from '../eventLayout'
 import { colorHex, INBOX_COLOR } from '../palette'
 import { resolveColor } from '../colorModel'
@@ -147,10 +147,3 @@ export default function DayGrid({
   )
 }
 
-function timeRange(startIso, endIso) {
-  return clock(startIso) + '–' + clock(endIso)
-}
-function clock(iso) {
-  const d = new Date(iso)
-  return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0')
-}

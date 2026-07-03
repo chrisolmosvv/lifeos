@@ -1,7 +1,7 @@
 import { buildDayItems, layoutEvents } from '../eventLayout'
 import { colorHex, INBOX_COLOR } from '../palette'
 import { resolveColor } from '../colorModel'
-import { HOUR_HEIGHT } from '../dateUtils'
+import { HOUR_HEIGHT, timeRange } from '../dateUtils'
 import TintedBlock from './TintedBlock'
 import './gridCursor.css'
 
@@ -67,6 +67,7 @@ export default function WeekColumn({
           <TintedBlock
             key={ev.kind + ':' + ev.id}
             title={ev.title}
+            time={timeRange(ev.start_at, ev.end_at)}
             hex={hex}
             done={isDone}
             top={it.top}

@@ -98,6 +98,17 @@ export function formatClock(d) {
   return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 }
 
+// A timed block's start–end label, e.g. "9:00–10:00" (24-hour, en-dash, minutes
+// zero-padded). Shared by the day column and the week grid so a block reads the
+// same on both.
+export function timeRange(startIso, endIso) {
+  return clock(startIso) + '–' + clock(endIso)
+}
+function clock(iso) {
+  const d = new Date(iso)
+  return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0')
+}
+
 // Where an hour-grid should open: centred around now during working hours, else
 // at ~7am. Shared by the day column and the week view so they behave the same.
 export function nowScrollTop(viewportH) {
