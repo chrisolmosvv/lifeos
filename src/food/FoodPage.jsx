@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LogPage from "./LogPage";
 import Cookbook from "./Cookbook";
 import ResumeCookBanner from "./ResumeCookBanner";
@@ -19,12 +19,16 @@ const TABS = [
   { id: "cookbook", label: "Cookbook" },
 ];
 
-export default function FoodPage() {
+export default function FoodPage({ stageRecipeId, onConsumeStage }) {
   const [tab, setTab] = useState("log"); // 'log' | 'cookbook' — Food lands on the Log
   const [loading] = useState(false); // F5 will drive this during its load; inert in F4
   const [openRecipeId, setOpenRecipeId] = useState(null); // a Log→Cookbook "View recipe" jump (F9)
   const [openCook, setOpenCook] = useState(false); // resume-banner deep-link: open the recipe INTO cook (B)
-  const openRecipe = (id, cook = false) => { setOpenRecipeId(id); setOpenCook(!!cook); setTab("cookbook"); };
+  const [openStage, setOpenStage] = useState(false); // header finish deep-link: open the recipe INTO staging
+  const openRecipe = (id, cook = false, stage = false) => { setOpenRecipeId(id); setOpenCook(!!cook); setOpenStage(!!stage); setTab("cookbook"); };
+
+  // Header cook-finish deep-link: open the recipe with the staging sheet.
+  useEffect(() => { if (stageRecipeId) { openRecipe(stageRecipeId, false, true); onConsumeStage?.(); } }, [stageRecipeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="food-page">
@@ -55,7 +59,7 @@ export default function FoodPage() {
         </section>
       ) : (
         <section className="food-pane" role="tabpanel" aria-label="Cookbook">
-          <Cookbook openRecipeId={openRecipeId} cookOnOpen={openCook} onConsumeOpen={() => { setOpenRecipeId(null); setOpenCook(false); }} />
+          <Cookbook openRecipeId={openRecipeId} cookOnOpen={openCook} stageOnOpen={openStage} onConsumeOpen={() => { setOpenRecipeId(null); setOpenCook(false); setOpenStage(false); }} />
         </section>
       )}
     </div>

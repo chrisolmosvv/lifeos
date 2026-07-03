@@ -36,8 +36,12 @@ export function useCookSession(recipeId) {
       const next = { ...cur, ...patch };
       clearTimeout(timer.current);
       timer.current = setTimeout(() => {
+        const wasNew = !idRef.current;
         saveSession(idRef.current, { recipe_id: recipeId, struck_steps: next.struck, ticked_ingredients: next.ticked, timer_ends: next.timers, board_states: next.board, status: next.status, dismissed: next.dismissed })
-          .then((id) => { idRef.current = id; })
+          .then((id) => {
+            idRef.current = id;
+            if (wasNew || next.status === "done") window.dispatchEvent(new Event("lifeos:cook-session-change"));
+          })
           .catch(() => { /* reload reveals the truth */ });
       }, 500);
       return next;

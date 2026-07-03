@@ -8,6 +8,13 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-03 — Global cook-session header marker ✅ (src-only)
+A pulsing terracotta dot + live elapsed time in the nav band for active cook sessions,
+mirroring the Focus running-session marker. Tap → popover with elapsed / Open / Finish.
+Finish deep-navigates to the recipe's staging sheet (exact parity with CookPage's "Done
+cooking"). Both markers share a right-pinned flex container; the centred nav never shifts.
+New file: `cookSessionContext.jsx`. Nine files touched. No schema change.
+
 ## Session note — 2026-07-03 — Calendar/Today six-fix bundle ✅ (src-only)
 Six small Calendar-week + Today display/interaction fixes, one commit each + a cleanup deletion,
 each owner-verified (commits `08d893f`→`c553d69`, cleanup `9be564b`, + docs). No schema. Shipped:

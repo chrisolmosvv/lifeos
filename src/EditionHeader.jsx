@@ -3,6 +3,7 @@ import Masthead from './kit/Masthead'
 import Popover from './kit/Popover'
 import { mastTime, mastWeekday, mastDate, personalEdition } from './personalEdition'
 import { useFocusSessionCtx } from './focus/focusSessionContext'
+import { useCookSessionCtx } from './food/cookSessionContext'
 import { elapsedClock } from './focus/focusFormat'
 import './editionHeader.css'
 
@@ -42,6 +43,21 @@ export default function EditionHeader({ view, onNavigate }) {
   const [popOpen, setPopOpen] = useState(false)
   const running = fs && (fs.status === 'running' || fs.status === 'paused') && fs.live
 
+  // The global cook live-marker: same pattern as Focus, only rendered while an active
+  // cook_session exists. Elapsed time is computed from the session's created_at.
+  const cook = useCookSessionCtx()
+  const cookMarkerRef = useRef(null)
+  const [cookPopOpen, setCookPopOpen] = useState(false)
+  const cookActive = cook && cook.active
+  const cookElapsed = cookActive ? Math.max(0, Math.floor((now.getTime() - new Date(cook.startedAt).getTime()) / 1000)) : 0
+
+  const finishCook = async () => {
+    const rid = cook.recipeId
+    setCookPopOpen(false)
+    await cook.finish()
+    onNavigate('food', { stageRecipeId: rid })
+  }
+
   return (
     <header className="masthead">
       <div className="mast-top">
@@ -75,16 +91,31 @@ export default function EditionHeader({ view, onNavigate }) {
           </button>
         ))}
 
-        {running && (
-          <button
-            ref={markerRef}
-            className="mast-focus-marker"
-            onClick={() => setPopOpen(true)}
-            aria-label={`Focus session running · ${elapsedClock(fs.live.focusSeconds)}`}
-          >
-            <span className="mast-focus-dot" aria-hidden="true" />
-            <span className="tnum">{elapsedClock(fs.live.focusSeconds)}</span>
-          </button>
+        {(running || cookActive) && (
+          <div className="mast-nav-markers">
+            {cookActive && (
+              <button
+                ref={cookMarkerRef}
+                className="mast-cook-marker"
+                onClick={() => setCookPopOpen(true)}
+                aria-label={`Cook session running · ${elapsedClock(cookElapsed)}`}
+              >
+                <span className="mast-cook-dot" aria-hidden="true" />
+                <span className="tnum">{elapsedClock(cookElapsed)}</span>
+              </button>
+            )}
+            {running && (
+              <button
+                ref={markerRef}
+                className="mast-focus-marker"
+                onClick={() => setPopOpen(true)}
+                aria-label={`Focus session running · ${elapsedClock(fs.live.focusSeconds)}`}
+              >
+                <span className="mast-focus-dot" aria-hidden="true" />
+                <span className="tnum">{elapsedClock(fs.live.focusSeconds)}</span>
+              </button>
+            )}
+          </div>
         )}
       </nav>
 
@@ -95,6 +126,18 @@ export default function EditionHeader({ view, onNavigate }) {
             <div className="mast-focus-popacts">
               <button className="mast-focus-open" onClick={() => { setPopOpen(false); onNavigate('focus') }}>Open</button>
               <button className="mast-focus-stop" onClick={() => { setPopOpen(false); fs.stop() }}>Stop</button>
+            </div>
+          </div>
+        </Popover>
+      )}
+
+      {cookPopOpen && cookActive && (
+        <Popover anchorRef={cookMarkerRef} title="Cook session" onClose={() => setCookPopOpen(false)}>
+          <div className="mast-cook-pop">
+            <div className="mast-cook-elapsed tnum">{elapsedClock(cookElapsed)} cooking</div>
+            <div className="mast-cook-popacts">
+              <button className="mast-cook-open" onClick={() => { setCookPopOpen(false); onNavigate('food') }}>Open</button>
+              <button className="mast-cook-finish" onClick={finishCook}>Finish</button>
             </div>
           </div>
         </Popover>

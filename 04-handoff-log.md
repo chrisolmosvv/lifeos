@@ -33,6 +33,45 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Global cook-session header marker (SRC-ONLY)
+
+WHAT CHANGED:
+- A pulsing terracotta dot + live elapsed clock appears far-right of the nav band whenever
+  a cook session is active — mirrors the Focus running-session marker exactly.
+- Tap the dot → a popover with elapsed time, "Open" (→ Food page), and "Finish."
+- "Finish" sets status='done' in the DB AND deep-navigates to the recipe's staging sheet
+  (the LogMealSheet) — exact parity with CookPage's "Done cooking" action.
+- Both cook and focus markers sit in a shared flex container (cook left, focus right);
+  the centred nav never shifts.
+
+FILES TOUCHED:
+- `src/food/cookSession.js` — added `created_at` to fetchAnyActiveSession select
+- `src/food/cookSessionContext.jsx` — NEW: global active-cook context (~46 lines)
+- `src/food/useCookSession.js` — fires `lifeos:cook-session-change` on session create/done
+- `src/EditionHeader.jsx` — cook marker + popover + shared marker container
+- `src/editionHeader.css` — shared marker container + cook marker styles
+- `src/LoggedIn.jsx` — CookSessionProvider wrapper + foodStage state for deep-link
+- `src/food/FoodPage.jsx` — accepts stageRecipeId, threads stageOnOpen to Cookbook
+- `src/food/Cookbook.jsx` — threads stageOnOpen to RecipePage
+- `src/food/RecipePage.jsx` — stageOnOpen effect exits cook + opens staging sheet
+
+HOW TO VERIFY: Start a cook → interact (tick/strike) → navigate away → pulsing dot appears →
+tap it → popover shows → tap Finish → lands on the recipe page with the staging sheet open →
+dot disappears → DB row shows status='done'. Also verify: Focus marker still works identically;
+both markers show side by side when both sessions are running; centred nav never shifts.
+
+KNOWN GAPS / RISKS:
+- The cook marker only appears after the first interaction creates the session row (same as the
+  existing ResumeCookBanner — consistent, not a new gap).
+- Elapsed time uses `created_at` (when the session row was first inserted), not the moment
+  the user tapped "Cook." A few seconds off — negligible.
+
+NEXT: Owner verifies, then carries to the Planner for sign-off.
+
+FOR THE CHECKER: Nothing — src-only, no schema change.
+
+---
+
 ### 2026-07-03 — Recurring events + tasks — PIECE 6: the CLOSE (Month sanity + design audit + prove-dead). (SRC-ONLY.)
 
 The feature's close-out pass. No schema; nothing for the Checker. The full brain-doc pass is a

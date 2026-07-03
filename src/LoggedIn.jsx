@@ -3,6 +3,7 @@ import { weekDays } from './dateUtils'
 import { FocusTotalsProvider } from './focus/focusTotalsContext'
 import { FocusSessionProvider } from './focus/focusSessionContext'
 import FocusGlobalLayer from './focus/FocusGlobalLayer'
+import { CookSessionProvider } from './food/cookSessionContext'
 import CalendarWeek from './CalendarWeek'
 import DayAgenda from './DayAgenda'
 import EditionHeader from './EditionHeader'
@@ -35,7 +36,8 @@ export default function LoggedIn({ email }) {
   const today = new Date()
   const days = weekDays(today)
   const [view, setViewState] = useState(initialView)
-  const setView = (v) => { setViewState(v); try { window.localStorage.setItem(VIEW_KEY, v) } catch { /* private mode / disabled → in-memory only */ } }
+  const [foodStage, setFoodStage] = useState(null)
+  const setView = (v, opts) => { setViewState(v); if (opts?.stageRecipeId) setFoodStage(opts.stageRecipeId); try { window.localStorage.setItem(VIEW_KEY, v) } catch { /* private mode / disabled → in-memory only */ } }
 
   // Cross-pillar "open Focus" (P4): the task form's ▶ / add-past / see-all park a
   // request (focusNav) and fire this event; we switch to the Focus pillar, which then
@@ -50,6 +52,7 @@ export default function LoggedIn({ email }) {
   if (typeof window !== 'undefined' && window.location.hash === '#health-debug-v2') return <HealthDebugV2 />
 
   return (
+    <CookSessionProvider>
     <FocusSessionProvider>
     <FocusTotalsProvider>
     <div className="app">
@@ -86,7 +89,7 @@ export default function LoggedIn({ email }) {
         </div>
       ) : view === 'food' ? (
         <div className="cal-wrap">
-          <FoodPage />
+          <FoodPage stageRecipeId={foodStage} onConsumeStage={() => setFoodStage(null)} />
         </div>
       ) : (
         <div className="cal-wrap">
@@ -97,5 +100,6 @@ export default function LoggedIn({ email }) {
     </div>
     </FocusTotalsProvider>
     </FocusSessionProvider>
+    </CookSessionProvider>
   )
 }

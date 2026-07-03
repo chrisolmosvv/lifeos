@@ -110,26 +110,32 @@
   }
 }
 
-/* Focus module (P5): the global running-session marker, pinned far-right of the nav
-   band. Only rendered while a session runs, so with none the header is unchanged.
-   position:relative on .mast-nav is a containing block only — visually inert. */
+/* Running-session markers (Focus P5 + Cook): pinned far-right of the nav band in a
+   shared flex container. Each marker renders only while its session is active; flex
+   handles the gap when both are present (cook left, focus right). The centred nav
+   never shifts. position:relative on .mast-nav is the containing block. */
 .mast-nav { position: relative; }
-.mast-nav .mast-focus-marker {
+.mast-nav-markers {
   position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.mast-nav .mast-focus-marker,
+.mast-nav .mast-cook-marker {
   display: inline-flex; align-items: center; gap: 0.4rem;
   color: var(--accent); text-transform: none; letter-spacing: normal;
   border-bottom: none; padding: 0; font-size: 0.8rem;
 }
-.mast-nav .mast-focus-marker:hover { color: var(--accent); }
-.mast-focus-dot {
+.mast-nav .mast-focus-marker:hover,
+.mast-nav .mast-cook-marker:hover { color: var(--accent); }
+.mast-focus-dot, .mast-cook-dot {
   width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
   animation: mast-focus-pulse 1.6s ease-in-out infinite;
 }
 @keyframes mast-focus-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.82); } }
-@media (prefers-reduced-motion: reduce) { .mast-focus-dot { animation: none; } }
-.mast-focus-pop { display: flex; flex-direction: column; gap: 12px; min-width: 170px; }
-.mast-focus-elapsed { font-family: var(--font-serif); font-size: 22px; color: var(--ink); }
-.mast-focus-popacts { display: flex; gap: 10px; }
-.mast-focus-popacts button { flex: 1; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: var(--font-sans); }
-.mast-focus-open { background: none; border: 1px solid var(--rule); color: var(--ink); }
-.mast-focus-stop { background: var(--accent); border: 0; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .mast-focus-dot, .mast-cook-dot { animation: none; } }
+.mast-focus-pop, .mast-cook-pop { display: flex; flex-direction: column; gap: 12px; min-width: 170px; }
+.mast-focus-elapsed, .mast-cook-elapsed { font-family: var(--font-serif); font-size: 22px; color: var(--ink); }
+.mast-focus-popacts, .mast-cook-popacts { display: flex; gap: 10px; }
+.mast-focus-popacts button, .mast-cook-popacts button { flex: 1; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: var(--font-sans); }
+.mast-focus-open, .mast-cook-open { background: none; border: 1px solid var(--rule); color: var(--ink); }
+.mast-focus-stop, .mast-cook-finish { background: var(--accent); border: 0; color: #fff; }

@@ -39,7 +39,7 @@ export async function fetchDoneSession(recipeId) {
 export async function fetchAnyActiveSession() {
   const { data, error } = await supabase
     .from("cook_session")
-    .select("id,recipe_id,recipes(title)")
+    .select("id,recipe_id,created_at,recipes(title)")
     .eq("status", "active")
     .eq("dismissed", false)
     .order("updated_at", { ascending: false })

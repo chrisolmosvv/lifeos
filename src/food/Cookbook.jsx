@@ -17,7 +17,7 @@ import "./cookbook.css";
 // (Added/Cooked/A–Z/Favourites; Cooked reads lastCookedFor from P3, Favourites reads is_favourite),
 // ★ per entry, keyboard (arrows/Enter/Esc while searching). DRAFT DOOR: a GRID tap on a draft opens
 // the EDITOR (finish it); a DEEP-LINK opens the PAGE. Also hosts the recipe page / editor / import views.
-export default function Cookbook({ openRecipeId, cookOnOpen, onConsumeOpen }) {
+export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onConsumeOpen }) {
   const [data, setData] = useState({ recipes: [], ingredientsByRecipe: {}, itemsById: {}, stepCountByRecipe: {}, cookEntries: [] });
   const [view, setView] = useState({ kind: "grid" });
   const [sort, setSort] = useState("added");
@@ -33,7 +33,7 @@ export default function Cookbook({ openRecipeId, cookOnOpen, onConsumeOpen }) {
   const load = async () => { setLoading(true); setData(await fetchCookbook()); setLoading(false); };
   useEffect(() => { load().catch(() => setLoading(false)); }, []);
   // Deep-link (Log ▸ View recipe): ALWAYS the page, even a draft (per the draft-door split).
-  useEffect(() => { if (openRecipeId) { setView({ kind: "recipe", id: openRecipeId, cook: cookOnOpen }); onConsumeOpen?.(); } }, [openRecipeId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (openRecipeId) { setView({ kind: "recipe", id: openRecipeId, cook: cookOnOpen, stage: stageOnOpen }); onConsumeOpen?.(); } }, [openRecipeId]); // eslint-disable-line react-hooks/exhaustive-deps
   const backToGrid = () => { setView({ kind: "grid" }); if (dirty) { setDirty(false); load(); } };
 
   const kindOf = (r) => recipeKind({ ingredients: data.ingredientsByRecipe[r.id] || [], steps: Array(data.stepCountByRecipe?.[r.id] || 0) });
@@ -85,7 +85,7 @@ export default function Cookbook({ openRecipeId, cookOnOpen, onConsumeOpen }) {
   );
   if (view.kind === "recipe") return (
     <>
-      <RecipePage recipeId={view.id} cookOnOpen={view.cook} onBack={backToGrid} onEdit={(id) => setView({ kind: "editor", id })} onDelete={onDelete} onCooked={() => setDirty(true)} />
+      <RecipePage recipeId={view.id} cookOnOpen={view.cook} stageOnOpen={view.stage} onBack={backToGrid} onEdit={(id) => setView({ kind: "editor", id })} onDelete={onDelete} onCooked={() => setDirty(true)} />
       {rw.toast && <Toast text={rw.toast.text} onDismiss={rw.dismiss} />}
     </>
   );
