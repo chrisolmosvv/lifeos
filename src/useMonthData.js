@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { activeOnly } from './archive'
 import { startOfWeek } from './dateUtils'
+import { ensureGeneratedThrough } from './recur/topup'
 
 // Read-only month-range data for the Month view (Phase 7, C6). A sibling of
 // useWeekData (Week's hook is left untouched). Loads the 6-row grid range — the
@@ -26,9 +27,9 @@ export function useMonthData(monthAnchor) {
 
   useEffect(() => {
     let alive = true
-    async function load() {
-      const gridStart = startOfWeek(monthAnchor)
-      const gridEnd = addDays(gridStart, 42)
+    const gridStart = startOfWeek(monthAnchor)
+    const gridEnd = addDays(gridStart, 42)
+    async function fetchAndSet() {
       const sIso = gridStart.toISOString()
       const eIso = gridEnd.toISOString()
       const sStr = localDateStr(gridStart)
@@ -60,7 +61,13 @@ export function useMonthData(monthAnchor) {
       setCats(catRes.data || [])
       setLoading(false)
     }
-    load()
+    // Fetch, then quietly top up "forever" series through the far grid edge and
+    // refetch only if that added rows (so far-forward months are never empty).
+    async function run() {
+      await fetchAndSet()
+      if (alive && (await ensureGeneratedThrough(localDateStr(gridEnd)))) await fetchAndSet()
+    }
+    run()
     return () => {
       alive = false
     }

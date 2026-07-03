@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { activeOnly } from './archive'
+import { ensureGeneratedThrough } from './recur/topup'
 
 // The week's data layer: load this week's events + scheduled tasks + categories,
 // and the writes that the week view needs (all reload after). Kept apart so
@@ -18,7 +19,7 @@ export function useWeekData(days) {
   const [cats, setCats] = useState([])
   const [busy, setBusy] = useState(false)
 
-  async function load() {
+  async function fetchAndSet() {
     const weekStart = new Date(days[0])
     const weekEnd = new Date(days[0])
     weekEnd.setDate(weekEnd.getDate() + 7)
@@ -67,6 +68,16 @@ export function useWeekData(days) {
     setScheduled(taskRes.data || [])
     setTray(trayRes.data || [])
     setCats(catRes.data || [])
+  }
+
+  // Fetch, then quietly top up any "forever" series through the visible edge and
+  // refetch only if that added rows (so far-forward weeks are never empty). Top-up
+  // is client-side + best-effort — it never blocks the first render.
+  async function load() {
+    await fetchAndSet()
+    const lastDay = new Date(days[0])
+    lastDay.setDate(lastDay.getDate() + 6)
+    if (await ensureGeneratedThrough(localDateStr(lastDay))) await fetchAndSet()
   }
 
   // V2-4 (gate): reload when the WEEK changes, not just on mount. WeekView is now

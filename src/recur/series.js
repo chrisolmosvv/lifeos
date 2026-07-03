@@ -9,13 +9,13 @@ import { occurrencesBetween, wallTimeToInstant, wallOfInstant, ymdInZone, addDay
 // occurrence has three scopes: this one / this and following / all.
 const HORIZON_DAYS = 365
 
-const tableFor = (kind) => (kind === 'event' ? 'events' : 'tasks')
+export const tableFor = (kind) => (kind === 'event' ? 'events' : 'tasks')
 const midnightIso = (ymd) => { const [y, m, d] = ymd.split('-').map(Number); return new Date(y, m - 1, d).toISOString() }
 const durMin = (a, b) => Math.max(1, Math.round((new Date(b) - new Date(a)) / 60000))
 const friendly = (e) => (e?.code === '23514' ? 'That repeat has times that end before they start — check them.' : e?.message || 'Could not save the repeat.')
 
 // One occurrence ROW for a date, from the recipe's template (minus series_id).
-function occurrenceRow(recipe, ymd) {
+export function occurrenceRow(recipe, ymd) {
   const { target_kind, all_day, wall_time, duration_minutes, timezone } = recipe
   const dur = duration_minutes || 60
   if (target_kind === 'event') {
