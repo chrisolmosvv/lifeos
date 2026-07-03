@@ -43,12 +43,14 @@ export function useWeekData(days) {
       ),
       // C5: the tray — top-level tasks NOT time-blocked (scheduled_start null) that
       // are either undated or due in the VIEWED week; due-soonest, undated last.
+      // Completed tasks are excluded — a done loose task leaves the tray.
       activeOnly(
         supabase
           .from('tasks')
           .select('id, title, notes, status, category_id, priority, time_bucket, due_date, scheduled_start, scheduled_end, parent_task_id, created_at')
           .is('scheduled_start', null)
           .is('parent_task_id', null)
+          .neq('status', 'done')
           .or(`due_date.is.null,and(due_date.gte.${localDateStr(weekStart)},due_date.lt.${localDateStr(weekEnd)})`)
           .order('due_date', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: true }),
