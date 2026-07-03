@@ -24,11 +24,16 @@ bars show a date range. Full detail in the handoff log + `03-decisions.md`.
   before the week, but the grid only draws a block on its start day (no cross-column split), so an
   off-screen-start timed event is fetched-but-not-drawn. The all-day case shipped; this is a
   separate, bigger piece.
-- Also on the pile: a visual event/task distinction; repeating events; the optional **off-grid
-  drag-ghost** (a faint ghost as a dragged task crosses to the tray, instead of vanishing at the
-  grid edge — small, only if the vanish feels abrupt).
-- **File sizes:** `todayKit.css` 588 and `weekGrid.css` 275 lines — both still over ~250 but this
-  bundle NET-SHRANK both (FIX 6 + FIX 7 were deletions). Don't grow them; prefer trimming.
+- **Event/task visual distinction — ✅ shipped 2026-07-03** (commits `e965798` split + `5a615b6`):
+  EVENT = filled + solid bar; TASK = hollow (category outline) + dashed left bar + neutral to-do
+  ring; on the one shared block. Detail in the handoff log + `03-decisions.md`.
+- Also on the pile: repeating events; the optional **off-grid drag-ghost** (a faint ghost as a
+  dragged task crosses to the tray, instead of vanishing at the grid edge); the **done-task look**
+  on a hollow block (hollow outline + ring + 60% fade + strike is undesigned); an optional
+  **tickable to-do ring**.
+- **File sizes:** `weekGrid.css` 275 lines (over ~250; net-shrank earlier). `todayKit.css` was 588;
+  the event/task-distinction session split its block styles into new `blockKit.css` (~125), taking
+  todayKit.css to 483 — still over, keep trimming; don't grow either.
 - Minor future tidy (not urgent): `Today.jsx` still has its own local `clock()` duplicating
   `dateUtils.clock` — pre-existing, left as-is (out of this bundle's scope).
 

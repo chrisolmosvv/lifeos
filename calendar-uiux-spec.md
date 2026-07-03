@@ -77,6 +77,10 @@
 
 - **Tinted blocks** — the category colour as a low-opacity fill + a coloured
   left bar (Apple-Calendar style, kept soft so it still reads as paper).
+  *(Corrected 2026-07-03: this filled look is now the EVENT block specifically; a
+  TASK renders HOLLOW — no fill, a hairline category outline on top/right/bottom, a
+  single dashed category left edge, and a small neutral to-do ring leading its
+  title. Both come from the one shared block.)*
 - **Tinted by the item's OWN category**, including sub-categories — a task filed
   deep uses its **shaded branch colour**, not the parent's.
 - **Timed blocks show their start–end time** (corrected 2026-07-03; was "title only — blocks never
@@ -287,7 +291,7 @@
 | Off-home arrows | Standard Monday–Sunday weeks |
 | Window | Full 24h, internal scroll, 07:00 at top |
 | Time format | 24h everywhere; blocks show **no** time |
-| Block | Start–end time + title, tinted by its own (sub-)category (corrected 2026-07-03; was title-only) |
+| Block | Start–end time + title, by its own (sub-)category. EVENT = tinted fill + solid left bar; TASK = hollow (outline) + dashed left bar + neutral to-do ring (corrected 2026-07-03; was title-only + no event/task distinction) |
 | Now-line | Today's column only, ticking |
 | Past | Greyed/dimmed |
 | Grid click | 1-hour block, event (toggle to task) |

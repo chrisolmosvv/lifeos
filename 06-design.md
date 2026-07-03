@@ -107,7 +107,12 @@ little colour earns its place.
     category's colour can be used more fully on that category's own page.
   - **On the CALENDAR — amended (Phase 7, Piece 1):** a category now shows as a
     **soft tinted block** (the category colour at low opacity as a fill + a
-    coloured left bar), Apple-Calendar style — **not** the small dot. This
+    coloured left bar), Apple-Calendar style — **not** the small dot. *(Corrected
+    2026-07-03: this tinted-fill + solid left bar is now the **EVENT** block
+    specifically; a **TASK** renders **hollow** (no fill) with a hairline category
+    outline, a dashed category left edge, and a small neutral to-do ring leading its
+    title. The soft tinted fill remains the one sanctioned block fill, now reserved
+    for events.)* This
     **overrides** the earlier "calm, not big blocks of colour" rule *for the
     calendar specifically*: the owner chose the tinted block in Phase 7 because it
     reads at a glance on a lived-in calendar. The tint stays soft/low-opacity so

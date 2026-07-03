@@ -9,6 +9,28 @@
 
 ---
 
+## Calendar/Today event-vs-task block distinction (src-only) — 2026-07-03
+
+Two src commits (e965798 CSS split, 5a615b6 styling). No schema.
+
+- **[DISTINCTION] Events vs tasks are now visually distinct on the shared calendar/Today block**
+  (they were identical before). EVENT = soft category-tint fill + solid 3px left bar + title + time
+  + no mark (unchanged). TASK = hollow (no fill) + hairline category outline on top/right/bottom + a
+  single 3px DASHED category left edge (the dash IS the bar, not doubled) + a small neutral hairline
+  RING (a true circle, `var(--rule)` — never a category colour, never terracotta) leading the title;
+  the ring is STATIC, not tickable this pass. Both from the one shared block (TintedBlock), so Today
+  and the Calendar week match. **Why:** the owner couldn't tell events from tasks; hollow tasks also
+  read calmer (the soft fill stays the one sanctioned block fill, now reserved for events).
+  **Trade-off:** none for events (byte-for-byte unchanged).
+- **[HOUSEKEEPING] Block styles extracted to blockKit.css** — the `.tk-block*` rules were lifted
+  out of the oversized todayKit.css (588→483) into a new small blockKit.css (~125), a pure move with
+  no visual change, done first so the task styling didn't grow an already-over-ceiling file. **Why:**
+  the size law (files under ~250). **Trade-off:** none — a relocation.
+- **[PARKED] Two deliberate follow-ups:** (1) the done-state look on a hollow task is undesigned (a
+  done task now shows hollow outline + ring PLUS the existing 60% fade + strikethrough); (2) a
+  tickable to-do ring is a separate future decision. **Why:** each is its own design call, not this
+  pass. **Trade-off:** a done task's look is provisional until (1) lands.
+
 ## Calendar/Today drag-END bug fixed (src-only) — 2026-07-03
 
 The deferred drag-END bug (from the six-fix bundle below, point (viii)) is fixed in one src commit
