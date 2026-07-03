@@ -9,6 +9,27 @@
 
 ---
 
+## Cook running-marker mirrors the Focus pattern — 2026-07-03
+
+- **[FEATURE] Global cook-session header marker shipped.** A running cook now shows the same
+  global header marker as Focus — pulsing terracotta dot + live elapsed, far-right of the nav,
+  on every screen; tap → popover with Open / Finish. Finish = set status='done' + deep-jump into
+  that recipe with the staging sheet open (exact "Done cooking" parity, reached from the header).
+  **Why:** the owner had no way to end a cook from outside the cook page itself.
+- **[LAYOUT] Dual markers sit side by side in a right-pinned flex container** — cook left of
+  focus, nav never shifts. **Why:** avoids hardcoded offset numbers; flex handles any combination
+  (focus-only, cook-only, both). **Trade-off:** lightly lifts Focus's own `right:1rem` absolute
+  positioning into the shared container — layout-only, Focus logic/data untouched.
+- **[BUILD] Parallel twin, not a shared extraction.** Cook marker is its own CSS classes + JSX,
+  mirroring Focus identically. Focus code is not touched. **Why:** zero regression risk.
+  **Trade-off:** a future refactor could extract one shared NavMarker component; deferred.
+- **[ELAPSED] Uses `created_at` from cook_session** (when the row was first inserted, = first
+  interaction in the cook). No schema change needed. **Trade-off:** a few seconds off from when
+  the user tapped "Cook" — negligible.
+- **Src-only, no schema change.** Nothing for the Checker.
+
+---
+
 ## Recurring events + tasks — T10 shipped (schema + 6 src pieces) — 2026-07-03
 
 The full repeating-events-and-tasks feature (commits 4e2f22f schema → 692cb42). One checker-gated
