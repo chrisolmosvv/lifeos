@@ -92,7 +92,7 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
 
   // Week config for the shared useGridDrag: N columns (the day under x re-days a
   // move), a midnight lane (startMin 0), and "off the grid" = outside the scroll.
-  const GUTTER = 52 // must match .wk-gutter / .wk-corner in weekGrid.css
+  const GUTTER = 26 // must match .wk-gutter / .wk-corner in weekGrid.css
   const dayStartMsAt = (clientX) => {
     const r = bodyRef.current.getBoundingClientRect()
     const colW = (r.width - GUTTER) / 7

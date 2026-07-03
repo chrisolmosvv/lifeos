@@ -10,7 +10,7 @@
   background: var(--paper);
 }
 .adb-gutter {
-  width: 52px;
+  width: 26px;
   flex: none;
   display: flex;
   align-items: flex-start;

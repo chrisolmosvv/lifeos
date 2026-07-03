@@ -32,7 +32,7 @@
   border-bottom: 1px solid var(--rule);
 }
 .wk-corner {
-  width: 52px;
+  width: 26px;
   flex: none;
 }
 .wk-dayhead {
@@ -122,7 +122,7 @@
 
 /* The 24-hour gutter, two-digit labels (00..23) + a trailing 00 at midnight. */
 .wk-gutter {
-  width: 52px;
+  width: 26px;
   flex: none;
   position: relative;
 }
