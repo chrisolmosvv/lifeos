@@ -73,7 +73,22 @@ the first three, but the shapes are built to grow.
   all-day item — start/end carry the date(s) at local midnight, **end-exclusive**
   (a Mon–Wed all-day stores `end_at` = Thu 00:00); the time is ignored and the item
   renders in the calendar's all-day band / as a Month strip. Additive (`db/10`);
-  existing rows default false. (`repeat_rule` is still unused — recurrence is T10.)
+  existing rows default false. **(Corrected 2026-07-03: recurrence now SHIPS — see
+  `recurrences` below. `repeat_rule` remains dormant/unused; a proper table replaced
+  its purpose, so it's a prove-dead droppable-later cleanup, not repurposed.)**
+- **recurrences** (T10, `db/37`) — the repeat "recipe": one row describes a pattern
+  (freq daily/weekly/monthly/yearly + the weekday set for weekly + an end condition
+  never/count/until), a DST-safe time (start_date + wall_time + duration + a fixed
+  `timezone`, default Europe/Amsterdam), and the template stamped onto each generated
+  row (title/notes/category/location/all_day, `target_kind` event|task, task
+  `time_bucket`), plus bookkeeping (`generated_until`, `split_parent_id`). The app
+  GENERATES real events/tasks rows ("occurrences") from it (Approach A), so they
+  render through the existing pipeline. Owner-only RLS; additive; free-tier.
+- **series link (additive, on BOTH events + tasks, `db/37`)** — `series_id`
+  (uuid → recurrences ON DELETE SET NULL; null = a one-off) and `series_detached`
+  (boolean default false; a "customised" occurrence that whole-series edits skip).
+  Purely additive + spine-safe: an existing row (series_id null, detached false)
+  behaves exactly as before; the link points OUT to the module table, never cascades.
 
 ### The one move that unlocks everything
 Every task carries an optional **source** ("typed by me", later "meal planner",

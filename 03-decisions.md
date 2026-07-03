@@ -9,6 +9,52 @@
 
 ---
 
+## Recurring events + tasks — T10 shipped (schema + 6 src pieces) — 2026-07-03
+
+The full repeating-events-and-tasks feature (commits 4e2f22f schema → 692cb42). One checker-gated
+schema commit, then six src-only build pieces.
+
+- **[FEATURE] Recurring events + tasks shipped.** Patterns: Daily / Weekly (chosen weekdays) /
+  Monthly (same date) / Yearly, each ending Never / After N times / Until a date. BOTH events and
+  tasks can repeat. **Why:** the common, useful set without over-building (no every-N, no
+  monthly-by-weekday). **Trade-off:** the rarer patterns aren't available.
+- **[ARCHITECTURE] Approach A — "materialise".** Each occurrence is a REAL events/tasks row generated
+  from a retained recipe (the new `recurrences` table); occurrences render through the existing
+  Week/Today/Month pipeline with NO new drawing code. **Why:** single-occurrence edit/move/complete
+  and independently-completing recurring tasks come free; the recipe stays for regeneration + future
+  Apple sync. **Trade-off:** many rows per series (bounded up front / forever topped up lazily).
+- **[DST] Wall-clock time + a fixed timezone (Europe/Amsterdam).** Each occurrence's exact instant is
+  computed per-date by a hand-rolled Intl-based generator (no rrule.js, no date library), reusing the
+  gymDates.js pattern. **Why:** "09:00 every Monday" stays 09:00 across the clock change; no
+  dependency added. **Trade-off:** none of note.
+- **[TOP-UP] Bounded repeats materialise fully up front; "forever" repeats keep a ~12-month window
+  and top up LAZILY client-side on Week/Month navigation** (a strictly-after-generated_until
+  duplicate guard). **Why:** avoids server infra (no cron/edge). **Trade-off:** a far-future jump
+  tops up on arrival, not before.
+- **[EDIT MODEL] This one / This and following / All** (a calm hairline scope prompt). "This one"
+  DETACHES it (series_detached); "All" updates recipe + non-detached occurrences; "This and
+  following" bounds the old recipe + archives the non-detached future + creates a new recipe
+  (split_parent_id) carrying the change. A detached (customised) occurrence is PRESERVED by
+  series-level edits. **Why:** the standard calendar mental model; edit protects your work.
+  **Trade-off:** changing the PATTERN itself via edit is deferred (delete + recreate for now).
+- **[DELETE MODEL] Same three scopes, but DELIBERATELY DIFFERENT from edit: a series-scope delete
+  removes EVERYTHING in scope INCLUDING detached occurrences** ("All" also retires the recipe). All
+  modes are undoable via the existing archive-batch (one batch = one Undo). **Why:** deleting a
+  series should leave nothing behind — edit protects work, delete is a clean sweep. **Trade-off:**
+  none.
+- **[RENDERING] A small NEUTRAL-ink hairline loop (↻) top-right on repeat occurrences** (Week +
+  Today, events and tasks); one-offs show none; intentionally SKIPPED on the tiny Month cells (calm).
+  A single "Repeats" dropdown in the shared form reveals a compact detail line (weekday chooser / end
+  option) when a repeat is chosen. **Why:** quiet at-a-glance repeat cue; terracotta stays reserved.
+- **[TASK BEHAVIOUR] A recurring task is due-dated by default; if the recipe carries a wall-clock
+  time, each occurrence is ALSO calendar-scheduled** (mirrors a single task). Decided by wall_time
+  presence — no extra column. **Why:** matches how one-off tasks behave. **Trade-off:** none.
+- **[TODAY FETCH] Today's event fetch brought in line with the Week (all_day + overlap) via a new
+  useTodayData hook (also the Today.jsx split, 584→508).** All-day / multi-day events + all-day
+  repeats now render on Today in a calm all-day strip reusing the week band's look. **Why:** all-day
+  repeats must render on Today too; the split was overdue. **Trade-off:** Today.jsx still ~508 (render
+  bulk); Today's strip is view-only (no drag) for now.
+
 ## Calendar/Today event-vs-task block distinction (src-only) — 2026-07-03
 
 Two src commits (e965798 CSS split, 5a615b6 styling). No schema.

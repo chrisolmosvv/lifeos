@@ -27,10 +27,17 @@ bars show a date range. Full detail in the handoff log + `03-decisions.md`.
 - **Event/task visual distinction — ✅ shipped 2026-07-03** (commits `e965798` split + `5a615b6`):
   EVENT = filled + solid bar; TASK = hollow (category outline) + dashed left bar + neutral to-do
   ring; on the one shared block. Detail in the handoff log + `03-decisions.md`.
-- Also on the pile: repeating events; the optional **off-grid drag-ghost** (a faint ghost as a
-  dragged task crosses to the tray, instead of vanishing at the grid edge); the **done-task look**
-  on a hollow block (hollow outline + ring + 60% fade + strike is undesigned); an optional
-  **tickable to-do ring**.
+- **Recurring events + tasks — ✅ shipped 2026-07-03** (T10; see the T10 entry + `03-decisions.md`).
+- Still on the pile: the optional **off-grid drag-ghost** (a faint ghost as a dragged task crosses to
+  the tray, instead of vanishing at the grid edge); the **done-task look** on a hollow block (hollow
+  outline + ring + 60% fade + strike is undesigned); an optional **tickable to-do ring**; **timed
+  multi-day rendering** across columns (see above).
+- **Recurrence follow-ups (from T10):** changing a repeat's **PATTERN** via edit is deferred (delete +
+  recreate for now); **`Today.jsx` ~508** — componentise its render (the two module lists + drag
+  config) as its own refactor; **Today's all-day strip is view-only** (no drag — the week's band has
+  it); **`events.repeat_rule`** is a droppable-later column (its own future checker-gated schema
+  cleanup, prove-dead first); the **Month loop-marker** was intentionally skipped (calm) — revisit
+  only if wanted.
 - **File sizes:** `weekGrid.css` 275 lines (over ~250; net-shrank earlier). `todayKit.css` was 588;
   the event/task-distinction session split its block styles into new `blockKit.css` (~125), taking
   todayKit.css to 483 — still over, keep trimming; don't grow either.
@@ -358,7 +365,12 @@ it rather than dig (see the Piece-1c decision).
 - ✅ **T9 — Delete + undo toast** — *done as part of T6* (the `Toast` kit block: delete a
   task/event → "Deleted · Undo" → Undo re-inserts the exact row). The repeating-event
   "this one or all?" branch stays with the recurrence piece.
-- ⬜ **T10 — Recurring events** *(large)*. Recurrence + "this one or all?".
+- ✅ **T10 — Recurring events + tasks** *(large; shipped 2026-07-03)*. Approach A (materialise): a
+  `recurrences` recipe generates real occurrence rows. Daily/Weekly/Monthly/Yearly × Never/After N/
+  Until; events AND tasks; DST-safe (wall-clock + fixed zone, hand-rolled Intl generator); lazy
+  client-side top-up for "forever"; This one / This and following / All on edit + delete; a neutral
+  loop marker; Today's fetch brought to all-day+overlap. Schema `db/37` (checker-gated) + 6 src
+  pieces; full contract in `03-decisions.md` + the handoff log.
 - ✅ **T11 — All Tasks inventory screen (desktop-first).** A new view: the backlog browsed
   by-category drill-in (Inbox first, then top categories; tap to drill, breadcrumb to climb;
   inside = own tasks then sub-categories). Whole-sub-tree active counts; due-soonest order
@@ -735,7 +747,8 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
   drag hooks).
 - ⬜ **Settings screen** — bring it up to the broadsheet look (incl. account + the entry to T13).
 - ⬜ **T13 — Settings category manager** (above) — gated by the two OPEN questions.
-- ⬜ **T10 — Recurring events** *(large)* — recurrence + "this one or all?".
+- ✅ **T10 — Recurring events + tasks** *(large; shipped 2026-07-03)* — see the T10 entry above /
+  `03-decisions.md`.
 - ✅ **Auth — email + password** (replaced magic link; closed single-user; forgot-password reset).
   AUTH-1 (add) + AUTH-2 (cutover) done + deployed; magic link removed from the UI (provider left on
   as the recovery backstop — see AUTH-2 note). Owner to final-verify password login on Mac + phone.

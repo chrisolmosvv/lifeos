@@ -181,15 +181,21 @@
 
 - **One form with a task/event toggle on top;** fields swap by type.
   - **Event:** Title · Category · **All-day toggle** · Start/End (24h) ·
-    Location · **Repeat (shown but disabled — "coming soon")** · Notes · Delete.
+    Location · **Repeats** (live — see below) · Notes · Delete.
   - **Task:** Title · Category · Status (3-state) · Day/Time · Priority · Notes ·
     Delete.
 - **Opening to edit: one click on a block opens the full form** — no preview
   step (consistent with Today).
 - **Selected state:** while a block's form is open, **the block gets a quiet
   outline** so you can see what you're editing; it clears on close.
-- **Repeat is a disabled placeholder only** — real recurrence is **T10**, its own
-  later piece (so the form's final shape is visible but does nothing yet).
+- **Repeats is LIVE** *(corrected 2026-07-03; T10 shipped — was a disabled
+  placeholder)*. A single **Repeats** dropdown (Does not repeat / Daily / Weekly /
+  Monthly / Yearly) on BOTH the event and task form; choosing a repeat reveals a
+  compact detail line (a weekday chooser for Weekly, and the end option Never /
+  After N / On a date for all). Saving a repeat generates real occurrences. Editing
+  or deleting one occurrence asks the scope — **This one / This and following /
+  All** (a calm hairline prompt); a repeat occurrence carries a small neutral loop
+  (↻) top-right on its block. Full contract in `03-decisions.md`.
 
 ---
 
@@ -261,8 +267,9 @@
   unused, in separate commits, verified.
 
 **Out of scope for this rebuild (their own later pieces):**
-- **Recurring events (T10)** — full recurrence + "this one / all?" edit-scope.
-  (The Repeat field ships disabled; the delete exception is reserved.)
+- ~~**Recurring events (T10)**~~ — *shipped 2026-07-03 (full recurrence + This one /
+  This and following / All on edit AND delete; events + tasks). See above +
+  `03-decisions.md`.*
 - **Mobile Calendar** — a separate spec.
 
 **Proposed build sequence (each its own small, verified piece):**
@@ -291,7 +298,7 @@
 | Off-home arrows | Standard Monday–Sunday weeks |
 | Window | Full 24h, internal scroll, 07:00 at top |
 | Time format | 24h everywhere; blocks show **no** time |
-| Block | Start–end time + title, by its own (sub-)category. EVENT = tinted fill + solid left bar; TASK = hollow (outline) + dashed left bar + neutral to-do ring (corrected 2026-07-03; was title-only + no event/task distinction) |
+| Block | Start–end time + title, by its own (sub-)category. EVENT = tinted fill + solid left bar; TASK = hollow (outline) + dashed left bar + neutral to-do ring; a repeat occurrence adds a small neutral loop (↻) top-right (corrected 2026-07-03) |
 | Now-line | Today's column only, ticking |
 | Past | Greyed/dimmed |
 | Grid click | 1-hour block, event (toggle to task) |
@@ -304,7 +311,7 @@
 | Drag off grid | Tasks → tray (unschedule); events → snap back (corrected 2026-07-03: now working — drag-END bug fixed) |
 | Drag look | Paper-true lift (scale + hairline, no shadow) |
 | Open to edit | One click → full form, quiet selected outline |
-| Repeat field | Shown, disabled ("coming soon") — recurrence = T10 |
+| Repeat field | LIVE (corrected 2026-07-03): Repeats dropdown → occurrences; This one/following/All on edit+delete; loop marker on occurrences |
 | Delete | Archive + "Undo" toast; recurring → "this one/all?" (T10) |
 | Tray | Right drawer, push, button-opened; working mini-list |
 | After a drop | Task leaves tray, tray stays open |

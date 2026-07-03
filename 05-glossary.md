@@ -153,3 +153,20 @@
 - **The shared form** — **one** create/edit form used everywhere (Today, Calendar,
   All Tasks). A task/event toggle on top while creating; once saved, the type is
   fixed. Same form, so the screens never drift.
+- **Repeat / recurrence** — an event or task that happens again on a pattern (daily,
+  weekly on chosen days, monthly, yearly), ending never / after a number of times /
+  on a date. Set it with the **Repeats** dropdown in the form.
+- **Series / recipe** — the one hidden row that describes a repeat (the pattern +
+  the details to copy). It's kept so the app can keep making more; you never see it
+  directly (the `recurrences` table).
+- **Occurrence** — one real, actual event/task the recipe made — a normal entry you
+  can move, complete, edit or delete on its own. A repeat is a recipe + its
+  occurrences.
+- **Detached** — an occurrence you changed with "This one": it becomes independent,
+  so later "All"/"following" edits to the series leave it alone. (Deleting the whole
+  series still removes it — delete is a clean sweep.)
+- **This one / This and following / All** — the three choices you get when editing or
+  deleting one occurrence of a repeat: just this one, this one and every later one,
+  or the whole series.
+- **Top-up** — a "forever" repeat keeps about a year of occurrences ready and quietly
+  makes more as you scroll further ahead — done in the app, no server alarm.
