@@ -174,14 +174,12 @@
   cursor: var(--kit-create-cursor, crosshair);
   touch-action: pan-y;
 }
-/* Weekend wash — a barely-there terracotta on Sat/Sun so the week-ends read at a
-   glance. Fainter than today's tint, and today (its circle + stronger wash) wins
-   when today IS a weekend (this rule sits before .is-today). */
+/* Weekend wash — a gentle terracotta on Sat/Sun so the week-ends read at a glance.
+   It's now the ONLY column tint: today no longer washes its column (its terracotta
+   date-circle + now-line carry "today" on their own), so the weekend is nudged up
+   to 6% to stay clearly distinct from a plain weekday. */
 .wk-col.is-weekend {
-  background: color-mix(in srgb, var(--accent) 4%, transparent);
-}
-.wk-col.is-today {
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 .wk-hour {
   /* border-box so the 1px hour-line sits INSIDE the 48px, not added on top —
