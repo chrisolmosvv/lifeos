@@ -33,6 +33,61 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-02 — Focus — INTERVALS hand-bounded (D1–D3). SRC-ONLY, no schema. (Owner-verified D1–D3.)
+
+The in-focus INTERVAL timer no longer auto-advances between focus and break — the owner hand-bounds
+every phase. Intervals mode ONLY — count-up and count-down (incl. its terracotta overtime) untouched.
+Built in three pieces, each its own commit + owner eyeball. No database change, nothing for the Checker.
+*(Written 2026-07-02 during the docs pass — this fix's per-piece verify steps were given in-chat at
+build time; this is its first handoff-log entry.)*
+
+WHAT CHANGED:
+- D1 (core, in-memory): removed the tick's auto-switch (it now only chimes ONCE when a phase hits its
+  target); flipped the interval flap to COUNT-UP that HOLDS at the target with a muted "+M:SS" overage
+  ("25:00 · +2:00"), symmetric for break in the muted register; added a terracotta-OUTLINE "Enter break
+  / End break" button (reusing the pause/resume close-one/open-opposite move) to switch phase by hand.
+  A phase run past its target logs as one real-length segment of that kind (27:00 focus = one 27-min
+  focus segment; NOT clamped, NOT split).
+- D2 (reload fidelity, write path): persist each phase boundary to the running row AS phases end (the
+  open phase as an end-less marker in the SAME segments jsonb column) — background/best-effort, never
+  blocks the switch. A mid-session reload now restores the TRUE hand-set split; reconstructIntervals is
+  kept ONLY as the fallback for legacy/lengthless rows with no persisted segments.
+- D3 (Setup): interval focus/break lengths are now OPTIONAL — a blank field = a pure hand-run stopwatch
+  for that phase (count up, no target/hold/over/chime); a set field = the D1 hold-at-target behaviour;
+  mixed allowed (each phase per its own field); Setup remembers a blank as blank.
+
+FILES TOUCHED: src/focus/focusTimer.js (computeLive interval branch → count-up + over + phase), src/
+focus/useFocusSession.js (no auto-switch; per-phase chime; switchPhase; persistRunning + splitPersisted
++ reload restore), src/focus/InFocus.jsx (+"over" + terracotta Enter/End break button), src/focus/
+FocusPage.jsx (pass onSwitchPhase), src/focus/Setup.jsx (optional lengths + intervalSecs + blank hint),
+src/focus/focus.css (flap row, muted "+over", terracotta-outline button, hint). Commits: c80584b (D1),
+1e18d1c (D2), eff2fcb (D3). Prove-dead sweep: nothing orphaned (the auto-switch + interval guard were
+clean in-place replacements) — no cleanup commit.
+
+HOW TO VERIFY (13" MacBook, throwaway sessions; a running row is ended_at NULL — check the SEGMENTS
+after Stop, when they finalise):
+- Intervals (both set): the flap counts up, HOLDS at the target, chimes once, "+over" runs, and phase
+  changes ONLY on Enter/End break. A phase run past its target logs its real length (see the dial / "see
+  all"), not the target.
+- Reload fidelity: hand-switch at UNEVEN points, reload mid-session → the restored split matches what
+  you did (not even re-guessed intervals); continue → Stop → logged segments are the real hand-set phases.
+- Optional lengths: both blank → both phases count up freely (no target/over/chime), switched only by
+  the button; mixed → each phase per its own field; a blank stays blank next time.
+- Regression: count-up unchanged; count-down still counts DOWN → terracotta overtime.
+
+KNOWN GAPS / RISKS:
+- The D2 boundary save is best-effort/non-blocking — a reload in the instant a background write is in
+  flight can miss the very latest split; the save card still corrects at Stop (as today).
+- PRE-EXISTING (not introduced here): a mid-session reload does NOT preserve pause/resume history —
+  elapsed can be slightly off if a session was paused before the reload; the save card corrects it. The
+  phase SPLIT itself is now faithful across reload.
+
+NEXT: none for this fix. The DEFERRED Marty focus-control track is still not built.
+
+FOR THE CHECKER: none — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-02 — Focus — OVERVIEW REDESIGN (pieces P1–P6). SRC-ONLY, no schema. (Owner-verified P1–P5; P6 pending final eyeball.)
 
 A full redesign of the Focus tab's Overview screen only. Built piece-by-piece, each its own

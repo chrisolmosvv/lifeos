@@ -160,8 +160,20 @@ focus_sessions
     overtime** — you stop when ready (logged time is the true elapsed).
   - **intervals:** focus interval → break interval (a visibly different break state)
     → repeat. Breaks are logged (as rest), not counted as focus.
+    *(Corrected 2026-07-02 — intervals are now HAND-BOUNDED, no auto-switch: the flap counts UP
+    to the target and HOLDS there with a muted "+M:SS" overage (count-down's countdown is
+    unchanged; intervals count up); a chime fires once at the target but NOTHING switches; the
+    owner presses a terracotta "Enter break / End break" control to change phase. Lengths are
+    OPTIONAL — a blank phase is a free hand-run stopwatch (no target/hold/over/chime). The
+    overage logs as plain time of that phase's kind (a 27:00 focus phase = one 27-min focus
+    segment, real elapsed). Phase boundaries are persisted to the running row AS phases end, so
+    a mid-session reload restores the TRUE hand-set split — `reconstructIntervals` is now only
+    the fallback for legacy/lengthless rows.)*
 - **Controls: pause/resume + stop only.** To change task you stop and start fresh,
   so **every session is exactly one subject start-to-stop.**
+  *(Corrected 2026-07-02: intervals add a third control — the terracotta "Enter break / End
+  break" button — to hand-switch focus↔break within the one session; the "one subject
+  start-to-stop" rule is unchanged.)*
 - **Leave mid-session → keeps running + the header live-marker** on every screen.
 
 ---
@@ -276,7 +288,10 @@ focus_sessions
 ## 15. Amendments to prior locks (called out openly)
 
 - **Pomodoro REINSTATED** as the "intervals" mode (reverses the Set-3 "stopwatch only,
-  pomodoro dropped"). Adds count-down too → three modes.
+  pomodoro dropped"). Adds count-down too → three modes. *(Corrected 2026-07-02: the
+  "intervals" mode is now HAND-BOUNDED — no auto-advance; see §4 + `03-decisions.md` "Focus
+  INTERVALS hand-bounded, 2026-07-02". It's still classic Pomodoro focus/break, but the owner
+  presses to switch, and the lengths are optional.)*
 - **Start flow via a Setup screen** (reverses the earlier "▶ starts in place, stays
   on page").
 - **deep/shallow → a 1–5 star quality rating.**

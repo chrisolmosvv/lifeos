@@ -9,6 +9,46 @@
 
 ---
 
+## Focus INTERVALS hand-bounded (src-only, D1–D3) — 2026-07-02
+
+The in-focus INTERVAL timer no longer auto-advances; the owner hand-bounds every phase (commits
+c80584b → eff2fcb). Intervals mode ONLY — count-up and count-down are untouched. No schema.
+
+- **[REVERSAL] Intervals NO LONGER auto-advance.** The shipped behaviour (focus→break→focus flips on
+  its own at the set length) is reversed — a manual "Enter break / End break" control switches phase.
+  **Why:** the owner wants to decide when to switch, not be forced at a boundary. **Trade-off:** one
+  more press per phase (the point of the fix).
+- **[DISPLAY] The interval flap FLIPPED from a countdown to a COUNT-UP** — it counts up to the target,
+  HOLDS there, and shows a muted "+M:SS" overage ("25:00 · +2:00"); symmetric for break in the muted
+  register. **Why:** the only way "hold at target · +over" reads correctly, and it makes optional
+  lengths fall out as one consistent count-up display. **Trade-off:** you watch time climb toward the
+  target, not tick down. INTERVALS ONLY — count-down keeps its own countdown + terracotta overtime.
+- **[CHIME] A gentle chime fires ONCE when a phase hits its target** — nothing switches on the chime;
+  it only marks the line. **Why:** a nudge, not a trigger. **Trade-off:** none.
+- **[COLOUR] The Enter/End break button is TERRACOTTA OUTLINE** (distinct from Stop's terracotta FILL,
+  which is shared with count-up/count-down and couldn't be restyled). It is the only new terracotta;
+  the "+over" counter reads muted (the interval over-state does NOT tint the flap terracotta — that
+  register stays count-down's). **Why:** terracotta on the action, calm elsewhere. **Trade-off:** two
+  terracotta button styles (fill vs outline) coexist.
+- **[RECORDING] Overage logs as PLAIN TIME of that phase's kind** — a focus phase run to 27:00 logs as
+  one 27-minute FOCUS segment at real elapsed, NOT clamped to the target, NOT split into "target +
+  over", NOT a separate bucket. The "+over" is display-only; the dial + all totals see real elapsed.
+  **Why:** the record is the truth. **Trade-off:** none.
+- **[SETUP] Interval focus/break LENGTHS are now OPTIONAL.** A BLANK field = a pure hand-run stopwatch
+  for that phase (count up, no target/hold/over/chime, ended only by the button); a SET field = the
+  hold-at-target behaviour. Mixed (one blank, one set) is allowed, each phase per its own field; Setup
+  remembers a blank as blank. **Why:** free hand-run sessions without inventing a target. **Trade-off:**
+  the fields no longer force a number (count-down still requires its length).
+- **[WRITE PATH] Interval phase boundaries are now written to the RUNNING row AS phases end** (was:
+  segments written only at Stop). The current open phase persists as an end-less marker in the SAME
+  `segments` jsonb column (NO new column). **Why:** a mid-session reload restores the TRUE hand-set
+  split instead of re-guessing even intervals. `reconstructIntervals` is KEPT only as the fallback for
+  legacy / lengthless rows with no persisted segments. The boundary save is best-effort / non-blocking
+  (the phase switch never waits on it). **Trade-off:** small extra writes per phase switch (negligible).
+- **[KNOWN GAP — pre-existing, not introduced here]** A mid-session reload does NOT preserve
+  pause/resume history — elapsed can be slightly off if a session was paused before the reload; the
+  save card corrects it at Stop. The phase SPLIT itself is now faithful across reload.
+
 ## Focus OVERVIEW redesign (src-only, P1–P6) — 2026-07-02
 
 A full redesign of the Focus tab's Overview screen (commits afb0026 → 806f1b0, cleanup 4a7297b).
