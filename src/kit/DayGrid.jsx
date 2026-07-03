@@ -76,20 +76,11 @@ export default function DayGrid({
   const empty = laidOut.length === 0
   const laneTop = (ms) => ((ms - dayStart) / 3600000) * HOUR_HEIGHT - OFFSET
 
-  // V2-3: the full-span gutter highlight — the time footprint of whatever's being
-  // dragged/created lights up the gutter. Read from the live drag state (no
-  // drag-math change); hidden while a task is dragged off the grid.
-  const span = blockPreview && !blockPreview.off ? blockPreview : createDraft
-  const gutterHi = span
-    ? { top: laneTop(span.startMs), height: ((span.endMs - span.startMs) / 3600000) * HOUR_HEIGHT }
-    : null
-
   return (
     <div className="tk-grid">
       <div className="tk-grid-scroll kit-scroll" ref={scrollRef}>
         <div className="tk-grid-inner">
           <div className="tk-grid-times">
-            {gutterHi && <div className="tk-grid-times-hi" style={{ top: gutterHi.top, height: gutterHi.height }} />}
             {HOURS.map((h) => (
               <div className="tk-grid-time" key={h}>
                 <span>{formatHour(h)}</span>

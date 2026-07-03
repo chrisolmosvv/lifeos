@@ -293,16 +293,7 @@
 .tk-grid-times {
   flex: none;
   width: 52px;
-  position: relative; /* anchors the V2-3 gutter highlight band */
-}
-/* V2-3: the full-span gutter highlight while dragging/creating — a faint accent
-   band behind the hour numbers, spanning the block's start row → end row. */
-.tk-grid-times-hi {
-  position: absolute;
-  left: 0;
-  right: 0;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  pointer-events: none;
+  position: relative;
 }
 .tk-grid-time {
   height: 48px; /* must equal HOUR_HEIGHT in dateUtils.js */
