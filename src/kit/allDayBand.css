@@ -53,11 +53,22 @@
   outline: 1px solid var(--ink);
 }
 .adb-bar-title {
+  flex: 0 1 auto;
+  min-width: 0; /* let the title shrink + ellipsis before the date range does */
   font-size: 0.7rem;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* The multi-day date range — lighter + smaller, sharing the bar's one thin line;
+   it keeps its width while the title truncates first. */
+.adb-bar-range {
+  flex: none;
+  margin-left: 6px;
+  font-size: 0.62rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
 }
 
 /* The span being drawn while click-dragging on the empty band. */

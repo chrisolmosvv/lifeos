@@ -27,11 +27,17 @@ export function useWeekData(days) {
 
     // Archive A3: active-only — archived rows are hidden (the ONLY change here).
     const [evRes, taskRes, trayRes, catRes] = await Promise.all([
+      // Events that OVERLAP the visible week (start before week-end AND end after
+      // week-start), not just those that START in it — so a multi-day event that
+      // began earlier still appears. End is stored end-exclusive at midnight, so
+      // "end > weekStart" is the correct edge. (This also surfaces timed multi-day
+      // events that began before the week.)
       activeOnly(
-        inWeek(
-          supabase.from('events').select('id, title, notes, start_at, end_at, location, category_id, all_day'),
-          'start_at',
-        ),
+        supabase
+          .from('events')
+          .select('id, title, notes, start_at, end_at, location, category_id, all_day')
+          .lt('start_at', weekEnd.toISOString())
+          .gt('end_at', weekStart.toISOString()),
       ).order('start_at', { ascending: true }),
       activeOnly(
         inWeek(

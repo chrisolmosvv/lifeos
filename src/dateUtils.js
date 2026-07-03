@@ -98,6 +98,12 @@ export function formatClock(d) {
   return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 }
 
+// "July 3" — full month name + day, no year. Used for the date range on a
+// multi-day all-day bar.
+export function monthDay(d) {
+  return `${MO_FULL[d.getMonth()]} ${d.getDate()}`
+}
+
 // A timed block's start–end label, e.g. "9:00–10:00" (24-hour, en-dash, minutes
 // zero-padded). Shared by the day column and the week grid so a block reads the
 // same on both.

@@ -1,5 +1,6 @@
 import { resolveColor } from '../colorModel'
 import { colorHex, INBOX_COLOR } from '../palette'
+import { monthDay } from '../dateUtils'
 import './allDayBand.css'
 import './gridCursor.css'
 
@@ -31,7 +32,11 @@ export default function AllDayBand({ days, today, allDayEvents, byId, bandRef, c
       const endCol = clamp(Math.round((b.eExcl - DAY - weekStart) / DAY), 0, 6)
       let lane = lanes.findIndex((end) => startCol > end)
       if (lane === -1) { lane = lanes.length; lanes.push(endCol) } else { lanes[lane] = endCol }
-      return { ev: b.ev, startCol, endCol, lane, past: b.eExcl <= todayMs }
+      // Multi-day → a date range using the TRUE span (subtract one day off the
+      // end-exclusive end so it reads "July 3 – July 5", not July 6). Single-day → none.
+      const range =
+        b.eExcl - b.s > DAY ? `${monthDay(new Date(b.s))} – ${monthDay(new Date(b.eExcl - DAY))}` : null
+      return { ev: b.ev, startCol, endCol, lane, past: b.eExcl <= todayMs, range }
     })
 
   const dragId = preview && !preview.create ? preview.id : null
@@ -61,6 +66,7 @@ export default function AllDayBand({ days, today, allDayEvents, byId, bandRef, c
               {...barBind(b.ev)}
             >
               <span className="adb-bar-title">{b.ev.title}</span>
+              {b.range && <span className="adb-bar-range">{b.range}</span>}
             </button>
           )
         })}
