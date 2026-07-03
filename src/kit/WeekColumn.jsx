@@ -51,7 +51,7 @@ export default function WeekColumn({
 
   return (
     <div
-      className={'wk-col kit-create-cursor' + (isWeekend ? ' is-weekend' : '') + (isToday ? ' is-today' : '')}
+      className={'wk-col kit-create-cursor' + (isWeekend ? ' is-weekend' : '')}
       {...backgroundBind}
     >
       {HOURS.map((h) => (
