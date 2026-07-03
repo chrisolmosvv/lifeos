@@ -33,6 +33,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Recurring events + tasks — PIECE 6: the CLOSE (Month sanity + design audit + prove-dead). (SRC-ONLY.)
+
+The feature's close-out pass. No schema; nothing for the Checker. The full brain-doc pass is a
+SEPARATE docs-only step next (so docs capture the final state).
+
+WHAT CHANGED (mostly audit — one small deletion):
+- 6A MONTH — verified, NO change: repeats are ordinary rows, so they render as the normal event=solid
+  / task=hollow dots; a heavy daily repeat hits the existing MAX=3 "+N more" cap, which degrades
+  gracefully (shows "+N more", click still navigates to the week). No broken layout. The loop marker
+  stays intentionally OFF Month cells (calm) — noted, revisitable.
+- 6B DESIGN AUDIT — compliant, NO change: the loop glyph + task ring use neutral tokens
+  (var(--ink-muted) / var(--rule)), never terracotta or a category colour; the Repeat control, scope
+  prompt, and Today all-day strip are hairline/calm (border + small radius, NO box-shadow/card); the
+  strip bar reuses the sanctioned week-band tint (color-mix … 16%), not a new fill. The only
+  box-shadows in the block CSS are the pre-existing sanctioned drag-lift, untouched. Terracotta stays
+  reserved for today/now/add.
+- 6C PROVE-DEAD — one removal: deleted the dead .tk-form-soonrow / .tk-form-soon CSS (styled the old
+  disabled "coming soon" Repeat placeholder that Piece 2 replaced with the live RepeatField; no
+  component references them). Everything else checked is LIVE: all recur exports are consumed (the
+  edit/delete fns via applyOccurrenceEdit + seriesFormHandlers; occurrenceRow/tableFor within the
+  module + topup; ensureGeneratedThrough by the three fetchers); Today.jsx has no dead imports after
+  the split. The dormant events.repeat_rule column is still LEFT untouched — a prove-dead DROPPABLE
+  candidate for its OWN later checker-gated schema cleanup (NOT this src-only piece).
+
+FILES: src/kit/todayForm.css (dead CSS removed). Commit 692cb42 + this docs. (6A/6B changed nothing.)
+
+HOW TO VERIFY (light — confirming nothing broke): Month shows repeats as dots + a heavy daily repeat
+shows "+N more" and still navigates to the week (no broken layout); Today + the calendar still
+create/edit/delete/drag normally (the dead-CSS removal touches nothing functional).
+
+KNOWN GAPS / RISKS: changing the repeat PATTERN via edit is still deferred (delete + recreate);
+Today.jsx is still ~508 — the render componentisation (module lists / drag config) is a separate
+refactor, not forced; Today's all-day strip is view-only (no drag; create all-day via the form);
+Month loop-marker intentionally skipped; events.repeat_rule is droppable later as its own schema
+cleanup.
+
+NEXT: the DOCS-ONLY brain-doc pass for the whole recurring-events feature (00/01/02/03/05/
+calendar-uiux-spec + decisions), capturing the final post-sweep state.
+FOR THE CHECKER: nothing — src-only.
+
+---
+
 ### 2026-07-03 — Recurring events + tasks — PIECE 5: loop marker + Today all-day fix + Today split (SRC-ONLY). (Owner-to-verify.)
 
 Three sub-steps: a repeat marker on blocks, Today's all-day/overlap fetch fix, and the Today.jsx data-
