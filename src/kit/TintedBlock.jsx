@@ -7,7 +7,8 @@ import './blockKit.css'
 // pointer/click handlers spread onto the root). `dragging`/`removing` are just
 // visual states during a drag.
 //
-// Props: title, time, hex, done, top, height, col, cols, bind, dragging, removing,
+// Props: title, time, task (true → the hollow task look; false/undefined → the
+//        event look), hex, done, top, height, col, cols, bind, dragging, removing,
 //        selected (a quiet outline while this block's form is open),
 //        appearDelay (V2-2: a number of ms → this block fades in with that stagger
 //        delay; undefined → no appear animation. Decided by useBlockAppearance).
@@ -21,12 +22,18 @@ import './blockKit.css'
 // collides with the drag-lift scale() on the week.
 const HIT_MIN = 24
 
-export default function TintedBlock({ title, time, hex, done, top, height, col, cols, bind, dragging, removing, selected, appearDelay }) {
+export default function TintedBlock({ title, time, task, hex, done, top, height, col, cols, bind, dragging, removing, selected, appearDelay }) {
   const width = `calc(${100 / cols}% - 4px)`
   const left = `calc(${(col * 100) / cols}% + 2px)`
   const hitH = Math.max(height, HIT_MIN)
   const inset = (hitH - height) / 2 // visual's offset inside the (taller) hit box
   const appearing = appearDelay != null
+  // Event = the soft category fill + solid left bar (the one sanctioned block fill).
+  // Task = HOLLOW: no fill, a hairline category outline on 3 sides, and the left
+  // edge as a single 3px DASHED category bar (the dash IS the bar — not doubled).
+  const visual = task
+    ? { background: 'transparent', border: `1px solid ${hex}`, borderLeft: `3px dashed ${hex}` }
+    : { background: tint(hex, 0.14), borderLeft: `3px solid ${hex}` }
   return (
     <div
       className="tk-block-hit"
@@ -48,13 +55,15 @@ export default function TintedBlock({ title, time, hex, done, top, height, col, 
           height,
           left: 0,
           right: 0,
-          background: tint(hex, 0.14),
-          borderLeft: `3px solid ${hex}`,
+          ...visual,
           ...(appearing ? { animationDelay: `${appearDelay}ms` } : null),
         }}
       >
         {height >= 30 && time && <div className="tk-block-time">{time}</div>}
-        <div className="tk-block-title">{title}</div>
+        <div className="tk-block-title">
+          {task && <span className="tk-block-todo" aria-hidden="true" />}
+          {title}
+        </div>
       </div>
     </div>
   )

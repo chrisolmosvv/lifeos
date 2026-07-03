@@ -54,6 +54,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Task blocks lead their title with a small NEUTRAL hairline ring — a static
+   to-do marker (NOT clickable this pass). Neutral rule colour, never a category
+   colour, never terracotta. Inline so it sits at the head of the title text. */
+.tk-block-todo {
+  display: inline-block;
+  width: 0.62rem;
+  height: 0.62rem;
+  margin-right: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  vertical-align: -0.08em;
+}
 /* V2-2 completion strike — a drawn line that sweeps left→right when a task is
    completed in place (text-decoration can't animate). A freshly-loaded done block
    mounts at scaleX(1) → instant strike, no sweep. */
