@@ -33,6 +33,49 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Recurring events + tasks — PIECE 4: lazy TOP-UP of forever series (SRC-ONLY). (Owner-to-verify.)
+
+"Forever" repeats now keep generating as you navigate forward, entirely client-side (no cron, no edge
+function — the reason the owner chose this design). No schema; nothing for the Checker.
+
+WHAT CHANGED:
+- ensureGeneratedThrough(targetDate) (src/recur/topup.js): for every end_kind='never' series whose
+  materialised window (generated_until) ends within ~1 month of the target, it generates the missing
+  occurrences out to ~12 months beyond the target and advances generated_until. It reuses the Piece-2
+  engine + row shaping (same DST-correct instants), for both event and task forever-series.
+- ★ Duplicate guard: it generates ONLY dates strictly AFTER the series' current generated_until, so
+  re-calling can never double an occurrence at the window boundary; plus an in-flight guard against
+  re-entrant calls. Idempotent — a series already covering the target is skipped (the query filter).
+- Bounded series (count / until) generated fully up front and are LEFT UNTOUCHED.
+- Wired into the WEEK (useWeekData) and MONTH (useMonthData) fetches: fetch first, then top up
+  through the visible edge and refetch ONLY if it added rows — so it never blocks the first render and
+  far-forward weeks/months are never empty.
+
+FILES: new src/recur/topup.js (51); src/recur/series.js exports occurrenceRow + tableFor (244);
+src/useWeekData.js (151) + src/useMonthData.js (77) trigger wiring. Commit 099e4f9 + this docs.
+
+HOW TO VERIFY (13" Mac, real data):
+- Create a FOREVER (end = Never) WEEKLY event. Navigate the WEEK and the MONTH forward past the
+  ~12-month edge → occurrences KEEP appearing, no empty far weeks; keep going → it keeps topping up.
+- ★ DUPLICATE CHECK: scroll back and forth across the ~12-month boundary → exactly ONE occurrence per
+  scheduled day, no doubles anywhere (this was the make-or-break; the strictly-after guard was proven
+  against a boundary: initial + top-up reconstruct the full series with no overlap/gap, and a second
+  call inserts nothing).
+- A BOUNDED series (After N / Until) does NOT top up — it ends where it should.
+- A forever recurring TASK tops up the same way.
+
+KNOWN GAPS / RISKS: Today (Today.jsx) doesn't call top-up yet — it navigates day-by-day and can't
+reach a far-future empty window without passing through Week/Month; it can call the same
+ensureGeneratedThrough once useTodayData exists in Piece 5 (NOT built here). Changing the repeat
+PATTERN via edit is still deferred. No loop-glyph marker + Today's all-day/overlap fetch fix + the
+Today.jsx split are Piece 5.
+
+NEXT: PIECE 5 — the loop-glyph marker on occurrences + Today's all-day/overlap fetch fix + the
+Today.jsx split (lift its data layer into useTodayData).
+FOR THE CHECKER: nothing — src-only.
+
+---
+
 ### 2026-07-03 — Recurring events + tasks — PIECE 3b: DELETE three-mode model (SRC-ONLY). (Owner-to-verify.)
 
 Deleting an occurrence of a repeat now asks "Delete… This one / This and following / All" (reusing
