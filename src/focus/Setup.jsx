@@ -17,6 +17,10 @@ const MODES = [
   { id: "intervals", label: "Intervals" },
 ];
 
+// Minutes field → seconds, or null when blank/non-positive (an OPTIONAL interval length:
+// null = a pure hand-run phase — count up freely, no target/hold/over/chime).
+const intervalSecs = (v) => { const n = Math.round(Number(v) * 60); return n > 0 ? n : null; };
+
 export default function Setup({ prefill, cats, inboxColor, busy, onStart, onCancel }) {
   const prefs = loadPrefs();
   const [mode, setMode] = useState(prefs.mode);
@@ -38,12 +42,13 @@ export default function Setup({ prefill, cats, inboxColor, busy, onStart, onCanc
       if (!(s > 0)) return setErr("Set how long to count down.");
       target_seconds = s;
     } else if (mode === "intervals") {
-      const f = Math.round(Number(focusMin) * 60);
-      const b = Math.round(Number(breakMin) * 60);
-      if (!(f > 0) || !(b > 0)) return setErr("Set both a focus and a break length.");
-      target_seconds = f; break_seconds = b;
+      // Optional lengths: a blank/non-positive field = a hand-run phase (null). No error —
+      // both blank is allowed (a pure hand-run session, switched only by Enter/End break).
+      target_seconds = intervalSecs(focusMin);
+      break_seconds = intervalSecs(breakMin);
     }
-    savePrefs({ mode, downMinutes: Number(downMin), focusMinutes: Number(focusMin), breakMinutes: Number(breakMin) });
+    // Remember the RAW field values (blank stays blank next time).
+    savePrefs({ mode, downMinutes: downMin, focusMinutes: focusMin, breakMinutes: breakMin });
     const snap = selectedCat ? { id: selectedCat.id, name: selectedCat.name, color: selectedCat.color ?? null } : (taskId ? prefill?.category_snapshot ?? null : null);
     onStart({
       mode, target_seconds, break_seconds,
@@ -110,6 +115,7 @@ export default function Setup({ prefill, cats, inboxColor, busy, onStart, onCanc
             onChange={(e) => setFocusMin(e.target.value)} /><span>min focus</span></div>
           <div className="focus-mins"><input type="number" min="1" inputMode="numeric" value={breakMin}
             onChange={(e) => setBreakMin(e.target.value)} /><span>min break</span></div>
+          <span className="focus-hint">Leave a length blank to hand-run that phase (no target).</span>
         </div>
       )}
 

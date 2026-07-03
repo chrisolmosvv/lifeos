@@ -46,6 +46,7 @@
 .focus-mins { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .focus-mins input { width: 76px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; font-size: 15px; font-family: var(--font-sans); background: var(--paper); color: var(--ink); }
 .focus-mins span { color: var(--ink-muted); font-size: 14px; }
+.focus-hint { display: block; color: var(--ink-muted); font-size: 12px; margin-top: 8px; }
 
 .focus-err { color: var(--overdue); font-size: 13px; margin: 8px 0 0; }
 .focus-setup-actions, .focus-card-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; }
