@@ -39,7 +39,7 @@ export function useMonthData(monthAnchor) {
         activeOnly(
           supabase
             .from('events')
-            .select('id, title, start_at, end_at, category_id, all_day')
+            .select('id, title, start_at, end_at, category_id, all_day, series_id')
             .lt('start_at', eIso)
             .gte('end_at', sIso)
             .order('start_at', { ascending: true }),
@@ -47,7 +47,7 @@ export function useMonthData(monthAnchor) {
         activeOnly(
           supabase
             .from('tasks')
-            .select('id, title, status, category_id, due_date, scheduled_start, parent_task_id')
+            .select('id, title, status, category_id, due_date, scheduled_start, parent_task_id, series_id')
             .is('parent_task_id', null)
             .or(
               `and(scheduled_start.gte.${sIso},scheduled_start.lt.${eIso}),and(due_date.gte.${sStr},due_date.lt.${eStr})`,

@@ -22,7 +22,7 @@ import './blockKit.css'
 // collides with the drag-lift scale() on the week.
 const HIT_MIN = 24
 
-export default function TintedBlock({ title, time, task, hex, done, top, height, col, cols, bind, dragging, removing, selected, appearDelay }) {
+export default function TintedBlock({ title, time, task, repeats, hex, done, top, height, col, cols, bind, dragging, removing, selected, appearDelay }) {
   const width = `calc(${100 / cols}% - 4px)`
   const left = `calc(${(col * 100) / cols}% + 2px)`
   const hitH = Math.max(height, HIT_MIN)
@@ -59,6 +59,7 @@ export default function TintedBlock({ title, time, task, hex, done, top, height,
           ...(appearing ? { animationDelay: `${appearDelay}ms` } : null),
         }}
       >
+        {repeats && <span className="tk-block-loop" aria-hidden="true">↻</span>}
         {height >= 30 && time && <div className="tk-block-time">{time}</div>}
         <div className="tk-block-title">
           {task && <span className="tk-block-todo" aria-hidden="true" />}

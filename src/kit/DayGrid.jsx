@@ -113,6 +113,7 @@ export default function DayGrid({
                   title={ev.title}
                   time={timeRange(ev.start_at, ev.end_at)}
                   task={ev.kind === 'task'}
+                  repeats={!!ev.series_id}
                   hex={hex}
                   done={isDone}
                   top={it.top - OFFSET}

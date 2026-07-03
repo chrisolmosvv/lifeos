@@ -88,6 +88,7 @@ export function buildDayItems(events, scheduledTasks) {
       title: t.title,
       category_id: t.category_id,
       status: t.status,
+      series_id: t.series_id,
       start_at: t.scheduled_start,
       end_at: t.scheduled_end,
     })),

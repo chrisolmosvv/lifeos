@@ -66,6 +66,17 @@
   border-radius: 50%;
   vertical-align: -0.08em;
 }
+/* A repeat occurrence carries a small NEUTRAL loop glyph pinned top-right — quiet,
+   never terracotta or a category colour. Absolute so it never shifts title/time. */
+.tk-block-loop {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--ink-muted);
+  pointer-events: none;
+}
 /* V2-2 completion strike — a drawn line that sweeps left→right when a task is
    completed in place (text-decoration can't animate). A freshly-loaded done block
    mounts at scaleX(1) → instant strike, no sweep. */
