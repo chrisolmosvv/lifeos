@@ -33,6 +33,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Calendar/Today — EVENT vs TASK block distinction (SRC-ONLY, no schema). (Owner-verified, both screens.)
+
+The shared calendar/Today block now shows events and tasks differently (they were identical before).
+Two commits: a pure CSS split first, then the task styling. All front-end — nothing for the Checker.
+
+WHAT CHANGED:
+- Commit 1 (e965798) — PURE MOVE, zero visual change: lifted the block's styles (the .tk-block*
+  chunk) out of the oversized todayKit.css (588 lines) into a new small src/kit/blockKit.css, and
+  pointed TintedBlock at it. todayKit.css 588 → 483; blockKit.css created (~125). Owner-verified
+  "nothing changed" on both screens.
+- Commit 2 (5a615b6) — the distinction: plumb task={ev.kind==='task'} to the shared block from both
+  callers. An EVENT is UNCHANGED (soft category-tint fill + solid 3px left bar + title + time + no
+  mark). A TASK is now HOLLOW — no fill (paper shows through), a hairline category outline on
+  top/right/bottom, the left edge a SINGLE 3px DASHED category bar (the dash IS the bar, not
+  doubled), and a small NEUTRAL hairline ring (var(--rule), a true circle) leading the title. The
+  ring is STATIC — not clickable this pass. Colours reuse the category hex already on the block; the
+  ring is neutral ink, never a category colour, never terracotta.
+
+FILES TOUCHED: src/kit/blockKit.css (new — the moved block styles + the ring), src/kit/todayKit.css
+(block styles removed), src/kit/TintedBlock.jsx (task prop + hollow visual + ring), src/kit/
+DayGrid.jsx + src/kit/WeekColumn.jsx (pass task=), src/kit/weekGrid.css (comment: .tk-block now in
+blockKit.css). Commits e965798 (split) + 5a615b6 (styling) + this docs commit.
+
+HOW TO VERIFY (13" MacBook; shared block → BOTH Today AND the Calendar week; use a REAL busy week,
+events + tasks mixed): after the split — every block looks/behaves exactly as before (the "nothing
+changed" gate). After the styling — an EVENT is unchanged; a TASK is hollow with a category outline
++ single dashed left edge + neutral ring before its title; category still reads without a fill; the
+event-vs-task difference is obvious at a glance; a short (15–30 min) task isn't crowded; a full week
+reads calmer, not busier. Nothing changes stored data — verify visually on real items.
+
+KNOWN GAPS / RISKS: the DONE-state look on a task is now UNDESIGNED — a done task shows the new
+hollow outline + ring PLUS the existing 60% fade + strikethrough; that combination is a parked
+follow-up (not built this pass). The ring is intentionally static (not tickable) — tickable is a
+separate future decision.
+
+NEXT: repeating events; timed multi-day rendering across columns; the optional off-grid drag ghost;
+the done-TASK look (hollow + done); an optional tickable to-do ring.
+
+FOR THE CHECKER: nothing — no schema.
+
+---
+
 ### 2026-07-03 — Calendar/Today — DRAG-END bug fixed (SRC-ONLY, no schema). (Owner-verified, both screens.)
 
 The deferred drag-END bug is fixed. Releasing the mouse over the open tray (or after the dragged
