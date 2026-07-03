@@ -1,4 +1,4 @@
-import './todayKit.css'
+import './blockKit.css'
 
 // TintedBlock — an Apple-style soft tinted block on the day grid: the category
 // colour as a low-opacity fill plus a full-strength coloured left bar. Used for

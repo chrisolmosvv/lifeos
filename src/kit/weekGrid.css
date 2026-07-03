@@ -1,6 +1,6 @@
 /* WeekGrid — the Calendar week sheet (Phase 7, C1). `wk-`-prefixed, used ONLY by
    WeekGrid. Reuses the theme tokens (no new colours) and Today's tinted block
-   (.tk-block, styled in todayKit.css). The whole sheet scrolls inside .wk-scroll;
+   (.tk-block, styled in blockKit.css). The whole sheet scrolls inside .wk-scroll;
    the page itself never scrolls. The day-header row is sticky so it stays put and
    stays aligned with the columns. */
 

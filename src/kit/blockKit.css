@@ -1,0 +1,113 @@
+/* blockKit — the shared TintedBlock styles, used on BOTH Today (DayGrid) and the
+   Calendar week (WeekColumn). Extracted verbatim from todayKit.css so the block is
+   its own small kit file (todayKit.css was well over the ~250 ceiling). The tinted
+   fill + coloured left bar are still set inline per category colour on the element;
+   these rules are the structure, states, title/time, and motion. Theme tokens
+   (var(--ink) etc.) come from the global theme.css. */
+
+/* --- TintedBlock: an Apple-style soft tinted block on the grid ------------- */
+/* V2-0b: the transparent grab wrapper. It owns the pointer/click gesture (so the
+   drag engine reads ITS rect) and stays >= 24px even when the visible block is
+   shorter, so tiny blocks keep a full grab/click target. No fill, no clip. */
+.tk-block-hit {
+  cursor: pointer;
+  user-select: none;
+}
+.tk-block {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 4px;
+  padding: 2px 6px 2px 8px;
+  overflow: hidden;
+  cursor: pointer;
+  pointer-events: none; /* the wrapper handles all input; this is just the visual */
+  /* V2-2: completion eases to grey (opacity, fast tier); hover deepens the tint.
+     V2-3: the lift's transform + elevation settle here on DROP — quick (~100ms
+     ease-out) so the set-down feels firmer than the gentler pickup below. */
+  transition: opacity 300ms ease, filter 120ms ease, transform 100ms ease-out,
+    box-shadow 100ms ease-out;
+  /* the tinted fill + coloured left bar are set inline (per category colour) */
+}
+.tk-block.is-done {
+  opacity: 0.6;
+}
+/* V2-2 hover tint-deepen — on the hit WRAPPER, since the inner block is
+   pointer-events:none (V2-0b). A faint deepen, both screens. */
+.tk-block-hit:hover .tk-block {
+  filter: brightness(0.96);
+}
+/* Selected — a quiet ink outline while this block's form is open (both screens). */
+.tk-block.is-selected {
+  outline: 1.5px solid var(--ink);
+  outline-offset: -1px;
+}
+.tk-block-time {
+  font-size: 0.6rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.tk-block-title {
+  position: relative; /* anchors the V2-2 strike line */
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* V2-2 completion strike — a drawn line that sweeps left→right when a task is
+   completed in place (text-decoration can't animate). A freshly-loaded done block
+   mounts at scaleX(1) → instant strike, no sweep. */
+.tk-block-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 300ms ease;
+}
+.tk-block.is-done .tk-block-title::after {
+  transform: scaleX(1);
+}
+/* V2-2 appear — soft fade + 2px rise, on load-stagger / create only (the stagger
+   delay is set inline by useBlockAppearance). */
+@keyframes tk-appear {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tk-appear-rm {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.tk-block.is-appearing {
+  animation: tk-appear 280ms ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Quiet crossfade / instant — no rise, sweep, glide, or lift/drop float. The
+     static elevation still shows (V2-3: it's a look, not movement). */
+  .tk-block.is-appearing { animation-name: tk-appear-rm; }
+  .tk-block-title::after { transition: none; }
+  .tk-block { transition: opacity 300ms ease, filter 120ms ease; }
+  .tk-block.is-dragging { transition: none; }
+}
+
+/* --- the pickup lift + off-grid fade (was under DayGrid's T5 visuals) ------ */
+.tk-block {
+  user-select: none;
+}
+/* V2-3: the pickup lift — a faint elevation fading in (Amendment 1, the one
+   sanctioned no-shadow exception, scoped strictly to the dragged block). The
+   gentler ~150ms ease-in is the lift; the firmer ~100ms drop lives on .tk-block
+   above. Shared by both screens (the week adds scale + a hairline outline). */
+.tk-block.is-dragging {
+  z-index: 4;
+  cursor: grabbing;
+  box-shadow: 0 5px 14px rgba(40, 36, 30, 0.16);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.tk-block.is-removing {
+  opacity: 0.4; /* dragged over a module → about to leave the grid */
+}
