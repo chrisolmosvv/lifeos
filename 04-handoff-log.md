@@ -33,6 +33,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-03 — Recurring events + tasks — PIECE 2: GENERATOR + create-a-repeat (SRC-ONLY). (Owner-to-verify.)
+
+Create-a-repeat now works: choose a repeat in the form and it saves the "recipe" + generates real
+event/task rows ("occurrences") that show through the existing Week/Today/Month pipeline with no new
+drawing code. CREATE-ONLY this piece — editing/deleting ONE occurrence still behaves like a normal
+single entry (the "this one / all" prompt is Piece 3). No schema; nothing for the Checker.
+
+WHAT CHANGED:
+- A pure, dependency-free recurrence ENGINE (src/recur/engine.js): occurrencesBetween (daily /
+  weekly-by-weekday / monthly-by-date [skips short months] / yearly [skips Feb 29 in common years];
+  never/count/until) + wallTimeToInstant (DST-correct UTC instant via the Intl offset trick, same
+  toolkit as gymDates.js). Math verified against the Oct DST boundary + edge cases.
+- Series creation (src/recur/series.js): createSeriesAndMaterialise inserts the recipe then
+  batch-inserts the occurrences. Bounded repeats (after N / until) generate FULLY up front; "forever"
+  generates a rolling ~12-month window and sets generated_until (Piece 4 extends it lazily). Event
+  occurrences → events rows (timed via wallTimeToInstant + duration; all-day end-exclusive). Task
+  occurrences → tasks rows (due_date + status open + bucket; ALSO scheduled_start/end when the recipe
+  carries a time — the owner's "depends on time" rule).
+- The form's Repeat control is now REAL (src/kit/RepeatField.jsx + a useRepeat hook + recipe builder
+  src/recur/recipe.js): Does-not-repeat / Daily / Weekly / Monthly / Yearly, revealing a weekday
+  chooser (weekly) + the end option (Never / After N / On date). Threaded through ItemForm.save →
+  onSaveSeries, wired in all three form hosts (WeekView, Today, Planning). Create-only; on edit the
+  control simply doesn't render yet.
+
+FILES: new src/recur/engine.js, src/recur/series.js, src/recur/recipe.js, src/kit/RepeatField.jsx +
+repeatField.css; grew src/kit/ItemTypeFields.jsx; touched src/kit/ItemForm.jsx, src/WeekView.jsx,
+src/Today.jsx, src/Planning.jsx. Commits ae51c46 (engine) + 2fed401 (series + form) + this docs.
+
+HOW TO VERIFY (13" Mac, real data; both Today + the Calendar week + Month):
+- EVENT repeats: Daily; Weekly on a couple of chosen weekdays; Monthly; Yearly — each with each end
+  type (Never / After N / Until a date). Occurrences land on the right days; timed blocks at the
+  right clock time; all-day repeats in the band.
+- TASK repeats: Weekly with NO time → a dated to-do on those days; with a time → a calendar block
+  AND tickable.
+- THE DST CHECK: a weekly 09:00 event across the late-October clock change still reads 09:00 on every
+  occurrence.
+- Monthly-on-the-31st SKIPS short months (Feb/Apr/… ) — confirm that's acceptable.
+Editing/deleting ONE occurrence right now = normal single entry (no "this one / all" prompt yet) —
+expected; that's Piece 3.
+
+KNOWN GAPS / RISKS: edit/delete is still single-row until Piece 3; no loop-glyph marker yet (Piece
+5); Today's all-day/overlap fetch fix is Piece 5, so all-day repeats may render better on Week/Month
+than on Today until then; monthly-31st (and yearly-Feb-29) SKIP periods that lack the day (by design).
+FILE SIZE: ItemForm.jsx is now 272 lines (was 250) — modestly over ~250 after the minimal create-path
+glue (the UI + recipe-building + state were extracted out to keep it small); a fuller ItemForm
+state-extraction is a candidate follow-up, not forced into this piece.
+
+NEXT: PIECE 3 — the edit/delete three-mode model ("This one / This and following / All").
+FOR THE CHECKER: nothing — src-only.
+
+---
+
 ### 2026-07-03 — Recurring events + tasks — PIECE 1: SCHEMA (checker-gated, DB-only). (Verified live on Frankfurt.)
 
 The database groundwork for repeating events + tasks (T10). SCHEMA ONLY — no consuming code this
