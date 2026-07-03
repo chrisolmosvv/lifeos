@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { HOUR_HEIGHT } from '../dateUtils'
 
 // useGridDrag — the ONE timeline-drag hook (Phase 7, C4 Part 2), the merge of the
@@ -86,7 +86,6 @@ export function useGridDrag({
       type: 'block', item, origin, mode, startMin: sMin, endMin: eMin, dur: eMin - sMin,
       downX: e.clientX, downY: e.clientY, grab: minutesAt(e.clientY) - ref, moved: false, cur: null,
     }
-    e.currentTarget.setPointerCapture(e.pointerId)
   }
   function startCreate(e) {
     if (e.pointerType === 'touch' || (e.pointerType === 'mouse' && e.button !== 0)) return
@@ -95,13 +94,11 @@ export function useGridDrag({
       type: 'create', dayStartMs: dayStartMsAt(e.clientX), startMin: m,
       downX: e.clientX, downY: e.clientY, moved: false, curMin: m,
     }
-    e.currentTarget.setPointerCapture(e.pointerId)
   }
   function startTray(e, task) {
     if (e.pointerType === 'touch' || (e.pointerType === 'mouse' && e.button !== 0)) return
     e.stopPropagation()
     drag.current = { type: 'tray', task, downX: e.clientX, downY: e.clientY, moved: false }
-    e.currentTarget.setPointerCapture(e.pointerId)
   }
 
   function passedThreshold(d, e) {
@@ -149,7 +146,6 @@ export function useGridDrag({
   function handleEnd(e) {
     const d = drag.current
     if (!d) return
-    try { e.currentTarget.releasePointerCapture(e.pointerId) } catch {}
     drag.current = null
     setBlockPreview(null)
     setCreateDraft(null)
@@ -209,19 +205,37 @@ export function useGridDrag({
     setGhost(null)
   }
 
-  const moveEnd = { onPointerMove: handleMove, onPointerUp: handleEnd, onPointerCancel: handleCancel }
+  // Move / release / cancel live on the WINDOW for the hook's life, so the release
+  // is heard wherever the cursor is — even over the tray, or after the dragged block
+  // was removed mid-drag (off-grid). Elements only START gestures + handle clicks.
+  // Handlers early-return when idle; a ref keeps the listeners on the freshest ones.
+  const handlersRef = useRef(null)
+  handlersRef.current = { handleMove, handleEnd, handleCancel }
+  useEffect(() => {
+    const move = (e) => handlersRef.current.handleMove(e)
+    const up = (e) => handlersRef.current.handleEnd(e)
+    const cancel = (e) => handlersRef.current.handleCancel(e)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', cancel)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', cancel)
+    }
+  }, [])
+
   const blockBind = (item, itemDayStartMs) => ({
     onPointerDown: (e) => startBlock(e, item, itemDayStartMs),
-    ...moveEnd,
     onClick: (e) => {
       e.stopPropagation()
       if (justDragged.current) { justDragged.current = false; return }
       onSelect(item)
     },
   })
-  const backgroundBind = { onPointerDown: startCreate, ...moveEnd }
+  const backgroundBind = { onPointerDown: startCreate }
   const trayBind = (task) => {
-    const h = { onPointerDown: (e) => startTray(e, task), ...moveEnd }
+    const h = { onPointerDown: (e) => startTray(e, task) }
     if (onTraySelect) {
       h.onClick = (e) => {
         e.stopPropagation()
