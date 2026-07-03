@@ -143,10 +143,11 @@
 - **Drag a block OFF the grid to unschedule it** → it drops back into the **tray
   as a loose task.** **Only tasks can be unscheduled this way** — an **event
   dragged off snaps back** (an event must have a time). *(Corrected 2026-07-03:
-  the off-grid CLEARING logic is intact, but a separate drag-END bug — the mouse
-  release over the open tray doesn't end the drag — currently stops this working
-  in practice. Deferred to its own piece; don't treat as fully working until it
-  lands.)*
+  this now works — dragging a TASK off the grid or onto the open tray unschedules
+  it and returns it to the tray (filed under its due week if that's a different
+  week); an EVENT snaps back. The drag-END bug that previously blocked this in
+  practice is fixed — a release is now heard window-wide, so a drag ends wherever
+  the cursor is.)*
 - **Drag feedback: a faint ghost** of where the block will land **+ a live time
   label** (`14:15–15:15`), updating on the 15-min snap.
 - **Paper-true lift while dragging:** the grabbed block **scales up a hair + gets
@@ -296,7 +297,7 @@
 | Overlap | Even split |
 | All-day band | Auto-height; collapses when empty; fully interactive |
 | Re-day drag | Keeps time (horizontal = day, vertical = time) |
-| Drag off grid | Tasks → tray (unschedule); events → snap back (corrected 2026-07-03: blocked in practice by a deferred drag-END bug) |
+| Drag off grid | Tasks → tray (unschedule); events → snap back (corrected 2026-07-03: now working — drag-END bug fixed) |
 | Drag look | Paper-true lift (scale + hairline, no shadow) |
 | Open to edit | One click → full form, quiet selected outline |
 | Repeat field | Shown, disabled ("coming soon") — recurrence = T10 |

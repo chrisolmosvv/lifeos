@@ -9,6 +9,29 @@
 
 ---
 
+## Calendar/Today drag-END bug fixed (src-only) — 2026-07-03
+
+The deferred drag-END bug (from the six-fix bundle below, point (viii)) is fixed in one src commit
+(142379c). No schema.
+
+- **[FIXED] The drag-END bug is resolved.** Root cause: the drag's move/release listeners lived on
+  the individual blocks/columns, and the pointer-capture safety net was pinned to the dragged block
+  — which is removed from the screen the moment it crosses off-grid toward the tray, so nothing
+  heard the release and the drag never ended. **Fix:** move/release/cancel listeners now live on the
+  WINDOW for the life of the drag; pointer capture removed as no longer needed. **Why:** a release
+  must be heard wherever the cursor is, immune to the dragged block being removed mid-drag.
+  **Trade-off:** none — src-only, one file (`useGridDrag.js`, the shared engine — verified on both
+  Today and the Calendar week).
+- **[CLOSED] Drag-a-task-to-the-tray-to-unschedule now works** (the original #3a want) as a direct
+  result — the tray sits outside the grid so it already counted as "off-grid"; the existing
+  unschedule rule simply couldn't run until the release was heard. No extra logic. Events dragged
+  off still snap back. **Why:** the fix unblocked a rule that was already correct. **Trade-off:**
+  none.
+- **[KNOWN GAP — not built by ruling]** The dragged task still vanishes at the grid's right edge
+  (clipped) and reappears in the tray on release, rather than sliding a ghost across. Accepted; an
+  optional faint drag-ghost is a tiny follow-up if the vanish feels abrupt. **Why:** the minimal
+  fix was the ask; visual polish is separable. **Trade-off:** no off-grid drag feedback for now.
+
 ## Calendar/Today six-fix bundle (src-only) — 2026-07-03
 
 Six small display + interaction fixes on the Calendar week + Today (commits 08d893f → c553d69,
@@ -43,7 +66,8 @@ cleanup 9be564b). All front-end; no schema, nothing for the Checker.
 - **[DEFERRED] The drag-END bug is deferred to its own diagnostic piece** — releasing over the open
   tray doesn't end the drag (a pointer-up capture bug, NOT the off-grid clearing logic, which was
   proven intact). **Why:** a real bug needing focused root-cause; not ridden alongside six clean
-  fixes. **Trade-off:** drag-off-to-unschedule doesn't work in practice until it lands.
+  fixes. **Trade-off:** drag-off-to-unschedule doesn't work in practice until it lands. *(Resolved
+  2026-07-03 — see "Calendar/Today drag-END bug fixed" entry above.)*
 
 ## Focus INTERVALS hand-bounded (src-only, D1–D3) — 2026-07-02
 

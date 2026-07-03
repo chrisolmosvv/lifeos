@@ -16,14 +16,17 @@ screens; the week gutter halved 52→26px; timed week blocks now show start–en
 `timeRange`); the tray hides completed tasks; the week fetch is overlap-based + multi-day all-day
 bars show a date range. Full detail in the handoff log + `03-decisions.md`.
 **FOLLOW-UPS / DEBT (Calendar pile):**
-- **Drag-END bug** — releasing over the OPEN tray doesn't end the drag; the block then follows the
-  unpressed cursor back onto the grid and the next click saves it + opens the editor. A pointer-up
-  capture bug (NOT the off-grid clearing logic, which is intact). Its own diagnostic piece next.
+- **Drag-END bug — ✅ FIXED this session** (commit `142379c`): the drag now ends on release wherever
+  the cursor is (window-level listeners), immune to the dragged block being removed mid-drag — so
+  releasing a task over the open tray unschedules it + returns it to the tray. Detail in the handoff
+  log + `03-decisions.md`.
 - **Timed multi-day rendering** — the overlap fetch now loads timed multi-day events that began
   before the week, but the grid only draws a block on its start day (no cross-column split), so an
   off-screen-start timed event is fetched-but-not-drawn. The all-day case shipped; this is a
   separate, bigger piece.
-- Also on the pile: a visual event/task distinction; repeating events.
+- Also on the pile: a visual event/task distinction; repeating events; the optional **off-grid
+  drag-ghost** (a faint ghost as a dragged task crosses to the tray, instead of vanishing at the
+  grid edge — small, only if the vanish feels abrupt).
 - **File sizes:** `todayKit.css` 588 and `weekGrid.css` 275 lines — both still over ~250 but this
   bundle NET-SHRANK both (FIX 6 + FIX 7 were deletions). Don't grow them; prefer trimming.
 - Minor future tidy (not urgent): `Today.jsx` still has its own local `clock()` duplicating
