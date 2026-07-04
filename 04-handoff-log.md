@@ -33,6 +33,49 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 4 v2: timing chart → calm text + MEANWHILE markers (SRC-ONLY)
+
+WHAT CHANGED:
+- REMOVED the drawn proportional-height lane chart (it failed: one long step crushed all the short
+  prep steps into an unreadable cluster, and most recipes are sequential anyway).
+- REPLACED with calm text in the timing column:
+  · SEQUENTIAL: "Ready in ~40 min" (Fraunces, from schedule.finish) + "mostly a 15 min cook"
+    (Inter muted, the longest step). Two calm lines.
+  · PARALLEL: adds a headline above the total — "2 threads run in parallel" (the safe fallback;
+    auto-generated English from step fragments was too risky). Plus quiet inline "▸ MEANWHILE"
+    small-caps markers in the METHOD column on steps whose time ranges overlap another step.
+- The timing column is now short text that just fits — no internal scroll needed.
+- cookLanes.js + cookSchedule.js UNCHANGED (reused for overlap detection + total time).
+
+FILES TOUCHED:
+- REWRITTEN: src/food/BroadsheetTiming.jsx (chart → calm text, 95 lines)
+- REWRITTEN: src/food/BroadsheetSteps.jsx (added MEANWHILE marker, 56 lines)
+- MODIFIED: src/food/BroadsheetRecipe.jsx (removed timing scroll wrapper)
+- MODIFIED: src/food/broadsheet.css (removed chart styles, added text + marker styles)
+
+HOW TO VERIFY (Chris — 13" MacBook):
+1. PORTUGUESE CHICKEN (b94973c5-...): "broadsheet →" → timing column reads "Ready in ~40 min" +
+   "mostly a 15 min cook". NO chart, NO lanes, NO markers in method. Clear at a glance.
+2. BOLOGNESE (d5bb1fea-...): timing column reads "2 threads run in parallel" + "Ready in ~1 hr
+   53 min" + "mostly a 1 hr 15 min simmer". In the method column, steps 7 and 8 (add parmesan +
+   cook pasta) show a quiet "▸ MEANWHILE" marker — those are the steps that run at the same time.
+3. NO chart / ruler / proportional blocks anywhere. The timing column is short calm text, not a
+   visualisation.
+4. The rest of the cockpit is UNCHANGED — page doesn't scroll, ingredients + method scroll with fade
+   cues. Masthead pinned.
+5. It reads CALM and USEFUL — tells you the total time and where the long haul is.
+
+KNOWN GAPS:
+- The "While X, do Y" natural-language headline was DEFERRED to the plain fallback ("2 threads run
+  in parallel") because auto-generated English from step fragments reads badly easily. The fallback
+  is calm and correct. The Planner can revisit the natural version later if needed.
+- cookLanes.js is still present (used for overlap detection). The chart CSS is gone.
+
+FOR THE CHECKER: nothing (no schema, no edge function).
+NEXT: Piece 5 — make it live (the NOW line, live timers, cook session integration).
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 4: real parallel timing lanes (SRC-ONLY)
 
 WHAT CHANGED:
