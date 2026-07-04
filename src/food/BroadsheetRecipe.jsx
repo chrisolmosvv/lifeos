@@ -5,6 +5,7 @@
 // internally with a "more ↓" fade cue that disappears at the end.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchRecipe } from "./recipeLoad";
+import { useBroadsheetCook } from "./useBroadsheetCook";
 import BroadsheetMasthead from "./BroadsheetMasthead";
 import BroadsheetIngredients from "./BroadsheetIngredients";
 import BroadsheetSteps from "./BroadsheetSteps";
@@ -45,6 +46,7 @@ function useScrollCue() {
 export default function BroadsheetRecipe({ recipeId, onBack, onEdit, onDelete, onCook, onLog, onToggleFav, isFav }) {
   const [data, setData] = useState(null);
   const [groupMode, setGroupMode] = useState("flat");
+  const cook = useBroadsheetCook(recipeId);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [bodyH, setBodyH] = useState(null);
@@ -99,6 +101,8 @@ export default function BroadsheetRecipe({ recipeId, onBack, onEdit, onDelete, o
                   steps={steps}
                   groupMode={groupMode}
                   onToggleGroup={() => setGroupMode((m) => (m === "flat" ? "grouped" : "flat"))}
+                  isTicked={cook.isTicked}
+                  onToggleTick={cook.toggleTick}
                 />
               </div>
             </div>
@@ -108,7 +112,7 @@ export default function BroadsheetRecipe({ recipeId, onBack, onEdit, onDelete, o
         <div className="bs-centre">
           <div className={`bs-scroll-wrap${stepCue.hasMore ? " has-more" : ""}`}>
             <div className="bs-scroll-inner" ref={stepCue.ref}>
-              <BroadsheetSteps steps={steps} />
+              <BroadsheetSteps steps={steps} stepState={cook.stepState} onMarkStep={cook.markStep} />
             </div>
           </div>
         </div>

@@ -228,6 +228,21 @@
   line-height: 1.4;
 }
 .bs-ing-line:last-child { border-bottom: none; }
+/* Tickable ingredient */
+.bs-ing-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.bs-ing-line.is-ticked .bs-ing-text {
+  text-decoration: line-through;
+  color: var(--ink-muted);
+}
 .bs-ing-group { margin-bottom: 0.8rem; }
 .bs-ing-group-head {
   font-family: var(--font-sans);
@@ -285,6 +300,23 @@
   color: var(--ink);
   margin: 0;
 }
+/* Step tap target (whole step is tappable to cycle state) */
+.bs-step-tap {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+/* Step states: active = stronger ink; done = muted + struck */
+.bs-step.is-active { border-left: 2px solid var(--ink); padding-left: 0.6rem; }
+.bs-step.is-done .bs-step-text { text-decoration: line-through; color: var(--ink-muted); }
+.bs-step.is-done .bs-step-num { color: var(--ink-muted); }
+.bs-step.is-done .bs-step-tag { opacity: 0.5; }
+.bs-step.is-done .bs-step-dur { opacity: 0.5; }
 /* Inline "▸ meanwhile" marker — shown only for steps that overlap another step's time range */
 .bs-step-meanwhile {
   font-family: var(--font-sans);

@@ -15,7 +15,7 @@ const fmtDuration = (secs) => {
 
 const TAG_LABEL = { hands_on: "Hands-on", hands_free: "Hands-free", active_heat: "Active heat" };
 
-export default function BroadsheetSteps({ steps }) {
+export default function BroadsheetSteps({ steps, stepState, onMarkStep }) {
   // Compute which steps overlap (for the inline MEANWHILE marker)
   const concurrent = useMemo(() => {
     const input = (steps || []).map((s, i) => ({
@@ -38,15 +38,18 @@ export default function BroadsheetSteps({ steps }) {
           const dur = fmtDuration(s.timer_seconds);
           const tagLabel = s.tag ? TAG_LABEL[s.tag] || null : null;
           const isConcurrent = concurrent.has(i);
+          const sState = stepState ? stepState(i) : "waiting";
           return (
-            <li key={i} className="bs-step">
-              <div className="bs-step-head">
-                <span className="bs-step-num">{i + 1}</span>
-                {tagLabel && <span className="bs-step-tag">{tagLabel}</span>}
-                {dur && <span className="bs-step-dur tnum">{dur}</span>}
-                {isConcurrent && <span className="bs-step-meanwhile">▸ meanwhile</span>}
-              </div>
-              <p className="bs-step-text">{typeof s.text === "string" ? s.text : ""}</p>
+            <li key={i} className={`bs-step${sState === "active" ? " is-active" : ""}${sState === "done" ? " is-done" : ""}`}>
+              <button type="button" className="bs-step-tap" onClick={() => onMarkStep?.(i)}>
+                <div className="bs-step-head">
+                  <span className="bs-step-num">{i + 1}</span>
+                  {tagLabel && <span className="bs-step-tag">{tagLabel}</span>}
+                  {dur && <span className="bs-step-dur tnum">{dur}</span>}
+                  {isConcurrent && <span className="bs-step-meanwhile">▸ meanwhile</span>}
+                </div>
+                <p className="bs-step-text">{typeof s.text === "string" ? s.text : ""}</p>
+              </button>
             </li>
           );
         })}

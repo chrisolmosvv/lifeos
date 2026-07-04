@@ -2,7 +2,7 @@
 // lines, no boxes, no checkboxes (ticking is Piece 5). Grouped mode uses step_position.
 import "./broadsheet.css";
 
-export default function BroadsheetIngredients({ ingredients, steps, groupMode, onToggleGroup }) {
+export default function BroadsheetIngredients({ ingredients, steps, groupMode, onToggleGroup, isTicked, onToggleTick }) {
   const flat = groupMode !== "grouped";
 
   // Group ingredients by step_position (null → "other")
@@ -25,9 +25,12 @@ export default function BroadsheetIngredients({ ingredients, steps, groupMode, o
 
   const ingLine = (ing, i) => {
     const label = ing.raw_text || "ingredient";
+    const ticked = isTicked ? isTicked(i) : false;
     return (
-      <li key={i} className="bs-ing-line">
-        <span className="bs-ing-text">{label}</span>
+      <li key={i} className={ticked ? "bs-ing-line is-ticked" : "bs-ing-line"}>
+        <button type="button" className="bs-ing-btn" onClick={() => onToggleTick?.(i)}>
+          <span className="bs-ing-text">{label}</span>
+        </button>
       </li>
     );
   };
