@@ -33,6 +33,56 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 3: the broadsheet shell (SRC-ONLY, static look)
+
+WHAT CHANGED:
+- A new three-column broadsheet recipe surface, mounted behind a TEMPORARY preview toggle ("broadsheet
+  →") on the classic recipe page. Classic stays default + fully functional (Cook/Log/Edit/macros all
+  intact). The toggle is temporary scaffolding removed at Piece 5.
+- The broadsheet shell renders:
+  • MASTHEAD: Fraunces title + Inter small-caps dateline ("SERVES 4 · 45 MIN TO TABLE" — time-to-table
+    computed from prep+cook; omitted cleanly if absent). Hairline beneath. "‹ Cookbook" back + source.
+  • LEFT COLUMN (ingredients): flat list (default) or grouped-by-step via a quiet toggle ("by step" /
+    "flat"). Grouped mode uses step_position. Null-step ingredients land under "Other ingredients".
+  • CENTRE COLUMN (steps): ruled Fraunces numerals, step text in Inter, quiet small-caps tag labels
+    (HANDS-FREE / ACTIVE HEAT / HANDS-ON), inline duration figures (e.g. "10 min"). No cards, no fills.
+  • RIGHT COLUMN (timing placeholder): a static vertical list of steps with durations and tags —
+    stands in for the lane visualisation (Piece 4). Calm and intentional.
+  • COLLAPSIBLE side columns with eased transitions (‹/› buttons).
+- Five new files + one CSS file. All JSX under 250 lines.
+
+FILES TOUCHED:
+- NEW: src/food/BroadsheetRecipe.jsx, BroadsheetMasthead.jsx, BroadsheetIngredients.jsx,
+  BroadsheetSteps.jsx, BroadsheetTiming.jsx, broadsheet.css
+- MODIFIED: src/food/RecipePage.jsx (the preview toggle + import of the new surface)
+
+HOW TO VERIFY (Chris — the LOOK judgement, 13" MacBook):
+1. Open a recipe from the cookbook (the Portuguese chicken, id b94973c5-...).
+2. At the top, click "broadsheet →" to flip to the new surface.
+3. You should see: Fraunces title, small-caps dateline (just "SERVES 5" if no times), hairline below.
+4. Three columns: ingredients (left) · method (centre) · timing (right). All separated by hairlines,
+   no boxes/fills anywhere.
+5. Steps: large serif numerals, quiet tag labels (HANDS-ON / ACTIVE HEAT / HANDS-FREE), quiet
+   duration figures (15 min, 10 min, etc.).
+6. Click "by step" on the ingredients column — most/all ingredients land under "Other ingredients"
+   (expected — step_position is null for this recipe).
+7. Collapse left/right columns (‹/› buttons) — they fold with a calm transition.
+8. Click "← classic view" to return to the working classic page (Cook/Log/Edit all still work).
+Judge: does it read calm and aligned? Does it hold zero-scroll on the 13"? Flag what to tune.
+
+KNOWN GAPS / RISKS:
+- Timing column is a PLACEHOLDER (a plain step list, not lanes). Piece 4 draws real lanes.
+- No live cooking, no clock, no ticking, no cook session (Piece 5).
+- No macros/servings scaler on broadsheet yet (stays on classic until broadsheet goes live).
+- CSS file is 262 lines (slightly over 250) — it's a pure style sheet, no logic; splitting CSS
+  creates import-order issues. Accepted.
+
+FOR THE CHECKER: nothing (no schema, no edge function).
+
+NEXT: Piece 4 — the timing lanes (the lane visualisation replacing the placeholder).
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 2 FIX: step-import [object Object] bug (SRC-ONLY)
 
 WHAT CHANGED:
