@@ -1,0 +1,262 @@
+/* LifeOS — Broadsheet recipe surface (Piece 3). Fraunces title + step numerals, Inter body,
+   hairline rules only. No boxes, shadows, rounded corners, or fills. Calm is the product.
+   All colours/fonts from theme.css tokens. */
+
+/* --- Layout: masthead over a three-column body --- */
+.bs {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.bs-body {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+  margin-top: 1.2rem;
+}
+
+/* --- Collapsible side columns --- */
+.bs-side {
+  display: flex;
+  align-items: flex-start;
+  transition: width 0.3s ease, opacity 0.25s ease;
+  overflow: hidden;
+}
+.bs-side-left { border-right: 1px solid var(--rule-faint); }
+.bs-side-right { border-left: 1px solid var(--rule-faint); }
+.bs-side.is-open { width: 240px; min-width: 200px; opacity: 1; }
+.bs-side:not(.is-open) { width: 28px; min-width: 28px; opacity: 1; }
+.bs-collapse-btn {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.bs-collapse-btn:hover { color: var(--ink); }
+
+/* Centre column: takes remaining space */
+.bs-centre {
+  flex: 1;
+  min-width: 0;
+  padding: 0 1.4rem;
+}
+
+/* --- Masthead --- */
+.bs-mast { margin-bottom: 0.4rem; }
+.bs-mast-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+}
+.bs-back {
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 0;
+}
+.bs-back:hover { color: var(--ink); }
+.bs-provenance {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+.bs-title {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--ink);
+  margin: 0 0 0.25rem;
+}
+.bs-dateline {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  margin: 0 0 0.6rem;
+}
+
+/* --- Column heads --- */
+.bs-col-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+}
+.bs-col-title {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+.bs-toggle {
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.64rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 0;
+}
+.bs-toggle:hover { color: var(--ink); }
+
+/* --- Ingredients column --- */
+.bs-col-ing { padding-right: 0.8rem; }
+.bs-ing-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bs-ing-line {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--rule-faint);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.bs-ing-line:last-child { border-bottom: none; }
+.bs-ing-group { margin-bottom: 0.8rem; }
+.bs-ing-group-head {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin: 0 0 0.3rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--rule);
+}
+
+/* --- Steps column --- */
+.bs-step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bs-step {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.bs-step:last-child { border-bottom: none; }
+.bs-step-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+.bs-step-num {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink);
+}
+.bs-step-tag {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+.bs-step-dur {
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+}
+.bs-step-text {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* --- Timing column (placeholder) --- */
+.bs-col-timing { padding-left: 0.8rem; }
+.bs-timing-total {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.bs-timing-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bs-timing-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--rule-faint);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink);
+}
+.bs-timing-row:last-child { border-bottom: none; }
+.bs-timing-n {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  min-width: 1rem;
+}
+.bs-timing-dur {
+  color: var(--ink);
+  min-width: 2.4rem;
+}
+.bs-timing-tag {
+  font-size: 0.62rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+/* --- Preview toggle (temporary — retires at Piece 5) --- */
+.bs-preview-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.4rem;
+}
+.bs-preview-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 2px 0;
+}
+.bs-preview-btn:hover { color: var(--ink); }
+
+/* --- Responsive: stack on phone --- */
+@media (max-width: 768px) {
+  .bs-body { flex-direction: column; }
+  .bs-side.is-open { width: 100%; min-width: 0; }
+  .bs-side-left, .bs-side-right { border: none; border-bottom: 1px solid var(--rule-faint); }
+  .bs-centre { padding: 0; }
+  .bs-title { font-size: 1.4rem; }
+}

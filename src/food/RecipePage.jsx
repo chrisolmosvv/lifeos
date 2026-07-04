@@ -11,8 +11,10 @@ import CookPage from "./CookPage";
 import DoneCookCard from "./DoneCookCard";
 import LogMealSheet from "./LogMealSheet";
 import RecipeActionBar from "./RecipeActionBar";
+import BroadsheetRecipe from "./BroadsheetRecipe";
 import Toast from "../kit/Toast";
 import "./cookbook.css";
+import "./broadsheet.css";
 
 // RecipePage (V2 P6) — zero-scroll via COLLAPSE-BY-DEFAULT: steps read as titles (expand on tap), the
 // macro block is compact (kcal/serving + P/C/F lead; fibre/sugar/sodium behind a tap). recipeMacros
@@ -27,6 +29,7 @@ export default function RecipePage({ recipeId, cookOnOpen, stageOnOpen, onBack, 
   const [data, setData] = useState(null);
   const [servings, setServings] = useState(1);
   const [cooking, setCooking] = useState(false);
+  const [broadsheet, setBroadsheet] = useState(false);
   const [menu, setMenu] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
   const [staging, setStaging] = useState(null); // null | 'log' | 'cooked' (cooked = from the cook exit)
@@ -64,6 +67,12 @@ export default function RecipePage({ recipeId, cookOnOpen, stageOnOpen, onBack, 
   const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
 
   if (cooking) return <CookPage recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging("cooked"); }} />;
+  if (broadsheet) return (
+    <div>
+      <div className="bs-preview-toggle"><button type="button" className="bs-preview-btn" onClick={() => setBroadsheet(false)}>← classic view</button></div>
+      <BroadsheetRecipe recipeId={recipeId} onBack={onBack} />
+    </div>
+  );
 
   const toggleFav = () => { const next = !fav; setFav(next); setRecipeFavourite(recipe.id, next).catch(() => setFav(!next)); };
 
@@ -119,9 +128,14 @@ export default function RecipePage({ recipeId, cookOnOpen, stageOnOpen, onBack, 
     );
   }
 
+  const previewToggle = kind === "recipe" ? (
+    <div className="bs-preview-toggle"><button type="button" className="bs-preview-btn" onClick={() => setBroadsheet(true)}>broadsheet →</button></div>
+  ) : null;
+
   return (
     <div className="rp">
       {header}
+      {previewToggle}
       <p className="rp-sub">
         {time ? `${time} min · ` : ""}{base} serving{base === 1 ? "" : "s"}
         {recipe.source_url && (<> · <a className="rp-source" href={recipe.source_url} target="_blank" rel="noreferrer">{(() => { try { return `from ${new URL(recipe.source_url).hostname}`; } catch { return "source"; } })()}</a></>)}
