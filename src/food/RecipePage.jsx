@@ -29,7 +29,7 @@ export default function RecipePage({ recipeId, cookOnOpen, stageOnOpen, onBack, 
   const [data, setData] = useState(null);
   const [servings, setServings] = useState(1);
   const [cooking, setCooking] = useState(false);
-  const [broadsheet, setBroadsheet] = useState(false);
+  const [classic, setClassic] = useState(false);
   const [menu, setMenu] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
   const [staging, setStaging] = useState(null); // null | 'log' | 'cooked' (cooked = from the cook exit)
@@ -67,14 +67,26 @@ export default function RecipePage({ recipeId, cookOnOpen, stageOnOpen, onBack, 
   const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
 
   if (cooking) return <CookPage recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging("cooked"); }} />;
-  if (broadsheet) return (
-    <div>
-      <div className="bs-preview-toggle"><button type="button" className="bs-preview-btn" onClick={() => setBroadsheet(false)}>← classic view</button></div>
-      <BroadsheetRecipe recipeId={recipeId} onBack={onBack} />
-    </div>
-  );
 
   const toggleFav = () => { const next = !fav; setFav(next); setRecipeFavourite(recipe.id, next).catch(() => setFav(!next)); };
+
+  // Broadsheet is the DEFAULT for recipes; classic is the escape hatch (opt-in, safety valve for 5a–5d)
+  if (kind === "recipe" && !classic) return (
+    <div>
+      <div className="bs-preview-toggle"><button type="button" className="bs-preview-btn" onClick={() => setClassic(true)}>← classic view</button></div>
+      <BroadsheetRecipe recipeId={recipeId} onBack={onBack}
+        onEdit={() => onEdit(recipeId)} onDelete={() => onDelete(recipeId)}
+        onCook={() => setCooking(true)} onLog={() => setStaging("log")}
+        onToggleFav={toggleFav} isFav={fav} />
+      {doneSession && <DoneCookCard onLog={() => { dismissDone(); setStaging("cooked"); }} onDismiss={dismissDone} />}
+      {staging && (
+        <LogMealSheet perServing={macros.perServing} unestimatedCount={macros.unestimatedCount}
+          defaultSlot={slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60))} cookedEyebrow={staging === "cooked"}
+          onLog={onLogMeal} onClose={() => setStaging(null)} />
+      )}
+      {cl.toast && <Toast text={cl.toast.text} onUndo={cl.toast.undo} onDismiss={cl.dismiss} />}
+    </div>
+  );
 
   const onLogMeal = (eaten, slot) => {
     setStaging(false);
@@ -128,14 +140,14 @@ export default function RecipePage({ recipeId, cookOnOpen, stageOnOpen, onBack, 
     );
   }
 
-  const previewToggle = kind === "recipe" ? (
-    <div className="bs-preview-toggle"><button type="button" className="bs-preview-btn" onClick={() => setBroadsheet(true)}>broadsheet →</button></div>
+  const classicToggle = kind === "recipe" ? (
+    <div className="bs-preview-toggle"><button type="button" className="bs-preview-btn" onClick={() => setClassic(false)}>broadsheet →</button></div>
   ) : null;
 
   return (
     <div className="rp">
       {header}
-      {previewToggle}
+      {classicToggle}
       <p className="rp-sub">
         {time ? `${time} min · ` : ""}{base} serving{base === 1 ? "" : "s"}
         {recipe.source_url && (<> · <a className="rp-source" href={recipe.source_url} target="_blank" rel="noreferrer">{(() => { try { return `from ${new URL(recipe.source_url).hostname}`; } catch { return "source"; } })()}</a></>)}

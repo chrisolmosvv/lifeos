@@ -42,7 +42,7 @@ function useScrollCue() {
   return { ref, hasMore };
 }
 
-export default function BroadsheetRecipe({ recipeId, onBack }) {
+export default function BroadsheetRecipe({ recipeId, onBack, onEdit, onDelete, onCook, onLog, onToggleFav, isFav }) {
   const [data, setData] = useState(null);
   const [groupMode, setGroupMode] = useState("flat");
   const [leftOpen, setLeftOpen] = useState(true);
@@ -84,7 +84,7 @@ export default function BroadsheetRecipe({ recipeId, onBack }) {
 
   return (
     <div className="bs" ref={bsRef}>
-      <BroadsheetMasthead recipe={recipe} timeToTable={timeToTable} onBack={onBack} />
+      <BroadsheetMasthead recipe={recipe} timeToTable={timeToTable} onBack={onBack} onEdit={onEdit} onDelete={onDelete} onCook={onCook} onLog={onLog} onToggleFav={onToggleFav} isFav={isFav} />
 
       <div className="bs-body" style={bodyH ? { height: `${bodyH}px` } : undefined}>
         <div className={`bs-side bs-side-left${leftOpen ? " is-open" : ""}`}>
