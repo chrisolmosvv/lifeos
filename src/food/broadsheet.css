@@ -236,45 +236,97 @@
   margin: 0;
 }
 
-/* --- Timing column (placeholder) --- */
+/* --- Timing column (real lanes — Piece 4) --- */
 .bs-col-timing { padding-left: 0.8rem; }
 .bs-timing-total {
   font-family: var(--font-sans);
   font-size: 0.72rem;
   color: var(--ink-muted);
 }
-.bs-timing-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+
+/* The scrollable lane frame (fixed px height from the scale; scrolls when tall) */
+.bs-lanes-frame {
+  position: relative;
+  min-height: 100px;
 }
-.bs-timing-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  padding: 0.3rem 0;
-  border-bottom: 1px solid var(--rule-faint);
+
+/* Shared time ruler — left edge */
+.bs-ruler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2.2rem;
+  height: 100%;
+}
+.bs-ruler-tick {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  border-top: 1px solid var(--rule-faint);
+}
+.bs-ruler-label {
   font-family: var(--font-sans);
-  font-size: 0.78rem;
-  color: var(--ink);
+  font-size: 0.6rem;
+  color: var(--ink-muted);
+  position: absolute;
+  top: 2px;
+  left: 0;
 }
-.bs-timing-row:last-child { border-bottom: none; }
-.bs-timing-n {
+
+/* Lane columns — a CSS grid positioned to the right of the ruler */
+.bs-lanes {
+  position: absolute;
+  top: 0;
+  left: 2.4rem;
+  right: 0;
+  height: 100%;
+  display: grid;
+  gap: 4px;
+}
+
+/* Each step block: positioned absolutely within the grid cell */
+.bs-lane-block {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+  /* Default border (overridden by weight class) */
+  border-top: 1px solid var(--rule);
+}
+
+/* Tag weights: hairline thickness signals the activity type */
+.bs-wt-light { border-top: 0.5px solid var(--rule-faint); }
+.bs-wt-medium { border-top: 1px solid var(--rule); }
+.bs-wt-heavy { border-top: 1.5px solid var(--ink); }
+
+/* Merge step: spans all lanes */
+.bs-merge { background: none; }
+
+/* Block content */
+.bs-lane-num {
   font-family: var(--font-serif);
-  font-size: 0.9rem;
-  color: var(--ink-muted);
-  min-width: 1rem;
-}
-.bs-timing-dur {
+  font-size: 0.82rem;
+  line-height: 1;
   color: var(--ink);
-  min-width: 2.4rem;
 }
-.bs-timing-tag {
-  font-size: 0.62rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.bs-lane-dur {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
   color: var(--ink-muted);
+}
+.bs-lane-label {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  color: var(--ink-muted);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* --- Preview toggle (temporary — retires at Piece 5) --- */

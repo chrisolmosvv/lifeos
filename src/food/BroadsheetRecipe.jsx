@@ -51,6 +51,7 @@ export default function BroadsheetRecipe({ recipeId, onBack }) {
   const bsRef = useRef(null);
   const ingCue = useScrollCue();
   const stepCue = useScrollCue();
+  const timingCue = useScrollCue();
 
   // Measure remaining viewport height from .bs top → set body height dynamically.
   // Adapts to chrome above (with or without resume banner). Re-measures on resize.
@@ -117,7 +118,13 @@ export default function BroadsheetRecipe({ recipeId, onBack }) {
           <button type="button" className="bs-collapse-btn" onClick={() => setRightOpen((v) => !v)}>
             {rightOpen ? "›" : "‹"}
           </button>
-          {rightOpen && <BroadsheetTiming steps={steps} />}
+          {rightOpen && (
+            <div className={`bs-scroll-wrap${timingCue.hasMore ? " has-more" : ""}`}>
+              <div className="bs-scroll-inner" ref={timingCue.ref}>
+                <BroadsheetTiming steps={steps} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
