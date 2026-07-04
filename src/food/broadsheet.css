@@ -3,10 +3,17 @@
    All colours/fonts from theme.css tokens. */
 
 /* --- Layout: masthead over a three-column body --- */
+/* Break out of the .food-page 760px cap so the broadsheet fills the page.
+   The negative-margin trick escapes the parent max-width without touching it.
+   overflow-x:hidden guards against the 100vw-includes-scrollbar edge (non-overlay
+   scrollbar systems); on macOS (overlay scrollbars) 100vw === client width, no issue. */
 .bs {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1rem;
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(-50vw + 50%);
+  padding: 0 2.5rem;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 .bs-body {
   display: flex;
@@ -15,17 +22,18 @@
   margin-top: 1.2rem;
 }
 
-/* --- Collapsible side columns --- */
+/* --- Collapsible side columns (proportional, not fixed) --- */
 .bs-side {
   display: flex;
   align-items: flex-start;
-  transition: width 0.3s ease, opacity 0.25s ease;
+  transition: flex-basis 0.3s ease, opacity 0.25s ease;
   overflow: hidden;
+  flex-shrink: 0;
 }
 .bs-side-left { border-right: 1px solid var(--rule-faint); }
 .bs-side-right { border-left: 1px solid var(--rule-faint); }
-.bs-side.is-open { width: 240px; min-width: 200px; opacity: 1; }
-.bs-side:not(.is-open) { width: 28px; min-width: 28px; opacity: 1; }
+.bs-side.is-open { flex: 0 0 22%; opacity: 1; }
+.bs-side:not(.is-open) { flex: 0 0 28px; opacity: 1; }
 .bs-collapse-btn {
   background: none;
   border: none;
@@ -254,8 +262,9 @@
 
 /* --- Responsive: stack on phone --- */
 @media (max-width: 768px) {
+  .bs { padding: 0 1rem; }
   .bs-body { flex-direction: column; }
-  .bs-side.is-open { width: 100%; min-width: 0; }
+  .bs-side.is-open { flex: 0 0 100%; }
   .bs-side-left, .bs-side-right { border: none; border-bottom: 1px solid var(--rule-faint); }
   .bs-centre { padding: 0; }
   .bs-title { font-size: 1.4rem; }
