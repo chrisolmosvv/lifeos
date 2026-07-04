@@ -33,6 +33,32 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 3 TUNE #2: broadsheet full-width (CSS-ONLY)
+
+WHAT CHANGED:
+- The broadsheet surface now breaks out of the .food-page 760px cap and spans the full page width
+  (with 2.5rem gutters). Side columns switched from fixed 240px to proportional 22% — they grow with
+  the viewport, giving ingredients real room. overflow-x:hidden guards against the scrollbar-width
+  edge case. Classic page + rest of Food untouched (still 760px).
+
+FILE TOUCHED: src/food/broadsheet.css
+
+HOW TO VERIFY (Chris — 13" MacBook):
+1. Open Portuguese chicken → "broadsheet →". The three columns now span the FULL page with gutters —
+   no big empty right margin.
+2. The long chicken-thighs ingredient line should wrap at most 1–2 rows, not 3.
+3. Confirm NO horizontal scrollbar (no sideways drift at any point).
+4. Re-check vertical scroll — should be much reduced (maybe gone). Report if it persists.
+5. "← classic view" → classic page still 760px, Log tab still 760px. No width change anywhere else.
+
+KNOWN GAPS: If vertical scroll persists slightly, it's likely a content-height issue (many steps) —
+address after the owner re-judges. The width fix alone should cut it significantly by reducing wraps.
+
+FOR THE CHECKER: nothing (CSS-only).
+NEXT: Owner re-judges the broadsheet look (width pass); then Piece 4 — timing lanes.
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 3: the broadsheet shell (SRC-ONLY, static look)
 
 WHAT CHANGED:
