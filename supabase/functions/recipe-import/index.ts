@@ -1,8 +1,10 @@
-// LifeOS — Food → recipe-import (F8): the ONE AI touch in V1. Paste text OR a URL → Gemini parses
-// it into the house recipe schema → the app pre-fills the F7 editor (the review screen) → the owner
-// spot-checks + saves via the F7 write. ONLY recipe text leaves the app (the paste, or the fetched
-// page's text) — nothing personal, nothing from logs/health — which is WHY the FREE Gemini key (the
-// shared callGemini seam) is acceptable here.
+// LifeOS — Food → recipe-import (F8 + Cookbook V2 Piece 2). Paste text OR a URL → Gemini parses it
+// into the house recipe schema with ENRICHED steps (duration, tag, dependencies) and ingredients
+// (step linkage) → the app pre-fills the editor (the review screen) → the owner spot-checks + saves.
+// ONLY recipe text leaves the app — nothing personal, nothing from logs/health — which is WHY the
+// FREE Gemini key (the shared callGemini seam) is acceptable here. The enrichment asks only for
+// cooking metadata derivable from the recipe text: durations, activity tags, parallel cues, and
+// which step uses which ingredient. No intake/goals/health reasoning — free-key boundary intact.
 //
 // Called by the app AS THE OWNER (verify_jwt = true, pinned in config.toml; CORS like food-search).
 // DISTINCT outcomes so the UI shows the right message:
@@ -24,16 +26,25 @@ function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
-const SYSTEM = `You convert a recipe (pasted text or a web page's text) into STRICT JSON for a cookbook. Output ONLY the JSON object — no prose, no markdown fences.
+const SYSTEM = `You convert a recipe (pasted text or a web page's text) into STRICT JSON for a cookbook app. Output ONLY the JSON object — no prose, no markdown fences.
 Schema:
 { "title": string, "servings": number|null, "prep_minutes": number|null, "cook_minutes": number|null,
-  "ingredients": [ { "raw_text": string, "name": string, "amount": number|null, "unit": string|null } ],
-  "steps": [ string ] }
+  "ingredients": [ { "raw_text": string, "name": string, "amount": number|null, "unit": string|null, "step_number": number|null } ],
+  "steps": [ { "text": string, "duration_seconds": number|null, "tag": string|null, "depends_on": number[]|null } ] }
 Rules:
 - "raw_text" = the original ingredient line (e.g. "2 tbsp melted butter").
 - "name" = the core food for database matching: lowercase, no quantity or prep words (e.g. "butter").
 - "amount"/"unit" = the numeric quantity + its unit when clearly present, else null.
-- "steps" = the method, one string per step, in order.
+- Steps are 0-INDEXED (the first step is 0, the second is 1, etc.).
+- "duration_seconds" = how long this step takes in seconds. Null if genuinely unknowable (e.g. "salt to taste"). For a range like "8–10 minutes", use the LOWER bound (480).
+- "tag" = exactly one of "hands_on", "hands_free", or "active_heat". Use "hands_on" if you must actively stir/chop/assemble. Use "hands_free" if it simmers, rests, bakes, or proofs unattended. Use "active_heat" if it's high-heat stovetop or grilling needing constant attention. Null if unclear.
+- "depends_on" = array of 0-based step numbers that must FINISH before this step can start. You MUST fill this for every step:
+  • null = this step starts IMMEDIATELY with no prerequisite (only valid for the very first steps).
+  • [N] = this step waits for step N to finish first.
+  • [N, M] = this step waits for BOTH step N and step M.
+  EXAMPLE: if step 0 is "boil water", step 1 is "meanwhile, sauté onion", step 2 is "add garlic" (after onion), step 3 is "cook pasta" (needs boiling water), step 4 is "combine" (needs both pasta and sauce): then depends_on would be null, null, [1], [0], [2, 3].
+  Be AGGRESSIVE: "meanwhile", "while the X…", independent components = PARALLEL (give them null or their true predecessor only). A step that just continues the previous step gets [previous_step_number]. The FINAL step usually depends on multiple threads converging.
+- "step_number" on an ingredient = the 0-based step number that PRIMARILY uses this ingredient. Most ingredients are first introduced in a specific step — assign that step. Null only if genuinely unclear or if the ingredient is used equally across many steps (e.g. "salt" used throughout).
 - If the text is NOT a recipe, return {"title":"","servings":null,"prep_minutes":null,"cook_minutes":null,"ingredients":[],"steps":[]}.`;
 
 const RESPONSE_SCHEMA = {
@@ -52,11 +63,24 @@ const RESPONSE_SCHEMA = {
           name: { type: "STRING" },
           amount: { type: "NUMBER", nullable: true },
           unit: { type: "STRING", nullable: true },
+          step_number: { type: "NUMBER", nullable: true },
         },
         required: ["raw_text", "name"],
       },
     },
-    steps: { type: "ARRAY", items: { type: "STRING" } },
+    steps: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          text: { type: "STRING" },
+          duration_seconds: { type: "NUMBER", nullable: true },
+          tag: { type: "STRING", nullable: true },
+          depends_on: { type: "ARRAY", items: { type: "NUMBER" }, nullable: true },
+        },
+        required: ["text"],
+      },
+    },
   },
   required: ["title", "ingredients", "steps"],
 };
@@ -73,7 +97,19 @@ function parseRecipe(text: string): Record<string, unknown> | null {
 }
 
 const numOrNull = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const intOrNull = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
 const strOrNull = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+
+// Tag safety: only the three allowed values pass; anything else → null (so the DB CHECK never rejects).
+const VALID_TAGS = new Set(["hands_on", "hands_free", "active_heat"]);
+const tagOrNull = (v: unknown) => (typeof v === "string" && VALID_TAGS.has(v) ? v : null);
+
+// Deps safety: must be a clean array of non-negative integers; anything else → null (sequential).
+function depsOrNull(v: unknown): number[] | null {
+  if (!Array.isArray(v) || v.length === 0) return null;
+  const clean = v.filter((d) => typeof d === "number" && Number.isInteger(d) && d >= 0);
+  return clean.length > 0 ? clean : null;
+}
 
 // "Usable" = a title OR any ingredient OR any step (partial-ok); else nothing → parse_fail.
 function isUsable(r: Record<string, unknown> | null): boolean {
@@ -87,7 +123,7 @@ function isUsable(r: Record<string, unknown> | null): boolean {
 // Normalise to the house shape the app expects (defensive against odd model output).
 function normalise(r: Record<string, unknown>) {
   const ings = Array.isArray(r.ingredients) ? (r.ingredients as Record<string, unknown>[]) : [];
-  const steps = Array.isArray(r.steps) ? (r.steps as unknown[]) : [];
+  const rawSteps = Array.isArray(r.steps) ? (r.steps as unknown[]) : [];
   return {
     title: typeof r.title === "string" ? r.title.trim() : "",
     servings: numOrNull(r.servings),
@@ -100,8 +136,22 @@ function normalise(r: Record<string, unknown>) {
         name: strOrNull(i.name) || strOrNull(i.raw_text) || "",
         amount: numOrNull(i.amount),
         unit: strOrNull(i.unit),
+        step_number: intOrNull(i.step_number),
       })),
-    steps: steps.map((s) => (typeof s === "string" ? s.trim() : "")).filter((s) => s.length > 0),
+    steps: rawSteps
+      .map((s) => {
+        // Backwards compat: if somehow a plain string arrives, wrap it.
+        if (typeof s === "string") return { text: s.trim(), duration_seconds: null, tag: null, depends_on: null };
+        const obj = s as Record<string, unknown>;
+        const text = typeof obj.text === "string" ? obj.text.trim() : "";
+        return {
+          text,
+          duration_seconds: numOrNull(obj.duration_seconds),
+          tag: tagOrNull(obj.tag),
+          depends_on: depsOrNull(obj.depends_on),
+        };
+      })
+      .filter((s) => s.text.length > 0),
   };
 }
 
