@@ -47,7 +47,11 @@ export async function importRecipe({ text, url }) {
       cook_minutes: r.cook_minutes ?? null,
       source_url: data.source_url ?? null,
       ingredients,
-      steps: (r.steps || []).map((t) => ({ text: t })),
+      steps: (r.steps || []).map((s) =>
+        typeof s === "string"
+          ? { text: s }
+          : { text: s.text || "", timer_seconds: s.duration_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null }
+      ),
     },
     itemsById,
   };
@@ -60,7 +64,7 @@ export async function importRecipe({ text, url }) {
 // top3 null → flagged → import STILL COMPLETES (every ingredient lands, some flagged; nothing hard-stops).
 // `parsedName` rides along (transient) so the editor can pre-fill the finder when re-matching.
 async function matchOne(ing, itemsById) {
-  const base = { parsedName: ing.name || ing.raw_text || "", raw_text: ing.raw_text || ing.name || "", no_macros: false };
+  const base = { parsedName: ing.name || ing.raw_text || "", raw_text: ing.raw_text || ing.name || "", no_macros: false, step_position: ing.step_number ?? null };
   try {
     const res = await searchFoods(ing.name || ing.raw_text || "");
     const results = res.results || [];

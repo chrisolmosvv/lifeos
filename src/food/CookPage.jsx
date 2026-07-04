@@ -20,7 +20,7 @@ export default function CookPage({ recipe, steps, ingredients, onExit }) {
   const wake = useWakeLock(true);
 
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
-  const schedule = useMemo(() => cookSchedule((steps || []).map((s, i) => ({ index: i, durationSeconds: parseDuration(s.text) }))).schedule, [steps]);
+  const schedule = useMemo(() => cookSchedule((steps || []).map((s, i) => ({ index: i, durationSeconds: s.timer_seconds ?? parseDuration(s.text), deps: s.depends_on || undefined }))).schedule, [steps]);
 
   if (!ready) return <div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Resuming your cook…</span></div>;
 

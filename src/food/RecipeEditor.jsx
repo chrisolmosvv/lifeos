@@ -40,8 +40,8 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
         setPrep(r.recipe.prep_minutes ?? "");
         setCook(r.recipe.cook_minutes ?? "");
         setSourceUrl(r.recipe.source_url ?? null);
-        setIngredients(r.ingredients.map((i) => ({ food_item_id: i.food_item_id, raw_text: i.raw_text, amount: i.amount, unit: i.unit, no_macros: i.no_macros, manual_macros: i.manual_macros })));
-        setSteps((r.steps || []).map((s) => ({ text: s.text })));
+        setIngredients(r.ingredients.map((i) => ({ food_item_id: i.food_item_id, raw_text: i.raw_text, amount: i.amount, unit: i.unit, no_macros: i.no_macros, manual_macros: i.manual_macros, step_position: i.step_position ?? null })));
+        setSteps((r.steps || []).map((s) => ({ text: s.text, timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null })));
         setItemsById(r.itemsById || {});
         setLoading(false);
       })
@@ -84,8 +84,8 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   const submit = () =>
     onSave(
       { title: title.trim(), servings: servings === "" ? null : Number(servings), prep_minutes: prep === "" ? null : Number(prep), cook_minutes: cook === "" ? null : Number(cook), source_url: sourceUrl },
-      ingredients.map((i) => ({ food_item_id: i.food_item_id ?? null, raw_text: i.raw_text ?? null, amount: i.amount ?? null, unit: i.unit ?? null, manual_macros: i.manual_macros ?? null, no_macros: !!i.no_macros })),
-      steps.filter((s) => s.text.trim() !== "").map((s) => ({ text: s.text.trim() })),
+      ingredients.map((i) => ({ food_item_id: i.food_item_id ?? null, raw_text: i.raw_text ?? null, amount: i.amount ?? null, unit: i.unit ?? null, manual_macros: i.manual_macros ?? null, no_macros: !!i.no_macros, step_position: i.step_position ?? null })),
+      steps.filter((s) => s.text.trim() !== "").map((s) => ({ text: s.text.trim(), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null })),
     );
 
   if (loading) return <div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Loading recipe…</span></div>;
@@ -139,7 +139,7 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
           <ol className="red-steps">
             {steps.map((s, i) => (
               <li key={i} className="red-step">
-                <textarea rows={2} value={s.text} placeholder={`Step ${i + 1}`} onChange={(e) => setSteps((xs) => xs.map((x, j) => (j === i ? { text: e.target.value } : x)))} />
+                <textarea rows={2} value={s.text} placeholder={`Step ${i + 1}`} onChange={(e) => setSteps((xs) => xs.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
                 <div className="red-step-ctl">
                   <button type="button" onClick={() => moveStep(i, -1)} aria-label="Move up">↑</button>
                   <button type="button" onClick={() => moveStep(i, 1)} aria-label="Move down">↓</button>

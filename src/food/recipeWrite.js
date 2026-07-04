@@ -34,12 +34,13 @@ async function writeChildren(recipeId, ingredients, steps) {
       manual_macros: ing.manual_macros ?? null,
       no_macros: !!ing.no_macros,
       position: i,
+      step_position: ing.step_position ?? null,
     }));
     const { error } = await supabase.from("recipe_ingredients").insert(rows);
     if (error) throw new Error(error.message);
   }
   if (steps?.length) {
-    const rows = steps.map((s, i) => ({ recipe_id: recipeId, position: i, text: s.text, timer_seconds: s.timer_seconds ?? null }));
+    const rows = steps.map((s, i) => ({ recipe_id: recipeId, position: i, text: s.text, timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null }));
     const { error } = await supabase.from("recipe_steps").insert(rows);
     if (error) throw new Error(error.message);
   }
