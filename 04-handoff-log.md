@@ -33,6 +33,37 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 5a: broadsheet is now the DEFAULT recipe surface (SRC-ONLY)
+
+WHAT CHANGED:
+- For kind=recipe, the broadsheet cockpit is now the PRIMARY view (no toggle needed to reach it).
+  Steps + ingredients stay READ-ONLY (no ticking, no marking — that's 5b).
+- Recipe-level ACTIONS all wired in the broadsheet masthead: Edit (⋯ menu), Delete (⋯ menu with
+  confirm), Favourite (★ toggle), Log this meal (staging sheet), Cook (still → old CookPage for now).
+- Done-cook card (if a session is done + not dismissed) appears below the broadsheet.
+- The "← classic view" ESCAPE HATCH is present — flips to the classic RecipePage rendering (safety
+  valve for 5b–5d; retires at 5d). From classic view, "broadsheet →" flips back.
+- Meals + drafts: UNCHANGED — keep the classic RecipePage rendering.
+- CookPage: DORMANT but still mounted via the "Cook" button (retires at 5d).
+
+FILES TOUCHED: src/food/RecipePage.jsx, src/food/BroadsheetRecipe.jsx, src/food/BroadsheetMasthead.jsx,
+  src/food/broadsheet.css
+
+HOW TO VERIFY (Chris — 13" MacBook):
+1. Open a recipe (Portuguese chicken or Bolognese). It opens DIRECTLY in the broadsheet cockpit.
+2. Actions: ★ toggle works (check favourite persists). "Log" opens staging sheet. ⋯ → Edit opens
+   editor. ⋯ → Delete works (careful). Back returns to cookbook.
+3. "← classic view" flips to the classic page; "broadsheet →" flips back.
+4. Steps + ingredients are still read-only (tapping does nothing). No NOW line, no timers.
+5. A meal / draft still shows the classic page.
+6. "Cook" button (in ⋯ or action area) still opens the old CookPage (it works).
+
+KNOWN GAPS: Cooking not live on broadsheet yet (5b/5c/5d). Cook → old CookPage path stays for now.
+FOR THE CHECKER: nothing.
+NEXT: 5b — tickable ingredients + mark steps + persistence + resume + lazy-start.
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 4 v2: timing chart → calm text + MEANWHILE markers (SRC-ONLY)
 
 WHAT CHANGED:
