@@ -26,32 +26,35 @@
 }
 
 /* --- Scrollable column wrapper (ingredients + method) --- */
-.bs-scroll-col {
+/* The wrapper is position:relative so the fade overlay positions against it. */
+.bs-scroll-wrap {
   flex: 1;
   min-height: 0;
+  position: relative;
+}
+.bs-scroll-inner {
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  position: relative;
   /* Hide scrollbars — the paper-fade cue signals overflow instead */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.bs-scroll-col::-webkit-scrollbar { display: none; }
-/* Paper-fade "more ↓" cue: a gradient at the bottom, shown when there's more below */
-.bs-scroll-col::after {
+.bs-scroll-inner::-webkit-scrollbar { display: none; }
+/* Paper-fade "more ↓" cue: absolutely positioned at the container's visible bottom */
+.bs-scroll-wrap::after {
   content: "";
-  position: sticky;
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  display: block;
   height: 2.5rem;
   background: linear-gradient(transparent, var(--paper));
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
-.bs-scroll-col.has-more::after { opacity: 1; }
+.bs-scroll-wrap.has-more::after { opacity: 1; }
 
 /* --- Collapsible side columns (proportional, not fixed) --- */
 .bs-side {
@@ -302,7 +305,7 @@
   .bs-side.is-open { flex: 0 0 100%; }
   .bs-side-left, .bs-side-right { border: none; border-bottom: 1px solid var(--rule-faint); }
   .bs-centre { padding: 0; display: block; }
-  .bs-scroll-col { overflow-y: visible; }
-  .bs-scroll-col::after { display: none; }
+  .bs-scroll-inner { overflow-y: visible; height: auto; }
+  .bs-scroll-wrap::after { display: none; }
   .bs-title { font-size: 1.4rem; }
 }

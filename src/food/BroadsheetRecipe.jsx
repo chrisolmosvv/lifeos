@@ -11,25 +11,34 @@ import BroadsheetSteps from "./BroadsheetSteps";
 import BroadsheetTiming from "./BroadsheetTiming";
 import "./broadsheet.css";
 
-// Scroll-cue hook: returns a ref + a boolean "has more below". Attach the ref to the scrollable
-// container; the boolean drives the paper-fade cue class.
+// Scroll-cue hook: returns a callback ref + a boolean "has more below". Uses a callback ref so
+// setup runs when the element ACTUALLY MOUNTS (not on first render when data hasn't loaded yet).
 function useScrollCue() {
-  const ref = useRef(null);
+  const elRef = useRef(null);
+  const cleanupRef = useRef(null);
   const [hasMore, setHasMore] = useState(false);
-  const check = useCallback(() => {
-    const el = ref.current;
-    if (!el) return;
-    setHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 4);
-  }, []);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    check();
-    el.addEventListener("scroll", check, { passive: true });
+
+  const ref = useCallback((node) => {
+    // Teardown previous
+    if (cleanupRef.current) { cleanupRef.current(); cleanupRef.current = null; }
+    elRef.current = node;
+    if (!node) { setHasMore(false); return; }
+
+    const check = () => {
+      setHasMore(node.scrollHeight - node.scrollTop - node.clientHeight > 4);
+    };
+    // Initial check after a frame (layout must settle)
+    requestAnimationFrame(check);
+
+    node.addEventListener("scroll", check, { passive: true });
     const ro = new ResizeObserver(check);
-    ro.observe(el);
-    return () => { el.removeEventListener("scroll", check); ro.disconnect(); };
-  }, [check]);
+    ro.observe(node);
+    cleanupRef.current = () => { node.removeEventListener("scroll", check); ro.disconnect(); };
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => () => { if (cleanupRef.current) cleanupRef.current(); }, []);
+
   return { ref, hasMore };
 }
 
@@ -83,20 +92,24 @@ export default function BroadsheetRecipe({ recipeId, onBack }) {
             {leftOpen ? "‹" : "›"}
           </button>
           {leftOpen && (
-            <div className={`bs-scroll-col${ingCue.hasMore ? " has-more" : ""}`} ref={ingCue.ref}>
-              <BroadsheetIngredients
-                ingredients={ingredients}
-                steps={steps}
-                groupMode={groupMode}
-                onToggleGroup={() => setGroupMode((m) => (m === "flat" ? "grouped" : "flat"))}
-              />
+            <div className={`bs-scroll-wrap${ingCue.hasMore ? " has-more" : ""}`}>
+              <div className="bs-scroll-inner" ref={ingCue.ref}>
+                <BroadsheetIngredients
+                  ingredients={ingredients}
+                  steps={steps}
+                  groupMode={groupMode}
+                  onToggleGroup={() => setGroupMode((m) => (m === "flat" ? "grouped" : "flat"))}
+                />
+              </div>
             </div>
           )}
         </div>
 
         <div className="bs-centre">
-          <div className={`bs-scroll-col${stepCue.hasMore ? " has-more" : ""}`} ref={stepCue.ref}>
-            <BroadsheetSteps steps={steps} />
+          <div className={`bs-scroll-wrap${stepCue.hasMore ? " has-more" : ""}`}>
+            <div className="bs-scroll-inner" ref={stepCue.ref}>
+              <BroadsheetSteps steps={steps} />
+            </div>
           </div>
         </div>
 
