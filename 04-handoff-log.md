@@ -33,6 +33,49 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 3 TUNE #3: fixed-frame cockpit (SRC + CSS)
+
+WHAT CHANGED:
+- The broadsheet is now a FIXED-FRAME cockpit — the page never scrolls. The masthead pins at top;
+  the column row fills the MEASURED remaining viewport height (JS reads the surface's top offset on
+  mount + resize, so it adapts to the actual chrome above — works identically with or without the
+  resume cook banner present).
+- INGREDIENTS (left) and METHOD (centre) scroll INTERNALLY with hidden scrollbars. A subtle
+  paper-fade "more ↓" cue appears at the bottom of each when there's more content below, and
+  DISAPPEARS when scrolled to the end (a scroll listener + ResizeObserver toggling a `has-more`
+  class → CSS opacity transition on a sticky ::after gradient).
+- TIMING (right) stays PINNED (no internal scroll — it's short).
+- At narrow widths (≤768px) the cockpit reverts to normal page scroll (stacked columns, no trapped
+  scroll regions, no fade cues).
+- Collapse (‹/›) still works. No horizontal scrollbar.
+
+FILES TOUCHED: src/food/BroadsheetRecipe.jsx (the measured height + scroll-cue hook),
+  src/food/broadsheet.css (cockpit layout + fade cue styles + mobile revert)
+
+HOW TO VERIFY (Chris — 13" MacBook, id b94973c5-...):
+1. Open recipe → "broadsheet →". The PAGE does NOT scroll — masthead + timing stay fixed in view.
+2. INGREDIENTS scrolls internally; a subtle fade shows at the bottom when there's more, disappears
+   when scrolled to the end. Every ingredient is reachable.
+3. METHOD scrolls internally with its own fade cue; every step reachable.
+4. TIMING stays pinned and fully visible (no scroll).
+5. NO chunky scrollbars visible; NO horizontal scrollbar; no sideways drift.
+6. Collapse a side column → still folds calmly; expand → restored.
+7. (If a cook is running) the resume banner appears above — the cockpit still fills correctly
+   (adapts to the extra banner height). If no cook running, that's fine — it adapts to both states.
+8. "← classic view" → classic page UNCHANGED (normal width, normal page scroll). Log tab unchanged.
+
+KNOWN GAPS:
+- If a recipe's TIMING list is ever very long (20+ steps with data), it could overflow its pinned
+  column — flag if seen; can add overflow-y:auto to timing as a future tune.
+- The measured height re-runs on resize and a 100ms settle tick; an extremely unusual chrome
+  height change mid-session (e.g. a banner appearing/disappearing WHILE the broadsheet is open)
+  won't re-measure until a resize. Acceptable for a preview surface.
+
+FOR THE CHECKER: nothing (no schema, no edge function).
+NEXT: Owner locks the look; then Piece 4 — real timing lanes.
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 3 TUNE #2: broadsheet full-width (CSS-ONLY)
 
 WHAT CHANGED:
