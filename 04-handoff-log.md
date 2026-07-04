@@ -33,6 +33,57 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 4: real parallel timing lanes (SRC-ONLY)
+
+WHAT CHANGED:
+- The timing column's placeholder (a flat sequential list) is replaced by a REAL PARALLEL LANE
+  VISUALISATION, computed on read from cookSchedule + the new cookLanes.js helper.
+- VISUAL: time flows top → down. A shared TIME RULER on the left (sparse ticks at 0m · 10m · 20m ·
+  30m etc., Inter tabular figures). Lanes as side-by-side columns — one per parallel thread. Each
+  step is a PROPORTIONAL-HEIGHT BLOCK (fixed 14px per minute, 24px minimum for legibility). Block
+  carries: step number, duration, and a short label when tall enough. Tag encoded as HAIRLINE WEIGHT:
+  hands_free = lightest (0.5px rule-faint), hands_on = medium (1px rule), active_heat = heaviest
+  (1.5px ink). Waiting time = BLANK. Convergence steps span FULL WIDTH across all lanes. No fill, no
+  box, no terracotta.
+- Lane derivation: cookLanes.js (33 lines, pure). No-dep steps start a new lane; one-dep inherits;
+  multi-dep = merge (full-width). Bolognese → 2 lanes (sauce left, pasta right, combine merges).
+  Portuguese chicken → 1 lane (clean degradation).
+- Timing column now scrolls internally (same fade-cue mechanism as the other two columns) when the
+  timeline is taller than the cockpit frame.
+
+FILES TOUCHED:
+- NEW: src/food/cookLanes.js (lane derivation)
+- REWRITTEN: src/food/BroadsheetTiming.jsx (the lane visual)
+- MODIFIED: src/food/BroadsheetRecipe.jsx (added scroll-cue wrapper for timing column)
+- MODIFIED: src/food/broadsheet.css (lane styles replacing old placeholder styles)
+
+HOW TO VERIFY (Chris — 13" MacBook):
+1. Open the PORTUGUESE CHICKEN (b94973c5-...) → "broadsheet →". The timing column shows a SINGLE
+   lane — a straight proportional staircase (~40 min). Clean degradation, no empty second lane.
+2. Import a BOLOGNESE (or any multi-component recipe with "meanwhile" cues) → the timing column
+   shows TWO lanes side by side: sauce on the left (steps 1→2→3→4, critical path), pasta on the
+   right (steps 0→5, with a blank gap at the top for the idle period). The final "combine" step
+   spans full width at the bottom. The 20-min simmer is visibly the tallest block. Ruler ticks on
+   the left (0m · 10m · 20m · 30m). Total ~30 min at the top.
+3. Tag weights: hands-free blocks have the lightest hairline, active-heat the heaviest. Distinct but
+   calm — no colour, no fill.
+4. The rest of the cockpit is UNCHANGED — page doesn't scroll, masthead + ingredients + method behave
+   exactly as before. Timing scrolls internally with the fade cue if the timeline is tall.
+5. It reads CALM — the lanes clarify the plan, they don't clutter. Flag if it feels busy.
+
+KNOWN GAPS:
+- The 24px min-height floor means very short steps (1 min) get slightly more visual space than strict
+  proportion — a legibility tradeoff (flagged + accepted by Planner).
+- No NOW line, no live timers, no clock — that's Piece 5 (make it live).
+- No terracotta anywhere — that's reserved for the now-line (Piece 5).
+- A recipe with 15+ steps could push the timeline taller than the column frame — it scrolls
+  internally (handled by the fade cue).
+
+FOR THE CHECKER: nothing (no schema, no edge function).
+NEXT: Piece 5 — make it live (the moving NOW line, live timers, cook session integration).
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 3 cockpit FIX: scroll-cue fade now appears (SRC + CSS)
 
 WHAT CHANGED:
