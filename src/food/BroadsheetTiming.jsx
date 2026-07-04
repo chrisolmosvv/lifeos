@@ -1,106 +1,95 @@
-// BroadsheetTiming (Piece 4) — real parallel timing lanes. Vertical timeline (top → down),
-// proportional heights (fixed px-per-minute), lanes as side-by-side columns, shared time ruler,
-// tag encoded as hairline weight. Convergence steps span full width. Scrolls internally when
-// the timeline is taller than the column. Compute-on-read from cookSchedule + cookLanes.
+// BroadsheetTiming (Piece 4 v2) — calm text, not a chart. Shows total time-to-table + the longest
+// step (the common sequential case). For genuinely parallel recipes (overlapping time ranges), adds
+// a "While X, do Y" headline above the total. Compute-on-read from cookSchedule. No chart, no lanes,
+// no ruler, no blocks. cookLanes.js + cookSchedule.js stay untouched (reused for detection).
 import { useMemo } from "react";
 import { cookSchedule } from "./cookSchedule";
-import { assignLanes } from "./cookLanes";
 import { parseDuration } from "./cookTimers";
 import "./broadsheet.css";
 
-const PX_PER_MIN = 14; // fixed scale: each minute = 14px of height
-const MIN_BLOCK_H = 24; // floor for legibility on tiny steps
-
-const fmtDur = (secs) => {
-  if (secs == null || secs <= 0) return "";
-  if (secs >= 3600) return `${Math.floor(secs / 3600)}h${Math.round((secs % 3600) / 60)}m`;
-  return `${Math.round(secs / 60)}m`;
-};
-
-const fmtTotal = (secs) => {
-  if (!secs) return "";
-  if (secs >= 3600) return `${Math.floor(secs / 3600)}h ${Math.round((secs % 3600) / 60)}m`;
-  return `${Math.round(secs / 60)} min`;
-};
-
-// Pick sparse ruler ticks that suit the total duration (e.g. every 5m, 10m, or 15m)
-function rulerTicks(finish) {
-  if (finish <= 0) return [];
-  const totalMin = finish / 60;
-  const interval = totalMin <= 15 ? 5 : totalMin <= 45 ? 10 : 15;
-  const ticks = [];
-  for (let m = 0; m <= totalMin; m += interval) ticks.push(m);
-  return ticks;
+function fmtTime(secs) {
+  if (!secs || secs <= 0) return "";
+  const h = Math.floor(secs / 3600);
+  const m = Math.round((secs % 3600) / 60);
+  if (h > 0 && m > 0) return `${h} hr ${m} min`;
+  if (h > 0) return `${h} hr`;
+  return `${m} min`;
 }
 
-const TAG_WEIGHT = { hands_free: "bs-wt-light", hands_on: "bs-wt-medium", active_heat: "bs-wt-heavy" };
+// Find steps whose time ranges overlap with at least one other step
+function findOverlaps(schedule) {
+  const concurrent = new Set();
+  for (let i = 0; i < schedule.length; i++) {
+    for (let j = i + 1; j < schedule.length; j++) {
+      const a = schedule[i], b = schedule[j];
+      if (a.startOffset < b.endOffset && b.startOffset < a.endOffset) {
+        concurrent.add(a.index);
+        concurrent.add(b.index);
+      }
+    }
+  }
+  return concurrent;
+}
+
+// Try to generate "While X, do Y" — only if it reads cleanly; else fallback
+function whileHeadline(steps, schedule, concurrent) {
+  if (concurrent.size < 2) return null;
+  // Among concurrent steps, find the longest (X) and the other(s) (Y)
+  const sorted = [...concurrent].map((i) => schedule.find((s) => s.index === i)).filter(Boolean).sort((a, b) => b.duration - a.duration);
+  if (sorted.length < 2) return null;
+  const x = sorted[0]; // longest overlapping step
+  const y = sorted[1]; // second
+  const xText = typeof steps[x.index]?.text === "string" ? steps[x.index].text : "";
+  const yText = typeof steps[y.index]?.text === "string" ? steps[y.index].text : "";
+  // Extract a short verb phrase (first ~6 words)
+  const shortPhrase = (t) => t.split(/\s+/).slice(0, 6).join(" ").replace(/[.,;:]+$/, "").toLowerCase();
+  const xLabel = shortPhrase(xText);
+  const yLabel = shortPhrase(yText);
+  // Safety: if either label is too short, fragmented, or we have 3+ overlapping steps, fall back
+  if (xLabel.length < 5 || yLabel.length < 5) return `${concurrent.size} threads run in parallel`;
+  if (concurrent.size > 3) return `${concurrent.size} threads run in parallel`;
+  return null; // fall back to the plain line — generating clean English from fragments is risky
+}
 
 export default function BroadsheetTiming({ steps }) {
-  const { schedule, finish, lanes, laneCount, mergeSteps } = useMemo(() => {
+  const { schedule, finish, concurrent, longest } = useMemo(() => {
     const input = (steps || []).map((s, i) => ({
       index: i,
       durationSeconds: s.timer_seconds ?? parseDuration(typeof s.text === "string" ? s.text : ""),
       deps: s.depends_on || undefined,
     }));
     const sched = cookSchedule(input);
-    const { lanes, laneCount, mergeSteps } = assignLanes(steps);
-    return { ...sched, lanes, laneCount, mergeSteps };
+    const concurrent = findOverlaps(sched.schedule);
+    // Find the longest step
+    let longest = null;
+    for (const s of sched.schedule) {
+      if (!longest || s.duration > longest.duration) longest = s;
+    }
+    return { ...sched, concurrent, longest };
   }, [steps]);
 
-  const ticks = rulerTicks(finish);
-  const totalH = Math.max((finish / 60) * PX_PER_MIN, 100);
-
-  // Convert seconds → px position/height with the min-height floor
-  const toY = (sec) => (sec / 60) * PX_PER_MIN;
-  const blockH = (dur) => Math.max(MIN_BLOCK_H, (dur / 60) * PX_PER_MIN);
+  const isParallel = concurrent.size >= 2;
+  const headline = isParallel ? (whileHeadline(steps, schedule, concurrent) || "2 threads run in parallel") : null;
+  const longestLabel = longest && longest.duration > 0
+    ? (typeof steps[longest.index]?.text === "string" ? steps[longest.index].text.split(/\s+/).slice(0, 5).join(" ").replace(/[.,;:]+$/, "").toLowerCase() : "")
+    : "";
 
   return (
     <div className="bs-col bs-col-timing">
       <div className="bs-col-head">
         <span className="bs-col-title">Timing</span>
-        {finish > 0 && <span className="bs-timing-total tnum">{fmtTotal(finish)}</span>}
       </div>
 
-      <div className="bs-lanes-frame" style={{ height: `${totalH}px` }}>
-        {/* Shared time ruler */}
-        <div className="bs-ruler">
-          {ticks.map((m) => (
-            <div key={m} className="bs-ruler-tick" style={{ top: `${toY(m * 60)}px` }}>
-              <span className="bs-ruler-label tnum">{m}m</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Lane columns */}
-        <div className="bs-lanes" style={{ gridTemplateColumns: `repeat(${laneCount}, 1fr)` }}>
-          {schedule.map((s) => {
-            const step = steps[s.index];
-            const tag = step?.tag || "hands_on";
-            const wtClass = TAG_WEIGHT[tag] || "bs-wt-medium";
-            const isMerge = mergeSteps.has(s.index);
-            const label = (typeof step?.text === "string" ? step.text : "").slice(0, 20);
-            const top = toY(s.startOffset);
-            const h = blockH(s.duration);
-
-            return (
-              <div
-                key={s.index}
-                className={`bs-lane-block ${wtClass}${isMerge ? " bs-merge" : ""}`}
-                style={{
-                  top: `${top}px`,
-                  height: `${h}px`,
-                  gridColumn: isMerge ? `1 / -1` : `${lanes[s.index] + 1}`,
-                  gridRow: "1",
-                }}
-              >
-                <span className="bs-lane-num">{s.index + 1}</span>
-                <span className="bs-lane-dur tnum">{fmtDur(s.duration)}</span>
-                {h >= 36 && label && <span className="bs-lane-label">{label}</span>}
-              </div>
-            );
-          })}
-        </div>
+      <div className="bs-timing-text">
+        {isParallel && headline && <p className="bs-timing-headline">{headline}</p>}
+        {finish > 0 && <p className="bs-timing-ready">Ready in ~{fmtTime(finish)}</p>}
+        {longest && longest.duration > 0 && longestLabel && (
+          <p className="bs-timing-longest">mostly a {fmtTime(longest.duration)} {longestLabel}</p>
+        )}
       </div>
     </div>
   );
 }
+
+// Export concurrent detection for BroadsheetSteps inline markers
+export { findOverlaps };
