@@ -47,11 +47,11 @@ export async function importRecipe({ text, url }) {
       cook_minutes: r.cook_minutes ?? null,
       source_url: data.source_url ?? null,
       ingredients,
-      steps: (r.steps || []).map((s) =>
-        typeof s === "string"
-          ? { text: s }
-          : { text: s.text || "", timer_seconds: s.duration_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null }
-      ),
+      steps: (r.steps || []).map((s) => {
+        if (typeof s === "string") return { text: s };
+        const text = typeof s.text === "string" ? s.text : String(s.text ?? "");
+        return { text, timer_seconds: s.duration_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null };
+      }),
     },
     itemsById,
   };
