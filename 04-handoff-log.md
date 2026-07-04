@@ -33,6 +33,38 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 3 cockpit FIX: scroll-cue fade now appears (SRC + CSS)
+
+WHAT CHANGED:
+- The "more ↓" paper-fade cue now actually works. Root cause: the scroll-cue hook ran its setup
+  effect on first render, when the scrollable elements hadn't mounted yet (data was still loading).
+  The ref was null → no listener attached → cue never fired.
+- FIX: replaced the plain useRef-based hook with a CALLBACK REF pattern — the setup (scroll listener
+  + ResizeObserver + rAF initial check) runs when the element actually mounts into the DOM, not on
+  first render. Also restructured to a two-element wrapper (.bs-scroll-wrap > .bs-scroll-inner): the
+  inner element scrolls, the outer positions the fade ::after via position:absolute (more reliable
+  than position:sticky on a pseudo-element inside a scroll container).
+- The fade appears when a column has more content below; disappears (opacity → 0) when scrolled to
+  the end. Both ingredients and method columns are wired.
+
+FILES TOUCHED: src/food/BroadsheetRecipe.jsx, src/food/broadsheet.css
+
+HOW TO VERIFY (Chris — 13" MacBook, id b94973c5-...):
+1. Open recipe → "broadsheet →". A subtle paper fade IS VISIBLE at the bottom of BOTH the
+   ingredients column and the method column (because both have more below).
+2. Scroll a column to its very end → the fade DISAPPEARS. Nothing covers the last line.
+3. Scroll back up → fade returns.
+4. Page still doesn't scroll; masthead + timing pinned; no chunky scrollbars; no horizontal scroll.
+5. Resize window → cue re-evaluates (appears/disappears correctly based on overflow).
+6. Collapse/expand (‹/›) still works.
+7. "← classic view" → classic page unchanged.
+
+KNOWN GAPS: none remaining for this surface's static look.
+FOR THE CHECKER: nothing.
+NEXT: Owner locks the look; then Piece 4 — real timing lanes.
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 3 TUNE #3: fixed-frame cockpit (SRC + CSS)
 
 WHAT CHANGED:
