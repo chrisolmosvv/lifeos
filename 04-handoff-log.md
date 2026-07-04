@@ -33,6 +33,44 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 5b: interactive broadsheet — tick, mark, lazy-start, resume (SRC-ONLY)
+
+WHAT CHANGED:
+- The broadsheet surface is now INTERACTIVE. Ingredients are TICKABLE (tap to strike-through) and
+  steps are MARKABLE (tap to cycle waiting → active → done → waiting). Both persist to cook_session.
+- LAZY START: the first action (tick or mark) creates the cook_session row. Before that, browsing
+  creates nothing. The Fix-1 header marker lights up on session create.
+- RESUME: reload restores everything from the DB — ticked ingredients stay ticked, marked steps keep
+  their state. useCookSession hydrates on mount.
+- Step states rendered typographically: active = 2px ink left border; done = struck-through + muted.
+  Ticked ingredients = struck-through + muted. No fills, no boxes.
+- New file: useBroadsheetCook.js (34 lines) — thin hook composing useCookSession + the actions.
+
+FILES TOUCHED:
+- NEW: src/food/useBroadsheetCook.js
+- MODIFIED: src/food/BroadsheetRecipe.jsx, BroadsheetIngredients.jsx, BroadsheetSteps.jsx,
+  broadsheet.css
+
+HOW TO VERIFY (Chris — 13" MacBook, the make-or-break is RESUME):
+1. Open a recipe (Bolognese d5bb1fea or chicken b94973c5). BEFORE any action: the Fix-1 nav marker
+   is NOT showing (browsing ≠ cooking).
+2. TICK an ingredient → it strikes through AND the Fix-1 pulsing marker appears (lazy start).
+3. TAP a step → it cycles: waiting (default) → active (2px left border) → done (struck) → waiting.
+4. ★ RESUME: with some ticked + some marked, RELOAD (Cmd-R). Everything comes back exactly. Then:
+     select struck_steps, ticked_ingredients, board_states, status from cook_session
+       where recipe_id = '<that recipe>' order by created_at desc limit 1;
+   The persisted row matches what's on screen.
+5. Open a DIFFERENT recipe → clean (no bleed).
+6. "← classic view" still works. No timers, no NOW line (5c). No on-surface finish (5d).
+7. The nav-marker "Finish" popover still routes to the existing done path (tested from header).
+
+KNOWN GAPS: No per-step timers, no NOW line (5c). No on-surface finish button (5d — the header
+popover finish works for now). The Cook→CookPage path still exists as fallback.
+FOR THE CHECKER: nothing.
+NEXT: 5c — per-step timers + terracotta NOW line + the "meanwhile" marker bump.
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 5a: broadsheet is now the DEFAULT recipe surface (SRC-ONLY)
 
 WHAT CHANGED:
