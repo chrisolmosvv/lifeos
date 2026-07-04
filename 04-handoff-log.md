@@ -33,6 +33,40 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 2 FIX: step-import [object Object] bug (SRC-ONLY)
+
+WHAT CHANGED:
+- Fixed the "[object Object]" bug in step textareas after import. Root cause: the Track 2 data-layer
+  commit hadn't been pushed to GitHub, so the Vercel deployment was serving old code that still
+  wrapped the entire step object into .text. Additionally, added defensive String() coercions at
+  every point where step .text is read or written, so this can never recur regardless of data shape:
+  • importClient.js: explicit `typeof === 'string'` check + String() coercion on s.text
+  • RecipeEditor.jsx load path: coerces s.text to string
+  • RecipeEditor.jsx textarea value: renders `typeof s.text === "string" ? s.text : ""`
+  • RecipeEditor.jsx save path: uses `String(s.text ?? "").trim()` (never throws on non-string)
+- All enrichment fields (timer_seconds, tag, depends_on, step_position) still flow through intact.
+
+FILES TOUCHED: src/food/importClient.js, src/food/RecipeEditor.jsx
+
+HOW TO VERIFY (Chris — after pushing + deploying):
+1. Import the Bolognese (or any recipe). Step textareas show REAL step text, not "[object Object]".
+2. SAVE succeeds (no silent failure).
+3. Read the rows:
+     select position, tag, depends_on, timer_seconds from recipe_steps
+       where recipe_id = '<that recipe>' order by position;
+     select raw_text, step_position from recipe_ingredients
+       where recipe_id = '<that recipe>' order by position;
+   → real tags, 0-based depends_on arrays, timer_seconds filled.
+4. Edit-preservation: change the title, save, re-read → enrichment still there.
+
+KNOWN GAPS / RISKS: None. The defensive coercion guards against any future upstream shape surprise.
+
+FOR THE CHECKER: nothing (no schema, no edge function change).
+
+NEXT: Push to GitHub so Vercel deploys. Then Piece 3 — the broadsheet shell.
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 2: AI parser + data layer (SUPABASE + SRC, no schema)
 
 WHAT CHANGED:
