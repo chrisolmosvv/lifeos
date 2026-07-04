@@ -33,6 +33,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-04 — Cookbook V2 Piece 2: AI parser + data layer (SUPABASE + SRC, no schema)
+
+WHAT CHANGED:
+- TRACK 1 (supabase/): The recipe-import Edge Function now asks Gemini to infer, per step:
+  duration_seconds (how long), tag (hands_on/hands_free/active_heat), and depends_on (which prior
+  steps must finish first, 0-based). Per ingredient: step_number (which step uses it). Inference
+  stance is AGGRESSIVE — parallelism inferred wherever text supports it ("meanwhile", independent
+  components). Defensive coercion: bad tags → null, bad deps → null (so the CHECK never rejects and
+  sequential is the safe fallback). Free-key health boundary intact (only recipe text metadata).
+- TRACK 2 (src/): The data layer now carries all new fields end-to-end:
+  • importClient.js handles step objects (not strings) and maps duration_seconds → timer_seconds,
+    step_number → step_position.
+  • recipeWrite.js persists tag, depends_on, step_position on CREATE and EDIT (the delete-reinsert
+    rewrite carries them through — an unrelated edit no longer wipes enrichment data).
+  • recipeLoad.js SELECTs the new columns.
+  • RecipeEditor.jsx preserves tag/depends_on/timer_seconds/step_position through load + save +
+    text editing (no new controls — round-trip preservation only).
+  • CookPage.jsx feeds timer_seconds (falling back to parseDuration) + depends_on into the existing
+    cookSchedule dep branch, so real parallel lanes compute for enriched recipes.
+
+FILES TOUCHED:
+- Track 1: supabase/functions/recipe-import/index.ts
+- Track 2: src/food/importClient.js, src/food/recipeWrite.js, src/food/recipeLoad.js,
+  src/food/RecipeEditor.jsx, src/food/CookPage.jsx
+
+HOW TO VERIFY (Chris — end-to-end, through the app):
+1. Import a multi-component recipe with obvious parallelism (e.g. a pasta + sauce recipe that says
+   "meanwhile"). After save, read the rows:
+     select position, tag, depends_on, timer_seconds from recipe_steps
+       where recipe_id = '<that recipe>' order by position;
+     select raw_text, step_position from recipe_ingredients
+       where recipe_id = '<that recipe>' order by position;
+   → Expect: tags populated (hands_on/hands_free/active_heat), depends_on with real numbers for
+   sequential steps and null for parallel-start steps, timer_seconds populated, some step_positions
+   populated. depends_on is 0-based. Nothing rejected by the CHECK.
+2. Edit-preservation: open that recipe, change the title, save, re-read rows → tag/depends_on/
+   step_position/timer_seconds are STILL there, not wiped.
+3. Existing recipe: open one imported before this change → null tag/depends_on/step_position →
+   everything renders exactly as today (sequential, ungrouped, untagged).
+4. Fallback: the parse_fail path works (tested server-side: non-recipe text → clean error, no crash).
+
+KNOWN GAPS / RISKS:
+- step_number on ingredients is conservative (the model leaves many null — ~75% inference as
+  expected). Null = ungrouped, which is the safe fallback.
+- The depends_on inference is aggressive but not perfect (~65% reliability per the feasibility note).
+  Null = sequential = exactly today's behaviour. The owner can review in a later editor piece.
+- No UI surfaces these new fields yet (no tags shown, no timing column, no by-step grouping) — that's
+  later pieces. The data is there; the display is unchanged.
+
+FOR THE CHECKER: no schema this piece (Piece 1 did it). The parser stays on the free Gemini key
+(recipe text is not health data). The fallback holds (AI off → all new fields null → sequential +
+ungrouped + untagged, identical to today).
+
+NEXT: Piece 3 — the broadsheet shell (the owner's first look at the new cook surface).
+
+---
+
 ### 2026-07-03 — Cookbook V2 Piece 1: schema — step enrichment columns (DB ONLY, checker approved)
 
 WHAT CHANGED:
