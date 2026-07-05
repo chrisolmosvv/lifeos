@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { dayLedger, calorieArc, macroSplit } from "./foodCalc";
-import { fmtFull } from "./foodFormat";
 import CalorieArc from "./CalorieArc";
 import MacroBar from "./MacroBar";
 import MealLedger from "./MealLedger";
 import QuickAddStrip from "./QuickAddStrip";
 import SaveAsMealPanel from "./SaveAsMealPanel";
 
-// DayView (V2 P4 + P5) — the two-column broadsheet. LEFT rail: calorie arc (→ Goals) → macro bar →
-// micros → quick-add (OR, in save-as-meal mode, the builder). RIGHT column: "+ Log food" (P2 finder)
-// + "Save a meal" toggle → the ledger. Save-as-meal (P5, Feature A) is a local multi-select over
-// today's FOOD entries → onSaveMeal (the caller writes a stepless recipe); it does NOT log.
+// DayView (Slice 1a rebuild) — single-column layout. A horizontal band at the top: ring left,
+// macros right, "+ Log food" top-right. QuickAddStrip below the band. MealLedger unchanged below.
 export default function DayView({ entries, goalMap, day, names, quickItems, favSet, onAdd, onQuickAdd, onRelogMeal, onLongPressMeal, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals, onSaveMeal }) {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
@@ -33,32 +30,37 @@ export default function DayView({ entries, goalMap, day, names, quickItems, favS
 
   return (
     <div className="flog-day">
-      <aside className="flog-rail">
-        {calGoal != null ? (
-          <button type="button" className="flog-arc-btn" onClick={(e) => onOpenGoals(e.currentTarget)} aria-label="Edit daily targets">
-            <CalorieArc arc={arc} />
-          </button>
-        ) : (
-          <button type="button" className="flog-setgoals" onClick={(e) => onOpenGoals(e.currentTarget)}>Set your daily targets</button>
-        )}
-        <MacroBar split={split} grams={ledger.total} targets={targets} />
-        <p className="flog-micros">
-          fibre {fmtFull("fibre", ledger.total.fibre)} · sugar {fmtFull("sugar", ledger.total.sugar)} · sodium {fmtFull("sodium", ledger.total.sodium)}
-        </p>
+      <div className="flog-band">
+        <div className="flog-band-left">
+          {calGoal != null ? (
+            <button type="button" className="flog-arc-btn" onClick={(e) => onOpenGoals(e.currentTarget)} aria-label="Edit daily targets">
+              <CalorieArc arc={arc} />
+            </button>
+          ) : (
+            <button type="button" className="flog-setgoals" onClick={(e) => onOpenGoals(e.currentTarget)}>Set your daily targets</button>
+          )}
+        </div>
+
+        <div className="flog-band-right">
+          <button type="button" className="flog-logfood" onClick={() => onAdd()}>+ Log food</button>
+          <MacroBar split={split} grams={ledger.total} targets={targets} micros={ledger.total} />
+        </div>
+      </div>
+
+      <div className="flog-quickrow">
         {selectMode ? (
           <SaveAsMealPanel entries={selectedEntries} onSave={save} onCancel={exitSelect} />
         ) : (
           <QuickAddStrip items={quickItems} onPickMeal={onRelogMeal} onLongPressMeal={onLongPressMeal} onPickFood={onQuickAdd} />
         )}
-      </aside>
+      </div>
 
-      <div className="flog-col">
-        <button type="button" className="flog-logfood" onClick={() => onAdd()}>+ Log food</button>
+      <div className="flog-ledger">
         {selectMode ? (
-          <p className="flog-selecthint">Tick food items to include, then name your meal in the panel ‹</p>
+          <p className="flog-selecthint">Tick food items to include, then name your meal in the panel above.</p>
         ) : (
           allItems.some((e) => e.food_item_id) && (
-            <button type="button" className="flog-savemeal" onClick={() => setSelectMode(true)}>⊕ Save a meal from today</button>
+            <button type="button" className="flog-savemeal" onClick={() => setSelectMode(true)}>Save a meal from today</button>
           )
         )}
         <MealLedger

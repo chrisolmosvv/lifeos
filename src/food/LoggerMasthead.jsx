@@ -1,18 +1,18 @@
-// LoggerMasthead — the ONE masthead across every logger page (V2 P4). A broadsheet nameplate:
-// an eyebrow + serif date/range headline (left), the Day/Week/Month switcher + date-nav ‹ › (right).
-// Pure chrome — no data, no getters. The consumer supplies the label + handlers.
+// LoggerMasthead (Slice 1a rebuild) — the date line and range switcher. Date at ~15px in
+// Fraunces, Day/Week/Month as an understated switcher with a thin underline on the active one.
+// Generous space beneath before the band starts. Pure chrome — no data, no getters.
 export default function LoggerMasthead({ ranges, range, onRange, dateLabel, isToday, atToday, onPrev, onNext }) {
   return (
     <header className="lmast">
-      <div className="lmast-plate">
-        <span className="lmast-eyebrow">Nutrition</span>
-        <h1 className="lmast-headline">
-          {dateLabel}
-          {isToday && <span className="lmast-today">Today</span>}
-        </h1>
-      </div>
+      <div className="lmast-row">
+        <div className="lmast-date-group">
+          <h1 className="lmast-date">{dateLabel}</h1>
+          <div className="lmast-nav">
+            <button type="button" className="lmast-arrow" aria-label="Previous" onClick={onPrev}>‹</button>
+            <button type="button" className="lmast-arrow" aria-label="Next" disabled={atToday} onClick={onNext}>›</button>
+          </div>
+        </div>
 
-      <div className="lmast-controls">
         <div className="lmast-tabs" role="tablist" aria-label="Range">
           {ranges.map((r) => (
             <button key={r.id} type="button" role="tab" aria-selected={r.id === range}
@@ -20,10 +20,6 @@ export default function LoggerMasthead({ ranges, range, onRange, dateLabel, isTo
               {r.label}
             </button>
           ))}
-        </div>
-        <div className="lmast-nav">
-          <button type="button" className="lmast-arrow" aria-label="Previous" onClick={onPrev}>‹</button>
-          <button type="button" className="lmast-arrow" aria-label="Next" disabled={atToday} onClick={onNext}>›</button>
         </div>
       </div>
     </header>

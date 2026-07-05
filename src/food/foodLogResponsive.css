@@ -1,13 +1,21 @@
-/* Food log phone fit rules. Kept separate because foodLog.css is already large. */
+/* Food log phone fit rules (Slice 1a). */
 
 @media (max-width: 520px) {
+  .flog-band {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+  .flog-band-right {
+    padding-top: 32px; /* room for the absolute-positioned Log food button */
+  }
   .mb {
     width: 100%;
   }
-
-  .mb-labels {
-    justify-content: space-between;
-    gap: 6px;
-    font-size: 0.74rem;
+  .mb-lines {
+    gap: 4px;
+  }
+  .mb-line {
+    font-size: 0.78rem;
   }
 }
