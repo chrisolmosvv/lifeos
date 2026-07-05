@@ -4,7 +4,7 @@ import { recipeKind } from "./recipeCalc";
 import { setRecipeFavourite } from "./recipeWrite";
 import { useRecipeWrites } from "./useRecipeWrites";
 import CookbookRegister from "./CookbookRegister";
-import RecipePage from "./RecipePage";
+import CookMode from "./CookMode";
 import RecipeEditor from "./RecipeEditor";
 import ImportScreen from "./ImportScreen";
 import Toast from "../kit/Toast";
@@ -46,7 +46,7 @@ export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onCons
   );
   if (view.kind === "recipe") return (
     <>
-      <RecipePage recipeId={view.id} cookOnOpen={view.cook} stageOnOpen={view.stage} onBack={backToGrid} onEdit={(id) => setView({ kind: "editor", id })} onDelete={onDelete} onCooked={() => setDirty(true)} />
+      <CookMode recipeId={view.id} onBack={backToGrid} onEdit={(id) => setView({ kind: "editor", id })} onDelete={onDelete} />
       {rw.toast && <Toast text={rw.toast.text} onDismiss={rw.dismiss} />}
     </>
   );
