@@ -1,5 +1,6 @@
-/* CookMode — the event-sourced cooking companion (variation C). Fraunces instruction text,
-   hairline rules, terracotta for affordances + live timers only. Fits 13" MacBook viewport. */
+/* CookMode — the event-sourced cooking companion. Full scrolling method (all steps visible,
+   current highlighted), ingredients rail with per-step highlighting. Fraunces for instruction
+   text, terracotta for affordances + live timers only. */
 
 .cm2 {
   width: 100vw;
@@ -22,366 +23,160 @@
   border-bottom: 1px solid var(--rule);
   flex-shrink: 0;
 }
-.cm2-mast-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.cm2-live-dot {
-  color: var(--accent);
-  font-size: 0.6rem;
-  line-height: 1;
-}
-.cm2-live-label {
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-}
-.cm2-mast-title {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  color: var(--ink);
-}
-.cm2-mast-right {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-.cm2-step-of {
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--ink-muted);
-}
+.cm2-mast-left { display: flex; align-items: center; gap: 10px; }
+.cm2-live-dot { color: var(--accent); font-size: 0.6rem; line-height: 1; }
+.cm2-live-label { font-family: var(--font-sans); font-size: 0.62rem; font-weight: 500; letter-spacing: 0.1em; color: var(--accent); }
+.cm2-mast-title { font-family: var(--font-serif); font-size: 1.1rem; color: var(--ink); }
+.cm2-mast-right { display: flex; align-items: center; gap: 18px; }
+.cm2-step-of { font-family: var(--font-sans); font-size: 0.62rem; font-weight: 500; letter-spacing: 0.1em; color: var(--ink-muted); }
 .cm2-finish-btn {
-  background: none;
-  border: 1px solid var(--ink);
-  padding: 6px 16px;
-  font-family: var(--font-sans);
-  font-size: 0.66rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink);
-  cursor: pointer;
+  background: none; border: 1px solid var(--ink); padding: 6px 16px;
+  font-family: var(--font-sans); font-size: 0.66rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); cursor: pointer;
   transition: background 140ms ease, color 140ms ease;
 }
-.cm2-finish-btn:hover {
-  background: var(--ink);
-  color: var(--paper);
-}
+.cm2-finish-btn:hover { background: var(--ink); color: var(--paper); }
 
 /* ── Body: method + ingredients ────────────────────────────────────────────── */
-.cm2-body {
-  display: flex;
-  gap: 0;
-  flex: 1;
-  min-height: 0;
-}
+.cm2-body { display: flex; gap: 0; flex: 1; min-height: 0; }
 .cm2-method {
-  flex: 1;
-  min-width: 0;
-  padding-right: 28px;
-  border-right: 1px solid var(--rule);
-  padding-top: 16px;
+  flex: 1; min-width: 0; padding-right: 28px;
+  border-right: 1px solid var(--rule); padding-top: 16px;
 }
-.cm2-ings {
-  width: 190px;
-  flex-shrink: 0;
-  padding-left: 20px;
-  padding-top: 16px;
-}
+.cm2-ings { width: 190px; flex-shrink: 0; padding-left: 20px; padding-top: 16px; }
 
-/* ── Done steps (collapsed summaries) ──────────────────────────────────────── */
-.cm2-done-step {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 4px 0;
+/* ── Steps — full scrolling method (all visible) ───────────────────────────── */
+.cm2-step {
+  padding: 16px 0;
   border-bottom: 1px solid var(--rule-faint);
 }
-.cm2-done-num {
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  color: var(--ink-muted);
-  flex-shrink: 0;
+.cm2-step-head {
+  display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;
 }
-.cm2-done-text {
-  font-family: var(--font-sans);
-  font-size: 0.76rem;
-  color: var(--ink-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
+.cm2-step-num {
+  font-family: var(--font-serif); font-weight: 400; line-height: 1; color: var(--ink);
 }
-.cm2-done-timer {
-  font-family: var(--font-serif);
-  font-size: 0.76rem;
-  color: var(--accent);
-  flex-shrink: 0;
-  margin-left: auto;
+.cm2-step-meta {
+  display: flex; gap: 10px; align-items: baseline;
+}
+.cm2-step-tag {
+  font-family: var(--font-sans); font-size: 0.56rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted);
+}
+.cm2-step-dur {
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
-.cm2-done-timer-done {
-  font-family: var(--font-sans);
-  font-size: 0.66rem;
-  color: var(--ink-muted);
-  font-style: italic;
-  flex-shrink: 0;
-  margin-left: auto;
+.cm2-step-text {
+  font-family: var(--font-serif); font-weight: 400; line-height: 1.45;
+  color: var(--ink); margin: 0;
 }
 
-/* ── Current step (full size) ──────────────────────────────────────────────── */
-.cm2-current {
-  padding: 24px 0 20px;
-  border-bottom: 1px solid var(--rule);
+/* CURRENT step — large, full ink, carries controls */
+.cm2-step.is-current { padding: 24px 0 20px; border-bottom: 1px solid var(--rule); }
+.cm2-step.is-current .cm2-step-num { font-size: 2.8rem; }
+.cm2-step.is-current .cm2-step-text { font-size: 1.65rem; margin-bottom: 16px; }
+
+/* DONE steps — muted, struck text */
+.cm2-step.is-done .cm2-step-num { font-size: 1rem; color: var(--ink-muted); }
+.cm2-step.is-done .cm2-step-text {
+  font-size: 0.92rem; color: var(--ink-muted); text-decoration: line-through;
 }
-.cm2-current-head {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  margin-bottom: 12px;
+.cm2-step.is-done .cm2-step-tag { opacity: 0.5; }
+.cm2-step.is-done { padding: 10px 0; }
+.cm2-step-done-mark {
+  font-family: var(--font-sans); font-size: 0.56rem; font-weight: 500;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted);
 }
-.cm2-current-num {
-  font-family: var(--font-serif);
-  font-size: 3rem;
-  font-weight: 400;
-  line-height: 1;
-  color: var(--ink);
+
+/* UPCOMING steps — quieter but fully readable */
+.cm2-step.is-upcoming .cm2-step-num { font-size: 1.3rem; color: var(--ink-muted); }
+.cm2-step.is-upcoming .cm2-step-text { font-size: 1rem; color: var(--ink-muted); }
+
+/* Inline timer on done/non-current steps */
+.cm2-step-inline-timer {
+  font-family: var(--font-serif); font-size: 0.82rem; color: var(--accent);
+  font-variant-numeric: tabular-nums; margin-left: auto;
 }
-.cm2-current-meta {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
+.cm2-step-timer-done {
+  font-family: var(--font-sans); font-size: 0.6rem; color: var(--ink-muted);
+  font-style: italic; margin-left: auto;
 }
-.cm2-current-tag {
-  font-family: var(--font-sans);
-  font-size: 0.58rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
+
+/* Per-step ingredients (under the current step's instruction) */
+.cm2-step-ings {
+  display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 14px;
 }
-.cm2-current-dur {
-  font-family: var(--font-sans);
-  font-size: 0.76rem;
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
+.cm2-step-ing {
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted);
+  border-bottom: 1px solid var(--rule-faint); padding-bottom: 2px;
 }
-.cm2-current-text {
-  font-family: var(--font-serif);
-  font-size: 1.7rem;
-  font-weight: 400;
-  line-height: 1.45;
-  color: var(--ink);
-  margin: 0 0 20px;
+
+/* ── Step controls (current step only) ─────────────────────────────────────── */
+.cm2-step-actions { display: flex; align-items: center; gap: 14px; }
+.cm2-go-back {
+  background: none; border: none; padding: 0;
+  font-family: var(--font-sans); font-size: 0.76rem; color: var(--ink-muted); cursor: pointer;
+  transition: color 140ms ease;
 }
-.cm2-current-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
+.cm2-go-back:hover { color: var(--ink); }
 .cm2-start-timer {
-  background: none;
-  border: 1px solid var(--accent);
-  padding: 8px 18px;
-  font-family: var(--font-sans);
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--accent);
-  cursor: pointer;
+  background: none; border: 1px solid var(--accent); padding: 8px 18px;
+  font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.06em; color: var(--accent); cursor: pointer;
   transition: background 140ms ease, color 140ms ease;
 }
-.cm2-start-timer:hover {
-  background: var(--accent);
-  color: var(--paper);
-}
-.cm2-timer-running {
-  font-family: var(--font-serif);
-  font-size: 1.3rem;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-.cm2-timer-nudge {
-  font-family: var(--font-sans);
-  font-size: 0.76rem;
-  font-style: italic;
-  color: var(--ink-muted);
-}
+.cm2-start-timer:hover { background: var(--accent); color: var(--paper); }
 .cm2-mark-done {
-  background: var(--ink);
-  color: var(--paper);
-  border: none;
-  padding: 10px 22px;
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: opacity 140ms ease;
+  background: var(--ink); color: var(--paper); border: none; padding: 10px 22px;
+  font-family: var(--font-sans); font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.06em; cursor: pointer; transition: opacity 140ms ease;
 }
 .cm2-mark-done:hover { opacity: 0.85; }
 
-/* ── Next step (preview) ───────────────────────────────────────────────────── */
-.cm2-next {
-  padding: 18px 0;
-  opacity: 0.35;
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-}
-.cm2-next-num {
-  font-family: var(--font-serif);
-  font-size: 1.6rem;
-  font-weight: 400;
-  line-height: 1;
-  color: var(--ink);
-}
-.cm2-next-text {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  line-height: 1.4;
-  color: var(--ink);
-  margin: 0;
-}
-
 /* ── Ingredients rail ──────────────────────────────────────────────────────── */
-.cm2-ings-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.cm2-ings-title {
-  font-family: var(--font-sans);
-  font-size: 0.58rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--ink-muted);
-}
-.cm2-ings-count {
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
-}
-.cm2-ings-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.cm2-ing {
-  border-bottom: 1px solid var(--rule-faint);
-}
+.cm2-ings-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.cm2-ings-title { font-family: var(--font-sans); font-size: 0.58rem; font-weight: 500; letter-spacing: 0.1em; color: var(--ink-muted); }
+.cm2-ings-count { font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.cm2-ings-list { list-style: none; margin: 0; padding: 0; }
+.cm2-ing { border-bottom: 1px solid var(--rule-faint); }
 .cm2-ing-btn {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 7px 0;
-  text-align: left;
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  color: var(--ink);
+  display: flex; align-items: baseline; gap: 8px; width: 100%;
+  background: none; border: none; padding: 7px 0; text-align: left; cursor: pointer;
+  font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink);
   transition: color 120ms ease;
 }
-.cm2-ing-check {
-  font-size: 0.72rem;
-  color: var(--ink-muted);
-  flex-shrink: 0;
-}
+.cm2-ing-check { font-size: 0.72rem; color: var(--ink-muted); flex-shrink: 0; }
 .cm2-ing.is-ticked .cm2-ing-check { color: var(--ink); }
-.cm2-ing.is-ticked .cm2-ing-text {
-  text-decoration: line-through;
-  color: var(--ink-muted);
-}
+.cm2-ing.is-ticked .cm2-ing-text { text-decoration: line-through; color: var(--ink-muted); }
+/* Per-step highlight — ink emphasis, NOT terracotta */
+.cm2-ing.is-highlight .cm2-ing-text { font-weight: 600; color: var(--ink); }
+.cm2-ing.is-highlight { border-bottom-color: var(--rule); }
 
 /* ── Timer strip (bottom) ──────────────────────────────────────────────────── */
 .cm2-timers {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 12px 0;
-  border-top: 2px solid var(--ink);
-  flex-shrink: 0;
-  margin-top: auto;
+  display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 0;
+  border-top: 2px solid var(--ink); flex-shrink: 0; margin-top: auto;
 }
-.cm2-chip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 0;
-}
-.cm2-chip-label {
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--ink-muted);
-}
-.cm2-chip-time {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-.cm2-chip.is-done .cm2-chip-time {
-  color: var(--ink-muted);
-  font-style: italic;
-  font-size: 0.82rem;
-}
+.cm2-chip { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.cm2-chip-label { font-family: var(--font-sans); font-size: 0.62rem; font-weight: 500; letter-spacing: 0.06em; color: var(--ink-muted); }
+.cm2-chip-time { font-family: var(--font-serif); font-size: 1.1rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.cm2-chip.is-done .cm2-chip-time { color: var(--ink-muted); font-style: italic; font-size: 0.82rem; }
 .cm2-chip-stop {
-  background: none;
-  border: 1px solid var(--rule);
-  padding: 3px 10px;
-  font-family: var(--font-sans);
-  font-size: 0.58rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--ink-muted);
-  cursor: pointer;
+  background: none; border: 1px solid var(--rule); padding: 3px 10px;
+  font-family: var(--font-sans); font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.06em; color: var(--ink-muted); cursor: pointer;
 }
 .cm2-chip-stop:hover { color: var(--ink); border-color: var(--ink-muted); }
 
 /* ── Finished state ────────────────────────────────────────────────────────── */
-.cm2-finished {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10vh 0;
-  text-align: center;
-}
-.cm2-finished-title {
-  font-family: var(--font-serif);
-  font-size: 1.6rem;
-  color: var(--ink);
-  margin: 0 0 12px;
-}
-.cm2-finished-line {
-  font-family: var(--font-sans);
-  font-size: 0.88rem;
-  color: var(--ink-muted);
-  margin: 0 0 20px;
-}
+.cm2-finished { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10vh 0; text-align: center; }
+.cm2-finished-title { font-family: var(--font-serif); font-size: 1.6rem; color: var(--ink); margin: 0 0 12px; }
+.cm2-finished-line { font-family: var(--font-sans); font-size: 0.88rem; color: var(--ink-muted); margin: 0 0 20px; }
 .cm2-finished-back {
-  background: none;
-  border: 1px solid var(--ink);
-  padding: 8px 20px;
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--ink);
-  cursor: pointer;
+  background: none; border: 1px solid var(--ink); padding: 8px 20px;
+  font-family: var(--font-sans); font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.06em; color: var(--ink); cursor: pointer;
 }
 .cm2-finished-back:hover { background: var(--ink); color: var(--paper); }
 
@@ -391,5 +186,5 @@
   .cm2-body { flex-direction: column; }
   .cm2-method { padding-right: 0; border-right: none; border-bottom: 1px solid var(--rule); padding-bottom: 16px; }
   .cm2-ings { width: 100%; padding-left: 0; padding-top: 12px; }
-  .cm2-current-text { font-size: 1.3rem; }
+  .cm2-step.is-current .cm2-step-text { font-size: 1.3rem; }
 }

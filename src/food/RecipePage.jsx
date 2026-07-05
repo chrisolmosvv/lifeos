@@ -66,7 +66,7 @@ export default function RecipePage({ recipeId, cookOnOpen, stageOnOpen, onBack, 
   const cookedLabel = cookedDate(lastCookedFor({ id: recipe.id, ingredients, steps }, cookEntries));
   const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
 
-  if (cooking) return <CookMode recipe={recipe} steps={steps} ingredients={ingredients} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging("cooked"); }} />;
+  if (cooking) return <CookMode recipe={recipe} steps={steps} ingredients={ingredients} itemsById={itemsById} onExit={(offerLog) => { setCooking(false); if (offerLog) setStaging("cooked"); }} />;
 
   const toggleFav = () => { const next = !fav; setFav(next); setRecipeFavourite(recipe.id, next).catch(() => setFav(!next)); };
 
