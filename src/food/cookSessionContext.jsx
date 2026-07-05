@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { fetchAnyActiveSession, saveSession } from "./cookSession";
+import { fetchAnyActiveSession, finishSession } from "./cookEventStore";
 
-// CookSessionProvider — the global active-cook context (mirrors focusSessionContext for Focus).
-// Hosts a single question: "is there an active cook session right now?" Fetches on mount and
-// re-fetches on the 'lifeos:cook-session-change' event (fired by useCookSession on session
-// creation and on status='done'). The header marker and popover read from this context.
+// CookSessionProvider — the global active-cook context. Hosts a single question: "is there
+// an active cook session right now?" Now reads from the event-sourced engine (cookEventStore)
+// instead of the old cookSession.js. The header marker and popover read from this context.
+// Re-fetches on 'lifeos:cook-session-change' (fired by the engine on session create/finish).
 
 const Ctx = createContext(null);
 export function useCookSessionCtx() { return useContext(Ctx); }
@@ -18,16 +18,16 @@ export function CookSessionProvider({ children }) {
 
   useEffect(() => { load(); }, []);
 
-  // Re-fetch when useCookSession signals a session was created or finished.
   useEffect(() => {
     const handler = () => load();
     window.addEventListener("lifeos:cook-session-change", handler);
     return () => window.removeEventListener("lifeos:cook-session-change", handler);
   }, []);
 
+  // Finish via the event-sourced engine (inserts 'finished' event + status='done')
   const finish = async () => {
     if (!session) return;
-    await saveSession(session.id, { status: "done" });
+    await finishSession(session.id);
     setSession(null);
   };
 

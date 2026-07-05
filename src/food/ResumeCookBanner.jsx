@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
-import { fetchAnyActiveSession } from "./cookSession";
+import { fetchAnyActiveSession } from "./cookEventStore";
 
-// ResumeCookBanner (session-surfacing B) — a calm one-line bar above the Food tabs when there is an
-// ACTIVE, non-dismissed cook_session (across any recipe). Tap → back into that cook via the EXISTING
-// deep-link (openRecipe(recipe_id, cook=true) → RecipePage auto-enters cook). NO active session →
-// renders nothing (the graceful gone-cook path: a deleted recipe / dismissed session just yields null).
-// Dismissable-by-entering — opening the cook is the dismissal; finishing it flips status to 'done'
-// (then it's the done-card's job, not this banner's). refreshKey re-checks when the Food tab changes.
+// ResumeCookBanner — a calm one-line bar above the Food tabs when there is an ACTIVE
+// cook_session (across any recipe). Tap → resume. Now reads from the event-sourced engine
+// (cookEventStore) instead of the old cookSession.js. Read-only — no writes.
 export default function ResumeCookBanner({ onResume, refreshKey }) {
   const [session, setSession] = useState(null);
   useEffect(() => {
@@ -14,6 +11,15 @@ export default function ResumeCookBanner({ onResume, refreshKey }) {
     fetchAnyActiveSession().then((s) => { if (alive) setSession(s); }).catch(() => { if (alive) setSession(null); });
     return () => { alive = false; };
   }, [refreshKey]);
+
+  // Re-fetch on session changes (the event-sourced engine fires this on create/finish)
+  useEffect(() => {
+    const handler = () => {
+      fetchAnyActiveSession().then(setSession).catch(() => setSession(null));
+    };
+    window.addEventListener("lifeos:cook-session-change", handler);
+    return () => window.removeEventListener("lifeos:cook-session-change", handler);
+  }, []);
 
   if (!session) return null;
   const title = session.recipes?.title || "a recipe";
