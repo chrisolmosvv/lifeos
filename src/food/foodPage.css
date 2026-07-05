@@ -13,37 +13,11 @@
                        position:sticky on descendants (no BFC / scroll-port created). */
 }
 
-/* The Log | Cookbook toggle — mirrors .body-tabs (an inline hairline-bordered pair). */
-.food-tabs {
-  display: inline-flex;
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 6px 0 18px;
-}
-.food-tab {
-  background: var(--paper);
-  border: none;
-  border-left: 1px solid var(--rule);
-  padding: 8px 22px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: color 120ms ease, background 120ms ease;
-}
-.food-tab:first-child {
-  border-left: none;
-}
-.food-tab:hover {
-  color: var(--accent);
-}
-.food-tab.is-active {
-  background: var(--ink);
-  color: var(--paper);
-}
-.food-tab.is-active:hover {
-  color: var(--paper); /* selected stays calm — no terracotta on the active fill */
+/* Cookbook food-section toggle (reuses .lmast-tab style from foodLog.css). */
+.cb-food-tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 /* Warm empty state — Fraunces, generous breathing room, a single inviting line. Kept

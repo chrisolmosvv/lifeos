@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { dayLedger, calorieArc, macroSplit } from "./foodCalc";
+import { dayLedger, calorieArc } from "./foodCalc";
 import CalorieArc from "./CalorieArc";
-import MacroBar from "./MacroBar";
+import MacroRings from "./MacroRings";
 import MealLedger from "./MealLedger";
 import SaveAsMealPanel from "./SaveAsMealPanel";
 
-// DayView (Slice 1a rev) — two-column layout escaping the 760px container (same technique as
-// the recipe broadsheet). Left: ring + bar + macro lines + micros + "+ Log food". Right: the
-// meal ledger. Separated by a thin hairline. QuickAddStrip removed from this view.
+// DayView (Piece 2) — two-column layout. Left: calorie ring + three macro rings + micros +
+// "+ Log food" button. Right: meal ledger. All center-aligned in the left column.
 export default function DayView({ entries, goalMap, day, names, quickItems, favSet, onAdd, onQuickAdd, onRelogMeal, onLongPressMeal, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals, onSaveMeal }) {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
@@ -15,7 +14,6 @@ export default function DayView({ entries, goalMap, day, names, quickItems, favS
   const ledger = dayLedger(entries, goalMap, { day });
   const calGoal = goalMap.get("calories")?.target_value ?? null;
   const arc = calorieArc(ledger.total.kcal, calGoal);
-  const split = macroSplit(ledger.total);
   const targets = {
     protein: goalMap.get("protein")?.target_value ?? null,
     carbs: goalMap.get("carbs")?.target_value ?? null,
@@ -39,8 +37,8 @@ export default function DayView({ entries, goalMap, day, names, quickItems, favS
           ) : (
             <button type="button" className="flog-setgoals" onClick={(e) => onOpenGoals(e.currentTarget)}>Set your daily targets</button>
           )}
-          <MacroBar split={split} grams={ledger.total} targets={targets} micros={ledger.total} />
-          <button type="button" className="flog-logfood" onClick={() => onAdd()}>+ Log food</button>
+          <MacroRings grams={ledger.total} targets={targets} micros={ledger.total} />
+          <button type="button" className="flog-logfood" onClick={() => onAdd()}>+ LOG FOOD</button>
         </div>
 
         <div className="flog-right">

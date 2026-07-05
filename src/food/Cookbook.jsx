@@ -17,7 +17,7 @@ import "./cookbook.css";
 // (Added/Cooked/A–Z/Favourites; Cooked reads lastCookedFor from P3, Favourites reads is_favourite),
 // ★ per entry, keyboard (arrows/Enter/Esc while searching). DRAFT DOOR: a GRID tap on a draft opens
 // the EDITOR (finish it); a DEEP-LINK opens the PAGE. Also hosts the recipe page / editor / import views.
-export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onConsumeOpen }) {
+export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onConsumeOpen, foodTabs, foodTab, onFoodTab }) {
   const [data, setData] = useState({ recipes: [], ingredientsByRecipe: {}, itemsById: {}, stepCountByRecipe: {}, cookEntries: [] });
   const [view, setView] = useState({ kind: "grid" });
   const [sort, setSort] = useState("added");
@@ -95,6 +95,16 @@ export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onCons
 
   return (
     <div className="cb">
+      {foodTabs && (
+        <div className="cb-food-tabs" role="tablist" aria-label="Food section">
+          {foodTabs.map((t) => (
+            <button key={t.id} type="button" role="tab" aria-selected={t.id === foodTab}
+              className={t.id === foodTab ? "lmast-tab is-active" : "lmast-tab"} onClick={() => onFoodTab(t.id)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
       <CookbookToolbar sort={sort} onSort={setSort} filter={filter} onFilter={setFilter} viewMode={viewMode} onToggleView={toggleView}
         searchOpen={searchOpen} onToggleSearch={() => setSearchOpen(true)} query={query} onQuery={(v) => { setQuery(v); setActive(0); }} onSearchKey={onSearchKey}
         onImport={() => setView({ kind: "import" })} onNew={() => setView({ kind: "editor", id: null })} />

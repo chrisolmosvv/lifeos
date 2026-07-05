@@ -4,49 +4,28 @@ import Cookbook from "./Cookbook";
 import ResumeCookBanner from "./ResumeCookBanner";
 import "./foodPage.css";
 
-// FoodPage — the Food pillar shell (F4). Food lands on the Log; a Log | Cookbook toggle
-// (Log default) switches the two faces, mirroring the BodyPage tab pattern (its own
-// food-tabs class — no cross-coupling to Body's CSS). READ-ONLY: no data, no calc, no
-// fetch, no writes. The real Log front page is F5, the real Cookbook is F7; this file just
-// makes the frame sound so content lands cleanly later.
-//
-// The loading branch is here so F5 can flip `loading` true while the day/range data loads
-// and reuse it unchanged. F4 has nothing to load, so `loading` stays false and the tab
-// content renders directly — no perpetual spinner (one that never resolves would be a lie).
+// FoodPage (Piece 2) — the Food pillar shell. The Log/Cookbook toggle is now rendered INSIDE
+// the log's masthead row (matching the Day/Week/Month text-tab style). FoodPage just holds
+// the tab state and passes it down; it no longer renders its own toggle row.
 
-const TABS = [
+const FOOD_TABS = [
   { id: "log", label: "Log" },
   { id: "cookbook", label: "Cookbook" },
 ];
 
 export default function FoodPage({ stageRecipeId, onConsumeStage }) {
-  const [tab, setTab] = useState("log"); // 'log' | 'cookbook' — Food lands on the Log
-  const [loading] = useState(false); // F5 will drive this during its load; inert in F4
-  const [openRecipeId, setOpenRecipeId] = useState(null); // a Log→Cookbook "View recipe" jump (F9)
-  const [openCook, setOpenCook] = useState(false); // resume-banner deep-link: open the recipe INTO cook (B)
-  const [openStage, setOpenStage] = useState(false); // header finish deep-link: open the recipe INTO staging
+  const [tab, setTab] = useState("log");
+  const [loading] = useState(false);
+  const [openRecipeId, setOpenRecipeId] = useState(null);
+  const [openCook, setOpenCook] = useState(false);
+  const [openStage, setOpenStage] = useState(false);
   const openRecipe = (id, cook = false, stage = false) => { setOpenRecipeId(id); setOpenCook(!!cook); setOpenStage(!!stage); setTab("cookbook"); };
 
-  // Header cook-finish deep-link: open the recipe with the staging sheet.
   useEffect(() => { if (stageRecipeId) { openRecipe(stageRecipeId, false, true); onConsumeStage?.(); } }, [stageRecipeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="food-page">
       <ResumeCookBanner onResume={(id) => openRecipe(id, true)} refreshKey={tab} />
-      <div className="food-tabs" role="tablist" aria-label="Food">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={t.id === tab}
-            className={t.id === tab ? "food-tab is-active" : "food-tab"}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
 
       {loading ? (
         <div className="food-loading">
@@ -55,11 +34,13 @@ export default function FoodPage({ stageRecipeId, onConsumeStage }) {
         </div>
       ) : tab === "log" ? (
         <section className="food-pane" role="tabpanel" aria-label="Log">
-          <LogPage onOpenRecipe={openRecipe} />
+          <LogPage onOpenRecipe={openRecipe} foodTabs={FOOD_TABS} foodTab={tab} onFoodTab={setTab} />
         </section>
       ) : (
         <section className="food-pane" role="tabpanel" aria-label="Cookbook">
-          <Cookbook openRecipeId={openRecipeId} cookOnOpen={openCook} stageOnOpen={openStage} onConsumeOpen={() => { setOpenRecipeId(null); setOpenCook(false); setOpenStage(false); }} />
+          <Cookbook openRecipeId={openRecipeId} cookOnOpen={openCook} stageOnOpen={openStage}
+            onConsumeOpen={() => { setOpenRecipeId(null); setOpenCook(false); setOpenStage(false); }}
+            foodTabs={FOOD_TABS} foodTab={tab} onFoodTab={setTab} />
         </section>
       )}
     </div>

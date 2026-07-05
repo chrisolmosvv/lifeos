@@ -17,8 +17,9 @@
 /* (V2 P9 cleanup: removed dead flog-tabs / flog-datenav / flog-header — the P4 masthead superseded them.) */
 /* Set-goals placeholder (shown when no calorie goal exists). */
 .flog-setgoals {
-  width: 180px;
-  height: 180px;
+  width: 80%;
+  max-width: 336px;
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -31,7 +32,6 @@
   color: var(--ink-muted);
   cursor: pointer;
   padding: 0 20px;
-  margin: 0 auto;
   transition: color 160ms ease, border-color 160ms ease;
 }
 .flog-setgoals:hover {
@@ -39,10 +39,10 @@
   border-color: var(--ink-muted);
 }
 
-/* ── Calorie ring (Slice 1a rev) ───────────────────────────────────────────── */
+/* ── Calorie ring (Piece 2) ────────────────────────────────────────────────── */
 .ca {
-  width: 180px;
-  margin: 0 auto;
+  width: 80%;
+  max-width: 336px;
 }
 .ca-svg {
   width: 100%;
@@ -52,85 +52,83 @@
 .ca-track {
   fill: none;
   stroke: var(--rule);
-  stroke-width: 7;
+  stroke-width: 8;
 }
 .ca-value {
   fill: none;
   stroke: var(--ink);
-  stroke-width: 7;
+  stroke-width: 8;
   stroke-linecap: round;
   transition: stroke-dashoffset 650ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .ca-num {
   fill: var(--ink);
   font-family: var(--font-serif);
-  font-size: 2.75rem;
+  font-size: 4.5rem;
 }
 .ca-sub {
   fill: var(--ink-muted);
   font-family: var(--font-sans);
-  font-size: 0.66rem;
+  font-size: 0.85rem;
 }
 
-/* ── Macro bar + lines (Slice 1a) ──────────────────────────────────────────── */
-.mb {
-  min-width: 0;
-  flex: 1;
+/* ── Macro rings (Piece 2) ─────────────────────────────────────────────────── */
+.mr {
+  width: 100%;
+  text-align: center;
 }
-.mb-bar {
+.mr-row {
   display: flex;
-  height: 6px;
-  overflow: hidden;
-  background: var(--rule-faint);
+  justify-content: center;
+  gap: 28px;
 }
-.mb-seg {
-  height: 100%;
-}
-.mb-protein {
-  background: var(--ink);
-}
-.mb-carbs {
-  background: var(--ink-muted);
-}
-.mb-fat {
-  background: var(--rule);
-}
-.mb-empty {
-  background: var(--rule-faint);
-}
-.mb-lines {
-  margin-top: 12px;
+.mr-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 4px;
 }
-.mb-line {
+.mr-svg {
+  width: 100px;
+  height: 100px;
+  display: block;
+}
+.mr-track {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 5;
+}
+.mr-value {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 650ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mr-num {
+  fill: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+}
+.mr-label {
   font-family: var(--font-sans);
-  font-size: 0.84rem;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  margin: 0;
-  line-height: 1.5;
-}
-.mb-name {
-  color: var(--ink);
-}
-.mb-sep {
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   color: var(--ink-muted);
 }
-.mb-val {
-  color: var(--ink);
-}
-.mb-goal {
+.mr-goal {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
   color: var(--ink-muted);
 }
-.mb-micros {
+.mr-micros {
   font-family: var(--font-sans);
   font-size: 0.76rem;
   font-style: italic;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
-  margin: 10px 0 0;
+  margin: 16px 0 0;
 }
 
 /* (V2 P9 cleanup: removed dead flog-secondary / flog-empty / flog-empty-line / flog-add-primary —
@@ -438,12 +436,12 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  width: 180px;
-  margin: 0 auto;
+  width: 80%;
+  max-width: 336px;
   display: block;
 }
 
-/* ── Masthead (Slice 1a rebuild) ────────────────────────────────────────────── */
+/* ── Masthead (Piece 2) ────────────────────────────────────────────────────── */
 .lmast {
   margin-bottom: 24px;
 }
@@ -452,6 +450,11 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 20px;
+}
+.lmast-right {
+  display: flex;
+  align-items: baseline;
+  gap: 38px;
 }
 .lmast-date-group {
   display: flex;
@@ -523,18 +526,18 @@
   padding-left: 28px;
   min-width: 0;
 }
-/* "+ Log food" — terracotta text, thin terracotta bottom border, grouped with the left column */
+/* "+ Log food" — terracotta border, small-caps, no fill */
 .flog-logfood {
   background: none;
-  border: none;
-  border-bottom: 1px solid var(--accent);
-  padding: 4px 0;
+  border: 1px solid var(--accent);
+  padding: 12px 28px;
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   color: var(--accent);
   cursor: pointer;
   transition: opacity 140ms ease;
-  margin-top: 4px;
 }
 .flog-logfood:hover { opacity: 0.75; }
 .flog-savemeal {

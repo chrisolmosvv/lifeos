@@ -1,7 +1,6 @@
-// LoggerMasthead (Slice 1a rebuild) — the date line and range switcher. Date at ~15px in
-// Fraunces, Day/Week/Month as an understated switcher with a thin underline on the active one.
-// Generous space beneath before the band starts. Pure chrome — no data, no getters.
-export default function LoggerMasthead({ ranges, range, onRange, dateLabel, isToday, atToday, onPrev, onNext }) {
+// LoggerMasthead (Piece 2) — one row: date + ‹ › left, then Day/Week/Month tabs, then
+// Log/Cookbook tabs (both as matching plain-text underline tabs). Pure chrome.
+export default function LoggerMasthead({ ranges, range, onRange, dateLabel, isToday, atToday, onPrev, onNext, foodTabs, foodTab, onFoodTab }) {
   return (
     <header className="lmast">
       <div className="lmast-row">
@@ -13,13 +12,26 @@ export default function LoggerMasthead({ ranges, range, onRange, dateLabel, isTo
           </div>
         </div>
 
-        <div className="lmast-tabs" role="tablist" aria-label="Range">
-          {ranges.map((r) => (
-            <button key={r.id} type="button" role="tab" aria-selected={r.id === range}
-              className={r.id === range ? "lmast-tab is-active" : "lmast-tab"} onClick={() => onRange(r.id)}>
-              {r.label}
-            </button>
-          ))}
+        <div className="lmast-right">
+          <div className="lmast-tabs" role="tablist" aria-label="Range">
+            {ranges.map((r) => (
+              <button key={r.id} type="button" role="tab" aria-selected={r.id === range}
+                className={r.id === range ? "lmast-tab is-active" : "lmast-tab"} onClick={() => onRange(r.id)}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          {foodTabs && (
+            <div className="lmast-tabs lmast-food-tabs" role="tablist" aria-label="Food section">
+              {foodTabs.map((t) => (
+                <button key={t.id} type="button" role="tab" aria-selected={t.id === foodTab}
+                  className={t.id === foodTab ? "lmast-tab is-active" : "lmast-tab"} onClick={() => onFoodTab(t.id)}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </header>

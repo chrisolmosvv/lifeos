@@ -30,7 +30,7 @@ const RANGE_DAYS = { week: 7, month: 30 };
 const GOAL_TYPES = ["calories", "protein", "carbs", "fat"];
 const snap7 = (m) => ({ kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat, fibre: m.fibre, sugar: m.sugar, sodium: m.sodium });
 
-export default function LogPage({ onOpenRecipe }) {
+export default function LogPage({ onOpenRecipe, foodTabs, foodTab, onFoodTab }) {
   const [range, setRange] = useState("day");
   const [date, setDate] = useState(null);
   const [state, setState] = useState({ loading: true });
@@ -161,7 +161,8 @@ export default function LogPage({ onOpenRecipe }) {
   return (
     <div className="flog">
       <LoggerMasthead ranges={RANGES} range={range} onRange={setRange} dateLabel={dateLabel}
-        isToday={range === "day" && date === state.today} atToday={atToday} onPrev={() => go(-1)} onNext={() => go(1)} />
+        isToday={range === "day" && date === state.today} atToday={atToday} onPrev={() => go(-1)} onNext={() => go(1)}
+        foodTabs={foodTabs} foodTab={foodTab} onFoodTab={onFoodTab} />
 
       {range === "day" ? (
         <DayView entries={entries} goalMap={goalMap} day={date} names={state.names} quickItems={quickItems} favSet={favSet}
