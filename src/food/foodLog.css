@@ -504,7 +504,6 @@
   margin-left: calc(-50vw + 50%);
   padding: 0 2.5rem;
   box-sizing: border-box;
-  overflow-x: hidden;
 }
 .flog-cols {
   display: grid;
