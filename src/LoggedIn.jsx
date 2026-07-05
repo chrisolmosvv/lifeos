@@ -37,7 +37,8 @@ export default function LoggedIn({ email }) {
   const days = weekDays(today)
   const [view, setViewState] = useState(initialView)
   const [foodStage, setFoodStage] = useState(null)
-  const setView = (v, opts) => { setViewState(v); if (opts?.stageRecipeId) setFoodStage(opts.stageRecipeId); try { window.localStorage.setItem(VIEW_KEY, v) } catch { /* private mode / disabled → in-memory only */ } }
+  const [foodCook, setFoodCook] = useState(null)
+  const setView = (v, opts) => { setViewState(v); if (opts?.stageRecipeId) setFoodStage(opts.stageRecipeId); if (opts?.cookRecipeId) setFoodCook(opts.cookRecipeId); try { window.localStorage.setItem(VIEW_KEY, v) } catch { /* private mode / disabled → in-memory only */ } }
 
   // Cross-pillar "open Focus" (P4): the task form's ▶ / add-past / see-all park a
   // request (focusNav) and fire this event; we switch to the Focus pillar, which then
@@ -89,7 +90,7 @@ export default function LoggedIn({ email }) {
         </div>
       ) : view === 'food' ? (
         <div className="cal-wrap">
-          <FoodPage stageRecipeId={foodStage} onConsumeStage={() => setFoodStage(null)} />
+          <FoodPage stageRecipeId={foodStage} onConsumeStage={() => setFoodStage(null)} cookRecipeId={foodCook} onConsumeCook={() => setFoodCook(null)} />
         </div>
       ) : (
         <div className="cal-wrap">

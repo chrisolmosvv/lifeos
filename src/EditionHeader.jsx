@@ -136,7 +136,7 @@ export default function EditionHeader({ view, onNavigate }) {
           <div className="mast-cook-pop">
             <div className="mast-cook-elapsed tnum">{elapsedClock(cookElapsed)} cooking</div>
             <div className="mast-cook-popacts">
-              <button className="mast-cook-open" onClick={() => { setCookPopOpen(false); onNavigate('food') }}>Open</button>
+              <button className="mast-cook-open" onClick={() => { setCookPopOpen(false); onNavigate('food', { cookRecipeId: cook.recipeId }) }}>Open</button>
               <button className="mast-cook-finish" onClick={finishCook}>Finish</button>
             </div>
           </div>

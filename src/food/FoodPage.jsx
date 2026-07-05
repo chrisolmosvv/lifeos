@@ -13,7 +13,7 @@ const FOOD_TABS = [
   { id: "cookbook", label: "Cookbook" },
 ];
 
-export default function FoodPage({ stageRecipeId, onConsumeStage }) {
+export default function FoodPage({ stageRecipeId, onConsumeStage, cookRecipeId, onConsumeCook }) {
   const [tab, setTab] = useState("log");
   const [loading] = useState(false);
   const [openRecipeId, setOpenRecipeId] = useState(null);
@@ -22,6 +22,7 @@ export default function FoodPage({ stageRecipeId, onConsumeStage }) {
   const openRecipe = (id, cook = false, stage = false) => { setOpenRecipeId(id); setOpenCook(!!cook); setOpenStage(!!stage); setTab("cookbook"); };
 
   useEffect(() => { if (stageRecipeId) { openRecipe(stageRecipeId, false, true); onConsumeStage?.(); } }, [stageRecipeId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (cookRecipeId) { openRecipe(cookRecipeId, true); onConsumeCook?.(); } }, [cookRecipeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="food-page">
