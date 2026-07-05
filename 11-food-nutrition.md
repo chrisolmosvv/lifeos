@@ -11,8 +11,14 @@
 > ±10% on-target band is locked, and a portion/weight table is recorded as an
 > amendment (see "Settled at recon" + decisions).
 > **Progress (2026-06-29): F0–F9 DONE** — logger (read+write), Cookbook, recipe import,
-> and the cook→log bridge are all built + verified. **NEXT: F10 (alcohol-lite).** Live
-> per-piece status lives in `02-roadmap.md`; this doc stays the locked plan/spec.
+> and the cook→log bridge are all built + verified.
+> **Full rebuild (2026-07-05): COMPLETE.** The entire Food section was rebuilt as
+> vertical slices. Five core tables kept unchanged; cook layer re-architected
+> event-sourced (db/39); three recipe surfaces unified into one; cookbook library
+> rebuilt as a full-width register; day/week/month views rebuilt as broadsheet;
+> recipe import matching fixed (stage-handoff + naming, not engine); display_name
+> added (db/40). See "Food Rebuild" sections below and `03-decisions.md`.
+> **NEXT: F10 (alcohol-lite).** Live per-piece status in `02-roadmap.md`.
 
 ## What this is (one paragraph)
 A NEW **top-level pillar** called **Food**, with **two faces joined by a bridge** —
@@ -289,10 +295,52 @@ db/28_food_tables.sql            — the 5 tables                       [F1]
 - **USDA key = owner-supplied**, stored as `USDA_FDC_API_KEY`.
 
 ## Still open (to settle at the right layer)
-- **Food-search specifics:** OFF/USDA **rate limits** + the **caching** strategy in
-  practice (search `food_items` first; cache live hits, unique on `source,
-  source_ref`). — **F2.**
 - **Nav order of the five pillars.** — **F4 layout.**
+
+---
+
+## Food Rebuild — current truth (2026-07-05)
+
+### Schema changes (only two; five core tables kept unchanged)
+- **db/39 — event-sourced cook schema** (checker-approved). `cook_session` (thin header:
+  recipe_id, status active/done/abandoned, timestamps) + `cook_event` (append-only log:
+  event_type, target_ref, payload, created_at — no updated_at, events are immutable). State
+  derived by replay; timers survive reload (wall-clock computation). **Replaced db/34.**
+- **db/40 — `food_items.display_name`** (checker-approved). Nullable text; when set, the UI
+  shows it instead of the raw API `name`. Auto-cleaned on first cache (timid: casing/whitespace
+  only); owner can override via ✎ in the recipe editor.
+
+### Surfaces (current)
+- **ONE unified recipe/cook page** (CookMode.jsx). The old broadsheet, classic view, and
+  separate Cook mode are deleted. Opens readable; cook lazy-starts on first action. Full
+  scrolling method (accordion reversed), ingredients rail, live timers strip.
+- **Cookbook library = full-width register** (CookbookRegister.jsx). Ruled index, sortable
+  columns, hover-unfurl detail, filters (Recipes/Meals/Favourites).
+- **Day view** — full broadsheet rebuild. Two-column full-width: calorie ring + meal-segmented
+  macro rings (ink shades, not hues) + sticky column; meal ledger on right.
+- **Week + Month views** — consistency-focused. Full-width, one horizontal top band (avg kcal
+  lead + P/C/F averages + per-goal on-target counts + mini week-bar/sparkline). Four macro
+  charts in 2×2 grid. **Honesty rule:** all averages/ratios count logged days only; unlogged
+  days are gaps, not zeros. Sparse state (< 2 logged days) shows a calm "not enough yet"
+  message, no fake stats.
+
+### Recipe import & matching (fixed — the engine was sound)
+The matching logic is correct; failures were stage-handoff bugs:
+- **Suppressed-staple bug:** import now uses results[0] when the finder suppresses alternatives.
+- **Null-unit → items:** null unit + known item weight → items; unknown → honest flag.
+- **Count-word units:** clove/s, large/medium/small, piece/s, etc. → item resolution.
+- **Density classes:** vegetable (~150g/cup), spice (~2g/tsp) added.
+- **Rate-limit batching:** 6-at-a-time with 1.2s gaps (Gemini free-tier 15 req/min).
+- **Reranker:** soft-prefers English-language entries; deterministic fallback intact.
+- **Label cleanup:** `cleanLabel()` strips malformed punctuation from raw_text only.
+
+### Key files
+- Cook engine: `cookReplay.js`, `cookEventStore.js`, `useCookEvents.js`, `CookMode.jsx`.
+- Cookbook: `CookbookRegister.jsx`, `register.css`.
+- Day view: `CalorieArc.jsx`, `MacroRings.jsx`, `DayView.jsx`, `LoggerMasthead.jsx`.
+- Week/Month: `WeekMonthView.jsx`, `foodCalc.js` (`perGoalHits`).
+- Import/match: `importClient.js`, `portions.js`, `cleanName.js`; Edge:
+  `food-search/rerank.ts`, `recipe-import/index.ts`, `food-search/saved.ts`.
 
 ---
 

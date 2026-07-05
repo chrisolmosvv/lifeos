@@ -1161,26 +1161,35 @@ two-track. AMENDS Gym G0: Food is its own top-level pillar, not a Health sub-sec
 - ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
 - ⬜ F11 — Polish + audit to the design laws.
 
-### Food V2 — the in-place upgrade (P0–P8 + P9 CLEANUP DONE; full detail in 04-handoff-log.md)
-DONE + committed: P0 (schema + getters), P1 (food-search reranker + Basics + fallback, live), P2
-(converged finder), P3 (logSnapshot + last_cooked_at compute-on-read), P4 (logger read), P5 (logger
-write: estimate + save-as-meal + quick-add meals), P6 (cookbook: library/recipe page/editor + AI
-rescue), P7 (marquee cook page + resume-a-cook; finish-together→SEQUENTIAL amendment — deferred until
-a trustworthy dep source exists; scheduler built dep-ready), P8 (cook→log staging sheet). P9 CLEANUP
-done: dead recipes.last_cooked_at column dropped (db/35, checker-gated; P3 entry-gate re-cleared on
-real data first), dead-code sweep, brain-doc amendments recorded (03-decisions.md).
+### Food Rebuild (2026-07-05) — COMPLETE (all four slices: Log · Nutrition · Cookbook · Depth)
+The entire Food section was rebuilt from the V2 base as vertical slices. **Five core tables kept
+unchanged** (recon confirmed them clean — only the UI layer and cook_session were rebuilt).
 
-- ✅ SESSION-SURFACING — DONE (owner-verified): A route/view persistence (dd9f1ae; app-wide, shipped +
-     verified alone across every pillar) + C done-card (255d610) + B resume banner (553ceb4). db/35
-     last_cooked_at drop confirmed live. **FOOD V2 UPGRADE FULLY CLOSED — no tracked Food work remains.**
+**Schema changes (only two, both checker-gated):**
+- db/39 — event-sourced cook schema (`cook_session` header + append-only `cook_event` log).
+  Replaced db/34. Structurally eliminated resume-loss and cross-recipe isolation bugs.
+- db/40 — `food_items.display_name` (nullable text) for human-friendly name overrides.
 
-OPEN: caching live API hits into food_items (the cache-on-select write) lands at F6, not F2
-      (F2 is read-only).   F4 — nav order of the five pillars.
-SETTLED AT RECON: 5 tables only; goals/drinks/recents reuse; ±10% on-target band;
-      portion table for ingredient→weight (F7, an F0 amendment); USDA_FDC_API_KEY owner-supplied.
-F2 LIVE NOTES: OFF search = search-a-licious (search.openfoodfacts.org); world.openfoodfacts.org
-      search 503s. USDA = POST body (nginx 400s on percent-encoded parens in a GET dataType).
-      Secrets: USDA_FDC_API_KEY, OFF_CONTACT_EMAIL (User-Agent contact, never hardcoded).
+**Surface changes:**
+- Three per-recipe surfaces (broadsheet, classic view, Cook mode) → **ONE unified recipe/cook
+  page** (CookMode.jsx). Opens readable; cook lazy-starts on first action.
+- Cook layout: accordion REVERSED → full scrolling method, current step highlighted, ingredients
+  rail, live timers strip.
+- Cookbook library → **full-width register** (ruled index, sortable, hover-unfurl detail).
+- Day view → full broadsheet rebuild (calorie ring + meal-segmented macro rings, sticky column).
+- **NEW Week + Month views** — consistency-focused, honest about logged days (averages and
+  on-target counts over logged days ONLY; unlogged days are gaps, not zeros).
+
+**Recipe import fixes (stage-handoff, not engine):** suppressed-staple bug, null-unit→items,
+count-word units, density classes, rate-limit batching, English-preference reranker, label
+cleanup. Import went from ~zero to reliable matching with honest flagging for unresolvable items.
+
+- ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
+- ⬜ F11 — Polish + audit to the design laws.
+
+SETTLED: 5 tables only; goals/drinks/recents reuse; ±10% on-target band; portion table;
+USDA_FDC_API_KEY owner-supplied. "Improve AI matching" investigated and resolved as a
+stage-handoff + naming fix — the matching engine itself is sound.
 
 ---
 

@@ -143,6 +143,28 @@ what a category/task/event means.
   + answered). Enforces the guardrails (max 2/day, never back-to-back) and lets a "yes"/"no" reply
   resolve the open offer.
 
+#### Food module tables (F-track, `db/28` + `db/39` + `db/40`)
+Five core tables (all additive, owner-RLS, intra-module FKs only):
+- **`food_items`** — the food library / resolved-DB cache: `name`, `display_name` (nullable
+  human-friendly override, db/40), `brand`, `source` (off/usda/manual), `source_ref`, per-100g
+  macros, serving info, `is_favourite`.
+- **`food_log_entries`** — one row per logged item: `entry_date`, `meal_slot`, FKs to food_items
+  / recipes, `amount`, `unit`, the 7-number macro **snapshot**, `entry_source`, `is_estimated`,
+  `is_alcohol`.
+- **`recipes`** — `title`, `servings`, times, `source_url`, `is_favourite`.
+- **`recipe_ingredients`** — `food_item_id` (nullable FK), `raw_text`, `amount`, `unit`,
+  `manual_macros`, `no_macros`, `step_position`.
+- **`recipe_steps`** — `position`, `text`, `timer_seconds`, `tag`, `depends_on`.
+
+Cook layer (**event-sourced**, db/39 — replaced the original db/34 single-row `cook_session`):
+- **`cook_session`** (thin header): `recipe_id` (→ recipes, cascade), `status`
+  (active/done/abandoned), timestamps. One active cook at a time (enforced in app logic).
+- **`cook_event`** (append-only log): `session_id` (→ cook_session, cascade), `event_type`
+  (step_marked / ingredient_ticked / timer_started / timer_stopped / finished), `target_ref`
+  (plain text, not an FK), `payload` (jsonb), `created_at`. **No `updated_at`** — events are
+  immutable; state is derived by replay, never stored mutable. Timers survive reload/backgrounding
+  because a timer = start-timestamp + duration, computed against the wall clock on read.
+
 ## How the pieces connect (runtime)
 You → the app → Supabase (read/write your data). Supabase runs **two edge functions** —
 the public `telegram` webhook (Marty's chat) and the private `brief` (the proactive sends).

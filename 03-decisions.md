@@ -745,6 +745,43 @@ and the form/subtasks respectively. Src-only, 3 commits, no schema, no Checker.
   bucket. The full time-model amendment at the upgrade's close must state this — buckets are hidden,
   never absent. (This supersedes the V1 Map §F "bucket-less task" wording.)
 
+## Food Rebuild — decisions (2026-07-05)
+
+- **Cook schema: event-sourced (db/39), replacing db/34.** The original single-row `cook_session`
+  suffered resume-loss on reload (debounce writes missed) and cross-recipe state leak. The new
+  design: a thin `cook_session` header + append-only `cook_event` log; state derived by replay,
+  never stored mutable. Timers = start-timestamp + duration, computed against wall clock on read.
+  Both old bugs are structurally impossible. **Why:** event-sourcing is the proven fix for
+  lost-write and stale-state classes; a mutable row cannot guarantee it. **Trade-off:** replay on
+  every read (cheap for a personal cookbook; a cook has ~20–50 events).
+- **Three per-recipe surfaces → ONE unified page (accordion REVERSED).** The broadsheet reading
+  page, "classic view", and separate Cook mode are deleted (~1,270 lines). The unified page opens
+  readable; cook lazy-starts on first action. The accordion layout (only current step full-size)
+  was **reversed to a full scrolling method** (all steps visible, current highlighted) based on
+  real cooking — a cook needs to see what's coming, not just the current step. **Why:** one surface
+  is simpler (no "which page am I on" confusion); full-scroll beats accordion for real use.
+  **Trade-off:** none in practice — the accordion was never owner-verified in real cooking.
+- **`food_items.display_name` (db/40) — authored override, not a compute-on-read violation.** A
+  nullable text column that holds a human-friendly label. The auto-clean is deliberately timid
+  (casing/whitespace only); the owner's override is the real cleanup path. **Why:** you cannot
+  reliably derive "Eggs" from "Egg, whole, cooked, hard-boiled" by rule — a human decision is
+  stored, not a memoised derivation. **Trade-off:** none; the canonical `name` is preserved
+  untouched.
+- **"Improve AI matching" resolved as stage-handoff fixes, not an engine overhaul.** The finder
+  engine is sound (correct foods, correct macros, full fallbacks). Failures were: (1) suppressed-
+  staple bug (import ignored results[0] when suppression fired); (2) null-unit defaulted to grams
+  instead of items; (3) unrecognized count-word units; (4) generic volume density. All fixed in
+  src/ + Edge — no schema, no new AI surface. **Why:** recon called the engine sound; real imports
+  confirmed the logic was correct but the stage-handoffs were broken. **Trade-off:** none.
+- **Honest-flagging principle (locked).** Every heuristic (portion resolution, name cleanup,
+  matching) resolves only when genuinely confident and otherwise flags for the owner's manual fix.
+  A visible "set amount" beats a silent wrong number. **Why:** the owner's two-tap manual fix is
+  faster and more accurate than debugging a wrong calorie count.
+- **Week/Month views: logged-days-only honesty (locked).** Averages and on-target counts are ALWAYS
+  over logged days only; the count is always shown. An unlogged day is "no data", never a missed-
+  goal or a zero bar. **Why:** presenting stats the data hasn't earned is worse than showing fewer
+  stats honestly.
+
 ## Food — F9: the cook→log bridge (2026-06-29)
 
 - **ONE new column: `recipes.last_cooked_at` (timestamptz, nullable) — the only schema change since
