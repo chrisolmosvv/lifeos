@@ -499,8 +499,11 @@
 .lmast-arrow:hover:not(:disabled) { color: var(--ink); }
 .lmast-arrow:disabled { opacity: 0.3; cursor: default; }
 
-/* ── Day view (Slice 1a rev — two columns, full-width escape) ──────────────── */
-/* Escape the .food-page 760px cap: same technique as .bs (recipe broadsheet). */
+/* ── Day view (Piece 2 fix — two columns, full-width escape) ───────────────── */
+/* Break out of .food-page's 760px cap. Same 100vw technique as the recipe broadsheet
+   (.bs). No overflow-clip/hidden on this element or any ancestor — on macOS overlay
+   scrollbars 100vw === client width (no overflow), and keeping overflow:visible is
+   required for position:sticky on the left column (a later piece). */
 .flog-day {
   width: 100vw;
   max-width: none;
