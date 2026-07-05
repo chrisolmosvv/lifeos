@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import LogPage from "./LogPage";
 import Cookbook from "./Cookbook";
-import ResumeCookBanner from "./ResumeCookBanner";
 import "./foodPage.css";
 
 // FoodPage (Piece 2) — the Food pillar shell. The Log/Cookbook toggle is now rendered INSIDE
@@ -26,8 +25,6 @@ export default function FoodPage({ stageRecipeId, onConsumeStage, cookRecipeId, 
 
   return (
     <div className="food-page">
-      <ResumeCookBanner onResume={(id) => openRecipe(id, true)} refreshKey={tab} />
-
       {loading ? (
         <div className="food-loading">
           <span className="food-spinner" aria-hidden="true" />
