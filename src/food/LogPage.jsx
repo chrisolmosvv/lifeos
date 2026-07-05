@@ -162,6 +162,7 @@ export default function LogPage({ onOpenRecipe, foodTabs, foodTab, onFoodTab }) 
     <div className="flog">
       <LoggerMasthead ranges={RANGES} range={range} onRange={setRange} dateLabel={dateLabel}
         isToday={range === "day" && date === state.today} atToday={atToday} onPrev={() => go(-1)} onNext={() => go(1)}
+        onToday={() => setDate(state.today)}
         foodTabs={foodTabs} foodTab={foodTab} onFoodTab={onFoodTab} />
 
       {range === "day" ? (

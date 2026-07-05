@@ -1,16 +1,20 @@
-// LoggerMasthead (Piece 2) — one row: date + ‹ › left, then Day/Week/Month tabs, then
-// Log/Cookbook tabs (both as matching plain-text underline tabs). Pure chrome.
-export default function LoggerMasthead({ ranges, range, onRange, dateLabel, isToday, atToday, onPrev, onNext, foodTabs, foodTab, onFoodTab }) {
+// LoggerMasthead (Piece 4) — Calendar-quality header. Fixed stepper (arrows never shift),
+// small-caps date label, "Today" back-affordance when navigated away, Day/Week/Month +
+// Log/Cookbook as quiet text tabs. Modeled after CalendarWeek's toolbar pattern.
+export default function LoggerMasthead({ ranges, range, onRange, dateLabel, isToday, atToday, onPrev, onNext, onToday, foodTabs, foodTab, onFoodTab }) {
   return (
     <header className="lmast">
       <div className="lmast-row">
-        <div className="lmast-date-group">
-          <h1 className="lmast-date">{dateLabel}</h1>
-          <div className="lmast-nav">
-            <button type="button" className="lmast-arrow" aria-label="Previous" onClick={onPrev}>‹</button>
-            <button type="button" className="lmast-arrow" aria-label="Next" disabled={atToday} onClick={onNext}>›</button>
-          </div>
+        <div className="lmast-stepper">
+          <button type="button" className="lmast-step" aria-label="Previous" onClick={onPrev}>‹</button>
+          <button type="button" className="lmast-step" aria-label="Next" disabled={atToday} onClick={onNext}>›</button>
         </div>
+
+        <span className="lmast-range">{dateLabel}</span>
+
+        {!isToday && onToday && (
+          <button type="button" className="lmast-today" onClick={onToday}>Today</button>
+        )}
 
         <div className="lmast-right">
           <div className="lmast-tabs" role="tablist" aria-label="Range">
@@ -23,7 +27,7 @@ export default function LoggerMasthead({ ranges, range, onRange, dateLabel, isTo
           </div>
 
           {foodTabs && (
-            <div className="lmast-tabs lmast-food-tabs" role="tablist" aria-label="Food section">
+            <div className="lmast-tabs" role="tablist" aria-label="Food section">
               {foodTabs.map((t) => (
                 <button key={t.id} type="button" role="tab" aria-selected={t.id === foodTab}
                   className={t.id === foodTab ? "lmast-tab is-active" : "lmast-tab"} onClick={() => onFoodTab(t.id)}>

@@ -5,8 +5,9 @@ import MacroRings from "./MacroRings";
 import MealLedger from "./MealLedger";
 import SaveAsMealPanel from "./SaveAsMealPanel";
 
-// DayView (Piece 2) — two-column layout. Left: calorie ring + three macro rings + micros +
-// "+ Log food" button. Right: meal ledger. All center-aligned in the left column.
+// DayView (Piece 4) — two-column layout. Left: calorie ring + three macro rings (all with
+// per-meal segments) + micros + "+ Log food". Right: meal ledger. mealTotals derived from
+// the existing dayLedger slots subtotals — no new getter needed.
 export default function DayView({ entries, goalMap, day, names, quickItems, favSet, onAdd, onQuickAdd, onRelogMeal, onLongPressMeal, onEditEntry, onToggleFav, onOpenRecipe, onOpenGoals, onSaveMeal }) {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
@@ -18,6 +19,14 @@ export default function DayView({ entries, goalMap, day, names, quickItems, favS
     protein: goalMap.get("protein")?.target_value ?? null,
     carbs: goalMap.get("carbs")?.target_value ?? null,
     fat: goalMap.get("fat")?.target_value ?? null,
+  };
+
+  // Per-meal subtotals — already computed by dayLedger, just reshape for the rings
+  const mealTotals = {
+    breakfast: ledger.slots.breakfast.subtotal,
+    lunch: ledger.slots.lunch.subtotal,
+    dinner: ledger.slots.dinner.subtotal,
+    snacks: ledger.slots.snacks.subtotal,
   };
 
   const allItems = Object.values(ledger.slots).flatMap((s) => s.items);
@@ -32,12 +41,12 @@ export default function DayView({ entries, goalMap, day, names, quickItems, favS
         <div className="flog-left">
           {calGoal != null ? (
             <button type="button" className="flog-arc-btn" onClick={(e) => onOpenGoals(e.currentTarget)} aria-label="Edit daily targets">
-              <CalorieArc arc={arc} />
+              <CalorieArc arc={arc} mealTotals={mealTotals} />
             </button>
           ) : (
             <button type="button" className="flog-setgoals" onClick={(e) => onOpenGoals(e.currentTarget)}>Set your daily targets</button>
           )}
-          <MacroRings grams={ledger.total} targets={targets} micros={ledger.total} />
+          <MacroRings grams={ledger.total} targets={targets} micros={ledger.total} mealTotals={mealTotals} />
           <button type="button" className="flog-logfood" onClick={() => onAdd()}>+ LOG FOOD</button>
         </div>
 
