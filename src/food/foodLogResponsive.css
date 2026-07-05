@@ -1,21 +1,20 @@
-/* Food log phone fit rules (Slice 1a). */
+/* Food log phone fit rules (Slice 1a rev). */
 
-@media (max-width: 520px) {
-  .flog-band {
-    flex-direction: column;
-    gap: 16px;
-    align-items: center;
+@media (max-width: 768px) {
+  .flog-day {
+    padding: 0 1rem;
   }
-  .flog-band-right {
-    padding-top: 32px; /* room for the absolute-positioned Log food button */
+  .flog-cols {
+    grid-template-columns: 1fr;
   }
-  .mb {
-    width: 100%;
+  .flog-left {
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 20px;
+    margin-bottom: 16px;
   }
-  .mb-lines {
-    gap: 4px;
-  }
-  .mb-line {
-    font-size: 0.78rem;
+  .flog-right {
+    padding-left: 0;
   }
 }
