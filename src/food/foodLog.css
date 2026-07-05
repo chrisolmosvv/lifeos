@@ -524,6 +524,9 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  position: sticky;
+  top: 24px;
+  align-self: start; /* sticky needs the element shorter than its grid track */
 }
 .flog-right {
   padding-left: 28px;

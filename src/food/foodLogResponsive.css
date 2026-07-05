@@ -13,6 +13,7 @@
     border-bottom: 1px solid var(--rule);
     padding-bottom: 20px;
     margin-bottom: 16px;
+    position: static; /* disable sticky on stacked phone layout */
   }
   .flog-right {
     padding-left: 0;
