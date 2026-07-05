@@ -33,6 +33,41 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-05 — Cook-page frame + nav-timer fix (A+B quick-relief, src-only)
+
+WHAT CHANGED:
+- Nav-bar cook-timer popover "Open" now opens the active cook page (was: the food logger). New
+  `cookRecipeId` pass-through mirrors the existing `stageRecipeId` pattern. "Finish" unchanged.
+- Removed the in-page "● Cook in progress" banner (`ResumeCookBanner.jsx` deleted — prove-dead:
+  only FoodPage.jsx referenced it). The nav-bar indicator now covers resume-from-anywhere.
+- Cook page is now a bounded scroll frame: global header stays fixed, recipe cook-status bar +
+  title stay fixed, method + ingredients scroll internally, timer strip pinned to the bottom.
+  Cook-local CSS only (cookMode2.css) — the shared `.cal-wrap` / `.app` containers are untouched.
+
+FILES TOUCHED:
+- src/EditionHeader.jsx (nav "Open" routing)
+- src/LoggedIn.jsx (cookRecipeId pass-through)
+- src/food/FoodPage.jsx (accept cookRecipeId + banner removal)
+- src/food/foodPage.css (removed .rcb* banner styles)
+- src/food/cookMode2.css (scroll frame)
+- DELETED: src/food/ResumeCookBanner.jsx
+
+HOW TO VERIFY: start a cook on a long recipe → navigate away → tap the nav-bar cook timer →
+"Open" lands on the cook page (not the logger). "Finish" still goes to the logger. The banner
+is gone. On the cook page: scroll — the global header stays put; method/ingredients scroll
+inside; timer strip is pinned at the bottom, no horizontal overflow. Checked on 13" Mac + iPhone.
+
+KNOWN GAPS / RISKS:
+- CookMode.jsx is ~260 lines (over the ~250 ceiling) — split (extract CookStep) deferred to
+  the D1 cook-page redesign.
+- Nav-timer popover buttons have border-radius: 8px (pre-existing design-law nit) — deferred to D1.
+
+NEXT: D1 — structured recipe + import overhaul (the cook-page redesign).
+
+FOR THE CHECKER: no schema — n/a.
+
+---
+
 ### 2026-07-04 — Cookbook V2 Piece 5b: interactive broadsheet — tick, mark, lazy-start, resume (SRC-ONLY)
 
 WHAT CHANGED:

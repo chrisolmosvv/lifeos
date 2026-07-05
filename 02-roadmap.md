@@ -1187,6 +1187,13 @@ cleanup. Import went from ~zero to reliable matching with honest flagging for un
 - ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
 - ⬜ F11 — Polish + audit to the design laws.
 
+### Cook-experience overhaul (next Food work, sequenced A+B → D1 → D2)
+Quick-relief shipped (2026-07-05): nav "Open" routing fix, banner removal, scroll-frame fix.
+- ⬜ D1 — Structured recipe + import overhaul (the cook-page redesign; timer visual + dismiss-
+       alarm folded in). CookMode.jsx ~260 lines → extract CookStep at D1 start. Nav-timer
+       popover buttons use border-radius: 8px (pre-existing design-law nit) → address at D1.
+- ⬜ D2 — Per-cook logging (rides on D1's structure).
+
 SETTLED: 5 tables only; goals/drinks/recents reuse; ±10% on-target band; portion table;
 USDA_FDC_API_KEY owner-supplied. "Improve AI matching" investigated and resolved as a
 stage-handoff + naming fix — the matching engine itself is sound.

@@ -3125,3 +3125,24 @@ HONEST STATUSES (recorded truthfully, not fake-greened):
 - P3 ENTRY-GATE: CLEARED on real cook history (re-run at P9) — computed lastCookedFor faithfully
   reproduces the stored stamp on every has-steps recipe; the dead recipes.last_cooked_at column dropped
   (db/35).
+
+### 2026-07-05 — Cook-page frame + nav-timer fix (A+B quick-relief, src-only)
+- SEQUENCING: cook-experience overhaul runs A+B quick-relief FIRST → then D1 (structured recipe +
+  import, with the timer visual + dismiss-alarm folded into the cook-page redesign) → then D2
+  (per-cook logging). Why: real cooking surfaced the friction; frame + nav are small/safe and ship
+  now, the structure is the foundation the cook overview + staging read from, logging rides on top.
+- NAV "Open" ROUTING: the nav-bar cook-timer popover's "Open" now routes to the active cook page
+  via a new `cookRecipeId` pass-through (mirroring the existing `stageRecipeId` pattern);
+  EditionHeader → LoggedIn → FoodPage → Cookbook → CookMode. "Finish" still stages to the logger
+  (unchanged).
+- RESUME-COOK BANNER REMOVED: the in-page "● Cook in progress — [name] · Resume ›"
+  (`ResumeCookBanner.jsx`) was dead space during a cook and redundant now that the nav-bar cook
+  indicator covers resume-from-anywhere. Prove-dead: only FoodPage.jsx referenced it; the file +
+  its `.rcb*` styles were deleted.
+- COOK-PAGE SCROLL FRAME: cook-LOCAL CSS only (cookMode2.css) — did NOT touch the shared
+  `.cal-wrap` / `.app` / calendar.css to protect the other 7 screens. The global header + cook-
+  status bar + title stay fixed; method + ingredients scroll internally (overflow-y: auto on
+  `.cm2-body`); timer strip pins to the bottom. The 100vw full-bleed stays on the non-scrolling
+  `.cm2` frame; overflow lives ONLY on the inner `.cm2-body` (width 100%), so the scrollbar can't
+  trip the horizontal-overflow trap. Parent chain activated via `:has(.cm2)` so Log tab and other
+  Cookbook views are unaffected.

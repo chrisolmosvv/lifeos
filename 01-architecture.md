@@ -26,11 +26,13 @@ Build tool: **Claude Code** on the owner's Claude Max plan.
 > Category views and the task form / subtask rows (so `TodayTaskRow` is NOT Today-only).
 
 > **Front-end shape (Phase 7 rebuild — Calendar rebuild COMPLETE).** The logged-in
-> app is a single shell (`LoggedIn`) over four views switched by state — **Today**
-> (the rebuilt home: a 7am–midnight workspace grid + "tasks today" / "next 7 days"
-> modules), **Calendar** (rebuilt on Today's kit — see below), **All Tasks** (the
-> by-category inventory), **Settings** (account + the category manager + Archive),
-> plus the **Archive** screen.
+> app is a single shell (`LoggedIn`) over eight views switched by state (corrected
+> 2026-07-05) — **Today** (the rebuilt home: a 7am–midnight workspace grid + "tasks
+> today" / "next 7 days" modules), **Focus** (the focus-session tracker),
+> **Planning** (the planner view), **Calendar** (rebuilt on Today's kit — see below),
+> **Health** (gym + body data), **Food** (log + cookbook + cooking mode),
+> **Settings** (account + the category manager), plus the **Archive** screen
+> (reachable from Settings).
 >
 > **Calendar (rebuilt, C1–C7 + C4).** `CalendarWeek` (toolbar + today-anchored
 > rolling/Monday-week nav via `weekNav` + the Week/Month toggle) over `WeekView`
