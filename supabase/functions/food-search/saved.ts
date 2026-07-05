@@ -20,11 +20,12 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 export async function searchSaved(query: string, authHeader: string | null): Promise<SourceResult> {
   if (!SB_URL || !ANON_KEY || !authHeader) return { raw: 0, records: [] };
   const cols =
-    "id,name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite";
+    "id,name,display_name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite";
   // PostgREST: ilike with *wildcards*; favourites first, then alphabetical; cap at 10.
+  const eq = encodeURIComponent(query);
   const q =
     `food_items?select=${cols}` +
-    `&name=ilike.*${encodeURIComponent(query)}*` +
+    `&or=(name.ilike.*${eq}*,display_name.ilike.*${eq}*)` +
     `&order=is_favourite.desc,name.asc&limit=10`;
   try {
     const res = await fetch(`${SB_URL}/rest/v1/${q}`, {
@@ -47,7 +48,7 @@ function toCandidate(r: Record<string, unknown>): FoodCandidate {
   return {
     source,
     source_ref: str(r.source_ref),
-    name: str(r.name) ?? "",
+    name: str(r.display_name) ?? str(r.name) ?? "",
     brand: str(r.brand),
     serving: { grams: num(r.serving_grams), label: str(r.serving_label) },
     per100g: {
