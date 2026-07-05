@@ -4,6 +4,7 @@ import { recipeMacros } from "./recipeCalc";
 import { entryMacros } from "./foodCalc";
 import { fmtNum } from "./foodFormat";
 import { ensureFoodItem } from "./recipeWrite";
+import { updateDisplayName } from "./foodWrite";
 import Finder from "./finder/Finder";
 import { recipeFinderConfig } from "./finder/finderConfig";
 import ManualMacrosPanel from "./ManualMacrosPanel";
@@ -26,6 +27,7 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   const [sourceUrl, setSourceUrl] = useState(initialDraft?.source_url ?? null);
   const [finderAt, setFinderAt] = useState(null); // null | { index: number|null, query }
   const [manualAt, setManualAt] = useState(null); // null | index — the [manual] macros rescue
+  const [renameAt, setRenameAt] = useState(null); // null | { foodItemId, value }
   const [confirmDel, setConfirmDel] = useState(false);
   const [loading, setLoading] = useState(!!recipeId);
 
@@ -59,7 +61,8 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
     try {
       const item = await ensureFoodItem(food);
       setItemsById((m) => ({ ...m, [item.id]: { ...food, food_item_id: item.id } }));
-      applyIng({ food_item_id: item.id, raw_text: food.name, amount: detail.grams, unit: "g", no_macros: false });
+      const displayName = food.display_name || item.display_name || food.name;
+      applyIng({ food_item_id: item.id, raw_text: displayName, amount: detail.grams, unit: "g", no_macros: false });
     } catch { /* leave the finder open to retry */ return; }
     setFinderAt(null);
   };
@@ -70,14 +73,36 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   const removeIng = (i) => setIngredients((xs) => xs.filter((_, j) => j !== i));
   const moveStep = (i, d) => setSteps((xs) => { const j = i + d; if (j < 0 || j >= xs.length) return xs; const c = [...xs]; [c[i], c[j]] = [c[j], c[i]]; return c; });
 
+  const foodName = (id) => {
+    const item = itemsById[id];
+    if (!item) return "";
+    return item.display_name || item.name;
+  };
+
   const info = (ing) => {
     if (ing.food_item_id && itemsById[ing.food_item_id]) {
       const kcal = ing.amount != null ? entryMacros(itemsById[ing.food_item_id], Number(ing.amount), "g").kcal : null;
-      return { status: "matched", name: itemsById[ing.food_item_id].name, kcal };
+      return { status: "matched", name: foodName(ing.food_item_id), foodItemId: ing.food_item_id, kcal };
     }
     if (ing.manual_macros && Number.isFinite(ing.manual_macros.kcal)) return { status: "manual", kcal: ing.manual_macros.kcal };
     if (ing.no_macros) return { status: "text" };
     return { status: "flag" };
+  };
+
+  // Rename a food's display_name (shared edit — affects this food everywhere)
+  const saveRename = async () => {
+    if (!renameAt) return;
+    const val = renameAt.value.trim();
+    if (!val) { setRenameAt(null); return; }
+    try {
+      await updateDisplayName(renameAt.foodItemId, val);
+      setItemsById((m) => {
+        const item = m[renameAt.foodItemId];
+        if (!item) return m;
+        return { ...m, [renameAt.foodItemId]: { ...item, display_name: val, name: val } };
+      });
+    } catch { /* swallow — the name stays as-is */ }
+    setRenameAt(null);
   };
 
   const valid = title.trim() !== "";
@@ -108,11 +133,28 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
           <ul className="red-ings">
             {ingredients.map((ing, i) => {
               const m = info(ing);
+              const isRenaming = renameAt && m.foodItemId && renameAt.foodItemId === m.foodItemId;
               return (
                 <li key={i} className="red-ing">
                   <span className="red-ing-text">
                     {ing.raw_text || "ingredient"}
-                    {m.status === "matched" && <span className="red-ing-match"> · {m.name}{m.kcal != null ? ` · ${Math.round(m.kcal)} kcal` : " · set amount"}</span>}
+                    {m.status === "matched" && !isRenaming && (
+                      <span className="red-ing-match">
+                        {" · "}{m.name}
+                        <button type="button" className="red-rename" aria-label="Rename food"
+                          onClick={() => setRenameAt({ foodItemId: m.foodItemId, value: m.name })}>✎</button>
+                        {m.kcal != null ? ` · ${Math.round(m.kcal)} kcal` : " · set amount"}
+                      </span>
+                    )}
+                    {m.status === "matched" && isRenaming && (
+                      <span className="red-ing-match">
+                        {" · "}
+                        <input className="red-rename-input" type="text" value={renameAt.value} autoFocus
+                          onChange={(e) => setRenameAt((r) => ({ ...r, value: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === "Enter") saveRename(); if (e.key === "Escape") setRenameAt(null); }}
+                          onBlur={saveRename} />
+                      </span>
+                    )}
                     {m.status === "manual" && <span className="red-ing-match"> · ~ {Math.round(m.kcal)} kcal (estimated)</span>}
                     {m.status === "flag" && <span className="red-ing-flag"> · needs a match</span>}
                     {m.status === "text" && <span className="red-mark"> · no macros</span>}

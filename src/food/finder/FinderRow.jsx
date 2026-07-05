@@ -8,7 +8,7 @@ export default function FinderRow({ food, active, onPick }) {
   return (
     <button type="button" className={active ? "fdr-row is-active" : "fdr-row"} onClick={() => onPick(food)}>
       <span className="fdr-name">
-        {food.name}
+        {food.display_name || food.name}
         {food.brand ? <span className="fdr-brand"> · {food.brand}</span> : null}
       </span>
       <span className="fdr-macros">

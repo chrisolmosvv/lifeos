@@ -43,7 +43,7 @@ export function fetchEntries(start, end) {
 // The owner's saved/cached/manual foods (the My Foods library) — for the quick-add strip,
 // favourite state, and resolving names after a write. Newest first; RLS scopes to the owner.
 export function fetchMyFoods() {
-  return fetchAll("food_items", "id,name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite", (q) =>
+  return fetchAll("food_items", "id,name,display_name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite", (q) =>
     q.order("created_at", { ascending: false }),
   );
 }
@@ -62,13 +62,13 @@ export async function searchFoods(query) {
 // (food_log_entries stores no name — a manual entry's name path is decided at F6.)
 export async function fetchNames(itemIds, recipeIds) {
   const items = itemIds.length
-    ? await fetchAll("food_items", "id,name,brand", (q) => q.in("id", itemIds))
+    ? await fetchAll("food_items", "id,name,display_name,brand", (q) => q.in("id", itemIds))
     : [];
   const recipes = recipeIds.length
     ? await fetchAll("recipes", "id,title", (q) => q.in("id", recipeIds))
     : [];
   const itemById = {};
-  for (const it of items) itemById[it.id] = { name: it.name, brand: it.brand };
+  for (const it of items) itemById[it.id] = { name: it.display_name || it.name, brand: it.brand };
   const recipeById = {};
   for (const r of recipes) recipeById[r.id] = r.title;
   return { itemById, recipeById };

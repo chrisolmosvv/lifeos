@@ -11,7 +11,7 @@ export function itemToFood(row) {
   return {
     source: row.source,
     source_ref: row.source_ref ?? null,
-    name: row.name,
+    name: row.display_name || row.name,
     brand: row.brand ?? null,
     serving: { grams: row.serving_grams ?? null, label: row.serving_label ?? null },
     per100g,

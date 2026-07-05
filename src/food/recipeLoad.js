@@ -42,7 +42,7 @@ export async function fetchCookbook() {
   ]);
   const itemIds = [...new Set(ings.filter((i) => i.food_item_id).map((i) => i.food_item_id))];
   const rows = itemIds.length
-    ? await fetchAll("food_items", "id,name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label", (q) => q.in("id", itemIds))
+    ? await fetchAll("food_items", "id,name,display_name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label", (q) => q.in("id", itemIds))
     : [];
   const itemsById = {};
   for (const r of rows) itemsById[r.id] = itemToFood(r);
@@ -69,7 +69,7 @@ export async function fetchRecipe(id) {
 
   const itemIds = [...new Set(ingredients.filter((i) => i.food_item_id).map((i) => i.food_item_id))];
   const rows = itemIds.length
-    ? await fetchAll("food_items", "id,name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label", (q) => q.in("id", itemIds))
+    ? await fetchAll("food_items", "id,name,display_name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label", (q) => q.in("id", itemIds))
     : [];
   const itemsById = {};
   for (const r of rows) itemsById[r.id] = itemToFood(r);

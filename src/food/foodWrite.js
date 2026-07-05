@@ -5,10 +5,11 @@
 // target user_id+source+source_ref matches). FETCH stays in foodLoad, CALC in foodCalc.
 
 import { supabase } from "../supabaseClient.js";
+import { cleanFoodName } from "./cleanName.js";
 
 const RETURN_COLS =
   "id,entry_date,meal_slot,food_item_id,recipe_id,amount,unit,kcal,protein,carbs,fat,fibre,sugar,sodium,entry_source,is_estimated,entry_label,is_alcohol,alcohol_units,created_at,updated_at";
-const ITEM_COLS = "id,name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite";
+const ITEM_COLS = "id,name,display_name,brand,source,source_ref,kcal,protein,carbs,fat,fibre,sugar,sodium,serving_grams,serving_label,is_favourite";
 const PER100G = ["kcal", "protein", "carbs", "fat", "fibre", "sugar", "sodium"];
 
 // The owner's id from the local session (no network) — used to fill user_id on food_items
@@ -51,12 +52,19 @@ export async function removeEntry(id) {
 export async function cacheFoodOnLog(food) {
   const row = { user_id: await ownerId(), name: food.name, brand: food.brand ?? null, source: food.source, source_ref: food.source_ref ?? null, serving_grams: food.serving?.grams ?? null, serving_label: food.serving?.label ?? null };
   for (const k of PER100G) row[k] = food.per100g?.[k] ?? null;
+  // display_name is NOT in the upsert row — on conflict (re-cache) it stays untouched,
+  // preserving any owner override. We set it below only when still null (first cache).
   const { data, error } = await supabase
     .from("food_items")
     .upsert(row, { onConflict: "user_id,source,source_ref" })
     .select(ITEM_COLS)
     .single();
   if (error) throw new Error(error.message);
+  if (data.display_name == null) {
+    const dn = cleanFoodName(food.name);
+    await supabase.from("food_items").update({ display_name: dn }).eq("id", data.id);
+    data.display_name = dn;
+  }
   return data;
 }
 
@@ -64,11 +72,17 @@ export async function cacheFoodOnLog(food) {
 // `food` carries name + per-100g numbers (already normalised) + optional serving_grams. Returns
 // the inserted row. This gives every manual entry a food_item_id, so names always resolve.
 export async function insertManualFood(food) {
-  const row = { user_id: await ownerId(), name: food.name, brand: null, source: "manual", source_ref: null, serving_grams: food.serving?.grams ?? null, serving_label: food.serving?.label ?? null, is_favourite: false };
+  const row = { user_id: await ownerId(), name: food.name, display_name: cleanFoodName(food.name), brand: null, source: "manual", source_ref: null, serving_grams: food.serving?.grams ?? null, serving_label: food.serving?.label ?? null, is_favourite: false };
   for (const k of PER100G) row[k] = food.per100g?.[k] ?? null;
   const { data, error } = await supabase.from("food_items").insert(row).select(ITEM_COLS).single();
   if (error) throw new Error(error.message);
   return data;
+}
+
+// Set display_name on a food_items row (the owner override). Writes directly; RLS scopes it.
+export async function updateDisplayName(foodItemId, displayName) {
+  const { error } = await supabase.from("food_items").update({ display_name: displayName, updated_at: new Date().toISOString() }).eq("id", foodItemId);
+  if (error) throw new Error(error.message);
 }
 
 // Toggle is_favourite on a food_items row. Returns the updated row.

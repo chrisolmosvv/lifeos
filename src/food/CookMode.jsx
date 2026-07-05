@@ -30,7 +30,8 @@ function fmtDur(secs) {
 
 function ingLabel(ing, itemsById) {
   const raw = (ing.raw_text || "").trim();
-  const itemName = ing.food_item_id && itemsById?.[ing.food_item_id]?.name;
+  const item = ing.food_item_id && itemsById?.[ing.food_item_id];
+  const itemName = item?.display_name || item?.name;
   if (raw.length > 6 && /[a-zA-Z]{3,}/.test(raw)) return raw;
   if (itemName) return raw ? `${raw} ${itemName}` : itemName;
   return raw || "ingredient";

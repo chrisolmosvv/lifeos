@@ -27,7 +27,7 @@ export default function QuickAddStrip({ items, onPickMeal, onLongPressMeal, onPi
             <MealChip key={`m:${it.recipe.id}`} item={it} onTap={onPickMeal} onLongPress={onLongPressMeal} />
           ) : (
             <button key={`f:${it.row.id}`} type="button" className="qa-chip" onClick={() => onPickFood(itemToFood(it.row))}>
-              {it.row.is_favourite ? <span className="qa-star">★</span> : null}{it.row.name}
+              {it.row.is_favourite ? <span className="qa-star">★</span> : null}{it.row.display_name || it.row.name}
             </button>
           ),
         )}

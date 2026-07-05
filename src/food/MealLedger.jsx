@@ -13,9 +13,12 @@ const SLOTS = [
 ];
 
 function entryName(e, names) {
-  if (e.food_item_id && names?.itemById?.[e.food_item_id]) return names.itemById[e.food_item_id].name;
+  if (e.food_item_id && names?.itemById?.[e.food_item_id]) {
+    const it = names.itemById[e.food_item_id];
+    return it.name; // fetchNames already resolves display_name || name
+  }
   if (e.recipe_id && names?.recipeById?.[e.recipe_id]) return names.recipeById[e.recipe_id];
-  if (e.entry_label) return e.entry_label; // V2 P5: an estimate's typed description (no FK to borrow from)
+  if (e.entry_label) return e.entry_label;
   return "Food";
 }
 

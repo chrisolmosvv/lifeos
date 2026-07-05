@@ -536,6 +536,9 @@
   padding: 2px 4px;
 }
 .red-ing-ctl button:hover { color: var(--ink); }
+.red-rename { background: none; border: none; color: var(--ink-muted); font-size: 0.72rem; cursor: pointer; padding: 0 3px; opacity: 0.5; vertical-align: middle; }
+.red-rename:hover { color: var(--accent); opacity: 1; }
+.red-rename-input { border: none; border-bottom: 1px solid var(--accent); background: none; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink); padding: 1px 2px; outline: none; width: 16ch; }
 
 /* Import screen. */
 .imp { max-width: 600px; margin: 0 auto; }
