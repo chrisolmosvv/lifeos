@@ -21,8 +21,12 @@ const SYSTEM =
   `You re-rank food-search results for a grocery/nutrition logger. You are given a QUERY and a ` +
   `numbered list of candidate foods (index i, name, brand, kcal per 100g). Return the up-to-3 ` +
   `indices a person most likely means, MOST RELEVANT FIRST. Prefer the plain generic whole food ` +
-  `or the obvious everyday product over obscure, oddly-branded, or unrelated entries; drop ` +
-  `anything irrelevant. Output ONLY JSON {"top":[indices]} using the given indices, at most 3.`;
+  `or the obvious everyday product over obscure, oddly-branded, or unrelated entries. ` +
+  `PREFER ENGLISH-LANGUAGE names: when both an English-named entry and a foreign-language entry ` +
+  `(German, French, Dutch, etc.) exist for the same food, rank the English one higher. A ` +
+  `foreign-language entry is still valid when no English alternative exists — never drop a ` +
+  `correct match just because its name isn't English. ` +
+  `Drop anything irrelevant. Output ONLY JSON {"top":[indices]} using the given indices, at most 3.`;
 
 const RESPONSE_SCHEMA = {
   type: "OBJECT",

@@ -120,6 +120,17 @@ function isUsable(r: Record<string, unknown> | null): boolean {
   return hasTitle || hasIng || hasStep;
 }
 
+// Safe punctuation cleanup for ingredient raw_text. Only removes clearly-malformed artifacts
+// Gemini sometimes leaves (stray "(,", empty "()", doubled spaces). Never rewrites semantically.
+function cleanLabel(s: string): string {
+  let t = s;
+  t = t.replace(/\(\s*,\s*/g, "(");  // "(," or "( ," → "("
+  t = t.replace(/\(\s*\)/g, "");      // empty "()" or "( )"
+  t = t.replace(/\s{2,}/g, " ");      // collapse doubled spaces
+  t = t.trim();
+  return t;
+}
+
 // Normalise to the house shape the app expects (defensive against odd model output).
 function normalise(r: Record<string, unknown>) {
   const ings = Array.isArray(r.ingredients) ? (r.ingredients as Record<string, unknown>[]) : [];
@@ -132,7 +143,7 @@ function normalise(r: Record<string, unknown>) {
     ingredients: ings
       .filter((i) => i && (strOrNull(i.raw_text) || strOrNull(i.name)))
       .map((i) => ({
-        raw_text: strOrNull(i.raw_text) || strOrNull(i.name) || "",
+        raw_text: cleanLabel(strOrNull(i.raw_text) || strOrNull(i.name) || ""),
         name: strOrNull(i.name) || strOrNull(i.raw_text) || "",
         amount: numOrNull(i.amount),
         unit: strOrNull(i.unit),
