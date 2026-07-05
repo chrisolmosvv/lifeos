@@ -2,13 +2,27 @@
    current highlighted), ingredients rail with per-step highlighting. Fraunces for instruction
    text, terracotta for affordances + live timers only. */
 
+/* When CookMode is active, make the parent chain pass height through so .cm2
+   can be a bounded flex column (header stays put, body scrolls internally,
+   timer strip pins to the bottom). Scoped via :has() — the Log tab and other
+   Cookbook views are unaffected. */
+.food-page:has(.cm2) {
+  height: 100%;
+  box-sizing: border-box;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.food-page:has(.cm2) > .food-pane {
+  height: 100%;
+}
+
 .cm2 {
   width: 100vw;
   max-width: none;
   margin-left: calc(-50vw + 50%);
   padding: 0 2.5rem;
   box-sizing: border-box;
-  min-height: 80vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -65,13 +79,13 @@
 .cm2-confirm { font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); }
 
 /* Title + dateline row */
-.cm2-title-row { padding: 16px 0 12px; border-bottom: 1px solid var(--rule); }
+.cm2-title-row { padding: 16px 0 12px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
 .cm2-title { font-family: var(--font-serif); font-size: 1.8rem; font-weight: 400; line-height: 1.15; color: var(--ink); margin: 0 0 4px; }
 .cm2-dateline { font-family: var(--font-sans); font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); margin: 0; }
 .cm2-finished-note { font-family: var(--font-sans); font-size: 0.72rem; font-style: italic; color: var(--ink-muted); margin: 6px 0 0; }
 
 /* ── Body: method + ingredients ────────────────────────────────────────────── */
-.cm2-body { display: flex; gap: 0; flex: 1; min-height: 0; }
+.cm2-body { display: flex; gap: 0; flex: 1; min-height: 0; overflow-y: auto; }
 .cm2-method {
   flex: 1; min-width: 0; padding-right: 28px;
   border-right: 1px solid var(--rule); padding-top: 16px;
