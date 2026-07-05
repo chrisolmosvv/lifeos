@@ -375,46 +375,70 @@
   padding: 4vh 0;
 }
 
-/* ── V2 P4 — Week/Month summary strip + 2×2 chart grid ───────────────────────── */
-.fwm-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 26px;
-  padding: 4px 0 16px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid var(--rule);
-}
-.fwm-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.fwm-stat-val {
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-.fwm-stat-label {
-  font-family: var(--font-sans);
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-}
-.fwm-stat--target .fwm-stat-val { color: var(--accent); }
-.fwm-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 24px;
-}
-.fwm-foot {
-  font-family: var(--font-sans);
-  font-size: 0.68rem;
-  color: var(--ink-muted);
-  text-align: center;
-  margin: 14px 0 0;
-}
+/* ── Nutrition Slice 2 — Week/Month (consistency-focused, honest about logged days) ── */
+.fwm { max-width: 680px; margin: 0 auto; }
+
+/* Sparse state */
+.fwm-sparse { text-align: center; padding: 6vh 0 4vh; }
+.fwm-sparse-lead { font-family: var(--font-serif); font-size: 1.3rem; color: var(--ink); margin: 0 0 6px; }
+.fwm-sparse-sub { font-family: var(--font-sans); font-size: 0.88rem; color: var(--ink-muted); margin: 0 0 28px; }
+
+/* Day indicator (week — 7 slots) */
+.fwm-dayind { display: flex; justify-content: center; gap: 18px; }
+.fwm-dayind-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fwm-dayind-label { font-family: var(--font-sans); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+.fwm-dayind-dot { font-size: 0.7rem; color: var(--rule); }
+.fwm-dayind-slot.is-logged .fwm-dayind-dot { color: var(--ink); }
+.fwm-dayind-slot.is-logged .fwm-dayind-label { color: var(--ink); }
+.fwm-dayind-slot.is-future .fwm-dayind-dot { opacity: 0.3; }
+.fwm-dayind-slot.is-future .fwm-dayind-label { opacity: 0.3; }
+
+/* Month indicator (30 thin bars) */
+.fwm-monthind { display: flex; justify-content: center; gap: 2px; }
+.fwm-monthind-bar { width: 6px; height: 16px; background: var(--rule-faint); border-radius: 1px; }
+.fwm-monthind-bar.is-logged { background: var(--ink); }
+.fwm-monthind-bar.is-future { opacity: 0.2; }
+
+/* Lead number */
+.fwm-lead { text-align: center; padding: 24px 0 8px; }
+.fwm-lead-title { display: block; font-family: var(--font-sans); font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 4px; }
+.fwm-lead-num { font-family: var(--font-serif); font-size: 3.6rem; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.fwm-lead-caption { display: block; font-family: var(--font-sans); font-size: 0.76rem; color: var(--ink-muted); margin-top: 4px; }
+
+/* Supporting averages: P/C/F */
+.fwm-avgs { display: flex; justify-content: center; gap: 32px; padding: 12px 0 20px; border-bottom: 1px solid var(--rule); }
+.fwm-avg { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fwm-avg-val { font-family: var(--font-serif); font-size: 1.3rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fwm-avg-label { font-family: var(--font-sans); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); }
+
+/* Per-goal consistency */
+.fwm-consist { padding: 16px 0; border-bottom: 1px solid var(--rule); }
+.fwm-consist-head { display: block; font-family: var(--font-sans); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); text-align: center; margin-bottom: 10px; }
+.fwm-consist-row { display: flex; justify-content: center; gap: 28px; }
+.fwm-consist-goal { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fwm-consist-val { font-family: var(--font-serif); font-size: 1.3rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fwm-consist-label { font-family: var(--font-sans); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); }
+
+/* Week bar (7 days) */
+.fwm-weekbar { display: flex; justify-content: center; gap: 12px; padding: 20px 0 4px; }
+.fwm-weekbar-day { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+.fwm-weekbar-track { width: 24px; height: 64px; display: flex; flex-direction: column; justify-content: flex-end; }
+.fwm-weekbar-fill { width: 100%; background: var(--ink); border-radius: 2px 2px 0 0; min-height: 4px; }
+.fwm-weekbar-gap { width: 100%; height: 64px; border-bottom: 1px solid var(--rule-faint); }
+.fwm-weekbar-gap.is-future { opacity: 0.3; }
+.fwm-weekbar-label { font-family: var(--font-sans); font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+
+/* Month sparkline (30 bars) */
+.fwm-sparkline { display: flex; align-items: flex-end; justify-content: center; gap: 2px; padding: 20px 0 4px; height: 52px; }
+.fwm-spark { width: 5px; background: var(--rule-faint); border-radius: 1px 1px 0 0; min-height: 2px; height: 2px; }
+.fwm-spark.has-data { background: var(--ink); }
+.fwm-spark.is-future { opacity: 0.2; }
+
+/* Unlogged days caption */
+.fwm-unlogged { font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); text-align: center; margin: 6px 0 16px; }
+
+/* Chart grid (kept from V2 P4) */
+.fwm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; margin-top: 12px; }
 .fbar-head {
   display: flex;
   align-items: baseline;

@@ -234,6 +234,29 @@ export function rangeTotals(daily, days, { end } = {}) {
   return { days, start, end, perNutrient };
 }
 
+// ── perGoalHits (Nutrition Slice 2) ─────────────────────────────────────────────
+// Per-goal on-target counts over LOGGED DAYS ONLY (the honest denominator). For each goaled
+// nutrient, counts how many logged days hit that goal (vsGoal status === "on", the ±10% band).
+// Unlogged days are NOT counted as misses — the count is X of N logged days, always.
+// → { loggedDays, goals: { calories: { hit, of }, protein: { hit, of }, ... } }
+const GOAL_KEYS = [["calories", "kcal"], ["protein", "protein"], ["carbs", "carbs"], ["fat", "fat"]];
+export function perGoalHits(daily, goalMap, { start, end } = {}) {
+  const rows = (daily || []).filter((d) => d?.ymd && d.ymd >= start && d.ymd <= end);
+  const loggedDays = rows.length;
+  const goals = {};
+  for (const [type, key] of GOAL_KEYS) {
+    const target = goalMap?.get?.(type)?.target_value;
+    if (target == null) continue;
+    let hit = 0;
+    for (const day of rows) {
+      const s = vsGoal(day[key], target);
+      if (s && s.status === "on") hit++;
+    }
+    goals[type] = { hit, of: loggedDays };
+  }
+  return { loggedDays, goals };
+}
+
 // ── rangeAdherence (V2 P0) ─────────────────────────────────────────────────────
 // How many days in a window were "on target", over a CALENDAR-day denominator (an UNTRACKED day
 // counts against you — stricter, LOCKED). The on-target rule (LOCKED): a day counts iff its
