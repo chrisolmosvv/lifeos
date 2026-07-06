@@ -44,6 +44,13 @@
 }
 .cc-mode-tab:hover { color: var(--ink); }
 .cc-mode-tab.is-active { color: var(--ink); border-bottom-color: var(--ink); }
+/* Log button in masthead */
+.cc-log-btn {
+  background: none; border: none; padding: 0;
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted);
+  cursor: pointer;
+}
+.cc-log-btn:hover { color: var(--ink); }
 /* Dev toggles — temporary */
 .cc-dev-toggle {
   background: none; border: 1px solid var(--rule); padding: 3px 10px;

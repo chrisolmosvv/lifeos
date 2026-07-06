@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
 import { fetchRecipe } from "./recipeLoad";
+import { recipeMacros } from "./recipeCalc";
+import { slotForHour, NUTRIENTS } from "./foodCalc";
+import { amsTodayYMD, amsClockMinutes } from "../gym/gymDates";
 import { useCookEvents } from "./useCookEvents";
+import { useCookLog } from "./useCookLog";
 import { useWakeLock } from "./useWakeLock";
 import { initAudioContext } from "./cookAlarm";
 import CookHero from "./CookHero";
 import CookRail from "./CookRail";
 import AlarmOverlay from "./AlarmOverlay";
 import RecipeOverview from "./RecipeOverview";
+import LogMealSheet from "./LogMealSheet";
+import Toast from "../kit/Toast";
 import "./cook.css";
 
 // CookCompanion — the Hero + Rail cook page (replaces CookMode).
-// STEP 4: wired to real recipe data + the event-sourced session.
-// Buckets (hero / parked / not-yet / done) are COMPUTED ON READ —
-// never stored. Timers are wall-clock math from the event replay.
+// STEP 5: servings scaling + "Log this cook" via the existing logSnapshot.
+// The caller FREEZES the macro snapshot at log time (snapshot-not-live).
 
 function shortLabel(text) {
   return (text || "").split(/\s+/).slice(0, 5).join(" ");
@@ -21,6 +26,8 @@ function shortLabel(text) {
 export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
   const [data, setData] = useState(null);
   const [mode, setMode] = useState("cooking");
+  const [staging, setStaging] = useState(null); // null | { cookServings }
+  const cl = useCookLog();
 
   useEffect(() => {
     let alive = true;
@@ -35,7 +42,8 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
     return <div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Reading recipe…</span></div>;
   }
 
-  const { recipe, ingredients, steps } = data;
+  const { recipe, ingredients, steps, itemsById } = data;
+  const macros = recipeMacros(ingredients, recipe.servings || 1, itemsById);
   const { stepStates, tickedIngredients, timers, finished } = cook.state;
   const statusOf = (i) => stepStates[String(i)] || "waiting";
   const timerFor = (i) => timers.find((t) => t.targetRef === String(i));
@@ -77,6 +85,20 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
     cook.startTimer(parseInt(alarmTimer.targetRef, 10), sec);
   };
 
+  // ── Log this cook ──────────────────────────────────────────────────────
+  const handleLogRequest = () => setStaging({ cookServings: recipe.servings || 1 });
+  const handleLogMeal = (eaten, slot) => {
+    setStaging(null);
+    const today = amsTodayYMD(Date.now());
+    const snap = {};
+    for (const k of NUTRIENTS) snap[k] = (macros.perServing[k] || 0) * eaten;
+    cl.logSnapshot({
+      entry_date: today, meal_slot: slot, food_item_id: null,
+      recipe_id: recipeId, amount: eaten, unit: "serving",
+      ...snap, entry_source: "recipe_cook", is_alcohol: false,
+    }, {});
+  };
+
   const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
   const dateParts = [];
   if (recipe.servings) dateParts.push(`Serves ${recipe.servings}`);
@@ -97,6 +119,7 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
           {mode === "cooking" && finished && (
             <span className="cc-mast-status">Cook finished</span>
           )}
+          <button type="button" className="cc-log-btn" onClick={handleLogRequest}>Log</button>
         </div>
       </div>
 
@@ -127,11 +150,21 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
           <RecipeOverview
             recipe={recipe} ingredients={ingredients} steps={steps}
             tickedSet={tickedIngredients} onTick={(i) => cook.tickIngredient(i)}
+            onLogRequest={handleLogRequest}
           />
         </div>
       )}
 
       <AlarmOverlay stepLabel={alarmLabel} onDismiss={handleAlarmDismiss} onExtend={handleAlarmExtend} />
+      {staging && (
+        <LogMealSheet
+          perServing={macros.perServing} unestimatedCount={macros.unestimatedCount}
+          defaultSlot={slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60))}
+          cookedEyebrow
+          onLog={handleLogMeal} onClose={() => setStaging(null)}
+        />
+      )}
+      {cl.toast && <Toast text={cl.toast.text} onUndo={cl.toast.undo} onDismiss={cl.dismiss} />}
     </div>
   );
 }

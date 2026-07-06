@@ -1,9 +1,9 @@
 import { useState } from "react";
 import "./cookOverview.css";
 
-// RecipeOverview — the "Recipe" mode: tickable ingredient list (flat),
-// servings display, numbered method, and an at-a-glance timing strip.
-// Step 2: static render (tick state is local, servings are read-only).
+// RecipeOverview — the "Recipe" mode: servings stepper (scales ingredient
+// amounts proportionally), tickable ingredient list (flat), numbered method,
+// at-a-glance timing strip, and "Log this cook" trigger.
 
 const TAG_LABEL = { hands_on: "Hands-on", hands_free: "Hands-free", active_heat: "Active heat" };
 
@@ -14,8 +14,7 @@ function fmtDur(secs) {
   return `${m} min`;
 }
 
-export default function RecipeOverview({ recipe, ingredients, steps, tickedSet, onTick }) {
-  // Local tick state for step 2 (replaced by event-sourced state in step 4)
+export default function RecipeOverview({ recipe, ingredients, steps, tickedSet, onTick, onLogRequest }) {
   const [localTicked, setLocalTicked] = useState(new Set());
   const ticked = tickedSet || localTicked;
   const toggleTick = (i) => {
@@ -24,23 +23,27 @@ export default function RecipeOverview({ recipe, ingredients, steps, tickedSet, 
   };
   const tickedCount = ingredients.filter((_, i) => ticked.has(String(i))).length;
 
-  // Timing strip: sequential bars proportional to duration
+  // Servings stepper — scales displayed ingredient amounts
+  const baseServ = recipe.servings || 1;
+  const [cookServings, setCookServings] = useState(baseServ);
+  const scale = cookServings / baseServ;
+
   const totalSec = steps.reduce((sum, s) => sum + (s.timer_seconds || 0), 0);
   const hasTimingData = totalSec > 0;
 
   return (
     <div className="cc-ov">
-      {/* ── Servings + summary ──────────────────────────────────────────────── */}
       <div className="cc-ov-summary">
-        <span className="cc-ov-serves">
-          Serves {recipe.servings || "–"}
-        </span>
-        {hasTimingData && (
-          <span className="cc-ov-time tnum">{fmtDur(totalSec)} total</span>
-        )}
+        <div className="cc-ov-serv-row">
+          <button type="button" className="cc-ov-serv-btn" onClick={() => setCookServings((s) => Math.max(1, s - 1))}>−</button>
+          <span className="cc-ov-serves tnum">{cookServings}</span>
+          <button type="button" className="cc-ov-serv-btn" onClick={() => setCookServings((s) => s + 1)}>+</button>
+          <span className="cc-ov-serv-label">serving{cookServings === 1 ? "" : "s"}</span>
+          {scale !== 1 && <span className="cc-ov-scaled">scaled from {baseServ}</span>}
+        </div>
+        {hasTimingData && <span className="cc-ov-time tnum">{fmtDur(totalSec)} total</span>}
       </div>
 
-      {/* ── At-a-glance timing strip ────────────────────────────────────────── */}
       {hasTimingData && (
         <div className="cc-strip">
           {steps.map((s, i) => {
@@ -49,12 +52,9 @@ export default function RecipeOverview({ recipe, ingredients, steps, tickedSet, 
             const pct = (dur / totalSec) * 100;
             const isPassive = s.tag === "hands_free";
             return (
-              <div
-                key={i}
-                className={`cc-strip-bar${isPassive ? " is-passive" : ""}`}
+              <div key={i} className={`cc-strip-bar${isPassive ? " is-passive" : ""}`}
                 style={{ width: `${Math.max(pct, 2)}%` }}
-                title={`${i + 1}. ${(s.text || "").split(/\s+/).slice(0, 5).join(" ")} — ${fmtDur(dur)}`}
-              >
+                title={`${i + 1}. ${(s.text || "").split(/\s+/).slice(0, 5).join(" ")} — ${fmtDur(dur)}`}>
                 <span className="cc-strip-num tnum">{i + 1}</span>
               </div>
             );
@@ -62,9 +62,7 @@ export default function RecipeOverview({ recipe, ingredients, steps, tickedSet, 
         </div>
       )}
 
-      {/* ── Two-column body: ingredients + method ───────────────────────────── */}
       <div className="cc-ov-body">
-        {/* Ingredients */}
         <div className="cc-ov-col">
           <div className="cc-ov-label">
             Ingredients
@@ -83,9 +81,13 @@ export default function RecipeOverview({ recipe, ingredients, steps, tickedSet, 
               );
             })}
           </ul>
+          {onLogRequest && (
+            <button type="button" className="cc-ov-log" onClick={() => onLogRequest(cookServings)}>
+              Log this cook
+            </button>
+          )}
         </div>
 
-        {/* Method */}
         <div className="cc-ov-col cc-ov-col--method">
           <div className="cc-ov-label">Method</div>
           <ol className="cc-ov-method">
