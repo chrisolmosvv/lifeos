@@ -116,6 +116,23 @@
   max-width: 32ch;
 }
 
+/* ── Hero ingredient tags (tappable mark-used) ──────────────────────────────── */
+.cc-hero-ings {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem;
+}
+.cc-hero-ing {
+  background: none; border: none; padding: 3px 0;
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted);
+  cursor: pointer; border-bottom: 1px solid var(--rule-faint);
+  transition: color 120ms ease;
+}
+.cc-hero-ing:hover { color: var(--ink); }
+.cc-hero-ing::after { content: " ·"; color: var(--rule); }
+.cc-hero-ing:last-child::after { content: ""; }
+.cc-hero-ing.is-used {
+  text-decoration: line-through; color: var(--rule);
+}
+
 /* ── Heads-up line (the ONE terracotta mark) ────────────────────────────────── */
 .cc-headsup {
   display: flex; align-items: center; gap: 8px;

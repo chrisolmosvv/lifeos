@@ -134,9 +134,11 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
             <CookHero
               hero={hero} parked={parked} totalSteps={steps.length}
               heroTimer={heroTimer && !heroTimer.done ? heroTimer : null}
+              ingredients={ingredients} tickedSet={tickedIngredients}
               onMarkDone={handleMarkDone}
               onStartTimer={handleStartTimer}
               onAdjustTimer={handleAdjustTimer}
+              onTickIngredient={(i) => cook.tickIngredient(i)}
             />
             {hasRail && <CookRail parked={parked} notYet={notYet} />}
           </div>

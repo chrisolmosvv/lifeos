@@ -1,7 +1,6 @@
 // CookHero — the big calm directive: one step, readable across a kitchen.
 // Fraunces for the instruction, Inter for controls + metadata.
-// Step 3: live timer support — big countdown for parked steps shown inline,
-// "Start timer" button for active steps with a duration.
+// Step 6: ingredient tags below the hero text — tappable to mark used.
 
 import CookTimer from "./CookTimer";
 
@@ -25,7 +24,7 @@ function shortLabel(text) {
   return (text || "").split(/\s+/).slice(0, 5).join(" ");
 }
 
-export default function CookHero({ hero, parked, totalSteps, heroTimer, onMarkDone, onStartTimer, onAdjustTimer }) {
+export default function CookHero({ hero, parked, totalSteps, heroTimer, ingredients, tickedSet, onMarkDone, onStartTimer, onAdjustTimer, onTickIngredient }) {
   if (!hero) return null;
   const { index, step } = hero;
   const tag = step.tag ? TAG_LABEL[step.tag] || step.tag : null;
@@ -35,6 +34,15 @@ export default function CookHero({ hero, parked, totalSteps, heroTimer, onMarkDo
   const urgent = parked
     .filter((p) => p.remaining != null && p.remaining > 0 && p.remaining <= HEADSUP_THRESHOLD)
     .sort((a, b) => a.remaining - b.remaining)[0];
+
+  // Ingredients for this step (step_position link) or ALL if step_position is unpopulated
+  const stepIngs = ingredients
+    ? ingredients
+        .map((ing, i) => ({ ing, idx: i }))
+        .filter(({ ing }) => ing.step_position == null || ing.step_position === index)
+    : [];
+  // Only show ingredient tags when we have a meaningful set (step-linked or all)
+  const showIngs = stepIngs.length > 0 && stepIngs.length <= ingredients.length;
 
   return (
     <div className="cc-hero">
@@ -51,6 +59,22 @@ export default function CookHero({ hero, parked, totalSteps, heroTimer, onMarkDo
         <CookTimer remaining={heroTimer.remaining} onAdjust={(d) => onAdjustTimer?.(index, d)} />
       )}
 
+      {/* Ingredient tags — tappable to mark used */}
+      {showIngs && (
+        <div className="cc-hero-ings">
+          {stepIngs.map(({ ing, idx }) => {
+            const used = tickedSet?.has(String(idx));
+            return (
+              <button key={idx} type="button"
+                className={`cc-hero-ing${used ? " is-used" : ""}`}
+                onClick={() => onTickIngredient?.(idx)}>
+                {ing.raw_text}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {urgent && (
         <div className="cc-headsup">
           <span className="cc-headsup-dot">●</span>
@@ -61,7 +85,6 @@ export default function CookHero({ hero, parked, totalSteps, heroTimer, onMarkDo
       )}
 
       <div className="cc-hero-actions">
-        {/* "Start timer" for active steps with a duration but no running timer */}
         {hasDuration && !heroTimer && (
           <button type="button" className="cc-start-timer" onClick={() => onStartTimer?.(index, step.timer_seconds)}>
             Start {fmtDur(step.timer_seconds)} timer
