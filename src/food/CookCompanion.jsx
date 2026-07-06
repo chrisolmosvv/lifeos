@@ -7,17 +7,14 @@ import { RICH_MOCK, BARE_MOCK } from "./cookMock";
 import "./cook.css";
 
 // CookCompanion — the Hero + Rail cook page (replaces CookMode).
-// STEP 1: static render from mock data. The props + data hooks are declared
-// for step 4 to wire; until then we render from the hard-coded mocks.
+// STEP 2: the Cooking↔Recipe mode toggle. Still renders from mock data;
+// real data + event writes come in steps 3–4.
 
 export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
-  // Dev toggle: flip between the rich salmon mock and the bare scrambled-eggs fallback.
-  // Removed once real data is wired in step 2.
-  const [useBare, setUseBare] = useState(false);
-  const mock = useBare ? BARE_MOCK : RICH_MOCK;
-
-  const [overview, setOverview] = useState(false);
+  const [useBare, setUseBare] = useState(false);   // dev toggle (temporary)
+  const [mode, setMode] = useState("cooking");      // "cooking" | "recipe"
   const [showAlarm, setShowAlarm] = useState(false);
+  const mock = useBare ? BARE_MOCK : RICH_MOCK;
 
   const { recipe, steps, ingredients, hero, parked, notYet, done } = mock;
   const hasRail = parked.length > 0;
@@ -29,14 +26,20 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
 
   return (
     <div className="cm2">
-      {/* Masthead — back, cooking status, controls */}
+      {/* Masthead — back, mode toggle, controls */}
       <div className="cc-mast">
         <button type="button" className="cc-back" onClick={onBack}>‹ Cookbook</button>
+        <div className="cc-mast-center">
+          <button type="button" className={`cc-mode-tab${mode === "cooking" ? " is-active" : ""}`} onClick={() => setMode("cooking")}>Cooking</button>
+          <button type="button" className={`cc-mode-tab${mode === "recipe" ? " is-active" : ""}`} onClick={() => setMode("recipe")}>Recipe</button>
+        </div>
         <div className="cc-mast-right">
-          <span className="cc-mast-status">
-            Step {hero ? hero.index + 1 : "–"} of {steps.length}
-          </span>
-          {/* Dev toggles (temporary — removed after step 1) */}
+          {mode === "cooking" && (
+            <span className="cc-mast-status">
+              Step {hero ? hero.index + 1 : "–"} of {steps.length}
+            </span>
+          )}
+          {/* Dev toggles (temporary) */}
           <button type="button" className="cc-dev-toggle" onClick={() => setUseBare((b) => !b)}>
             {useBare ? "Rich" : "Bare"}
           </button>
@@ -54,32 +57,24 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
         )}
       </div>
 
-      {/* Main body: hero + rail (or hero full-width for bare fallback) */}
-      <div className={`cc-body${hasRail ? "" : " cc-body--solo"}`}>
-        <CookHero
-          hero={hero}
-          parked={parked}
-          totalSteps={steps.length}
-          onMarkDone={() => {}}
-        />
-        {hasRail && <CookRail parked={parked} notYet={notYet} />}
-      </div>
+      {/* Body: cooking mode (hero + rail) or recipe mode (overview) */}
+      {mode === "cooking" ? (
+        <>
+          <div className={`cc-body${hasRail ? "" : " cc-body--solo"}`}>
+            <CookHero hero={hero} parked={parked} totalSteps={steps.length} onMarkDone={() => {}} />
+            {hasRail && <CookRail parked={parked} notYet={notYet} />}
+          </div>
+          <div className="cc-foot">
+            {done.length > 0 && <span className="cc-done-count">{done.length} done</span>}
+          </div>
+        </>
+      ) : (
+        <div className="cc-body cc-body--scroll">
+          <RecipeOverview recipe={recipe} ingredients={ingredients} steps={steps} />
+        </div>
+      )}
 
-      {/* Footer: done count + recipe toggle */}
-      <div className="cc-foot">
-        {done.length > 0 && (
-          <span className="cc-done-count">{done.length} done</span>
-        )}
-        <button type="button" className="cc-recipe-toggle" onClick={() => setOverview(true)}>
-          View full recipe
-        </button>
-      </div>
-
-      {/* Overlays */}
-      <RecipeOverview
-        recipe={recipe} ingredients={ingredients} steps={steps}
-        open={overview} onClose={() => setOverview(false)}
-      />
+      {/* Alarm overlay */}
       <AlarmOverlay
         stepLabel={showAlarm ? "Salmon is ready" : null}
         onDismiss={() => setShowAlarm(false)}

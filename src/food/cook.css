@@ -31,7 +31,20 @@
   font-family: var(--font-sans); font-size: 0.6rem; font-weight: 500;
   letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted);
 }
-/* Dev toggles — temporary, removed after step 1 */
+/* Mode toggle (Cooking / Recipe) */
+.cc-mast-center { display: flex; gap: 0; }
+.cc-mode-tab {
+  background: none; border: none; padding: 0 0 0.15rem;
+  font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-muted); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin: 0 0.75rem;
+  transition: color 0.15s;
+}
+.cc-mode-tab:hover { color: var(--ink); }
+.cc-mode-tab.is-active { color: var(--ink); border-bottom-color: var(--ink); }
+/* Dev toggles — temporary */
 .cc-dev-toggle {
   background: none; border: 1px solid var(--rule); padding: 3px 10px;
   font-family: var(--font-sans); font-size: 0.58rem; color: var(--ink-muted);
@@ -62,6 +75,7 @@
   gap: 0;
 }
 .cc-body--solo .cc-hero { border-right: none; }
+.cc-body--scroll { overflow-y: auto; display: block; }
 
 /* ── Hero ───────────────────────────────────────────────────────────────────── */
 .cc-hero {
@@ -237,49 +251,4 @@
 }
 .cc-alarm-dismiss:hover { opacity: 0.85; }
 
-/* ── Recipe overview overlay ────────────────────────────────────────────────── */
-.cc-overview {
-  position: fixed; inset: 0; z-index: 45;
-  background: var(--paper);
-  overflow-y: auto;
-  padding: 2rem 3rem;
-}
-.cc-overview-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  border-bottom: 1px solid var(--rule); padding-bottom: 12px;
-  margin-bottom: 1.5rem;
-}
-.cc-overview-title {
-  font-family: var(--font-serif); font-size: 1.5rem; font-weight: 400;
-  color: var(--ink); margin: 0;
-}
-.cc-overview-close {
-  background: none; border: none; padding: 0;
-  font-family: var(--font-sans); font-size: 0.76rem; color: var(--ink-muted);
-  cursor: pointer;
-}
-.cc-overview-close:hover { color: var(--ink); }
-.cc-overview-body {
-  display: flex; gap: 3rem;
-  max-width: 760px;
-}
-.cc-overview-section { flex: 1; }
-.cc-overview-label {
-  font-family: var(--font-sans); font-size: 0.58rem; font-weight: 500;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted);
-  margin-bottom: 10px;
-}
-.cc-overview-ings { list-style: none; margin: 0; padding: 0; }
-.cc-overview-ing {
-  font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink);
-  padding: 5px 0;
-  border-bottom: 1px solid var(--rule-faint);
-}
-.cc-overview-steps {
-  margin: 0; padding: 0 0 0 1.2em;
-}
-.cc-overview-step {
-  font-family: var(--font-serif); font-size: 0.92rem; color: var(--ink);
-  line-height: 1.45; padding: 6px 0;
-  border-bottom: 1px solid var(--rule-faint);
-}
+/* Recipe overview styles live in cookOverview.css (imported by RecipeOverview.jsx) */
