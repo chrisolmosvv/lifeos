@@ -33,6 +33,42 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-06 — Cook Companion "Hero + Rail" — step 1: static render (D1, src-only)
+
+WHAT CHANGED:
+- NEW cook page replacing CookMode's body: one big Fraunces directive (the Hero = the single
+  active step) plus an always-visible rail (Parked = passive steps with countdowns, Not yet =
+  upcoming). Rendered from hard-coded mock data — no live recipe data, no real clock, no writes.
+- Two mock scenarios: a RICH salmon recipe (the 3-at-once peak: greens on your hands, couscous +
+  salmon parked, dressing + plate not-yet) and a BARE scrambled eggs (no tags, no durations —
+  degrades to a plain linear step list with no rail). Dev toggle to flip between them.
+- Terracotta discipline: exactly one terracotta mark — the soonest parked item (salmon 2:25) in
+  both the hero's heads-up line and the rail dot. Everywhere else is ink/muted.
+- AlarmOverlay previewable via a dev button (static look only — no audio, no auto-fire).
+- RecipeOverview skeleton (ingredients + method in two columns).
+- CookMode.jsx is NOT deleted (prove-dead comes later); Cookbook.jsx now imports CookCompanion.
+
+FILES TOUCHED:
+- NEW: src/food/CookCompanion.jsx (89), CookHero.jsx (53), CookRail.jsx (63), CookTimer.jsx (27),
+  AlarmOverlay.jsx (18), RecipeOverview.jsx (33), cookMock.js (80), cook.css (285)
+- MODIFIED: src/food/Cookbook.jsx (import CookCompanion instead of CookMode)
+
+HOW TO VERIFY: open any recipe from the Cookbook → you see the new Hero + Rail. "Bare" toggle
+shows the fallback (no rail, no timers). "Alarm" toggle shows the dismiss overlay. "View full
+recipe" shows the recipe overview. The global header stays fixed. Zero boxes/shadows/fills.
+
+KNOWN GAPS / RISKS:
+- cook.css at 285 lines (slightly over ~250 ceiling) — split if it grows further.
+- CookMode.jsx is still present (not deleted yet — prove-dead once CookCompanion is fully wired).
+- Dev toggles (Bare / Alarm) are temporary — removed when real data replaces mock.
+- No live data, no clock, no event writes — those are steps 2–4.
+
+NEXT: step 2 — wire real recipe data via fetchRecipe (replace mocks with live DB data).
+
+FOR THE CHECKER: n/a — no schema.
+
+---
+
 ### 2026-07-05 — Cook-page frame + nav-timer fix (A+B quick-relief, src-only)
 
 WHAT CHANGED:
