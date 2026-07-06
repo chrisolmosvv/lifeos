@@ -242,6 +242,9 @@
   font-family: var(--font-sans); font-size: 1rem; color: var(--ink-muted);
   margin: 0 0 2rem;
 }
+.cc-alarm-actions {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
 .cc-alarm-dismiss {
   background: var(--ink); color: var(--paper); border: none;
   padding: 14px 36px;
@@ -250,5 +253,21 @@
   transition: opacity 140ms ease;
 }
 .cc-alarm-dismiss:hover { opacity: 0.85; }
+.cc-alarm-ext {
+  background: none; border: 1px solid var(--rule); padding: 12px 20px;
+  font-family: var(--font-sans); font-size: 0.76rem; font-weight: 500;
+  color: var(--ink-muted); cursor: pointer;
+  transition: border-color 140ms ease;
+}
+.cc-alarm-ext:hover { border-color: var(--ink-muted); color: var(--ink); }
+
+/* ── "Start timer" button in hero ───────────────────────────────────────────── */
+.cc-start-timer {
+  background: none; border: 1px solid var(--rule); padding: 10px 20px;
+  font-family: var(--font-sans); font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.04em; color: var(--ink-muted); cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease;
+}
+.cc-start-timer:hover { border-color: var(--ink-muted); color: var(--ink); }
 
 /* Recipe overview styles live in cookOverview.css (imported by RecipeOverview.jsx) */

@@ -1,23 +1,60 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CookHero from "./CookHero";
 import CookRail from "./CookRail";
 import AlarmOverlay from "./AlarmOverlay";
 import RecipeOverview from "./RecipeOverview";
+import { useCookTimers } from "./useCookTimers";
 import { RICH_MOCK, BARE_MOCK } from "./cookMock";
 import "./cook.css";
 
 // CookCompanion — the Hero + Rail cook page (replaces CookMode).
-// STEP 2: the Cooking↔Recipe mode toggle. Still renders from mock data;
-// real data + event writes come in steps 3–4.
+// STEP 3: live timers, ±1 min, looping alarm. Still mock data.
+
+function shortLabel(text) {
+  return (text || "").split(/\s+/).slice(0, 5).join(" ");
+}
 
 export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
-  const [useBare, setUseBare] = useState(false);   // dev toggle (temporary)
-  const [mode, setMode] = useState("cooking");      // "cooking" | "recipe"
-  const [showAlarm, setShowAlarm] = useState(false);
+  const [useBare, setUseBare] = useState(false);
+  const [mode, setMode] = useState("cooking");
   const mock = useBare ? BARE_MOCK : RICH_MOCK;
+  const { recipe, steps, ingredients, hero, parked: mockParked, notYet, done } = mock;
+  const hasRail = mockParked.length > 0;
 
-  const { recipe, steps, ingredients, hero, parked, notYet, done } = mock;
-  const hasRail = parked.length > 0;
+  const ct = useCookTimers();
+
+  // Auto-start timers for parked items on mount (simulates a mid-cook state)
+  const [inited, setInited] = useState(false);
+  useEffect(() => {
+    if (inited || useBare) return;
+    for (const p of mockParked) {
+      if (p.remaining != null && p.step.timer_seconds > 0) {
+        // Start with remaining as the duration so countdown begins from mock values
+        ct.startTimer(p.index, p.remaining);
+      }
+    }
+    setInited(true);
+  }, [useBare]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Merge live timer data into parked items
+  const parked = mockParked.map((p) => {
+    const live = ct.liveTimers[p.index];
+    return live ? { ...p, remaining: live.remaining } : p;
+  });
+
+  // Hero timer (if one is running for the hero step)
+  const heroTimer = hero ? ct.liveTimers[hero.index] || null : null;
+
+  // Alarm: find the step that triggered it
+  const alarmStep = ct.alarmIdx != null ? steps[ct.alarmIdx] : null;
+  const alarmLabel = alarmStep ? shortLabel(alarmStep.text) : null;
+
+  const handleAlarmDismiss = () => {
+    if (ct.alarmIdx != null) ct.dismissTimer(ct.alarmIdx);
+  };
+  const handleAlarmExtend = (sec) => {
+    if (ct.alarmIdx != null) { ct.adjustTimer(ct.alarmIdx, sec); ct.dismissTimer(ct.alarmIdx); }
+  };
 
   const time = (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0);
   const dateParts = [];
@@ -26,7 +63,6 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
 
   return (
     <div className="cm2">
-      {/* Masthead — back, mode toggle, controls */}
       <div className="cc-mast">
         <button type="button" className="cc-back" onClick={onBack}>‹ Cookbook</button>
         <div className="cc-mast-center">
@@ -35,33 +71,29 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
         </div>
         <div className="cc-mast-right">
           {mode === "cooking" && (
-            <span className="cc-mast-status">
-              Step {hero ? hero.index + 1 : "–"} of {steps.length}
-            </span>
+            <span className="cc-mast-status">Step {hero ? hero.index + 1 : "–"} of {steps.length}</span>
           )}
-          {/* Dev toggles (temporary) */}
-          <button type="button" className="cc-dev-toggle" onClick={() => setUseBare((b) => !b)}>
+          <button type="button" className="cc-dev-toggle" onClick={() => { setUseBare((b) => !b); setInited(false); }}>
             {useBare ? "Rich" : "Bare"}
-          </button>
-          <button type="button" className="cc-dev-toggle" onClick={() => setShowAlarm(true)}>
-            Alarm
           </button>
         </div>
       </div>
 
-      {/* Title + dateline */}
       <div className="cc-title-row">
         <h1 className="cc-title">{recipe.title}</h1>
-        {dateParts.length > 0 && (
-          <p className="cc-dateline">{dateParts.join(" · ")}</p>
-        )}
+        {dateParts.length > 0 && <p className="cc-dateline">{dateParts.join(" · ")}</p>}
       </div>
 
-      {/* Body: cooking mode (hero + rail) or recipe mode (overview) */}
       {mode === "cooking" ? (
         <>
           <div className={`cc-body${hasRail ? "" : " cc-body--solo"}`}>
-            <CookHero hero={hero} parked={parked} totalSteps={steps.length} onMarkDone={() => {}} />
+            <CookHero
+              hero={hero} parked={parked} totalSteps={steps.length}
+              heroTimer={heroTimer}
+              onMarkDone={() => {}}
+              onStartTimer={(idx, dur) => ct.startTimer(idx, dur)}
+              onAdjustTimer={(idx, delta) => ct.adjustTimer(idx, delta)}
+            />
             {hasRail && <CookRail parked={parked} notYet={notYet} />}
           </div>
           <div className="cc-foot">
@@ -74,10 +106,10 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
         </div>
       )}
 
-      {/* Alarm overlay */}
       <AlarmOverlay
-        stepLabel={showAlarm ? "Salmon is ready" : null}
-        onDismiss={() => setShowAlarm(false)}
+        stepLabel={alarmLabel}
+        onDismiss={handleAlarmDismiss}
+        onExtend={handleAlarmExtend}
       />
     </div>
   );
