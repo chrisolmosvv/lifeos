@@ -1,0 +1,285 @@
+/* Cook Companion — the Hero + Rail cook page.
+   Broadsheet: Fraunces for the directive, Inter for controls + metadata.
+   Terracotta used ONCE: the soonest parked heads-up (the one live mark).
+   Hairlines only — no boxes, shadows, rounded corners, fills. */
+
+/* ── Frame: reuse the .cm2 height chain from cookMode2.css ──────────────────
+   The .food-page:has(.cm2) rules (in cookMode2.css) make .cm2 a bounded
+   flex column filling below the global header. We keep .cm2 as the root
+   class so those rules work untouched. These rules REPLACE the old .cm2
+   innards; when CookMode is fully retired, the frame rules move here. */
+
+/* ── Masthead ───────────────────────────────────────────────────────────────── */
+.cc-mast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+.cc-back {
+  background: none; border: none; padding: 0;
+  font-family: var(--font-sans); font-size: 0.82rem;
+  color: var(--ink-muted); cursor: pointer;
+}
+.cc-back:hover { color: var(--ink); }
+.cc-mast-right {
+  display: flex; align-items: center; gap: 14px;
+}
+.cc-mast-status {
+  font-family: var(--font-sans); font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted);
+}
+/* Dev toggles — temporary, removed after step 1 */
+.cc-dev-toggle {
+  background: none; border: 1px solid var(--rule); padding: 3px 10px;
+  font-family: var(--font-sans); font-size: 0.58rem; color: var(--ink-muted);
+  cursor: pointer; letter-spacing: 0.04em;
+}
+
+/* ── Title + dateline ───────────────────────────────────────────────────────── */
+.cc-title-row {
+  padding: 14px 0 10px;
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+.cc-title {
+  font-family: var(--font-serif); font-size: 1.5rem; font-weight: 400;
+  line-height: 1.2; color: var(--ink); margin: 0 0 3px;
+}
+.cc-dateline {
+  font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted);
+  margin: 0;
+}
+
+/* ── Body: hero + rail ──────────────────────────────────────────────────────── */
+.cc-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+.cc-body--solo .cc-hero { border-right: none; }
+
+/* ── Hero ───────────────────────────────────────────────────────────────────── */
+.cc-hero {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem 2rem 2rem 0;
+  border-right: 1px solid var(--rule);
+}
+.cc-hero-meta {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 1rem;
+}
+.cc-hero-num {
+  font-family: var(--font-serif); font-size: 3.5rem; font-weight: 400;
+  line-height: 1; color: var(--ink);
+}
+.cc-hero-of {
+  font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.08em; color: var(--ink-muted);
+}
+.cc-hero-tag {
+  font-family: var(--font-sans); font-size: 0.56rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted);
+}
+.cc-hero-text {
+  font-family: var(--font-serif); font-size: 2rem; font-weight: 400;
+  line-height: 1.35; color: var(--ink); margin: 0 0 1.5rem;
+  max-width: 32ch;
+}
+
+/* ── Heads-up line (the ONE terracotta mark) ────────────────────────────────── */
+.cc-headsup {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 1.5rem;
+}
+.cc-headsup-dot {
+  color: var(--accent); font-size: 0.6rem; line-height: 1;
+}
+.cc-headsup-label {
+  font-family: var(--font-sans); font-size: 0.78rem; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Hero actions ───────────────────────────────────────────────────────────── */
+.cc-hero-actions {
+  display: flex; align-items: center; gap: 14px;
+}
+.cc-done-btn {
+  background: var(--ink); color: var(--paper); border: none;
+  padding: 12px 28px;
+  font-family: var(--font-sans); font-size: 0.76rem; font-weight: 500;
+  letter-spacing: 0.04em; cursor: pointer;
+  transition: opacity 140ms ease;
+}
+.cc-done-btn:hover { opacity: 0.85; }
+
+/* ── Rail ───────────────────────────────────────────────────────────────────── */
+.cc-rail {
+  width: 220px;
+  flex-shrink: 0;
+  padding: 1.5rem 0 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.cc-rail-section {}
+.cc-rail-head {
+  font-family: var(--font-sans); font-size: 0.56rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted);
+  margin-bottom: 10px;
+}
+
+/* ── Parked items ───────────────────────────────────────────────────────────── */
+.cc-parked-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.cc-parked-dot {
+  font-size: 0.5rem; color: var(--ink-muted); flex-shrink: 0; line-height: 1;
+}
+.cc-parked-item.is-urgent .cc-parked-dot { color: var(--accent); }
+.cc-parked-label {
+  flex: 1; min-width: 0;
+  font-family: var(--font-sans); font-size: 0.76rem; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cc-parked-time {
+  font-family: var(--font-sans); font-size: 0.76rem; color: var(--ink-muted);
+  flex-shrink: 0;
+}
+.cc-parked-item.is-urgent .cc-parked-time { color: var(--accent); }
+
+/* ── Not-yet items ──────────────────────────────────────────────────────────── */
+.cc-ahead-item {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 5px 0;
+}
+.cc-ahead-num {
+  font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted);
+  font-variant-numeric: tabular-nums; min-width: 1.4em;
+}
+.cc-ahead-label {
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted);
+}
+
+/* ── Timer (big countdown in hero) ──────────────────────────────────────────── */
+.cc-timer {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 1rem;
+}
+.cc-timer-display {
+  font-family: var(--font-serif); font-size: 3rem; font-weight: 400;
+  color: var(--ink); line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.cc-timer-adjust {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.cc-timer-btn {
+  background: none; border: 1px solid var(--rule); padding: 4px 12px;
+  font-family: var(--font-sans); font-size: 0.62rem; font-weight: 500;
+  color: var(--ink-muted); cursor: pointer;
+  transition: border-color 140ms ease;
+}
+.cc-timer-btn:hover { border-color: var(--ink-muted); color: var(--ink); }
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+.cc-foot {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+}
+.cc-done-count {
+  font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted);
+}
+.cc-recipe-toggle {
+  background: none; border: none; padding: 0;
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted);
+  cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.cc-recipe-toggle:hover { color: var(--ink); }
+
+/* ── Alarm overlay ──────────────────────────────────────────────────────────── */
+.cc-alarm {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper);
+}
+.cc-alarm-inner {
+  text-align: center;
+  max-width: 400px;
+}
+.cc-alarm-ring {
+  font-family: var(--font-serif); font-size: 2.5rem; font-weight: 400;
+  color: var(--ink); margin-bottom: 0.75rem;
+}
+.cc-alarm-label {
+  font-family: var(--font-sans); font-size: 1rem; color: var(--ink-muted);
+  margin: 0 0 2rem;
+}
+.cc-alarm-dismiss {
+  background: var(--ink); color: var(--paper); border: none;
+  padding: 14px 36px;
+  font-family: var(--font-sans); font-size: 0.82rem; font-weight: 500;
+  letter-spacing: 0.04em; cursor: pointer;
+  transition: opacity 140ms ease;
+}
+.cc-alarm-dismiss:hover { opacity: 0.85; }
+
+/* ── Recipe overview overlay ────────────────────────────────────────────────── */
+.cc-overview {
+  position: fixed; inset: 0; z-index: 45;
+  background: var(--paper);
+  overflow-y: auto;
+  padding: 2rem 3rem;
+}
+.cc-overview-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  border-bottom: 1px solid var(--rule); padding-bottom: 12px;
+  margin-bottom: 1.5rem;
+}
+.cc-overview-title {
+  font-family: var(--font-serif); font-size: 1.5rem; font-weight: 400;
+  color: var(--ink); margin: 0;
+}
+.cc-overview-close {
+  background: none; border: none; padding: 0;
+  font-family: var(--font-sans); font-size: 0.76rem; color: var(--ink-muted);
+  cursor: pointer;
+}
+.cc-overview-close:hover { color: var(--ink); }
+.cc-overview-body {
+  display: flex; gap: 3rem;
+  max-width: 760px;
+}
+.cc-overview-section { flex: 1; }
+.cc-overview-label {
+  font-family: var(--font-sans); font-size: 0.58rem; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted);
+  margin-bottom: 10px;
+}
+.cc-overview-ings { list-style: none; margin: 0; padding: 0; }
+.cc-overview-ing {
+  font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.cc-overview-steps {
+  margin: 0; padding: 0 0 0 1.2em;
+}
+.cc-overview-step {
+  font-family: var(--font-serif); font-size: 0.92rem; color: var(--ink);
+  line-height: 1.45; padding: 6px 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
