@@ -9,6 +9,25 @@
 
 ---
 
+## Step 7 Piece 5 — editor remap + confirm surface (2026-07-08)
+
+- **[FIX] Editor remap fixes the live corruption bug.** On load, position-based depends_on and
+  step_position references are resolved to stable per-step identities (_keys). During reorder/add/
+  delete, references follow their target step. At save, _keys recompute to position numbers.
+  Delete rule: a depends_on pointing at a deleted step is DROPPED (empty → null = root); an
+  ingredient's step_position pointing at a deleted step becomes NULL (general). References stayed
+  POSITION-based — no schema change. **Why:** the corruption was live (editing enriched recipes
+  scrambled the graph); _keys are the minimal fix with no Checker gate.
+- **[FEATURE] Confirm surface shows the plan in the steps column.** Each step displays its
+  activity tag, dependency tokens ("starts: after step 2"), and linked ingredient tags. The owner
+  can reassign ingredient→step links (detach ×, or link from "Used throughout" dropdown) and
+  lightly edit dependencies (add/remove "after step N" tokens, or set "at the start" for a root).
+  Serves both import-review and edit. **Why:** the owner needs to see + fix the AI's structure
+  before cooking from it. A per-step token UI, not a graph editor, to protect the calm law.
+  **Trade-off:** no visual lane preview in the editor (the recipe-view timing strip serves that).
+
+---
+
 ## Step 7 smart-layer build — five pieces, schema-free (2026-07-07)
 
 Five additive pieces that repair the recipe structure data and wire it into the cook surfaces.

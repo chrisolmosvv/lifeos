@@ -8,23 +8,17 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
-## Session note — 2026-07-07 — Step 7 smart-layer build ✅ (5 pieces, schema-free)
+## Session note — 2026-07-08 — Step 7 smart-layer build ✅ (6 pieces, schema-free)
 Repaired + wired the recipe structure data that drives the cook companion's smart features.
 Pieces: (1) depends_on deterministic repair + backfill; (2/2b) step_position heuristic (head-noun
 scored) + backfill (61% linked, 39% general); (3) hero trims to current step's ingredients, full
 list one tap away; (4) parallel timing strip wired (cookLanes + cookSchedule now imported — no
-longer dormant). No schema change. recipe-import Edge Function redeployed.
-**★ LIVE RISK — EDITOR CORRUPTION (top debt):**
-depends_on + step_position are POSITION-BASED and the recipe editor does NOT remap them on step
-reorder/add/delete. They now carry real repaired data (read by the hero trim + the timing strip),
-so structurally editing an ENRICHED recipe's steps silently corrupts the graph. Piece 5's editor
-remap is the fix. **Until then: don't reorder/add/delete steps on enriched recipes** (editing
-ingredient/step TEXT is safe).
+longer dormant); (5) editor remap (the corruption fix — references follow steps through reorder/
+add/delete) + confirm surface (show the plan, reassign ingredient links, edit dependencies).
+No schema change. recipe-import Edge Function redeployed.
 **DEBT (Step 7 pile):**
-- The editor remap itself (Piece 5, deferred — the fix for the above).
-- The confirm surface (deferred — would let the owner fix/tighten ingredient→step links).
-- ~39% of ingredients are GENERAL (no step match). The confirm surface would tighten this;
-  re-importing a recipe uses the tightened heuristic and is the current manual workaround.
+- ~39% of ingredients are GENERAL (no step match) — now OWNER-FIXABLE via the confirm surface.
+  Re-importing a recipe uses the tightened heuristic and is the alternative workaround.
 - Perinaise-style long-parenthetical noise matches in the backfill (the import-time path is
   tighter because it uses Gemini's clean `name` field).
 - Live just-in-time cook ordering (deferred — may be unnecessary given the parked rail).

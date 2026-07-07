@@ -115,7 +115,11 @@ house format; because recipe text is not sensitive health data, this rides the
   repaired post-parse (1-indexed self-references shifted down by 1). `step_position`
   is populated by a head-noun-scored heuristic (Gemini refuses to fill it). Both now
   carry real data: depends_on drives the parallel timing strip (cookLanes/cookSchedule,
-  now wired); step_position drives the hero ingredient trim. Corrected 2026-07-07.)**
+  now wired); step_position drives the hero ingredient trim. The recipe editor now
+  SURFACES both — the steps column shows dependency tokens + linked ingredient tags, and
+  the owner can reassign links + edit deps. The editor REMAPS references through reorder/
+  add/delete (no longer corrupts the graph). RecipeEditor was split: EditorSteps holds
+  the steps + confirm surface. Corrected 2026-07-08.)**
 - **Recipe macros are computed from ingredients via the food DB**, **no
   recipe-level override.** An ingredient is therefore a **structured** thing —
   `{DB match, amount, unit}` — not free text, and recipe entry reuses the same
@@ -366,6 +370,7 @@ Weight resolution and food matching were improved across four slices. Current tr
 - Cook engine: `cookReplay.js`, `cookEventStore.js`, `useCookEvents.js`.
 - Scheduler (WIRED, corrected 2026-07-07 — was dormant): `cookLanes.js`, `cookSchedule.js`.
   Imported by RecipeOverview for the parallel timing strip. Computes lanes + critical-path offsets.
+- Editor: `RecipeEditor.jsx` (split; corrected 2026-07-08), `EditorSteps.jsx` (confirm surface).
 - Cookbook: `CookbookRegister.jsx`, `register.css`.
 - Day view: `CalorieArc.jsx`, `MacroRings.jsx`, `DayView.jsx`, `LoggerMasthead.jsx`.
 - Week/Month: `WeekMonthView.jsx`, `foodCalc.js` (`perGoalHits`).
