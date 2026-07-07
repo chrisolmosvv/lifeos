@@ -8,7 +8,7 @@ export default function EditorSteps({ steps, onEditText, onMove, onRemove, onAdd
       <h3 className="red-h">Steps</h3>
       <ol className="red-steps">
         {steps.map((s, i) => (
-          <li key={i} className="red-step">
+          <li key={s._key ?? i} className="red-step">
             <textarea rows={2} value={typeof s.text === "string" ? s.text : ""} placeholder={`Step ${i + 1}`}
               onChange={(e) => onEditText(i, e.target.value)} />
             <div className="red-step-ctl">

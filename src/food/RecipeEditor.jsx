@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchRecipe } from "./recipeLoad";
 import { recipeMacros } from "./recipeCalc";
 import { entryMacros } from "./foodCalc";
@@ -11,19 +11,36 @@ import ManualMacrosPanel from "./ManualMacrosPanel";
 import EditorSteps from "./EditorSteps";
 import "./cookbook.css";
 
-// RecipeEditor (V2 P6) — create + edit + the import review (same form), now TWO-COLUMN (ingredients +
-// live macros left, steps right). Ingredient add/match MOUNTS the converged finder (recipeFinderConfig
-// — portions ON, no-macros/free-text hatch ON, meals OFF) — the SAME <Finder> as the logger, not a
-// clone (IngredientPicker retired). A matched ingredient shows its food + kcal (spot-check); a flagged
-// one shows "needs a match" → the finder (pre-filled) or "text" (no_macros). Edit-rewrites-children
-// is preserved (the write layer). Save → onSave(recipe incl source_url, ingredients, steps).
+// RecipeEditor — create + edit + import review. Step 7 P5: the REMAP — steps carry a stable _key
+// so depends_on + step_position references follow their target through reorder/add/delete. At save,
+// _keys are converted back to position numbers.
+
+// Position ↔ _key helpers. Each step gets a _key on load; depends_on + step_position are stored as
+// _keys in editor state, converted back to positions only at save.
+function keySteps(rawSteps, counter) {
+  const ks = rawSteps.map((s) => ({ ...s, _key: counter.current++ }));
+  return ks.map((s) => {
+    if (!Array.isArray(s.depends_on) || !s.depends_on.length) return s;
+    const m = s.depends_on.filter((p) => p >= 0 && p < ks.length).map((p) => ks[p]._key);
+    return { ...s, depends_on: m.length ? m : null };
+  });
+}
+function keyIngredients(ings, ks) {
+  return ings.map((ing) => ing.step_position != null && ing.step_position >= 0 && ing.step_position < ks.length
+    ? { ...ing, step_position: ks[ing.step_position]._key } : { ...ing });
+}
+
 export default function RecipeEditor({ recipeId, initialDraft, initialItemsById, onSave, onCancel, onDelete, saving }) {
+  const keyRef = useRef(0);
   const [title, setTitle] = useState(initialDraft?.title || "");
   const [servings, setServings] = useState(initialDraft?.servings ?? "");
   const [prep, setPrep] = useState(initialDraft?.prep_minutes ?? "");
   const [cook, setCook] = useState(initialDraft?.cook_minutes ?? "");
-  const [ingredients, setIngredients] = useState(initialDraft?.ingredients || []);
-  const [steps, setSteps] = useState(initialDraft?.steps || []);
+  const [ingredients, setIngredients] = useState(() => {
+    const ks = keySteps(initialDraft?.steps || [], keyRef);
+    return keyIngredients(initialDraft?.ingredients || [], ks);
+  });
+  const [steps, setSteps] = useState(() => keySteps(initialDraft?.steps || [], keyRef));
   const [itemsById, setItemsById] = useState(initialItemsById || {});
   const [sourceUrl, setSourceUrl] = useState(initialDraft?.source_url ?? null);
   const [finderAt, setFinderAt] = useState(null); // null | { index: number|null, query }
@@ -43,8 +60,11 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
         setPrep(r.recipe.prep_minutes ?? "");
         setCook(r.recipe.cook_minutes ?? "");
         setSourceUrl(r.recipe.source_url ?? null);
-        setIngredients(r.ingredients.map((i) => ({ food_item_id: i.food_item_id, raw_text: i.raw_text, amount: i.amount, unit: i.unit, no_macros: i.no_macros, manual_macros: i.manual_macros, step_position: i.step_position ?? null })));
-        setSteps((r.steps || []).map((s) => ({ text: typeof s.text === "string" ? s.text : String(s.text ?? ""), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null })));
+        const rawSteps = (r.steps || []).map((s) => ({ text: typeof s.text === "string" ? s.text : String(s.text ?? ""), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null }));
+        const ks = keySteps(rawSteps, keyRef);
+        setSteps(ks);
+        const rawIngs = r.ingredients.map((i) => ({ food_item_id: i.food_item_id, raw_text: i.raw_text, amount: i.amount, unit: i.unit, no_macros: i.no_macros, manual_macros: i.manual_macros, step_position: i.step_position ?? null }));
+        setIngredients(keyIngredients(rawIngs, ks));
         setItemsById(r.itemsById || {});
         setLoading(false);
       })
@@ -73,7 +93,21 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   const setManual = (i, m) => { setIngredients((xs) => xs.map((x, j) => (j === i ? { ...x, manual_macros: m, no_macros: false, food_item_id: null } : x))); setManualAt(null); };
   const removeIng = (i) => setIngredients((xs) => xs.filter((_, j) => j !== i));
   const moveStep = (i, d) => setSteps((xs) => { const j = i + d; if (j < 0 || j >= xs.length) return xs; const c = [...xs]; [c[i], c[j]] = [c[j], c[i]]; return c; });
-
+  // Delete a step: remove it AND clean up all references pointing at it.
+  // depends_on: drop the deleted _key (empty → null = root). step_position: null (general).
+  const deleteStep = (i) => {
+    const dKey = steps[i]._key;
+    setSteps((xs) => {
+      const kept = xs.filter((_, j) => j !== i);
+      return kept.map((s) => {
+        if (!Array.isArray(s.depends_on)) return s;
+        const fixed = s.depends_on.filter((k) => k !== dKey);
+        return { ...s, depends_on: fixed.length > 0 ? fixed : null };
+      });
+    });
+    setIngredients((xs) => xs.map((ing) => ing.step_position === dKey ? { ...ing, step_position: null } : ing));
+  };
+  const addStep = () => setSteps((xs) => [...xs, { text: "", _key: keyRef.current++, timer_seconds: null, tag: null, depends_on: null }]);
   const foodName = (id) => {
     const item = itemsById[id];
     if (!item) return "";
@@ -107,12 +141,19 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   };
 
   const valid = title.trim() !== "";
-  const submit = () =>
+  const submit = () => {
+    // Convert _keys back to positions for save. Only non-empty steps survive.
+    const saved = steps.filter((s) => String(s.text ?? "").trim() !== "");
+    const keyToPos = {}; saved.forEach((s, i) => { keyToPos[s._key] = i; });
     onSave(
       { title: title.trim(), servings: servings === "" ? null : Number(servings), prep_minutes: prep === "" ? null : Number(prep), cook_minutes: cook === "" ? null : Number(cook), source_url: sourceUrl },
-      ingredients.map((i) => ({ food_item_id: i.food_item_id ?? null, raw_text: i.raw_text ?? null, amount: i.amount ?? null, unit: i.unit ?? null, manual_macros: i.manual_macros ?? null, no_macros: !!i.no_macros, step_position: i.step_position ?? null })),
-      steps.filter((s) => String(s.text ?? "").trim() !== "").map((s) => ({ text: String(s.text ?? "").trim(), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null })),
+      ingredients.map((i) => ({ food_item_id: i.food_item_id ?? null, raw_text: i.raw_text ?? null, amount: i.amount ?? null, unit: i.unit ?? null, manual_macros: i.manual_macros ?? null, no_macros: !!i.no_macros, step_position: i.step_position != null && keyToPos[i.step_position] != null ? keyToPos[i.step_position] : null })),
+      saved.map((s) => {
+        const deps = Array.isArray(s.depends_on) ? s.depends_on.map((k) => keyToPos[k]).filter((p) => p != null) : null;
+        return { text: String(s.text ?? "").trim(), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: deps && deps.length > 0 ? deps : null };
+      }),
     );
+  };
 
   if (loading) return <div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Loading recipe…</span></div>;
 
@@ -180,8 +221,8 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
         <EditorSteps steps={steps}
           onEditText={(i, text) => setSteps((xs) => xs.map((x, j) => (j === i ? { ...x, text } : x)))}
           onMove={moveStep}
-          onRemove={(i) => setSteps((xs) => xs.filter((_, j) => j !== i))}
-          onAdd={() => setSteps((xs) => [...xs, { text: "" }])}
+          onRemove={deleteStep}
+          onAdd={addStep}
         />
       </div>
 
