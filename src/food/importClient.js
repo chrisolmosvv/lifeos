@@ -67,6 +67,39 @@ export async function importRecipe({ text, url }) {
   };
 }
 
+// Bracket-gram fallback: when resolvePortion can't resolve, scan raw_text for a gram figure.
+// "(about 450g)" → 450. "125g to 150g each" with count 4 → midpoint 137.5 × 4 = 550.
+// Only acts on g/grams/gram/kg; ignores non-gram brackets. No "each" → total (safer under-estimate).
+function extractBracketGrams(rawText, parsedAmount) {
+  if (!rawText || typeof rawText !== "string") return null;
+  const t = rawText.toLowerCase();
+  const count = typeof parsedAmount === "number" && parsedAmount > 0 ? parsedAmount : 1;
+
+  // Range: "125g to 150g" / "125-150g" / "125 g – 150 g"
+  const range = t.match(/(\d+(?:\.\d+)?)\s*(?:g|grams?|kg)?\s*(?:to|[-–—])\s*(\d+(?:\.\d+)?)\s*(g|grams?|kg)\b/);
+  if (range) {
+    let lo = parseFloat(range[1]);
+    let hi = parseFloat(range[2]);
+    if (range[3] === "kg") { lo *= 1000; hi *= 1000; }
+    const mid = (lo + hi) / 2;
+    const tail = t.slice(t.indexOf(range[0]) + range[0].length);
+    if (/\beach\b/.test(tail.slice(0, 40)) && count > 1) return mid * count;
+    return mid;
+  }
+
+  // Single: "450g" / "about 450 grams" / "1.5kg"
+  const single = t.match(/(\d+(?:\.\d+)?)\s*(g|grams?|kg)\b/);
+  if (single) {
+    let val = parseFloat(single[1]);
+    if (single[2] === "kg") val *= 1000;
+    const tail = t.slice(t.indexOf(single[0]) + single[0].length);
+    if (/\beach\b/.test(tail.slice(0, 40)) && count > 1) return val * count;
+    return val;
+  }
+
+  return null;
+}
+
 async function matchOne(ing, itemsById) {
   const base = { parsedName: ing.name || ing.raw_text || "", raw_text: ing.raw_text || ing.name || "", no_macros: false, step_position: ing.step_number ?? null };
   try {
@@ -81,7 +114,7 @@ async function matchOne(ing, itemsById) {
     if (!hit) return { ...base, food_item_id: null, amount: null, unit: null };
     const item = await ensureFoodItem(hit);
     itemsById[item.id] = { ...hit, food_item_id: item.id };
-    const grams = resolvePortion(ing.name, ing.amount, ing.unit);
+    const grams = resolvePortion(ing.name, ing.amount, ing.unit) ?? extractBracketGrams(ing.raw_text, ing.amount);
     return { ...base, food_item_id: item.id, amount: grams, unit: grams != null ? "g" : null };
   } catch {
     return { ...base, food_item_id: null, amount: null, unit: null };

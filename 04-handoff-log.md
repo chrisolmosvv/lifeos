@@ -33,6 +33,45 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Recipe Import Accuracy Slice 2: bracket-gram extraction (SRC-ONLY)
+
+WHAT CHANGED:
+- When the normal resolver can't turn an ingredient into grams, the importer now
+  scans the raw_text for a bracketed gram figure before giving up.
+  "4 chicken breasts (about 450g)" → 450g (was "set amount").
+  "4 pork steaks (125g to 150g each)" → midpoint 137.5 × 4 = 550g.
+- Handles g/grams/gram/kg. Ranges take the midpoint. "each" multiplies by the
+  parsed count. No "each" → the figure is treated as total (the safer
+  under-estimate). Non-gram brackets like "(2 cans)" are ignored.
+- Fires ONLY as a fallback (the ?? operator) — can never disturb an ingredient
+  that already resolves.
+
+FILES TOUCHED: src/food/importClient.js (only file)
+
+HOW TO VERIFY:
+1. Re-import Creamy chicken pasta → "4 cooked chicken breasts (about 450g)"
+   should show 450g (not "set amount"). Per-serving macros should jump and the
+   "unestimated" count should drop.
+2. Re-import French pork schnitzel → "4 pork steaks (125g to 150g each)" should
+   show ~550g.
+3. Regression: anything that already resolved (eggs, oils, onions, flour, panko)
+   should be unchanged — the fallback only fires when the resolver returns null.
+
+KNOWN GAPS / RISKS:
+- Ambiguity: "2 chicken breasts (200g)" with no "each" defaults to 200g total
+  (not 400g). This is the owner-chosen under-estimate default.
+- Does not extract oz/lb figures (only grams/kg). Rare in metric-site recipes.
+- If Gemini embeds unrelated gram-like numbers in raw_text (e.g. nutrition info),
+  the regex could pick them up. In practice Gemini's raw_text is the ingredient
+  line only, not nutrition data.
+
+NEXT: Slice 3 — zero-kcal OFF match fix (Fix 5: penalise zero-kcal reranker
+picks or filter them). Separate concern (reranker, not resolver).
+
+FOR THE CHECKER: n/a — no schema change. Pure src (importClient.js).
+
+---
+
 ### 2026-07-07 — Recipe Import Accuracy Slice 1: three resolver fixes (SRC-ONLY)
 
 WHAT CHANGED:
