@@ -33,6 +33,65 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-08 — Step 7 Piece 5: editor remap + confirm surface (SRC-ONLY, 3 commits)
+
+WHAT CHANGED (three ordered commits):
+1. **Split** — extracted EditorSteps from RecipeEditor (pure move, no behaviour
+   change). RecipeEditor 219→209 lines.
+2. **Remap** — steps carry a stable _key in editor state. On load, position-based
+   depends_on + step_position are converted to _keys. During reorder/add/delete,
+   references follow their target step. At save, _keys convert back to positions.
+   Delete rule: depends_on pointing at a deleted step is dropped (empty → null =
+   root); step_position pointing at a deleted step becomes null (general).
+   **Row-verified on the bolognese**: reorder + delete → zero self-refs, zero
+   dangling, fork+merge graph intact, all 20 ingredients linked to correct steps.
+3. **Confirm surface** — the steps column now shows the plan: each step's activity
+   tag, dependency tokens ("starts: after step 2"), and linked ingredient tags.
+   The owner can reassign ingredient→step links and edit dependencies:
+   - Reassign: each linked ingredient has "×" to unlink (→ general); general
+     ingredients have a "→ step N" dropdown to link.
+   - Dependencies: existing deps show as removable "after N ×" tokens; a "+"
+     select adds a new dep (any earlier step or "at the start" for a root).
+   - "Used throughout" section shows general ingredients at the bottom.
+   Serves both import-review and edit. Calm hairline styling.
+
+FILES TOUCHED:
+- src/food/RecipeEditor.jsx (remap + new callbacks)
+- src/food/EditorSteps.jsx (new file → confirm surface)
+- src/food/cookbook.css (confirm-surface styles)
+
+THE REMAP APPROACH:
+- On load: each step gets a _key (counter via useRef). depends_on positions are
+  mapped to _keys. step_position positions are mapped to _keys.
+- During edit: moveStep swaps array elements (swap is _key-safe). deleteStep
+  filters + drops all references to the deleted _key. addStep assigns a new _key.
+- At save: a keyToPos map converts _keys back to position numbers (array index
+  after filtering empty-text steps).
+
+DELETE RULE: depends_on value pointing at a deleted step → dropped from the array
+(if that empties the array → null = root step). step_position pointing at a
+deleted step → null (general = shown under every step in the hero).
+
+HOW VERIFIED:
+- Remap row-verified on the bolognese (the enriched recipe with fork+merge):
+  reordered two steps + deleted one → saved → read back from DB. Zero self-refs,
+  zero dangling, graph intact, all 20 ingredients on correct steps.
+- Build passes. All files under 250 lines (RecipeEditor 248, EditorSteps 108).
+
+KNOWN GAPS / RISKS:
+- The confirm surface is functional but minimal — a first-pass calm attempt. The
+  owner may want to adjust the interaction or typography after eyeballing it.
+- Dependency editing is fully general (add/remove individual deps, set root) but
+  not visually guided (no lane preview — that's the recipe-view timing strip).
+- The "Used throughout" section truncates long ingredient names to ~22 chars.
+
+NEXT: the close — prove-dead sweep + docs. The editor-corruption warning in the
+roadmap can be REMOVED (the remap fixes it). The confirm surface closes Piece 5.
+
+FOR THE CHECKER: n/a — no schema change. Pure src (3 commits).
+
+---
+
 ### 2026-07-07 — Step 7 Piece 4: parallel timing strip (SRC-ONLY — scheduler now WIRED)
 
 WHAT CHANGED:
