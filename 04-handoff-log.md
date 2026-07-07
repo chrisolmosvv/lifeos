@@ -33,6 +33,71 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Step 7 Piece 2: step_position heuristic (Edge Function + data backfill)
+
+WHAT CHANGED:
+- Each ingredient is now linked to the step that uses it (step_position) via a
+  deterministic heuristic. Gemini refuses to fill this; the heuristic does it
+  by matching the ingredient's identity words against step text.
+- Applied at import time (Edge Function, right after the depends_on repair) and
+  backfilled across all 107 existing ingredients.
+
+FILES TOUCHED:
+- supabase/functions/recipe-import/index.ts (ING_STRIP + ingIdentity +
+  assignStepPositions + call site)
+
+THE HEURISTIC RULE:
+1. Extract identity words from the ingredient's name: lowercase, split on
+   non-alpha, keep 3+ char words, strip ~60 prep/form/size/unit modifiers
+   (ground, dried, large, cloves, leaves, etc.).
+2. For each step, check if ANY identity word appears as a WHOLE WORD in the
+   step text (regex \b word boundary, plural-tolerant via optional trailing
+   "e?s" — so "onion" matches "onions", "tomato" matches "tomatoes").
+3. Assign step_position = the FIRST (earliest) matching step.
+4. If NO step matches → null (general / used throughout). Honest omission.
+
+PER-RECIPE LINK REPORT:
+- Bolognese #1 (20 ingredients): 20 linked, 0 general. ~5 ingredients hit
+  step 0 when they should hit a later step (carrots, rosemary, basil, tomato
+  purée, chilli) — backfill artefact from matching raw_text instead of
+  Gemini's cleaner name field. Fresh imports will be tighter.
+- Nandos (22 ingredients): 18 linked, 4 general. The 4 general (oregano,
+  coriander, brown sugar, turmeric) are honest — seasoning-mix items not named
+  in any step. 2 false positives: chicken stock → step 0 (matched "chicken" in
+  "Season chicken" — should be step 3); Perinaise → step 0 (condiment, should
+  be general).
+- Overall: 77 linked / 30 general across all 8 recipes (72% fill rate).
+  ~10% of links are early-step false positives from backfill raw_text noise.
+  Fresh imports use Gemini's name field and will be tighter.
+
+REDEPLOY: recipe-import deployed to Frankfurt (cntlptuacsujbdtwvbis). OPTIONS → 200
+confirmed. verify_jwt = true pinned in config.toml (JWT-authed).
+
+HOW VERIFIED:
+- Backfill: DB read-back confirms 77 linked, 30 general (was 0 linked / 107
+  general). Per-recipe breakdown reviewed ingredient by ingredient.
+- Import-time: code path confirmed — assignStepPositions is line 247, one line
+  after repairDeps, same handler, same data flow. No live test-import needed
+  (avoids throwaway recipe clutter).
+- Recipe count unchanged at 8 (no test debris).
+
+KNOWN GAPS / RISKS:
+- The backfill used raw_text (the DB field) instead of Gemini's name (not
+  stored). This introduces more false positives than the import-time path.
+  A re-import of any recipe would produce tighter links.
+- "Chicken stock" matches step 0 (season chicken) on the word "chicken" — a
+  false positive from word overlap. The confirm surface (future piece) would
+  let the owner fix these.
+- File is at 250 lines (the ceiling). The next Edge Function addition must
+  split or extract a helper.
+
+NEXT: Piece 3 — the hero-trim display (CookHero now has step_position data;
+trim the ingredient list to show only the current step's ingredients).
+
+FOR THE CHECKER: n/a — no schema change. Edge Function + data backfill only.
+
+---
+
 ### 2026-07-07 — Step 7 Piece 1: depends_on repair pass (Edge Function + data backfill)
 
 WHAT CHANGED:
