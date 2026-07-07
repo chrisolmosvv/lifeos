@@ -633,6 +633,54 @@
 .red-col { min-width: 0; }
 @media (max-width: 640px) { .red-cols { grid-template-columns: 1fr; gap: 16px; } }
 
+/* ── Step 7 P5 — confirm surface (plan view in the editor steps column) ────── */
+.red-step--plan { flex-direction: column; align-items: stretch; }
+.red-step-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.red-step-num { font-family: var(--font-sans); font-size: 0.65rem; font-weight: 600; color: var(--ink-muted); min-width: 1.2em; }
+.red-step-tag { font-family: var(--font-sans); font-size: 0.6rem; color: var(--ink-muted); font-style: italic; }
+.red-step-spacer { flex: 1; }
+.red-step-after {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  margin-top: 4px; font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted);
+}
+.red-after-label { font-style: italic; }
+.red-after-val { font-style: italic; }
+.red-dep-token {
+  display: inline-flex; align-items: center; gap: 2px;
+  border-bottom: 1px solid var(--rule-faint); padding: 1px 0;
+}
+.red-dep-token button {
+  background: none; border: none; font-size: 0.55rem; color: var(--rule); cursor: pointer; padding: 0 2px;
+}
+.red-dep-token button:hover { color: var(--ink); }
+.red-dep-add {
+  background: none; border: 1px solid var(--rule-faint); font-family: var(--font-sans);
+  font-size: 0.58rem; color: var(--ink-muted); cursor: pointer; padding: 1px 4px; border-radius: 2px;
+}
+.red-step-ings {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+}
+.red-ing-token {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-family: var(--font-sans); font-size: 0.6rem; color: var(--ink-muted);
+  border-bottom: 1px solid var(--rule-faint); padding: 1px 0;
+}
+.red-ing-token button {
+  background: none; border: none; font-size: 0.5rem; color: var(--rule); cursor: pointer; padding: 0 2px;
+}
+.red-ing-token button:hover { color: var(--ink); }
+.red-general { margin-top: 12px; }
+.red-general-h {
+  font-family: var(--font-sans); font-size: 0.62rem; color: var(--rule);
+  font-style: italic; display: block; margin-bottom: 4px;
+}
+.red-general-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.red-ing-token--general { gap: 2px; }
+.red-ing-assign {
+  background: none; border: 1px solid var(--rule-faint); font-family: var(--font-sans);
+  font-size: 0.52rem; color: var(--ink-muted); cursor: pointer; padding: 0 3px; border-radius: 2px;
+}
+
 /* Session-surfacing C — the done-cook card on the recipe page (calm hairline; terracotta on "Log it"). */
 .dcc { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; margin: 4px 0 14px; }
 .dcc-text { font-family: var(--font-sans); font-size: 0.85rem; color: var(--ink); }

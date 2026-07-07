@@ -218,12 +218,10 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
           </div>
         </div>
 
-        <EditorSteps steps={steps}
-          onEditText={(i, text) => setSteps((xs) => xs.map((x, j) => (j === i ? { ...x, text } : x)))}
-          onMove={moveStep}
-          onRemove={deleteStep}
-          onAdd={addStep}
-        />
+        <EditorSteps steps={steps} ingredients={ingredients} onEditText={(i, text) => setSteps((xs) => xs.map((x, j) => (j === i ? { ...x, text } : x)))}
+          onMove={moveStep} onRemove={deleteStep} onAdd={addStep}
+          onSetDeps={(i, deps) => setSteps((xs) => xs.map((x, j) => (j === i ? { ...x, depends_on: deps } : x)))}
+          onSetIngStep={(ingIdx, key) => setIngredients((xs) => xs.map((x, j) => (j === ingIdx ? { ...x, step_position: key } : x)))} />
       </div>
 
       <div className="red-actions">
