@@ -8,6 +8,24 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-07 — Recipe import accuracy pass ✅ (src + Edge Function)
+Six fixes across four slices making recipe import weights + food matches more accurate:
+(1) fractional items resolve; (2) food-name-as-unit fallback; (3) light-dry density classes
++ honest flag for unknowns; (4) bracket-gram extraction from raw_text; (5) zero-kcal junk
+drop when a real match exists; (6) ranker skip on clear match + never-strand fallback.
+Files: `portions.js`, `importClient.js`, `food-search/normalize.ts`, `food-search/index.ts`.
+No schema. food-search redeployed.
+**DEBT / RESIDUAL SHARP EDGES (accuracy pile):**
+- **Unlisted dry goods in volume** now flag "needs a weight" instead of guessing water density.
+  Accepted — the owner types the number for off-list items.
+- **Wrong-variant risk** from Fix 6's aggressive ranker skip (cube instead of liquid stock). Easy
+  future lever: flag auto-picked matches at the confirm step if it proves annoying.
+- **Skinless/qualifier accuracy drift** — the ranker doesn't see qualifier words ("skinless
+  boneless chicken thighs" → matches chicken thighs with skin at ~210 kcal; real skinless ~149).
+  Noted, out of scope for this pass.
+- **Honey/syrup** resolve at water density (15g/tbsp; real ~21g). Close enough to not flag, but
+  a "thick liquid" density class could refine later.
+
 ## Session note — 2026-07-03 — Global cook-session header marker ✅ (src-only)
 A pulsing terracotta dot + live elapsed time in the nav band for active cook sessions,
 mirroring the Focus running-session marker. Tap → popover with elapsed / Open / Finish.

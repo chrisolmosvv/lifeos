@@ -334,14 +334,26 @@ db/28_food_tables.sql            — the 5 tables                       [F1]
   days are gaps, not zeros. Sparse state (< 2 logged days) shows a calm "not enough yet"
   message, no fake stats.
 
-### Recipe import & matching (fixed — the engine was sound)
-The matching logic is correct; failures were stage-handoff bugs:
-- **Suppressed-staple bug:** import now uses results[0] when the finder suppresses alternatives.
-- **Null-unit → items:** null unit + known item weight → items; unknown → honest flag.
-- **Count-word units:** clove/s, large/medium/small, piece/s, etc. → item resolution.
-- **Density classes:** vegetable (~150g/cup), spice (~2g/tsp) added.
-- **Rate-limit batching:** 6-at-a-time with 1.2s gaps (Gemini free-tier 15 req/min).
-- **Reranker:** soft-prefers English-language entries; deterministic fallback intact.
+### Recipe import & matching (corrected 2026-07-07 — accuracy pass, six fixes)
+Weight resolution and food matching were improved across four slices. Current truth:
+- **Fractional items resolve:** "½ onion" → 55g (0 < amount ≤ 24, integer-only guard removed).
+- **Food-name-as-unit fallback:** when Gemini puts the food name in the unit slot (unit="lemon"),
+  the resolver tries the item-weight table before giving up.
+- **Light-dry density classes:** breadcrumbs/panko (60g/cup), oats (85g/cup), chopped nuts
+  (120g/cup), grated hard cheese (100g/cup). Common liquids extended (vinegar, sauce, honey,
+  syrup, paste, purée). **Unknown dry goods in cups are FLAGGED "needs a weight"** — the old
+  water-density default (240g/cup) is removed (honest-omission).
+- **Bracket-gram extraction:** when the resolver can't handle the parsed amount/unit, raw_text
+  is scanned for "(about 450g)" or "(125g to 150g each)" as a last resort. No "each" → total.
+- **Zero-kcal junk dropped** pre-rerank when an unbranded calorie-bearing close-name match exists
+  (rescues cumin, paprika onto USDA real data). Genuine zeros (salt) kept.
+- **Ranker skipped on clear name match** (aggressive: every core query word appears as a whole word
+  in the top candidate's name → take it, no Gemini call). Saves AI budget, eliminates most
+  rate-limit strandings. **Never-strand fallback:** when the ranker can't pick but candidates
+  exist, take results[0] by merge priority (Basics → saved → OFF → USDA). Only flag "needs a
+  match" when genuinely no candidates.
+- **Rate-limit batching:** 6-at-a-time with 1.2s gaps (still in place, less critical now that
+  most queries skip the ranker).
 - **Label cleanup:** `cleanLabel()` strips malformed punctuation from raw_text only.
 
 ### Key files (corrected 2026-07-07)
@@ -353,7 +365,8 @@ The matching logic is correct; failures were stage-handoff bugs:
 - Day view: `CalorieArc.jsx`, `MacroRings.jsx`, `DayView.jsx`, `LoggerMasthead.jsx`.
 - Week/Month: `WeekMonthView.jsx`, `foodCalc.js` (`perGoalHits`).
 - Import/match: `importClient.js`, `portions.js`, `cleanName.js`; Edge:
-  `food-search/rerank.ts`, `recipe-import/index.ts`, `food-search/saved.ts`.
+  `food-search/normalize.ts`, `food-search/rerank.ts`, `food-search/index.ts`,
+  `recipe-import/index.ts`, `food-search/saved.ts`.
 
 ---
 

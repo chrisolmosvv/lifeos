@@ -9,6 +9,41 @@
 
 ---
 
+## Recipe import accuracy pass — six fixes (2026-07-07)
+
+Six additive fixes across the import weight-resolver, food-search filter, and matching fallback.
+Src + Edge Function; no schema.
+
+- **[FIX 1] Fractional item counts now resolve.** "½ onion" → 55g (was "set amount").
+  **Why:** the old integer-only guard rejected valid fractions. The 0 < amount ≤ 24 bound stays.
+- **[FIX 2] Food-name-as-unit falls back to the item-weight table.** "½ lemon" with unit="lemon"
+  → 30g (was "set amount"). **Why:** Gemini sometimes puts the food name where the unit goes;
+  the item-weight table already knows a lemon weighs ~60g. Only fires as a fallback.
+- **[FIX 3] Light-dry density classes added; unknown dry-in-volume is FLAGGED, never water-defaulted
+  (honest-omission).** Breadcrumbs/panko 60g/cup, oats 85g/cup, chopped nuts 120g/cup, grated hard
+  cheese 100g/cup. Common liquids (vinegar, sauce, honey, syrup, paste, purée) added to the liquid
+  class. An unlisted food in cups now says "needs a weight" instead of silently guessing water
+  (240g/cup). **Why:** panko at water density was 6× overweight (360g instead of 90g); honest
+  flagging is the owner-chosen behaviour. **Trade-off:** any unlisted dry good needs a manual weight.
+- **[FIX 4] Bracketed grams read from raw_text as a last-resort fallback.** "(about 450g)" → 450g;
+  "(125g to 150g each)" → midpoint × count. No "each" → total (the safer under-estimate).
+  **Why:** Gemini keeps the count ("4 chicken breasts") and drops the bracket grams; this retrieves
+  them. **Trade-off:** ambiguous "(200g)" with no "each" defaults to total, not per-item.
+- **[FIX 5] Zero-calorie junk dropped ONLY when a real close-name match exists.** Crowd-sourced
+  0-kcal OFF entries (wrong data) are removed when an unbranded calorie-bearing candidate with the
+  same core food words exists (e.g. "Spices, cumin seed" at 375 kcal rescues cumin). If no such
+  match exists (salt, water, or only spurious hits), zeros stay — honest omission. **Why:** cumin
+  and paprika were silently logging 0 calories. **Trade-off:** none — the filter is additive.
+- **[FIX 6] Ranker skipped on a clear name match (aggressive, owner-chosen) + never-strand
+  fallback.** When the top candidate clearly matches by name (every core food word appears as a
+  whole word), skip the Gemini call. When the ranker can't pick but candidates exist, take the top
+  candidate by merge priority (Basics → saved → OFF → USDA) instead of flagging "needs a match."
+  **Why:** saves AI budget → fewer rate-limit strandings → no more phantom misses on long recipes;
+  imports are faster. **Trade-off:** a wrong variant can occasionally auto-pick (cube instead of
+  liquid stock); the owner's confirm step is the catch.
+
+---
+
 ## Cook running-marker mirrors the Focus pattern — 2026-07-03
 
 - **[FEATURE] Global cook-session header marker shipped.** A running cook now shows the same
