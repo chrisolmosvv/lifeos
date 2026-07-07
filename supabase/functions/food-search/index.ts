@@ -21,7 +21,7 @@
 //   OFF_CONTACT_EMAIL — the contact in OFF's User-Agent (built in off.ts).
 //   SUPABASE_URL / SUPABASE_ANON_KEY — auto-injected; the owner-scoped food_items read.
 
-import { type FoodCandidate, isBasic, mergeDedupeOrder, dropZeroJunk, type SourceResult } from "./normalize.ts";
+import { type FoodCandidate, isBasic, mergeDedupeOrder, dropZeroJunk, isClearNameMatch, type SourceResult } from "./normalize.ts";
 import { searchSaved } from "./saved.ts";
 import { searchOff } from "./off.ts";
 import { searchUsda, usdaConfigured } from "./usda.ts";
@@ -113,7 +113,11 @@ Deno.serve(async (req) => {
   // common-sense top-3 (indices into `results`, ADDITIVE — records are never mutated). ANY rerank
   // failure / FOOD_RERANK_OFF → top3 null → the deterministic saved/Basics → OFF → USDA order stands.
   const dbSuppressed = confidentStaple(query, results);
-  const top3 = dbSuppressed ? null : await rerankTop(query, results);
+  // Skip the reranker when the top candidate already clearly matches the query by name (same
+  // core-word test as the zero-drop filter). Saves a Gemini call on obvious picks like
+  // "chicken stock" → "Chicken Stock". dbSuppressed stays unchanged (Finder UI unaffected).
+  const clearMatch = results.length > 0 && isClearNameMatch(query, results[0]);
+  const top3 = (dbSuppressed || clearMatch) ? null : await rerankTop(query, results);
 
   // Per-source outcome: a count when reachable, "unavailable" when the API failed/timed
   // out, "not_configured" when the USDA key isn't set (OFF/saved still worked).

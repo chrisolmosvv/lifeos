@@ -144,6 +144,16 @@ export function dropZeroJunk(query: string, candidates: FoodCandidate[]): FoodCa
   return hasCloseMatch ? candidates.filter((c) => !isZero(c)) : candidates;
 }
 
+// Clear name match: does the candidate's name contain every core query word as a whole word?
+// Same coreWords + word-boundary logic as the zero-drop test. Used to skip the reranker when
+// the top candidate obviously matches (saving a Gemini call on clear picks like "chicken stock").
+export function isClearNameMatch(query: string, candidate: FoodCandidate): boolean {
+  const core = coreWords(query);
+  if (core.length === 0) return false;
+  const name = candidate.name.toLowerCase();
+  return core.every((w) => new RegExp(`\\b${w}\\b`).test(name));
+}
+
 // ── Merge + dedupe ──────────────────────────────────────────────────────────
 // Merge the three sources into one ordered list with no duplicate of the SAME food.
 //   • Order: curated BASICS staples FIRST (P1 — the trusted generics lead), then the rest of
