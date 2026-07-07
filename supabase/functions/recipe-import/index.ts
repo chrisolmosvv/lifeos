@@ -166,11 +166,8 @@ function normalise(r: Record<string, unknown>) {
   };
 }
 
-// Repair depends_on: Gemini sometimes emits 1-INDEXED step numbers (step at position N has
-// depends_on containing N — a self-reference). When any step self-references, the whole recipe
-// is treated as 1-indexed: subtract 1 from every value in every step's depends_on. Then cleanup:
-// drop values < 0 or >= own position (forward/self refs), deduplicate. Already-correct recipes
-// (no self-refs) pass through the cleanup only — their valid values survive unchanged.
+// Repair depends_on: when any step self-references (1-indexed), subtract 1 from all values across
+// the recipe. Cleanup: drop < 0 or >= own position, deduplicate. Correct recipes pass unchanged.
 type StepShape = { text: string; duration_seconds: number | null; tag: string | null; depends_on: number[] | null };
 function repairDeps(steps: StepShape[]): StepShape[] {
   const is1Indexed = steps.some((s, i) => Array.isArray(s.depends_on) && s.depends_on.includes(i));
@@ -182,31 +179,35 @@ function repairDeps(steps: StepShape[]): StepShape[] {
   });
 }
 
-// Ingredient→step link: for each ingredient whose step_number is null, find the FIRST step whose
-// text contains any of the ingredient's identity words (whole-word match, plural-tolerant).
-// Identity words = the ingredient name split into 3+ char words, stripping prep/form/size modifiers.
-// If no step matches → null (honest "general / used throughout", not a forced guess).
+// Ingredient→step link: score identity words against step text. Head noun (last word) gets +3 bonus
+// so "chicken stock" prefers "stock" step over "chicken" step. Whole-word, plural-tolerant.
 const ING_STRIP = new Set(
   ("ground dried fresh raw cooked roasted chopped sliced diced minced crushed whole powdered frozen " +
   "canned smoked hot cold sweet plain organic natural baby flaked toasted blanched peeled pitted " +
   "unsalted salted boneless skinless shredded grated crumbled melted softened finely roughly thinly " +
   "lightly deseeded trimmed halved large medium small thin thick extra green red white black yellow " +
   "clove cloves leaves leaf stalks stalk sprig sprigs wedges wedge pieces piece bunch bunches " +
-  "rashers rasher optional about loosely packed cut into juiced zest").split(" "),
+  "rashers rasher optional about loosely packed cut into juiced zest cup cups tin tins").split(" "),
 );
 function ingIdentity(name: string): string[] {
-  return name.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 3 && !ING_STRIP.has(w));
+  return name.toLowerCase().replace(/\([^)]*\)/g, " ").split(/[^a-z]+/).filter((w) => w.length >= 3 && !ING_STRIP.has(w));
 }
 type IngShape = { raw_text: string; name: string; amount: number | null; unit: string | null; step_number: number | null };
+function wordPat(w: string): RegExp { return new RegExp(`\\b${w}(?:e?s)?\\b`); }
 function assignStepPositions(ingredients: IngShape[], steps: StepShape[]): IngShape[] {
   const texts = steps.map((s) => s.text.toLowerCase());
   return ingredients.map((ing) => {
-    if (ing.step_number != null) return ing; // already set — don't override
+    if (ing.step_number != null) return ing;
     const words = ingIdentity(ing.name);
-    if (words.length === 0) return ing; // no identity words → leave general
-    const pats = words.map((w) => new RegExp(`\\b${w}(?:e?s)?\\b`));
-    const idx = texts.findIndex((t) => pats.some((p) => p.test(t)));
-    return idx >= 0 ? { ...ing, step_number: idx } : ing;
+    if (words.length === 0) return ing;
+    const pats = words.map(wordPat), headPat = pats[pats.length - 1];
+    let bestIdx = -1, bestScore = 0;
+    texts.forEach((t, i) => {
+      let s = pats.filter((p) => p.test(t)).length;
+      if (s > 0 && headPat.test(t)) s += 3;
+      if (s > bestScore) { bestScore = s; bestIdx = i; }
+    });
+    return bestIdx >= 0 ? { ...ing, step_number: bestIdx } : ing;
   });
 }
 
@@ -244,7 +245,6 @@ Deno.serve(async (req) => {
   if (!isUsable(parsed)) return json({ ok: false, error: "parse_fail" });
 
   const recipe = normalise(parsed as Record<string, unknown>);
-  recipe.steps = repairDeps(recipe.steps);
-  recipe.ingredients = assignStepPositions(recipe.ingredients, recipe.steps);
+  recipe.steps = repairDeps(recipe.steps); recipe.ingredients = assignStepPositions(recipe.ingredients, recipe.steps);
   return json({ ok: true, recipe, source_url: sourceUrl });
 });

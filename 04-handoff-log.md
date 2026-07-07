@@ -33,6 +33,76 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Step 7 Piece 2b: tightened step_position heuristic (Edge Function + re-backfill)
+
+WHAT CHANGED:
+- The step_position heuristic now SCORES steps instead of taking the first
+  any-word hit. The HEAD NOUN (last identity word) gets a +3 bonus, so
+  "chicken stock" now prefers a step containing "stock" over one that only
+  says "chicken." Fixes the systematic early-step false positives from Piece 2.
+- Also added parens-stripping to ingIdentity (defensive) and unit words
+  (cup/cups/tin/tins) to the strip set.
+- Re-backfilled all 107 ingredients with the tightened rule.
+
+FILES TOUCHED:
+- supabase/functions/recipe-import/index.ts (assignStepPositions rewritten
+  with scoring; wordPat helper; ingIdentity parens-strip; ING_STRIP additions)
+
+THE TIGHTENED RULE:
+1. Extract identity words: lowercase, strip parenthetical content, split on
+   non-alpha, keep 3+ chars, drop ~60 modifiers + unit words.
+2. The HEAD noun = the last identity word (in English, the noun:
+   "chicken STOCK", "olive OIL", "beef MINCE").
+3. Score each step: +1 per matching identity word (whole-word, plural-tolerant),
+   +3 bonus if the head noun matches. Pick highest-scoring step; tie-break earliest.
+4. If NO step matches any word → null (honest GENERAL).
+
+BEFORE/AFTER REPORT:
+Bolognese #1 (20 ingredients):
+- BEFORE (Piece 2): 20 linked, 0 general. ~5 hit step 0 wrongly (carrots,
+  rosemary, basil, tomato purée, chilli).
+- AFTER: 20 linked, 0 general. All 5 moved to CORRECT later steps:
+  carrots/rosemary → step 2 (soften veg); basil/tomato purée/chilli → step 4
+  (add tomatoes). Zero regressions — every link that was correct stayed correct.
+
+Nandos (22 ingredients):
+- BEFORE: 18 linked, 4 general. "Chicken stock → step 0" (wrong: matched
+  "chicken"). "Perinaise → step 0" (wrong: condiment).
+- AFTER: 8 linked, 14 general. Chicken stock → GENERAL (fixed — no step names
+  "stock" explicitly). Perinaise → step 3 (still a backfill raw_text noise
+  artefact; import-time name "perinaise" → GENERAL). The new GENERALs are
+  honest: seasoning-mix spices, chicken thighs, peas — items the step text
+  doesn't mention by name. They'll show under every step in the hero (the
+  safe default).
+
+Fill rate: 65 linked, 42 general (was 77/30). The 12 items that moved from
+linked→GENERAL were Piece 2 false-positive noise matches (e.g. matched on
+"still" from a parenthetical note). The tighter rule trades a few honest
+GENERALs for zero wrong-step links.
+
+REDEPLOY: recipe-import deployed to Frankfurt (cntlptuacsujbdtwvbis). OPTIONS → 200
+confirmed. verify_jwt = true pinned in config.toml (JWT-authed).
+
+HOW VERIFIED:
+- Re-backfill: 27 changes applied, fill rate verified at 65/42 by row-read.
+- Import-time: code path confirmed (assignStepPositions at line 248, same
+  handler). No live test-import to avoid throwaway clutter.
+- Recipe count unchanged at 8.
+
+KNOWN GAPS / RISKS:
+- Backfill uses raw_text (noisy) vs import-time using Gemini's clean name
+  field. Fresh imports will be tighter than the backfill results.
+- Nandos "Perinaise → step 3" is a backfill noise artifact; import-time
+  would correctly produce GENERAL.
+- File at 250 lines (the ceiling). Next Edge Function addition needs a split.
+
+NEXT: Piece 3 — the hero-trim display (CookHero trims the ingredient list
+to the current step, with the full list one tap away).
+
+FOR THE CHECKER: n/a — no schema change. Edge Function + data re-backfill only.
+
+---
+
 ### 2026-07-07 — Step 7 Piece 2: step_position heuristic (Edge Function + data backfill)
 
 WHAT CHANGED:
