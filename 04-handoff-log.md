@@ -33,6 +33,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Step 7 Piece 3: hero-trim display (SRC-ONLY)
+
+WHAT CHANGED:
+- The cooking hero now shows just the CURRENT step's ingredients (those linked
+  to it via step_position) instead of the entire ingredient list.
+- "All ingredients" toggle at the end of the ingredient tags shows/hides the
+  complete list — so a mis-linked or general ingredient is always one tap away.
+- Graceful fallback: if a step has no linked ingredients (bare/unenriched recipe,
+  or the simmer step where nothing is added), the full list shows — never blank.
+- Mark-used (tap to strike) works in both trimmed and full-list views.
+
+FILES TOUCHED:
+- src/food/CookHero.jsx (per-step filtering + toggle state)
+- src/food/cook.css (toggle styling — quiet italic, no underline)
+
+PHASE-0 FINDING (chicken stock):
+Read all 7 Nandos step texts from the live DB. NO step contains the word "stock."
+Step 3 says "Add remaining rice ingredients" — it describes the stock generically
+as part of a group, never naming it. Chicken-stock-as-GENERAL is honest and
+correct. No heuristic bug.
+
+HOW TO VERIFY:
+1. Open Bolognese → Cook → step through: step 2 shows onion/carrot/celery/garlic/
+   rosemary ONLY (not all 20). Step 3 shows just mince. Step 7 shows spaghetti.
+   Each step feels calmer — fewer tags, only what you need now.
+2. Tap "All ingredients" → full list appears. Tap "This step" → returns to trimmed.
+3. A step with nothing linked (step 5 simmer, or step 8 serve with bread) → full
+   list shows, not blank. Toggle hidden.
+4. Open Air Fryer Chicken (unenriched, no step_position) → full list under every
+   step, exactly as before. No toggle shown.
+5. Tap an ingredient to mark used in trimmed view → strike persists when you toggle
+   to full list and back. Mark-used in full list also persists.
+6. Timer, alarm, parked rail, heads-up, COOKING↔RECIPE toggle all still work.
+
+KNOWN GAPS / RISKS:
+- General ingredients (null step_position) don't appear per-step — they live in
+  the "All ingredients" full list. This is the calm design intent, but if an
+  ingredient is wrongly general (the heuristic missed it), it's only visible via
+  the toggle. The toggle ensures nothing is ever fully hidden.
+- cook.css is 319 lines (over the ~250 ceiling — it was already 314). Flag for a
+  future split when it next grows.
+
+NEXT: Piece 4 — scheduler wiring + parallel timing strip (wire the dormant
+cookLanes/cookSchedule into the recipe view, render a truly-parallel strip).
+
+FOR THE CHECKER: n/a — no schema change. Pure src.
+
+---
+
 ### 2026-07-07 — Step 7 Piece 2b: tightened step_position heuristic (Edge Function + re-backfill)
 
 WHAT CHANGED:

@@ -149,6 +149,11 @@
 .cc-hero-ing.is-used {
   text-decoration: line-through; color: var(--rule);
 }
+.cc-hero-ing--toggle {
+  border-bottom: none; color: var(--rule); font-style: italic;
+}
+.cc-hero-ing--toggle:hover { color: var(--ink-muted); }
+.cc-hero-ing--toggle::after { content: "" !important; }
 
 /* ── Heads-up line (the ONE terracotta mark) ────────────────────────────────── */
 .cc-headsup {

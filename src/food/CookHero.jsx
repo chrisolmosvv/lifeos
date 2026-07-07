@@ -1,7 +1,8 @@
 // CookHero — the big calm directive: one step, readable across a kitchen.
 // Fraunces for the instruction, Inter for controls + metadata.
-// Step 6: ingredient tags below the hero text — tappable to mark used.
+// Step 7 P3: per-step ingredient trim (linked only) + "All ingredients" toggle.
 
+import { useState } from "react";
 import CookTimer from "./CookTimer";
 
 const TAG_LABEL = { hands_on: "Hands-on", hands_free: "Hands-free", active_heat: "Active heat" };
@@ -25,6 +26,7 @@ function shortLabel(text) {
 }
 
 export default function CookHero({ hero, parked, totalSteps, heroTimer, ingredients, tickedSet, onMarkDone, onStartTimer, onAdjustTimer, onTickIngredient }) {
+  const [showAll, setShowAll] = useState(false);
   if (!hero) return null;
   const { index, step } = hero;
   const tag = step.tag ? TAG_LABEL[step.tag] || step.tag : null;
@@ -35,14 +37,15 @@ export default function CookHero({ hero, parked, totalSteps, heroTimer, ingredie
     .filter((p) => p.remaining != null && p.remaining > 0 && p.remaining <= HEADSUP_THRESHOLD)
     .sort((a, b) => a.remaining - b.remaining)[0];
 
-  // Ingredients for this step (step_position link) or ALL if step_position is unpopulated
-  const stepIngs = ingredients
-    ? ingredients
-        .map((ing, i) => ({ ing, idx: i }))
-        .filter(({ ing }) => ing.step_position == null || ing.step_position === index)
-    : [];
-  // Only show ingredient tags when we have a meaningful set (step-linked or all)
-  const showIngs = stepIngs.length > 0 && stepIngs.length <= ingredients.length;
+  // Per-step trim: linked ingredients for THIS step only (step_position === index).
+  // Fallback: if no linked ingredients exist (bare/unenriched recipe, or all are general),
+  // show the full list — a bare recipe behaves exactly as before, never a blank.
+  const all = ingredients ? ingredients.map((ing, i) => ({ ing, idx: i })) : [];
+  const linked = all.filter(({ ing }) => ing.step_position === index);
+  const hasLinks = all.some(({ ing }) => ing.step_position != null);
+  const trimmed = linked.length > 0;
+  const visibleIngs = (!hasLinks || showAll) ? all : trimmed ? linked : all;
+  const showIngs = visibleIngs.length > 0;
 
   return (
     <div className="cc-hero">
@@ -59,10 +62,10 @@ export default function CookHero({ hero, parked, totalSteps, heroTimer, ingredie
         <CookTimer remaining={heroTimer.remaining} onAdjust={(d) => onAdjustTimer?.(index, d)} />
       )}
 
-      {/* Ingredient tags — tappable to mark used */}
+      {/* Ingredient tags — tappable to mark used; trimmed to this step's linked ingredients */}
       {showIngs && (
         <div className="cc-hero-ings">
-          {stepIngs.map(({ ing, idx }) => {
+          {visibleIngs.map(({ ing, idx }) => {
             const used = tickedSet?.has(String(idx));
             return (
               <button key={idx} type="button"
@@ -72,6 +75,12 @@ export default function CookHero({ hero, parked, totalSteps, heroTimer, ingredie
               </button>
             );
           })}
+          {trimmed && hasLinks && (
+            <button type="button" className="cc-hero-ing cc-hero-ing--toggle"
+              onClick={() => setShowAll((v) => !v)}>
+              {showAll ? "This step" : "All ingredients"}
+            </button>
+          )}
         </div>
       )}
 
