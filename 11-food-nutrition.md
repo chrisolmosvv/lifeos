@@ -105,10 +105,13 @@ house format; because recipe text is not sensitive health data, this rides the
   lands later, so nothing is re-argued then.
 
 ### The cookbook
-- **A recipe holds:** ingredients, steps, prep + cook times, servings. **No tags,
-  no photos** in V1 — the overview is **typographic** (on-brand for the broadsheet
-  look). (Import may still *stash* a source URL even though it isn't a displayed
-  field.)
+- **A recipe holds:** ingredients, steps, prep + cook times, servings. **No photos**
+  in V1 — the overview is **typographic** (on-brand for the broadsheet look).
+  (Import may still *stash* a source URL even though it isn't a displayed field.)
+  **(Corrected 2026-07-07: steps now carry three enrichment columns from db/38 —
+  `tag` (hands_on / hands_free / active_heat), `depends_on` (jsonb dependency
+  array), and `step_position` on ingredients (links an ingredient to the step that
+  uses it). All three are populated by the import and used by the cook companion.)**
 - **Recipe macros are computed from ingredients via the food DB**, **no
   recipe-level override.** An ingredient is therefore a **structured** thing —
   `{DB match, amount, unit}` — not free text, and recipe entry reuses the same
@@ -125,9 +128,10 @@ house format; because recipe text is not sensitive health data, this rides the
   shortcut in V1).
 - It **stages a draft you confirm**: **pick servings + meal slot** (e.g. "2 of 4 →
   Dinner"). Recipe per-serving macros × servings eaten = what lands.
-- **At the confirm step you may text-search and swap an ingredient for the real
-  product used — this cook only.** The saved recipe is untouched; the log entry
-  stores the resolved snapshot.
+- ~~At the confirm step you may text-search and swap an ingredient for the real
+  product used — this cook only.~~ **(Corrected 2026-07-07: cook-only ingredient
+  swap was DROPPED — see 03-decisions.md. The log entry stores the resolved
+  snapshot; editing individual ingredient amounts is deferred to D2.)**
 
 ### Recipe import (the one AI touch)
 - **Paste text OR a URL → AI converts to the house format.**
@@ -301,7 +305,7 @@ db/28_food_tables.sql            — the 5 tables                       [F1]
 
 ## Food Rebuild — current truth (2026-07-05)
 
-### Schema changes (only two; five core tables kept unchanged)
+### Schema changes (three; five core tables kept unchanged)
 - **db/39 — event-sourced cook schema** (checker-approved). `cook_session` (thin header:
   recipe_id, status active/done/abandoned, timestamps) + `cook_event` (append-only log:
   event_type, target_ref, payload, created_at — no updated_at, events are immutable). State
@@ -309,11 +313,17 @@ db/28_food_tables.sql            — the 5 tables                       [F1]
 - **db/40 — `food_items.display_name`** (checker-approved). Nullable text; when set, the UI
   shows it instead of the raw API `name`. Auto-cleaned on first cache (timid: casing/whitespace
   only); owner can override via ✎ in the recipe editor.
+- **db/41 — `cook_event.event_type` CHECK widened** (checker-approved, corrected 2026-07-07).
+  Added `ingredient_used` to the allowed values (strict superset — no existing data invalidated).
+  Splits cooking mark-used from shopping-tick (`ingredient_ticked`). Module table only.
 
-### Surfaces (current)
-- **ONE unified recipe/cook page** (CookMode.jsx). The old broadsheet, classic view, and
-  separate Cook mode are deleted. Opens readable; cook lazy-starts on first action. Full
-  scrolling method (accordion reversed), ingredients rail, live timers strip.
+### Surfaces (current — corrected 2026-07-07)
+- **Cook companion "Hero + Rail"** (CookCompanion.jsx + CookHero + CookRail + CookTimer +
+  AlarmOverlay + RecipeOverview + cook.css + cookOverview.css). One big Fraunces directive (the
+  Hero = the active step) + a rail (Parked = passive steps with live countdowns; Not yet =
+  upcoming). Cooking ↔ Recipe mode toggle. The old linear CookMode.jsx is deleted (prove-dead).
+  Active/passive split from `recipe_steps.tag`; timers with ±1 min + dismiss-required alarm
+  (Web Audio two-tone beep); servings stepper + "Log this cook" via logSnapshot.
 - **Cookbook library = full-width register** (CookbookRegister.jsx). Ruled index, sortable
   columns, hover-unfurl detail, filters (Recipes/Meals/Favourites).
 - **Day view** — full broadsheet rebuild. Two-column full-width: calorie ring + meal-segmented
@@ -334,8 +344,11 @@ The matching logic is correct; failures were stage-handoff bugs:
 - **Reranker:** soft-prefers English-language entries; deterministic fallback intact.
 - **Label cleanup:** `cleanLabel()` strips malformed punctuation from raw_text only.
 
-### Key files
-- Cook engine: `cookReplay.js`, `cookEventStore.js`, `useCookEvents.js`, `CookMode.jsx`.
+### Key files (corrected 2026-07-07)
+- Cook companion: `CookCompanion.jsx`, `CookHero.jsx`, `CookRail.jsx`, `CookTimer.jsx`,
+  `AlarmOverlay.jsx`, `RecipeOverview.jsx`, `cook.css`, `cookOverview.css`, `cookAlarm.js`.
+- Cook engine: `cookReplay.js`, `cookEventStore.js`, `useCookEvents.js`.
+- Dormant scheduler (for future parallel lanes): `cookLanes.js`, `cookSchedule.js`.
 - Cookbook: `CookbookRegister.jsx`, `register.css`.
 - Day view: `CalorieArc.jsx`, `MacroRings.jsx`, `DayView.jsx`, `LoggerMasthead.jsx`.
 - Week/Month: `WeekMonthView.jsx`, `foodCalc.js` (`perGoalHits`).

@@ -3126,6 +3126,28 @@ HONEST STATUSES (recorded truthfully, not fake-greened):
   reproduces the stored stamp on every has-steps recipe; the dead recipes.last_cooked_at column dropped
   (db/35).
 
+### 2026-07-07 — Cook Companion "Hero + Rail" rebuild (D1 steps 1–6 + 6b, src + one schema widen)
+- THE COOK PAGE WAS REBUILT as the Hero + Rail companion: one big calm directive (the Hero = the
+  single active step, readable across a kitchen) plus an always-visible rail (Parked = passive
+  steps cooking on their own with live countdowns; Not yet = upcoming). The old linear CookMode
+  is deleted (prove-dead). Why: real cooking needs one calm directive + glanceable awareness of
+  what's running on its own — the old sequential list forced the cook to scroll for timers.
+- ACTIVE/PASSIVE SPLIT driven by recipe_steps.tag: `hands_free` = passive (parked); `hands_on` +
+  `active_heat` + NULL = active (hero). Tags trusted straight from import (spot-check found them
+  reliable on real recipes — the simmer is hands_free, the chopping is hands_on); no confirm-gate
+  needed for the split.
+- TIMER-ADJUST (±1 min) uses RE-EMITTED timer_started with adjusted remaining as the new
+  duration_seconds (Option A — no new event type, no schema). Pragmatic and gate-free; a dedicated
+  `timer_adjusted` was considered and deferred (additive later if a replay feature ever needs it).
+- NEW EVENT TYPE `ingredient_used` (db/41, checker-approved): splits used-in-pan (Cooking hero)
+  from shopping-tick (`ingredient_ticked`, Recipe view). The two ingredient states are now
+  independent — shopping earlier doesn't pre-strike your cooking tags. Trade-off: took one schema
+  widen (a strict-superset CHECK on the module table cook_event) for a cleaner event log.
+- BUILD ORDER: steps 1–6 (static render → recipe view → live timers + alarm → real data + events →
+  servings + log → mark-used + shopping tick), then 6b (the ingredient_used split). The smart
+  scheduler (parallel lanes + timing strip) was deliberately DEFERRED — it depends on depends_on
+  data being fixed first (Gemini off-by-one).
+
 ### 2026-07-05 — Cook-page frame + nav-timer fix (A+B quick-relief, src-only)
 - SEQUENCING: cook-experience overhaul runs A+B quick-relief FIRST → then D1 (structured recipe +
   import, with the timer visual + dismiss-alarm folded into the cook-page redesign) → then D2

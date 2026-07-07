@@ -162,10 +162,13 @@ Cook layer (**event-sourced**, db/39 — replaced the original db/34 single-row 
 - **`cook_session`** (thin header): `recipe_id` (→ recipes, cascade), `status`
   (active/done/abandoned), timestamps. One active cook at a time (enforced in app logic).
 - **`cook_event`** (append-only log): `session_id` (→ cook_session, cascade), `event_type`
-  (step_marked / ingredient_ticked / timer_started / timer_stopped / finished), `target_ref`
-  (plain text, not an FK), `payload` (jsonb), `created_at`. **No `updated_at`** — events are
-  immutable; state is derived by replay, never stored mutable. Timers survive reload/backgrounding
-  because a timer = start-timestamp + duration, computed against the wall clock on read.
+  (step_marked / ingredient_ticked / timer_started / timer_stopped / finished /
+  **ingredient_used** — corrected 2026-07-07, db/41 added `ingredient_used` to split
+  shopping-tick from cooking mark-used; additive CHECK widen on the module table, spine-safe),
+  `target_ref` (plain text, not an FK), `payload` (jsonb), `created_at`. **No `updated_at`** —
+  events are immutable; state is derived by replay, never stored mutable. Timers survive
+  reload/backgrounding because a timer = start-timestamp + duration, computed against the wall
+  clock on read.
 
 ## How the pieces connect (runtime)
 You → the app → Supabase (read/write your data). Supabase runs **two edge functions** —

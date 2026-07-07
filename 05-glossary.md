@@ -170,3 +170,9 @@
   or the whole series.
 - **Top-up** — a "forever" repeat keeps about a year of occurrences ready and quietly
   makes more as you scroll further ahead — done in the app, no server alarm.
+- **Hero + Rail** — the cook companion's layout: one big calm directive (the Hero =
+  the step you're actively doing) beside a rail showing what's cooking on its own
+  (Parked) and what's next (Not yet).
+- **Parked** — a step that's running unattended (simmer, bake, rest) with a live
+  countdown. It lives in the rail while you work on the hero. When its timer hits
+  zero, a dismiss-required alarm fires.

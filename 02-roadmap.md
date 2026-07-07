@@ -1187,12 +1187,21 @@ cleanup. Import went from ~zero to reliable matching with honest flagging for un
 - ⬜ F10 — Alcohol-lite: drinks (units + kcal), daily/weekly count.
 - ⬜ F11 — Polish + audit to the design laws.
 
-### Cook-experience overhaul (next Food work, sequenced A+B → D1 → D2)
+### Cook-experience overhaul (sequenced A+B → D1 → D2)
 Quick-relief shipped (2026-07-05): nav "Open" routing fix, banner removal, scroll-frame fix.
-- ⬜ D1 — Structured recipe + import overhaul (the cook-page redesign; timer visual + dismiss-
-       alarm folded in). CookMode.jsx ~260 lines → extract CookStep at D1 start. Nav-timer
-       popover buttons use border-radius: 8px (pre-existing design-law nit) → address at D1.
-- ⬜ D2 — Per-cook logging (rides on D1's structure).
+- ✅ D1 — Hero + Rail cook companion (steps 1–6 + 6b): CookMode replaced by CookCompanion (the
+       Hero + Rail). Active/passive from tag, live timers + alarm, servings + log, shopping/used
+       tick split (db/41 ingredient_used). CookMode.jsx deleted (prove-dead). Smart scheduler
+       (parallel lanes) DEFERRED to after the import depends_on fix.
+  - DEBT: cook.css 314 lines (over ~250 ceiling — split when it next grows). Hero shows ALL
+    ingredients under every step (step_position is 0% populated — filter once import populates
+    it). Nav-timer popover buttons still have border-radius: 8px (pre-existing design-law nit).
+  - ⬜ IMPORT FIX: Gemini's depends_on has off-by-one self-references → prompt change + Edge
+    Function redeploy (no schema). Blocks the smart scheduler.
+  - ⬜ SMART SCHEDULER (step 7): parallel lanes + truly-parallel timing strip. Wires the dormant
+    cookLanes.js + cookSchedule.js. Depends on the import fix above.
+- ⬜ D2 — Per-cook logging: per-ingredient amount editing (deferred from step 5), log-only-tagged-
+       ingredients, dated per-cook versions, log-by-weight.
 
 SETTLED: 5 tables only; goals/drinks/recents reuse; ±10% on-target band; portion table;
 USDA_FDC_API_KEY owner-supplied. "Improve AI matching" investigated and resolved as a
