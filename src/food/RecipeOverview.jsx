@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { assignLanes } from "./cookLanes";
+import { cookSchedule } from "./cookSchedule";
 import "./cookOverview.css";
 
 // RecipeOverview — the "Recipe" mode: servings stepper (scales ingredient
@@ -28,8 +30,14 @@ export default function RecipeOverview({ recipe, ingredients, steps, tickedSet, 
   const [cookServings, setCookServings] = useState(baseServ);
   const scale = cookServings / baseServ;
 
-  const totalSec = steps.reduce((sum, s) => sum + (s.timer_seconds || 0), 0);
-  const hasTimingData = totalSec > 0;
+  // Scheduler: compute parallel lanes + critical-path timing from depends_on + durations.
+  // Sequential fallback: when no deps exist, everything in one lane (the old strip look).
+  const hasDeps = steps.some((s) => Array.isArray(s.depends_on) && s.depends_on.length > 0);
+  const { lanes: rawLanes, laneCount: rawLaneCount } = assignLanes(steps); // mergeSteps available if needed
+  const laneCount = hasDeps ? rawLaneCount : 1;
+  const lanes = hasDeps ? rawLanes : steps.map(() => 0);
+  const { schedule, finish } = cookSchedule(steps.map((s) => ({ durationSeconds: s.timer_seconds || 0, deps: s.depends_on })));
+  const hasTimingData = finish > 0;
 
   return (
     <div className="cc-ov">
@@ -41,24 +49,29 @@ export default function RecipeOverview({ recipe, ingredients, steps, tickedSet, 
           <span className="cc-ov-serv-label">serving{cookServings === 1 ? "" : "s"}</span>
           {scale !== 1 && <span className="cc-ov-scaled">scaled from {baseServ}</span>}
         </div>
-        {hasTimingData && <span className="cc-ov-time tnum">{fmtDur(totalSec)} total</span>}
+        {hasTimingData && <span className="cc-ov-time tnum">{fmtDur(finish)} total</span>}
       </div>
 
       {hasTimingData && (
         <div className="cc-strip">
-          {steps.map((s, i) => {
-            const dur = s.timer_seconds || 0;
-            if (dur <= 0) return null;
-            const pct = (dur / totalSec) * 100;
-            const isPassive = s.tag === "hands_free";
-            return (
-              <div key={i} className={`cc-strip-bar${isPassive ? " is-passive" : ""}`}
-                style={{ width: `${Math.max(pct, 2)}%` }}
-                title={`${i + 1}. ${(s.text || "").split(/\s+/).slice(0, 5).join(" ")} — ${fmtDur(dur)}`}>
-                <span className="cc-strip-num tnum">{i + 1}</span>
-              </div>
-            );
-          })}
+          {Array.from({ length: laneCount }, (_, lane) => (
+            <div key={lane} className="cc-strip-lane">
+              {schedule.filter((e) => lanes[e.index] === lane && e.duration > 0).map((e) => {
+                const step = steps[e.index];
+                const left = (e.startOffset / finish) * 100;
+                const width = (e.duration / finish) * 100;
+                const isPassive = step.tag === "hands_free";
+                return (
+                  <div key={e.index}
+                    className={`cc-strip-bar${isPassive ? " is-passive" : ""}`}
+                    style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
+                    title={`${e.index + 1}. ${(step.text || "").split(/\s+/).slice(0, 5).join(" ")} — ${fmtDur(e.duration)}`}>
+                    <span className="cc-strip-num tnum">{e.index + 1}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
       )}
 

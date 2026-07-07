@@ -33,6 +33,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Step 7 Piece 4: parallel timing strip (SRC-ONLY — scheduler now WIRED)
+
+WHAT CHANGED:
+- The recipe-view "at a glance" timing strip now shows PARALLEL LANES when a
+  recipe has dependency data. For the bolognese: the simmer runs in one lane,
+  the pasta in another alongside it over the same time span, converging at the
+  combine step. Reads as "these happen at the same time" at a glance.
+- The dormant scheduler files (cookLanes.js + cookSchedule.js) are now WIRED —
+  imported by RecipeOverview.jsx for the first time. No longer dormant.
+- The "total" time now shows the CRITICAL-PATH finish time (which is shorter
+  than the sum of all steps for parallel recipes) — the actual cooking time.
+- Graceful fallback: recipes with no deps (Fried Rice) or no timing data
+  (Air Fryer Chicken) render exactly as before — single row or no strip.
+
+FILES TOUCHED:
+- src/food/RecipeOverview.jsx (import schedulers, replace strip render)
+- src/food/cookOverview.css (strip CSS: flex-row → positioned lanes)
+- src/food/cookLanes.js (NOW IMPORTED — no longer dormant)
+- src/food/cookSchedule.js (NOW IMPORTED — no longer dormant)
+
+HOW TO VERIFY:
+1. Bolognese → RECIPE tab → the strip shows TWO LANE ROWS. The long simmer
+   bar (step 5, passive/lighter) dominates one lane; the pasta bar (step 7)
+   runs alongside it in the second lane at the same horizontal position. The
+   combine step (step 8) follows after both. Reads calm, not cluttered.
+2. Hover any bar → tooltip shows step number + text + duration.
+3. The "total" time shows the critical-path time (shorter than the old sum).
+4. Fried Rice (no deps) → single row, sequential, unchanged from before.
+5. Air Fryer Chicken (bare, no timing data) → no strip at all, unchanged.
+6. Nothing else regressed: ingredients, method, servings, COOKING↔RECIPE toggle,
+   live cook hero/rail/timers all unchanged.
+
+KNOWN GAPS / RISKS:
+- The strip is a read-only overview element; it does NOT drive the live cook
+  ordering (Hero/Parked/Not-yet). The companion's live progression is unchanged.
+- Merge steps (multi-dep convergence) render in their assigned lane like any
+  other bar. A future refinement could visually span them across lanes, but the
+  calm law says keep it quiet.
+- cookOverview.css was 116 lines (now 123); comfortable.
+
+NEXT: Piece 5 — the confirm surface + editor remap (deferred — see roadmap).
+This completes the Step 7 smart-layer build: depends_on repair (Piece 1),
+step_position heuristic (Pieces 2/2b), hero trim (Piece 3), parallel strip
+(Piece 4). The confirm surface and editor remap are separate, deferred work.
+
+FOR THE CHECKER: n/a — no schema change. Pure src.
+
+---
+
 ### 2026-07-07 — Step 7 Piece 3: hero-trim display (SRC-ONLY)
 
 WHAT CHANGED:

@@ -35,19 +35,25 @@
   font-weight: 500; color: var(--ink);
 }
 
-/* ── At-a-glance timing strip ───────────────────────────────────────────────── */
+/* ── At-a-glance timing strip (parallel lanes) ─────────────────────────────── */
 .cc-strip {
-  display: flex; height: 28px; margin-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
   border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
 }
+.cc-strip-lane {
+  position: relative; height: 24px;
+}
+.cc-strip-lane + .cc-strip-lane {
+  border-top: 1px solid var(--rule-faint);
+}
 .cc-strip-bar {
+  position: absolute; top: 0; height: 100%;
   display: flex; align-items: center; justify-content: center;
   background: var(--ink); min-width: 0;
   border-right: 1px solid var(--paper);
   box-sizing: border-box;
 }
 .cc-strip-bar.is-passive { background: var(--rule); }
-.cc-strip-bar:last-child { border-right: none; }
 .cc-strip-num {
   font-family: var(--font-sans); font-size: 0.52rem; font-weight: 500;
   letter-spacing: 0.04em; color: var(--paper);
