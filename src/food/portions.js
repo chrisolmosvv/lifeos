@@ -24,10 +24,13 @@ const VOLUME = {
   sugar: { cup: 200, tbsp: 12, tsp: 4 },
   fat: { cup: 218, tbsp: 14, tsp: 5 }, //   oil / butter
   rice: { cup: 185, tbsp: 12, tsp: 4 }, //  uncooked
-  liquid: { cup: 240, tbsp: 15, tsp: 5 }, // water / milk / stock / broth
+  liquid: { cup: 240, tbsp: 15, tsp: 5 }, // water / milk / stock / sauce / vinegar / etc.
   vegetable: { cup: 150, tbsp: 10, tsp: 3 }, // peas, corn, diced veg
   spice: { cup: 110, tbsp: 7, tsp: 2 }, // dry powder / ground spice
-  generic: { cup: 240, tbsp: 15, tsp: 5 }, // unknown food → water-like
+  breadcrumb: { cup: 60, tbsp: 4, tsp: 1 }, // panko, breadcrumbs
+  oat: { cup: 85, tbsp: 5, tsp: 2 }, //  rolled / porridge oats
+  nut: { cup: 120, tbsp: 8, tsp: 3 }, //  chopped tree nuts
+  cheese: { cup: 100, tbsp: 6, tsp: 2 }, // grated hard cheese
 };
 
 const num = (v) => {
@@ -56,10 +59,14 @@ function densityClass(name) {
   if (n.includes("sugar")) return "sugar";
   if (n.includes("oil") || n.includes("butter")) return "fat";
   if (n.includes("rice")) return "rice";
-  if (/(milk|water|stock|broth|juice|cream|wine|yogurt|yoghurt)/.test(n)) return "liquid";
+  if (/(milk|water|stock|broth|juice|cream|wine|yogurt|yoghurt|vinegar|sauce|honey|syrup|beer|cider|paste|puree|purée)/.test(n)) return "liquid";
   if (/(peas|corn|bean|chickpea|lentil)/.test(n)) return "vegetable";
   if (/(cumin|paprika|cinnamon|turmeric|chilli powder|chili powder|fenugreek|garam|nutmeg|oregano|thyme|basil|coriander ground|curry powder|spice)/.test(n)) return "spice";
-  return "generic";
+  if (/\b(breadcrumbs?|panko)\b/.test(n)) return "breadcrumb";
+  if (/\b(oats?|oatmeal|porridge)\b/.test(n)) return "oat";
+  if (/\b(almonds?|walnuts?|pecans?|cashews?|pistachios?|peanuts?|hazelnuts?|macadamias?|nuts?|pine nuts?)\b/.test(n)) return "nut";
+  if (/\b(parmesan|pecorino|cheddar|mozzarella|gruyere|gruyère|gouda|emmental|manchego)\b/.test(n)) return "cheese";
+  return null; // unknown → flagged (honest omission, not a water-density guess)
 }
 
 // The portion units the amount step offers for a food: grams + the volumes, plus "item" when the
@@ -100,18 +107,29 @@ export function resolvePortion(foodName, amount, unit) {
   if (a == null) return null;
   const u = unitKey(unit);
   if (u === "g") return a;
-  // Null unit with a plausible whole count (1–24): treat as items IF the food has a known weight.
-  // "2 eggs" → 2 × 50g. Unknown food + null unit → null (flagged), not grams.
+  // Null unit with a plausible count (0 < amount ≤ 24): treat as items IF the food has a known weight.
+  // "2 eggs" → 2 × 50g, "½ onion" → 0.5 × 110g = 55g. Unknown food → null (flagged).
   if (u == null) {
     const wt = itemWeight(foodName);
-    if (wt && a >= 1 && a <= 24 && Number.isInteger(a)) return a * wt;
+    if (wt && a > 0 && a <= 24) return a * wt;
     return null;
   }
   if (u === "item") {
     const wt = itemWeight(foodName);
     return wt ? a * wt : null; // unknown item weight → flagged
   }
-  const vol = VOLUME[densityClass(foodName)];
+  // Unrecognised unit (not a volume measure) — try item weight as a fallback.
+  // Gemini sometimes puts the food name in the unit slot ("½ lemon" → unit="lemon").
+  const isVolume = u === "cup" || u === "tbsp" || u === "tsp";
+  if (!isVolume) {
+    const wt = itemWeight(foodName);
+    if (wt && a > 0 && a <= 24) return a * wt;
+    return null;
+  }
+  // Volume unit → density-class lookup. Unknown density → flagged (honest omission, not a guess).
+  const cls = densityClass(foodName);
+  if (!cls) return null;
+  const vol = VOLUME[cls];
   return vol[u] != null ? a * vol[u] : null;
 }
 

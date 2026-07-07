@@ -33,6 +33,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Recipe Import Accuracy Slice 1: three resolver fixes (SRC-ONLY)
+
+WHAT CHANGED:
+- Fix 1 — Fractional item counts now resolve. "½ onion" → 55g (was "set amount").
+  Relaxed the integer-only guard; the 0 < amount ≤ 24 sanity bound stays.
+- Fix 2 — When Gemini puts the food name in the unit slot (e.g. "½ lemon" with
+  unit="lemon"), the resolver now falls back to the item-weight table before
+  giving up. 0.5 × lemon (60g) = 30g (was "set amount").
+- Fix 3 — Volume-measured dry goods now use real densities instead of water
+  density. Added four light-dry density classes (breadcrumbs/panko 60g/cup,
+  oats 85g/cup, chopped nuts 120g/cup, grated hard cheese 100g/cup). Unknown
+  foods in cups/tbsp/tsp now flag "set amount" instead of silently defaulting to
+  water density (240g/cup). Added vinegar, sauce, honey, syrup, beer, cider,
+  paste, and puree to the liquid class to prevent common-liquid regression.
+
+FILES TOUCHED: src/food/portions.js (only file)
+
+HOW TO VERIFY:
+1. Re-import Thai glass noodles → "½ onion" should show a weight (55g), not "set amount".
+2. Re-import Butter chicken → "½-1 lemon" should resolve to ~30g.
+3. Re-import French pork schnitzel → "1½ cups panko" should be ~90g (was ~360g).
+4. Any unknown dry good in cups (e.g. quinoa) → should flag "needs a weight",
+   not silently weigh as 360g.
+5. Regression: milk/stock/oil/flour/eggs/whole onions all still resolve to the
+   same grams as before.
+
+KNOWN GAPS / RISKS:
+- Honey/syrup resolve at water density (15g/tbsp; real ≈ 21g). Close enough to
+  not flag, but imprecise. A "thick liquid" class could refine this later.
+- The item-weight fallback (Fix 2) also activates for rare non-food units like
+  "tin" or "can" if the food is in the item table. Low risk (Gemini rarely emits
+  packaging words as units), but a future tightening could check unit-in-name.
+
+NEXT: Slice 2 — bracket-gram extraction (Fix 4: read "(about 450g)" from raw_text
+when the resolver can't resolve the parsed amount/unit).
+
+FOR THE CHECKER: n/a — no schema change. Pure src util (portions.js).
+
+---
+
 ### 2026-07-07 — Cook Companion 6b Piece 2: split shopping tick / cooking mark-used (SRC-ONLY)
 
 WHAT CHANGED:
