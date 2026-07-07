@@ -108,10 +108,14 @@ house format; because recipe text is not sensitive health data, this rides the
 - **A recipe holds:** ingredients, steps, prep + cook times, servings. **No photos**
   in V1 — the overview is **typographic** (on-brand for the broadsheet look).
   (Import may still *stash* a source URL even though it isn't a displayed field.)
-  **(Corrected 2026-07-07: steps now carry three enrichment columns from db/38 —
+  **(Corrected 2026-07-07: steps carry three enrichment columns from db/38 —
   `tag` (hands_on / hands_free / active_heat), `depends_on` (jsonb dependency
   array), and `step_position` on ingredients (links an ingredient to the step that
-  uses it). All three are populated by the import and used by the cook companion.)**
+  uses it). All three are populated by the import. `depends_on` is deterministically
+  repaired post-parse (1-indexed self-references shifted down by 1). `step_position`
+  is populated by a head-noun-scored heuristic (Gemini refuses to fill it). Both now
+  carry real data: depends_on drives the parallel timing strip (cookLanes/cookSchedule,
+  now wired); step_position drives the hero ingredient trim. Corrected 2026-07-07.)**
 - **Recipe macros are computed from ingredients via the food DB**, **no
   recipe-level override.** An ingredient is therefore a **structured** thing —
   `{DB match, amount, unit}` — not free text, and recipe entry reuses the same
@@ -360,7 +364,8 @@ Weight resolution and food matching were improved across four slices. Current tr
 - Cook companion: `CookCompanion.jsx`, `CookHero.jsx`, `CookRail.jsx`, `CookTimer.jsx`,
   `AlarmOverlay.jsx`, `RecipeOverview.jsx`, `cook.css`, `cookOverview.css`, `cookAlarm.js`.
 - Cook engine: `cookReplay.js`, `cookEventStore.js`, `useCookEvents.js`.
-- Dormant scheduler (for future parallel lanes): `cookLanes.js`, `cookSchedule.js`.
+- Scheduler (WIRED, corrected 2026-07-07 — was dormant): `cookLanes.js`, `cookSchedule.js`.
+  Imported by RecipeOverview for the parallel timing strip. Computes lanes + critical-path offsets.
 - Cookbook: `CookbookRegister.jsx`, `register.css`.
 - Day view: `CalorieArc.jsx`, `MacroRings.jsx`, `DayView.jsx`, `LoggerMasthead.jsx`.
 - Week/Month: `WeekMonthView.jsx`, `foodCalc.js` (`perGoalHits`).

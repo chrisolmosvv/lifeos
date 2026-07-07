@@ -9,6 +9,35 @@
 
 ---
 
+## Step 7 smart-layer build — five pieces, schema-free (2026-07-07)
+
+Five additive pieces that repair the recipe structure data and wire it into the cook surfaces.
+No schema change (the fragile delete-all-reinsert editor save would need rewriting first). Edge
+Function + src; recipe-import redeployed.
+
+- **[FIX] depends_on repaired deterministically.** Detect 1-indexed self-references per-recipe →
+  subtract 1 from all values; correct recipes untouched. Backfilled existing recipes. **Why:**
+  deterministic + fixes existing data; a prompt fix alone wouldn't repair stored rows.
+- **[FIX] step_position populated by a deterministic heuristic** (head-noun-scored name→step-text
+  match), not the AI (Gemini refuses to fill it). Low-confidence matches left GENERAL
+  (honest-omission). Backfilled existing recipes (65 linked / 42 general = 61% fill). **Why:** the
+  AI won't do it; a deterministic rule is reproducible and auditable.
+- **[DECISION] References kept POSITION-based (no schema)** rather than switched to step UUIDs. The
+  UUID path needs the fragile delete-all-reinsert save pattern rewritten first (every edit gives all
+  steps new UUIDs today). Positions + repair + a (deferred) editor remap solve it schema-free.
+  **Trade-off:** editor corruption is live (below).
+- **[FEATURE] Hero trims to the current step's ingredients,** full list one tap away. Graceful
+  fallback: general-only step or bare recipe → full list, never blank. **Why:** 20 ingredients under
+  every step was too heavy; the hero should feel calm. **Trade-off:** general ingredients are only
+  visible via the toggle (the toggle ensures nothing is ever fully hidden).
+- **[FEATURE] The dormant cookLanes/cookSchedule scheduler WIRED** to render the recipe-view timing
+  strip as real parallel lanes (critical-path total). Live cook ordering deliberately NOT changed.
+  **Why:** the strip is read-only overview — safe to ship before the live-ordering decision.
+- **[DEFERRED] Piece 5 (confirm surface + editor remap) and the live just-in-time ordering** —
+  decide after real use. The editor corruption risk is documented as live debt.
+
+---
+
 ## Recipe import accuracy pass — six fixes (2026-07-07)
 
 Six additive fixes across the import weight-resolver, food-search filter, and matching fallback.
