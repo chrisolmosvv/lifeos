@@ -166,6 +166,22 @@ function normalise(r: Record<string, unknown>) {
   };
 }
 
+// Repair depends_on: Gemini sometimes emits 1-INDEXED step numbers (step at position N has
+// depends_on containing N — a self-reference). When any step self-references, the whole recipe
+// is treated as 1-indexed: subtract 1 from every value in every step's depends_on. Then cleanup:
+// drop values < 0 or >= own position (forward/self refs), deduplicate. Already-correct recipes
+// (no self-refs) pass through the cleanup only — their valid values survive unchanged.
+type StepShape = { text: string; duration_seconds: number | null; tag: string | null; depends_on: number[] | null };
+function repairDeps(steps: StepShape[]): StepShape[] {
+  const is1Indexed = steps.some((s, i) => Array.isArray(s.depends_on) && s.depends_on.includes(i));
+  return steps.map((s, i) => {
+    if (!Array.isArray(s.depends_on) || s.depends_on.length === 0) return s;
+    let fixed = is1Indexed ? s.depends_on.map((d) => d - 1) : [...s.depends_on];
+    fixed = [...new Set(fixed.filter((d) => d >= 0 && d < i))];
+    return { ...s, depends_on: fixed.length > 0 ? fixed : null };
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
@@ -199,5 +215,7 @@ Deno.serve(async (req) => {
   const parsed = parseRecipe(res.text);
   if (!isUsable(parsed)) return json({ ok: false, error: "parse_fail" });
 
-  return json({ ok: true, recipe: normalise(parsed as Record<string, unknown>), source_url: sourceUrl });
+  const recipe = normalise(parsed as Record<string, unknown>);
+  recipe.steps = repairDeps(recipe.steps);
+  return json({ ok: true, recipe, source_url: sourceUrl });
 });

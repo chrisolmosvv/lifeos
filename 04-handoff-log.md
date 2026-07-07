@@ -33,6 +33,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Step 7 Piece 1: depends_on repair pass (Edge Function + data backfill)
+
+WHAT CHANGED:
+- A deterministic repair now runs on every import: if Gemini emitted 1-indexed
+  step references (causing self-references like "step 2 depends on step 2"),
+  the repair subtracts 1 from every value across the whole recipe to correct
+  them to 0-indexed. Already-correct recipes pass through untouched.
+- The one broken recipe in the DB (Bolognese #2, 18fcbf07) was backfilled with
+  the same −1 correction. It now has a fully correct dependency graph including
+  a genuine fork (parmesan + pasta run in parallel after the simmer) and merge
+  (combine waits for both).
+
+FILES TOUCHED:
+- supabase/functions/recipe-import/index.ts (repairDeps function + call site)
+
+THE EXACT REPAIR RULE:
+1. Detect: does ANY step in the recipe reference itself in depends_on?
+2. If yes → the whole recipe used 1-based numbering. Subtract 1 from every value
+   in every step's depends_on across the whole recipe (per-recipe, not per-step).
+3. Cleanup (always): drop values < 0, drop values >= own position (forward or
+   remaining self-ref), deduplicate. Empty → null.
+4. If no self-refs → recipe is already correct. Only the safety cleanup runs.
+
+PER-RECIPE CORRECTNESS REPORT:
+- Bolognese #1 (d5bb1fea, 9 steps): FULLY CORRECT — was already correct, unchanged.
+  Sequential chain with a fork (steps 6+7 both after simmer) and merge (step 8).
+- Bolognese #2 (18fcbf07, 8 steps): FULLY CORRECT — repaired from broken to correct.
+  6 self-refs eliminated. Fork (steps 5+6 both after simmer) and merge (step 7)
+  now match the real cooking structure.
+- Nandos (b94973c5, 7 steps): FULLY CORRECT — was already correct, unchanged.
+- Fried Rice (335a00f9, 3 steps): VALID — all null deps (Gemini didn't emit any).
+  The repair doesn't invent deps; this is an honest gap in Gemini's output.
+
+REDEPLOY: recipe-import deployed to Frankfurt (cntlptuacsujbdtwvbis). OPTIONS → 200
+confirmed. verify_jwt = true pinned in config.toml (JWT-authed).
+
+HOW VERIFIED:
+- Backfill: DB row-read confirms zero self-refs across all recipes (was 6 in one
+  recipe; now 0 globally). Correct recipes unchanged.
+- Import-time: fresh import of the bolognese recipe produces 9 steps, zero
+  self-refs, correct fork+merge structure.
+
+KNOWN GAPS / RISKS:
+- The repair only fixes 1-indexed errors (the observed pattern). If Gemini
+  produced a different kind of breakage (e.g. random wrong positions), the
+  repair would not detect it — it only fires on self-references. Those cases
+  would pass through with the safety cleanup only.
+- Fried Rice has no deps at all (all null). The repair can't fix missing data,
+  only broken data. This is an honest gap in Gemini's output.
+
+NEXT: Piece 2 — step_position heuristic (link each ingredient to the step that
+uses it, for the hero ingredient trim).
+
+FOR THE CHECKER: n/a — no schema change. Edge Function + data backfill only.
+
+---
+
 ### 2026-07-07 — Recipe Import Accuracy Slice 4: never strand + skip ranker on clear match
 
 WHAT CHANGED:
