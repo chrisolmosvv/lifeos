@@ -33,6 +33,29 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Cook Companion 6b Piece 1: widen cook_event CHECK (DB-ONLY, checker approved)
+
+WHAT CHANGED:
+- Widened the CHECK constraint on cook_event.event_type from 5 values to 6, adding
+  'ingredient_used'. Strict superset — every existing row still satisfies the constraint.
+  Module table (cook_event) only; spine untouched. No new column, table, FK, or RLS change.
+
+FILES TOUCHED:
+- NEW: db/41_cook_event_ingredient_used.sql
+
+HOW TO VERIFY: run the migration on Frankfurt (done), then insert a throwaway cook_event with
+event_type='ingredient_used' — the DB ACCEPTS it (before this change it rejected it). Read it
+back, delete it, confirm row count returns to the starting value. Done: 61 → 62 → 61, clean.
+
+KNOWN GAPS / RISKS: none — the constraint only adds a value.
+
+NEXT: Piece 2 — the src split (use ingredient_used for cooking mark-used, keep ingredient_ticked
+for the shopping tick). Src-only, no schema.
+
+FOR THE CHECKER: approved (exact phrase received).
+
+---
+
 ### 2026-07-06 — Cook Companion "Hero + Rail" — step 1: static render (D1, src-only)
 
 WHAT CHANGED:
