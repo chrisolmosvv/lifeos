@@ -33,6 +33,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Recipe Import Accuracy Slice 3: drop zero-calorie junk matches (Edge Function)
+
+WHAT CHANGED:
+- Spices like cumin and paprika were matching crowd-sourced 0-kcal database
+  entries instead of the correct ones (~375 kcal cumin, ~282 kcal paprika).
+  A pre-rerank filter now drops zero-kcal candidates when a calorie-bearing
+  close match exists, so the AI reranker picks among real entries.
+- Genuine zeros (salt, water) are unchanged — the filter only fires when
+  a USDA-quality alternative exists for the same food.
+
+THE EXACT "CLOSE NAME MATCH" RULE:
+1. Extract core food words from the query: lowercase, split on non-alpha,
+   keep 4+ chars, strip ~40 preparation modifiers (ground, dried, sea, etc.).
+   Example: "ground cumin" → ["cumin"]. "sea salt" → ["salt"].
+2. A calorie-bearing (kcal > 0), UNBRANDED candidate is a close match when
+   EVERY core word appears as a whole word (regex \b word boundary) in the
+   candidate name. The unbranded guard skips OFF branded products (like
+   "Popcorners sea salt" — a chip, not salt) that incidentally share words.
+3. If at least one such match exists → drop all 0-kcal candidates.
+   If none → change nothing (honest omission, not a forced wrong match).
+
+FILES TOUCHED:
+- supabase/functions/food-search/normalize.ts (dropZeroJunk + coreWords + MODIFIERS)
+- supabase/functions/food-search/index.ts (import + 3-line call site)
+
+REDEPLOY: food-search deployed to Frankfurt (cntlptuacsujbdtwvbis). OPTIONS → 200
+confirmed. verify_jwt = true pinned in config.toml (JWT-authed, not header-authed).
+
+HOW TO VERIFY:
+1. Re-import Butter chicken → "ground cumin" and "paprika" should show real
+   (small) calories in the editor, NOT 0.
+2. A salt/water ingredient should still show 0 kcal — unchanged.
+3. "Herbes de Provence" should still be honestly flagged "needs a match" —
+   NOT forced onto some random non-zero food.
+4. Regression: re-import a Slice-1/Slice-2 recipe (schnitzel, glass noodles)
+   → matches that already worked are unchanged.
+
+KNOWN GAPS / RISKS:
+- British/American spelling differences (chilli vs chili) may prevent a core-word
+  match. The filter degrades to "keep zeros" (honest default), not a regression.
+- The unbranded guard depends on USDA returning the correct entry. If USDA is
+  unavailable (key not set, timeout), the filter can't fire → zeros stay. Safe.
+- "Herbes de Provence" core words ["herbes","provence"] match "Herb de provence"
+  (OFF, 300 kcal) literally, but it fails the "all core words" test because
+  "herbes" ≠ "herb" (word boundary). So it correctly keeps zeros.
+
+NEXT: Fix 6 — ranker budget / never-strand (to be specced then built as Slice 4).
+
+FOR THE CHECKER: n/a — no schema change. Edge Function only.
+
+---
+
 ### 2026-07-07 — Recipe Import Accuracy Slice 2: bracket-gram extraction (SRC-ONLY)
 
 WHAT CHANGED:

@@ -21,7 +21,7 @@
 //   OFF_CONTACT_EMAIL — the contact in OFF's User-Agent (built in off.ts).
 //   SUPABASE_URL / SUPABASE_ANON_KEY — auto-injected; the owner-scoped food_items read.
 
-import { type FoodCandidate, isBasic, mergeDedupeOrder, type SourceResult } from "./normalize.ts";
+import { type FoodCandidate, isBasic, mergeDedupeOrder, dropZeroJunk, type SourceResult } from "./normalize.ts";
 import { searchSaved } from "./saved.ts";
 import { searchOff } from "./off.ts";
 import { searchUsda, usdaConfigured } from "./usda.ts";
@@ -103,7 +103,10 @@ Deno.serve(async (req) => {
     safely(searchUsda(query)),
   ]);
 
-  const results = mergeDedupeOrder(saved.result.records, off.result.records, usda.result.records);
+  const merged = mergeDedupeOrder(saved.result.records, off.result.records, usda.result.records);
+  // Drop zero-kcal junk when a calorie-bearing close match exists (e.g. "Ground cumin" at 0 kcal
+  // dropped in favour of "Spices, cumin seed" at 375 kcal). Genuine zeros like salt stay.
+  const results = dropZeroJunk(query, merged);
 
   // V2 P1 — the reranker + the quota lever. A confident Basics staple SUPPRESSES the AI DB zone
   // (skip the Gemini call; the UI reveals the databases behind a tap). Otherwise ask Gemini for a

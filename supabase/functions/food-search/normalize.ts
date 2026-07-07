@@ -87,6 +87,64 @@ export function isBasic(c: FoodCandidate): boolean {
   return c.source === "manual" && !!c.source_ref && c.source_ref.startsWith("basics:");
 }
 
+// ── Zero-drop filter (pre-rerank) ───────────────────────────────────────────
+// Preparation/form modifiers — stripped from the query to find the core food-identity words.
+// Only used for the zero-drop close-name-match test (never for display or storage).
+const MODIFIERS = new Set([
+  "ground", "dried", "fresh", "raw", "cooked", "roasted", "chopped", "sliced",
+  "diced", "minced", "crushed", "whole", "powdered", "frozen", "canned",
+  "smoked", "hot", "cold", "sweet", "plain", "organic", "natural", "sea",
+  "flaked", "toasted", "blanched", "peeled", "pitted", "unsalted", "salted",
+  "dehydrated", "steamed", "baked", "fried", "grilled", "boiled",
+  "boneless", "skinless", "shredded", "grated", "crumbled", "melted",
+  "light", "dark", "baby", "young", "powder", "flakes", "seed", "seeds",
+]);
+
+// Core food-identity words: lowercase, split on non-alpha, keep 4+ chars, drop modifiers.
+function coreWords(text: string): string[] {
+  return text.toLowerCase().split(/[^a-z]+/).filter((w) => w.length >= 4 && !MODIFIERS.has(w));
+}
+
+// Pre-rerank zero-drop: when a crowd-sourced "0 kcal" entry would win on name proximity
+// but a calorie-bearing candidate for the SAME food exists, drop the zeros so the reranker
+// chooses among real entries.
+//
+// CLOSE NAME MATCH RULE: extract core food words from the query (4+ chars, modifiers like
+// "ground"/"sea"/"dried" stripped). A calorie-bearing candidate is a close match when EVERY
+// core word appears as a WHOLE WORD (word-boundary-delimited) in the candidate's name.
+// Examples: query "ground cumin" → core ["cumin"] → matches "Spices, cumin seed" ✓.
+//           query "herbes de provence" → core ["herbes","provence"] → no candidate has both → ✗.
+//           query "sea salt" → core ["salt"] → "Almonds, salted" fails (\bsalt\b ≠ salted) → ✗.
+//
+// If no calorie-bearing close match exists (the food genuinely has 0 kcal like salt, or only
+// spurious non-zero hits exist), the list stays exactly as it was — honest omission, never a
+// forced wrong match.
+export function dropZeroJunk(query: string, candidates: FoodCandidate[]): FoodCandidate[] {
+  if (candidates.length === 0) return candidates;
+
+  const isZero = (c: FoodCandidate) => c.per100g.kcal === 0;
+  if (!candidates.some(isZero)) return candidates; // nothing to drop
+
+  const calorieBearing = candidates.filter((c) => c.per100g.kcal != null && c.per100g.kcal > 0);
+  if (calorieBearing.length === 0) return candidates; // all zero/null → genuine
+
+  const core = coreWords(query);
+  if (core.length === 0) return candidates; // can't test → leave alone
+
+  const patterns = core.map((w) => new RegExp(`\\b${w}\\b`));
+  // Only check UNBRANDED calorie-bearing candidates (USDA whole foods, owner's saved generics).
+  // Branded OFF products like "Popcorners sea salt" (a snack, not salt) incidentally share food
+  // words and would cause false close-matches; skipping them keeps genuine zeros like salt safe.
+  const hasCloseMatch = calorieBearing.some((c) => {
+    if (c.brand) return false;
+    const name = c.name.toLowerCase();
+    return patterns.every((p) => p.test(name));
+  });
+
+  return hasCloseMatch ? candidates.filter((c) => !isZero(c)) : candidates;
+}
+
+// ── Merge + dedupe ──────────────────────────────────────────────────────────
 // Merge the three sources into one ordered list with no duplicate of the SAME food.
 //   • Order: curated BASICS staples FIRST (P1 — the trusted generics lead), then the rest of
 //     the owner's saved/cached items (favourites-first from saved.ts), then OFF, then USDA.
