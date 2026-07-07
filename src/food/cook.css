@@ -3,11 +3,28 @@
    Terracotta used ONCE: the soonest parked heads-up (the one live mark).
    Hairlines only — no boxes, shadows, rounded corners, fills. */
 
-/* ── Frame: reuse the .cm2 height chain from cookMode2.css ──────────────────
-   The .food-page:has(.cm2) rules (in cookMode2.css) make .cm2 a bounded
-   flex column filling below the global header. We keep .cm2 as the root
-   class so those rules work untouched. These rules REPLACE the old .cm2
-   innards; when CookMode is fully retired, the frame rules move here. */
+/* ── Scroll frame: the .cm2 height chain (migrated from cookMode2.css) ────────
+   Makes .cm2 a bounded flex column filling below the global header. Scoped
+   via :has() — the Log tab and other Cookbook views are unaffected. */
+.food-page:has(.cm2) {
+  height: 100%;
+  box-sizing: border-box;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.food-page:has(.cm2) > .food-pane {
+  height: 100%;
+}
+.cm2 {
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(-50vw + 50%);
+  padding: 0 2.5rem;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
 /* ── Masthead ───────────────────────────────────────────────────────────────── */
 .cc-mast {
