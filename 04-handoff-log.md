@@ -33,6 +33,67 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Recipe Import Accuracy Slice 4: never strand + skip ranker on clear match
+
+WHAT CHANGED:
+- Part (a) — NEVER STRAND: when the AI ranker can't pick (rate-limited, down, or
+  errored) but candidates exist, the import now takes the top candidate by fixed
+  priority (Basics → saved → OFF → USDA) instead of leaving the ingredient flagged
+  "needs a match." Only strands when genuinely zero candidates.
+- Part (b) — SKIP RANKER ON CLEAR MATCH: when the top candidate clearly matches
+  the ingredient by name, the food-search function skips the Gemini call entirely.
+  This saves most of the AI budget on long recipes, making rate-limit strandings
+  rare in the first place. The import is also noticeably faster.
+
+THE EXACT RULES:
+- Clear name match (skip-ranker test): extract core food words from the query
+  (4+ chars, modifiers like "ground"/"dried"/"sea" stripped — same coreWords as
+  the Slice 3 zero-drop). The top candidate is a clear match when EVERY core word
+  appears as a whole word (\b boundary) in its name.
+  Examples: "chicken stock" → core ["chicken","stock"] → "Chicken Stock" ✓ (skip).
+            "naan bread" → core ["naan","bread"] → "Whole wheat bread" (naan absent) ✗ (call ranker).
+- Never-strand fallback priority: results[0] from the merged list, which is
+  ordered Basics staples → saved/cached → OFF → USDA. Same order as before;
+  the change is that the fallback fires instead of flagging.
+- dbSuppressed is unchanged (only true for Basics staples) — Finder UI unaffected.
+
+FILES TOUCHED:
+- supabase/functions/food-search/normalize.ts (isClearNameMatch — new export)
+- supabase/functions/food-search/index.ts (skipRerank on clear match)
+- src/food/importClient.js (never-strand fallback)
+
+REDEPLOY: food-search deployed to Frankfurt (cntlptuacsujbdtwvbis). OPTIONS → 200
+confirmed. verify_jwt = true pinned in config.toml (JWT-authed). Finder UI unchanged
+(dbSuppressed not altered).
+
+HOW TO VERIFY:
+1. Re-import Butter chicken (18 ingredients) → chicken stock matches EVERY time
+   (no "needs a match"). Import 2–3× → results are STABLE, import feels quicker.
+2. Eyeball all auto-picks for wrong variants: chicken stock may land on "cube"
+   instead of liquid (the owner-accepted variant trade). The schnitzel lemon
+   should match. Report any wrong variant you see.
+3. Slice-3 re-check: cumin + paprika still carry real calories; salt still 0;
+   herbes de Provence still flagged "needs a match".
+4. Regression: Slices 1–2 recipes (schnitzel, glass noodles) → matches + weights
+   unchanged.
+
+KNOWN GAPS / RISKS:
+- ACCEPTED VARIANT TRADE: the clear-match skip takes the top candidate even if a
+  variant word (cube/powder/concentrate) is present. "Chicken stock" may auto-pick
+  "Chicken stock cube" (7 kcal) instead of liquid stock (~15 kcal). The owner
+  catches this in the editor. Confirmed in live testing: chicken stock → "Chicken
+  stock cube" from Knorr is the top OFF result. Owner decides if this is acceptable
+  or needs a variant-preference refinement.
+- The merge order (OFF before USDA) means branded OFF products lead when no Basics
+  staple exists. For some ingredients, USDA's generic entry would be better. A
+  future refinement could prefer unbranded USDA over branded OFF — out of scope.
+
+NEXT: workstream close — prove-dead + docs for the accuracy fixes.
+
+FOR THE CHECKER: n/a — no schema change.
+
+---
+
 ### 2026-07-07 — Recipe Import Accuracy Slice 3: drop zero-calorie junk matches (Edge Function)
 
 WHAT CHANGED:

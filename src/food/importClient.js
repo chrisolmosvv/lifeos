@@ -105,12 +105,12 @@ async function matchOne(ing, itemsById) {
   try {
     const res = await searchFoods(ing.name || ing.raw_text || "");
     const results = res.results || [];
-    // The reranker's top pick when available; OR the confident Basics staple when the search
-    // suppressed the reranker (dbSuppressed = true → results[0] IS the staple). Without this
-    // fallback, common foods like butter/onion/egg get flagged despite having a perfect match.
+    // The reranker's top pick when available; otherwise the top candidate by fixed priority
+    // (Basics → saved → OFF → USDA). Never strand an ingredient as "needs a match" when
+    // candidates exist — a best-guess the owner can see beats a blank flag they must hunt.
     const hit = Array.isArray(res.top3) && res.top3.length
       ? results[res.top3[0]]
-      : res.dbSuppressed && results.length ? results[0] : null;
+      : results.length ? results[0] : null;
     if (!hit) return { ...base, food_item_id: null, amount: null, unit: null };
     const item = await ensureFoodItem(hit);
     itemsById[item.id] = { ...hit, food_item_id: item.id };
