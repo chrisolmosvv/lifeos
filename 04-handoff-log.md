@@ -33,6 +33,36 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-07 — Cook Companion 6b Piece 2: split shopping tick / cooking mark-used (SRC-ONLY)
+
+WHAT CHANGED:
+- Shopping tick (Recipe view) stays ingredient_ticked; cooking mark-used (hero tags) now emits
+  ingredient_used. cookReplay derives two independent sets: tickedIngredients (shopping) and
+  usedIngredients (cooking). Neither reads the other.
+- Ticking the shopping list does NOT mark an ingredient as used in the hero. Marking something
+  used-in-pan does NOT tick the shopping list. Both persist independently across reload.
+
+FILES TOUCHED:
+- src/food/cookReplay.js (derive usedIngredients from ingredient_used events)
+- src/food/cookEventStore.js (new useIngredient convenience wrapper)
+- src/food/useCookEvents.js (new useIngredient action dispatcher)
+- src/food/CookCompanion.jsx (pass usedIngredients to hero, tickedIngredients to recipe view)
+
+HOW TO VERIFY: open a recipe in Cooking → tap an ingredient on the hero → it's struck (used).
+Switch to Recipe → that ingredient is □ unticked on the shopping list. Tick a different ingredient
+on the Recipe shopping list → switch to Cooking → it's NOT struck on the hero. Both persist across
+reload independently.
+
+KNOWN GAPS / RISKS:
+- cookMock.js and useCookTimers.js are now unused (prove-dead candidates — defer to the close).
+
+NEXT: the close ritual — prove-dead (CookMode.jsx, cookMode2.css, cookMock.js, useCookTimers.js)
++ docs updates.
+
+FOR THE CHECKER: n/a — schema was Piece 1 (checker approved).
+
+---
+
 ### 2026-07-07 — Cook Companion 6b Piece 1: widen cook_event CHECK (DB-ONLY, checker approved)
 
 WHAT CHANGED:
