@@ -135,6 +135,10 @@ export function tickIngredient(sessionId, ingredientRef) {
   return insertEvent(sessionId, "ingredient_ticked", String(ingredientRef), null);
 }
 
+export function useIngredient(sessionId, ingredientRef) {
+  return insertEvent(sessionId, "ingredient_used", String(ingredientRef), null);
+}
+
 export function startTimer(sessionId, stepIndex, durationSeconds) {
   return insertEvent(sessionId, "timer_started", String(stepIndex), { duration_seconds: durationSeconds });
 }

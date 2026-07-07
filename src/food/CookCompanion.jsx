@@ -44,7 +44,7 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
 
   const { recipe, ingredients, steps, itemsById } = data;
   const macros = recipeMacros(ingredients, recipe.servings || 1, itemsById);
-  const { stepStates, tickedIngredients, timers, finished } = cook.state;
+  const { stepStates, tickedIngredients, usedIngredients, timers, finished } = cook.state;
   const statusOf = (i) => stepStates[String(i)] || "waiting";
   const timerFor = (i) => timers.find((t) => t.targetRef === String(i));
 
@@ -134,11 +134,11 @@ export default function CookCompanion({ recipeId, onBack, onEdit, onDelete }) {
             <CookHero
               hero={hero} parked={parked} totalSteps={steps.length}
               heroTimer={heroTimer && !heroTimer.done ? heroTimer : null}
-              ingredients={ingredients} tickedSet={tickedIngredients}
+              ingredients={ingredients} tickedSet={usedIngredients}
               onMarkDone={handleMarkDone}
               onStartTimer={handleStartTimer}
               onAdjustTimer={handleAdjustTimer}
-              onTickIngredient={(i) => cook.tickIngredient(i)}
+              onTickIngredient={(i) => cook.useIngredient(i)}
             />
             {hasRail && <CookRail parked={parked} notYet={notYet} />}
           </div>

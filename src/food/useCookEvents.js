@@ -12,6 +12,7 @@ import {
   finishSession,
   markStep as markStepAction,
   tickIngredient as tickAction,
+  useIngredient as useAction,
   startTimer as startTimerAction,
   stopTimer as stopTimerAction,
 } from "./cookEventStore.js";
@@ -84,6 +85,14 @@ export function useCookEvents(recipeId) {
     catch { /* optimistic stays */ }
   }, [ensureSession, appendEvent]);
 
+  const useIngredient = useCallback(async (ingredientRef) => {
+    const sid = await ensureSession();
+    const optimistic = { event_type: "ingredient_used", target_ref: String(ingredientRef), payload: null, created_at: new Date().toISOString() };
+    appendEvent(optimistic);
+    try { await useAction(sid, ingredientRef); }
+    catch { /* optimistic stays */ }
+  }, [ensureSession, appendEvent]);
+
   const startTimer = useCallback(async (stepIndex, durationSeconds) => {
     const sid = await ensureSession();
     const optimistic = { event_type: "timer_started", target_ref: String(stepIndex), payload: { duration_seconds: durationSeconds }, created_at: new Date().toISOString() };
@@ -111,10 +120,11 @@ export function useCookEvents(recipeId) {
   return {
     session,
     ready,
-    state,               // { stepStates, tickedIngredients, timers, finished }
+    state,               // { stepStates, tickedIngredients, usedIngredients, timers, finished }
     hasSession: !!session,
     markStep,
     tickIngredient,
+    useIngredient,
     startTimer,
     stopTimer,
     finish,

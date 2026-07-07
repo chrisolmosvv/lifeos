@@ -10,13 +10,15 @@
  * @returns {{
  *   stepStates: Object<string, 'waiting'|'active'|'done'>,
  *   tickedIngredients: Set<string>,
+ *   usedIngredients: Set<string>,
  *   timers: Array<{ targetRef: string, durationSeconds: number, startedAt: number, remaining: number, done: boolean }>,
  *   finished: boolean
  * }}
  */
 export function replayCookEvents(events, now) {
   const stepStates = {};        // targetRef → last status
-  const ingredientTicks = {};   // targetRef → true/false (last toggle wins)
+  const ingredientTicks = {};   // targetRef → true/false (last toggle wins — shopping)
+  const ingredientUsed = {};    // targetRef → true/false (last toggle wins — cooking)
   const timerStarts = {};       // targetRef → { durationSeconds, startedAt }
   const timerStops = new Set(); // targetRef values that have been stopped
   let finished = false;
@@ -32,8 +34,13 @@ export function replayCookEvents(events, now) {
         break;
 
       case "ingredient_ticked":
-        // Toggle: if already ticked, untick; if not, tick
+        // Toggle: if already ticked, untick; if not, tick (shopping)
         ingredientTicks[ref] = !ingredientTicks[ref];
+        break;
+
+      case "ingredient_used":
+        // Toggle: mark used / un-used (cooking)
+        ingredientUsed[ref] = !ingredientUsed[ref];
         break;
 
       case "timer_started":
@@ -66,11 +73,15 @@ export function replayCookEvents(events, now) {
     });
   }
 
-  // Derive ticked set
+  // Derive ticked sets (independent: shopping vs cooking)
   const tickedIngredients = new Set();
   for (const [ref, ticked] of Object.entries(ingredientTicks)) {
     if (ticked) tickedIngredients.add(ref);
   }
+  const usedIngredients = new Set();
+  for (const [ref, used] of Object.entries(ingredientUsed)) {
+    if (used) usedIngredients.add(ref);
+  }
 
-  return { stepStates, tickedIngredients, timers, finished };
+  return { stepStates, tickedIngredients, usedIngredients, timers, finished };
 }
