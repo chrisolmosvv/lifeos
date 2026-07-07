@@ -8,6 +8,7 @@ import { updateDisplayName } from "./foodWrite";
 import Finder from "./finder/Finder";
 import { recipeFinderConfig } from "./finder/finderConfig";
 import ManualMacrosPanel from "./ManualMacrosPanel";
+import EditorSteps from "./EditorSteps";
 import "./cookbook.css";
 
 // RecipeEditor (V2 P6) — create + edit + the import review (same form), now TWO-COLUMN (ingredients +
@@ -176,22 +177,12 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
           </div>
         </div>
 
-        <div className="red-col">
-          <h3 className="red-h">Steps</h3>
-          <ol className="red-steps">
-            {steps.map((s, i) => (
-              <li key={i} className="red-step">
-                <textarea rows={2} value={typeof s.text === "string" ? s.text : ""} placeholder={`Step ${i + 1}`} onChange={(e) => setSteps((xs) => xs.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
-                <div className="red-step-ctl">
-                  <button type="button" onClick={() => moveStep(i, -1)} aria-label="Move up">↑</button>
-                  <button type="button" onClick={() => moveStep(i, 1)} aria-label="Move down">↓</button>
-                  <button type="button" onClick={() => setSteps((xs) => xs.filter((_, j) => j !== i))} aria-label="Remove">×</button>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <button type="button" className="red-add" onClick={() => setSteps((xs) => [...xs, { text: "" }])}>+ step</button>
-        </div>
+        <EditorSteps steps={steps}
+          onEditText={(i, text) => setSteps((xs) => xs.map((x, j) => (j === i ? { ...x, text } : x)))}
+          onMove={moveStep}
+          onRemove={(i) => setSteps((xs) => xs.filter((_, j) => j !== i))}
+          onAdd={() => setSteps((xs) => [...xs, { text: "" }])}
+        />
       </div>
 
       <div className="red-actions">
