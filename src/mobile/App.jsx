@@ -70,7 +70,6 @@ export default function MobileShell() {
       <MobileMasthead />
       <div className="m-body">
         <div className="m-page" key={activeTab}>
-          <div className="m-subline">{'\u2014'}</div>
           <hr className="m-rule" />
           <Placeholder label={TAB_DISPLAY[activeTab]} />
         </div>
