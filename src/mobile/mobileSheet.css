@@ -71,16 +71,18 @@
 }
 .m-task-body { flex: 1; min-width: 0; }
 .m-task-title {
+  display: block;
   font-family: var(--font-sans);
   font-size: 0.85rem;
   color: var(--ink);
   line-height: 1.3;
 }
 .m-task-meta {
+  display: block;
   font-family: var(--font-sans);
   font-size: 0.68rem;
   color: var(--ink-muted);
-  margin-top: 1px;
+  margin-top: 2px;
 }
 .m-task-badge { color: var(--ink-muted); }
 .m-task-overdue { color: var(--overdue); }

@@ -100,7 +100,7 @@
   color: var(--ink-muted);
   display: block;
 }
-.m-block--past { opacity: 0.4; }
+.m-block--past { opacity: 0.55; }
 
 /* ── Now line ── */
 .m-now-line {
