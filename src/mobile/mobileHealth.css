@@ -205,6 +205,26 @@
   font-family: var(--font-sans); font-size: 0.58rem; color: var(--ink-muted); margin-top: 4px;
 }
 
+/* ── Body face ── */
+.mh-metric-row {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 7px 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.mh-mr-name { font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink-muted); min-width: 72px; }
+.mh-mr-val  { font-family: var(--font-serif); font-size: 1rem; color: var(--ink); }
+.mh-mr-arrow { font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); width: 14px; text-align: center; }
+.mh-mr-band { margin-left: auto; font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted); }
+.mh-mr-warn { color: var(--overdue); }
+.mh-journey { display: inline-block; width: 48px; height: 4px; background: var(--rule-faint); vertical-align: middle; }
+.mh-journey-fill { display: block; height: 100%; background: var(--ink); opacity: 0.5; }
+.mh-chart-wrap { padding: 6px 0 10px; }
+.mh-chart-svg { display: block; width: 100%; height: 56px; }
+.mh-chart-labels {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-sans); font-size: 0.58rem; color: var(--ink-muted); margin-top: 2px;
+}
+.mh-chart-empty { font-family: var(--font-sans); font-size: 0.75rem; color: var(--ink-muted); font-style: italic; margin: 4px 0 8px; }
+
 /* ── Empty / Error ── */
 .mh-empty {
   font-family: var(--font-sans);
