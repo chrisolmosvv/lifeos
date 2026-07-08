@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { buildPlanning, planDrop } from '../planningModel'
-import { progressOf } from '../subtasks'
+import { progressOf } from '../../spine/logic/subtasks'
 import TodayTaskRow from './TodayTaskRow'
 import PlanningColumn from './PlanningColumn'
 import TriagePopover from './TriagePopover'

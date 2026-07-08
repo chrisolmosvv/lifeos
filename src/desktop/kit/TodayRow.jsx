@@ -1,6 +1,6 @@
 import CategoryTag from '../CategoryTag'
 import StatusCycle from './StatusCycle'
-import { dueStatus, formatDue } from '../dueDate'
+import { dueStatus, formatDue } from '../../spine/logic/dueDate'
 import { resolveColor } from '../colorModel'
 import { colorHex } from '../palette'
 import { useFocusTotals } from '../focus/focusTotalsContext'

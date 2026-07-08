@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import CategoryTag from './CategoryTag'
 import TaskEditForm from './TaskEditForm'
-import { dueStatus, formatDue } from './dueDate'
+import { dueStatus, formatDue } from '../spine/logic/dueDate'
 import './tasks.css'
 
 // One task line: a tick to mark it done, the title + its quiet meta (priority
