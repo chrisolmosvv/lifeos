@@ -414,6 +414,11 @@ verify_jwt = true
 [functions.hermes-read]
 verify_jwt = false
 
+# hermes-write is the external Hermes agent's WRITE surface. Same header-auth pattern as
+# hermes-read (X-Hermes-Write-Secret, a SEPARATE secret). JWT verification MUST stay off.
+[functions.hermes-write]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
