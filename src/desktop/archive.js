@@ -1,9 +1,6 @@
 import { supabase } from '../spine/data/supabaseClient'
-
-// The ONE shared way to say "active only" (Archive A3): hide archived rows from
-// every read. Apply to every tasks/events/categories SELECT that feeds a screen,
-// so the rule is uniform and never re-implemented subtly differently per screen.
-export const activeOnly = (query) => query.is('archived_at', null)
+import { activeOnly } from '../spine/data/activeOnly'
+export { activeOnly }
 
 // The archive write helper (Phase 7, Archive A2). Soft-delete = archive: a delete
 // stamps the affected rows with archived_at + a shared archive_batch_id so it can

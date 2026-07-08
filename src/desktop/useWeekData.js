@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../spine/data/supabaseClient'
-import { activeOnly } from './archive'
+import { activeOnly } from '../spine/data/activeOnly'
 import { ensureGeneratedThrough } from './recur/topup'
 
 // The week's data layer: load this week's events + scheduled tasks + categories,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../spine/data/supabaseClient'
-import { activeOnly } from './archive'
-import { ensureGeneratedThrough } from './recur/topup'
+import { supabase } from './supabaseClient'
+import { activeOnly } from './activeOnly'
+import { ensureGeneratedThrough } from '../../desktop/recur/topup'
 
 // Today's data layer (Phase 7 / T10 P5): the viewed day's tasks + events + cats and
 // the write primitives, lifted OUT of Today.jsx so the screen stays about render +
