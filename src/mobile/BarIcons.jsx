@@ -7,7 +7,7 @@ const S = { display: 'block' }
 // Today — almanac sun: filled centre disc + 8 short rays
 export function IconSun() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" style={S} aria-hidden="true">
+    <svg width="26" height="26" viewBox="0 0 20 20" style={S} aria-hidden="true">
       <circle cx="10" cy="10" r="4" fill="currentColor" />
       <g stroke="currentColor" strokeWidth="2" strokeLinecap="butt">
         <line x1="10" y1="1" x2="10" y2="4" />
@@ -26,7 +26,7 @@ export function IconSun() {
 // Health — ECG / pulse line: flat line with one up-down-up spike
 export function IconPulse() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" style={S} aria-hidden="true">
+    <svg width="26" height="26" viewBox="0 0 20 20" style={S} aria-hidden="true">
       <polyline
         points="1,10 6,10 8,4 10,16 12,4 14,10 19,10"
         fill="none"
@@ -42,7 +42,7 @@ export function IconPulse() {
 // Food — fork: 3 tines, crossbar, neck, handle
 export function IconFork() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" style={S} aria-hidden="true">
+    <svg width="26" height="26" viewBox="0 0 20 20" style={S} aria-hidden="true">
       <g stroke="currentColor" strokeWidth="2" strokeLinecap="butt" strokeLinejoin="miter" fill="none">
         <line x1="6" y1="2" x2="6" y2="8" />
         <line x1="10" y1="2" x2="10" y2="8" />
@@ -57,7 +57,7 @@ export function IconFork() {
 // More — ellipsis: three filled dots in a horizontal row
 export function IconMore() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" style={S} aria-hidden="true">
+    <svg width="26" height="26" viewBox="0 0 20 20" style={S} aria-hidden="true">
       <circle cx="4" cy="10" r="2" fill="currentColor" />
       <circle cx="10" cy="10" r="2" fill="currentColor" />
       <circle cx="16" cy="10" r="2" fill="currentColor" />

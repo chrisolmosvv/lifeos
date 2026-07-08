@@ -29,8 +29,9 @@
 }
 .m-mast-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 14px;
 }
 .m-nameplate {
   font-family: var(--font-black);
@@ -45,14 +46,13 @@
   display: flex;
   flex-direction: column;
   font-family: var(--font-sans);
-  font-size: 0.5rem;
+  font-size: 0.72rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--ink-muted);
-  line-height: 1.35;
-  min-width: 0;
-  flex-shrink: 1;
+  line-height: 1.3;
+  flex: none;
 }
 .m-ear--left { text-align: left; }
 .m-ear--right { text-align: right; }
@@ -114,8 +114,7 @@
   align-items: center;
   border-top: 1px solid var(--rule);
   background: var(--paper);
-  padding: 6px 0;
-  padding-bottom: calc(6px + env(safe-area-inset-bottom));
+  padding: 10px 0 calc(8px + env(safe-area-inset-bottom));
 }
 .m-tab {
   -webkit-appearance: none;
@@ -130,8 +129,10 @@
   justify-content: center;
   color: var(--ink-muted);
   cursor: pointer;
-  padding: 4px 8px 3px;
+  padding: 10px 10px 8px;
   border-bottom: 2px solid transparent;
+  min-width: 44px;
+  min-height: 44px;
 }
 .m-tab-icon { line-height: 0; }
 .m-tab--active {
@@ -147,11 +148,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--rule);
   border-radius: 50%;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 400;
   line-height: 1;
 }
