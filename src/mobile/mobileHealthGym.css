@@ -1,0 +1,62 @@
+/* Mobile Health — Gym face + Session report (mh- prefix) */
+
+/* ── Story headline ── */
+.mh-gym-story {
+  font-family: var(--font-serif); font-size: 0.92rem; font-style: italic;
+  color: var(--ink); margin: 0; padding: 4px 20px 8px; line-height: 1.4;
+}
+
+/* ── Heatmap ── */
+.mh-heat-header {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 3px;
+  font-family: var(--font-sans); font-size: 0.52rem; color: var(--ink-muted); text-align: center;
+}
+.mh-heat-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.mh-heat-cell { aspect-ratio: 1; background: var(--rule-faint); }
+.mh-heat-on { background: var(--ink); }
+
+/* ── Balance ── */
+.mh-balance { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.mh-bal-row { display: flex; align-items: center; gap: 6px; }
+.mh-bal-name { font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); min-width: 72px; }
+.mh-bal-bar { flex: 1; height: 4px; background: var(--rule-faint); }
+.mh-bal-fill { display: block; height: 100%; background: var(--ink); opacity: 0.35; }
+.mh-bal-sets { font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted); min-width: 20px; text-align: right; }
+
+/* ── Session rows ── */
+.mh-sess-row {
+  display: flex; align-items: baseline; gap: 6px; padding: 7px 0;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.mh-sess-date { font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted); min-width: 42px; }
+.mh-sess-title { font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink); flex: 1; }
+.mh-sess-pr { font-family: var(--font-sans); font-size: 0.58rem; font-weight: 600; color: var(--accent); }
+.mh-sess-vol { font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted); }
+
+/* ── Session report ── */
+.mh-rpt-head { padding: 0 20px 8px; }
+.mh-rpt-title { font-family: var(--font-serif); font-size: 1.3rem; color: var(--ink); margin: 0; }
+.mh-rpt-date { font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); margin: 2px 0 0; }
+.mh-rpt-story { font-family: var(--font-serif); font-size: 0.88rem; font-style: italic; color: var(--ink); margin: 6px 0 0; }
+.mh-rpt-totals {
+  display: flex; gap: 16px; margin-top: 8px;
+  font-family: var(--font-sans); font-size: 0.75rem; color: var(--ink-muted);
+}
+.mh-rpt-pr { color: var(--accent); font-weight: 600; }
+
+/* ── Exercise ── */
+.mh-exercise { padding: 0 20px; border-top: 1px solid var(--rule-faint); }
+.mh-ex-head { display: flex; align-items: baseline; gap: 8px; padding: 10px 0 4px; }
+.mh-ex-title { font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600; color: var(--ink); }
+.mh-ex-muscle { font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted); }
+.mh-ex-sets { display: flex; flex-direction: column; gap: 1px; }
+.mh-set-row { display: flex; align-items: baseline; gap: 6px; padding: 3px 0; }
+.mh-set-num { font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted); width: 14px; text-align: right; }
+.mh-set-detail { font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink); }
+.mh-set-rpe { font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted); }
+.mh-set-tag { font-family: var(--font-sans); font-size: 0.58rem; color: var(--ink-muted); font-style: italic; }
+.mh-set-warm .mh-set-detail { opacity: 0.5; }
+.mh-ex-summary {
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); margin: 4px 0 0;
+}
+.mh-ex-vol { font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted); margin: 2px 0 8px; }

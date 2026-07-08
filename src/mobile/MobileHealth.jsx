@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useHealthData } from '../spine/data/useHealthData'
 import MobileHealthSleep from './MobileHealthSleep'
 import MobileHealthBody from './MobileHealthBody'
+import MobileHealthGym from './MobileHealthGym'
 import { hm, clockTime, asOf } from '../spine/logic/healthFormat'
 import { fmtFull } from '../spine/logic/bodyFormat'
 import { formatVolume, formatDuration, formatCount } from '../spine/logic/gymFormat'
@@ -138,6 +139,7 @@ export default function MobileHealth() {
 
   if (view === 'sleep') return <MobileHealthSleep data={data} onBack={() => setView('overview')} />
   if (view === 'body') return <MobileHealthBody data={data} onBack={() => setView('overview')} />
+  if (view === 'gym') return <MobileHealthGym data={data} onBack={() => setView('overview')} />
 
   return (
     <div className="mh-overview">
@@ -147,7 +149,7 @@ export default function MobileHealth() {
       <hr className="m-rule" />
       <BodyBlock body={data.body} onTap={() => setView('body')} />
       <hr className="m-rule" />
-      <GymBlock gym={data.gym} hasData={data.gymHasData} onTap={() => {}} />
+      <GymBlock gym={data.gym} hasData={data.gymHasData} onTap={() => setView('gym')} />
     </div>
   )
 }

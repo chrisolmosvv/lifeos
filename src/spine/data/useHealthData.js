@@ -73,7 +73,7 @@ export function useHealthData() {
         sleep: sv, sleepRows, sleepGoalTally, respiratoryRate: respRate,
         body: { weight: bodyAll.weight, body_fat: bodyAll.body_fat },
         bodyAll, bodyRows, activity, goalMap,
-        gym: box, gymHasData: built.length > 0, asOfTs,
+        gym: box, gymWorkouts: built, gymHasData: built.length > 0, asOfTs,
       })
     })().catch(e => alive && setState({ loading: false, error: e.message || String(e) }))
     return () => { alive = false }
