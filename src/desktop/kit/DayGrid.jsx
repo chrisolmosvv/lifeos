@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HOUR_HEIGHT, formatHour, timeRange } from '../../spine/logic/dateUtils'
-import { buildDayItems, layoutEvents } from '../eventLayout'
+import { buildDayItems, layoutEvents } from '../../spine/logic/eventLayout'
 import { colorHex, INBOX_COLOR } from '../palette'
 import { resolveColor } from '../colorModel'
 import { useBlockAppearance } from './useBlockAppearance'
