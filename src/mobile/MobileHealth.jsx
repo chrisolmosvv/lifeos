@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useHealthData } from '../spine/data/useHealthData'
+import MobileHealthSleep from './MobileHealthSleep'
 import { hm, clockTime, asOf } from '../spine/logic/healthFormat'
 import { fmtFull } from '../spine/logic/bodyFormat'
 import { formatVolume, formatDuration, formatCount } from '../spine/logic/gymFormat'
@@ -124,6 +126,7 @@ function HealthSkeleton() {
 // ── Overview hub ─────────────────────────────────────────────────────────────
 export default function MobileHealth() {
   const data = useHealthData()
+  const [view, setView] = useState('overview')
 
   if (data.loading) return <HealthSkeleton />
   if (data.error) return (
@@ -132,11 +135,13 @@ export default function MobileHealth() {
     </div>
   )
 
+  if (view === 'sleep') return <MobileHealthSleep data={data} onBack={() => setView('overview')} />
+
   return (
     <div className="mh-overview">
       {data.asOfTs && <p className="mh-freshness">as of {asOf(data.asOfTs)}</p>}
       <hr className="m-rule" />
-      <SleepBlock sleep={data.sleep} onTap={() => {}} />
+      <SleepBlock sleep={data.sleep} onTap={() => setView('sleep')} />
       <hr className="m-rule" />
       <BodyBlock body={data.body} onTap={() => {}} />
       <hr className="m-rule" />

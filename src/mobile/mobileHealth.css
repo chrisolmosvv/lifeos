@@ -133,6 +133,78 @@
   margin-top: 2px;
 }
 
+/* ── Sleep face ── */
+.mh-face { padding: 0 0 24px; animation: mh-slide-in 200ms ease-out; }
+@keyframes mh-slide-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .mh-face { animation: none; } }
+
+.mh-back {
+  -webkit-appearance: none; appearance: none; background: none; border: none;
+  font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-muted);
+  padding: 12px 20px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+
+/* Hypnogram (time-axis stage bar) */
+.mh-hypno { padding: 0 20px; margin: 4px 0 12px; }
+.mh-hypno-bar { position: relative; height: 22px; }
+.mh-hypno-seg {
+  position: absolute; top: 0; height: 100%; min-width: 1px;
+  -webkit-tap-highlight-color: transparent; cursor: pointer;
+}
+.mh-hypno-seg--sel { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+/* All neutral on the face (no terracotta for stages) */
+.mh-hypno-seg.mh-stage--deep  { background: var(--ink); opacity: 0.7; }
+.mh-hypno-seg.mh-stage--core  { background: var(--ink); opacity: 0.3; }
+.mh-hypno-seg.mh-stage--rem   { background: var(--ink); opacity: 0.5; }
+.mh-hypno-seg.mh-stage--awake { background: var(--ink); opacity: 0.1; }
+
+.mh-hypno-ticks { position: relative; height: 20px; }
+.mh-hypno-tick {
+  position: absolute; top: 0; border-left: 1px solid var(--rule-faint); height: 5px;
+}
+.mh-hypno-tick-label {
+  position: absolute; top: 7px; transform: translateX(-50%);
+  font-family: var(--font-sans); font-size: 0.58rem; color: var(--ink-muted);
+}
+.mh-hypno-detail {
+  font-family: var(--font-sans); font-size: 0.75rem; color: var(--ink); margin: 4px 0 0;
+}
+
+/* Rhythm readout */
+.mh-rhythm { padding: 16px 20px; display: flex; flex-direction: column; gap: 2px; }
+.mh-rhythm-row {
+  font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-muted); margin: 0;
+}
+.mh-rhythm-mark { margin-right: 6px; }
+.mh-rhythm-dur {
+  font-family: var(--font-serif); font-size: 1.6rem; font-weight: 400;
+  color: var(--accent); margin: 0; padding-left: 22px;
+}
+
+/* Footer 2×2 */
+.mh-footer {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px;
+  padding: 16px 20px;
+}
+.mh-footer-cell { display: flex; flex-direction: column; }
+.mh-footer-val { font-family: var(--font-serif); font-size: 1.1rem; color: var(--ink); }
+.mh-footer-label {
+  font-family: var(--font-sans); font-size: 0.62rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted);
+}
+
+/* 7-night trend */
+.mh-trend { padding: 16px 20px 0; }
+.mh-trend-bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; margin-top: 8px; }
+.mh-trend-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  height: 100%; justify-content: flex-end;
+}
+.mh-trend-bar { width: 100%; background: var(--ink); opacity: 0.18; min-height: 2px; }
+.mh-trend-day {
+  font-family: var(--font-sans); font-size: 0.58rem; color: var(--ink-muted); margin-top: 4px;
+}
+
 /* ── Empty / Error ── */
 .mh-empty {
   font-family: var(--font-sans);
