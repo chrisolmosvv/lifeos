@@ -1,0 +1,210 @@
+/* Mobile Today — grid, blocks, now-line, allday, navigation. Tokens only. */
+
+/* ── Today wrapper ── */
+.m-today { position: relative; }
+.m-today-grid-wrap { position: relative; }
+
+/* ── All-day band ── */
+.m-allday {
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.m-allday-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--ink);
+}
+.m-allday-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.m-allday-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.m-allday-more {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  color: var(--ink-muted);
+  padding-left: 13px;
+}
+
+/* ── Day grid ── */
+.m-grid { touch-action: pan-y; }
+.m-grid-inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px 1fr;
+}
+.m-grid-times {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+}
+.m-grid-time {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 2px 6px 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  box-sizing: border-box;
+}
+.m-grid-lane {
+  grid-column: 2;
+  position: relative;
+}
+.m-grid-hour {
+  border-top: 1px solid var(--rule-faint);
+  box-sizing: border-box;
+}
+
+/* ── Blocks ── */
+.m-block {
+  display: flex;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-right: 2px;
+}
+.m-block-bar { width: 3px; flex: none; }
+.m-block-body {
+  flex: 1;
+  padding: 2px 5px;
+  min-width: 0;
+  overflow: hidden;
+}
+.m-block-title {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.2;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.m-block-time {
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  color: var(--ink-muted);
+  display: block;
+}
+.m-block--past { opacity: 0.4; }
+
+/* ── Now line ── */
+.m-now-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 5;
+  pointer-events: none;
+}
+.m-now-dot {
+  position: absolute;
+  left: -4px; top: -3px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ── Back to today chip ── */
+.m-back-today {
+  position: absolute;
+  top: 8px; right: 12px;
+  z-index: 10;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 4px 10px;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* ── Grid expand ── */
+.m-grid-expand {
+  display: block;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  color: var(--ink-muted);
+  text-align: center;
+  padding: 6px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule-faint);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* ── Overflow +N ── */
+.m-overflow {
+  position: absolute;
+  right: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  padding: 2px 4px;
+}
+
+/* ── Day slide animations ── */
+.m-grid-slide-next { animation: m-slide-next 200ms ease-out; }
+.m-grid-slide-prev { animation: m-slide-prev 200ms ease-out; }
+@keyframes m-slide-next { from { transform: translateX(25%); opacity: 0.6; } }
+@keyframes m-slide-prev { from { transform: translateX(-25%); opacity: 0.6; } }
+@media (prefers-reduced-motion: reduce) {
+  .m-grid-slide-next, .m-grid-slide-prev { animation: none; }
+}
+
+/* ── Sheet handle (sticky at bottom of scroll content) ── */
+.m-sheet-handle {
+  position: sticky;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  text-align: center;
+  padding: 12px 16px;
+  background: var(--paper);
+  border: none;
+  border-top: 1px solid var(--rule);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  z-index: 4;
+}
+.m-sheet-handle-caret {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.6rem;
+}
+
+/* ── Empty states ── */
+.m-empty {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  text-align: center;
+  padding: 32px 16px;
+  margin: 0;
+}

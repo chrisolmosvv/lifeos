@@ -1,11 +1,13 @@
 import { mastDate, personalEdition } from '../spine/logic/personalEdition'
 
-export default function MobileMasthead() {
+export default function MobileMasthead({ subline, folioDate }) {
   const now = new Date()
-  const dateStr = mastDate(now)
+  const displayDate = folioDate || now
+  const dateStr = mastDate(displayDate)
   const lastSpace = dateStr.lastIndexOf(' ')
   const dayMonth = dateStr.slice(0, lastSpace)
   const year = dateStr.slice(lastSpace + 1)
+  // Personal edition always reflects the real today (year/day counts)
   const { age, day } = personalEdition(now)
 
   return (
@@ -21,6 +23,7 @@ export default function MobileMasthead() {
           <span>Day {day}</span>
         </div>
       </div>
+      {subline && <div className="m-subline">{subline}</div>}
     </header>
   )
 }

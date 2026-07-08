@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../spine/data/useAuth'
 import { supabase } from '../spine/data/supabaseClient'
 import MobileMasthead from './MobileMasthead'
 import MobileTabBar from './MobileTabBar'
+import MobileToday from './MobileToday'
 
 function Placeholder({ label }) {
   return (
@@ -45,7 +46,6 @@ function MobileLogin() {
 }
 
 const TAB_DISPLAY = {
-  today: 'Today',
   health: 'Health',
   capture: 'Capture',
   food: 'Food',
@@ -55,6 +55,13 @@ const TAB_DISPLAY = {
 export default function MobileShell() {
   const { session, loading, isPasswordRecovery } = useAuth()
   const [activeTab, setActiveTab] = useState('today')
+  const [subline, setSubline] = useState('')
+  const [folioDate, setFolioDate] = useState(null)
+
+  // Clear subline + folio when leaving the Today tab
+  useEffect(() => {
+    if (activeTab !== 'today') { setSubline(''); setFolioDate(null) }
+  }, [activeTab])
 
   if (loading)
     return <div className="m-center"><p>Loading…</p></div>
@@ -67,11 +74,17 @@ export default function MobileShell() {
 
   return (
     <div className="m-shell">
-      <MobileMasthead />
+      <MobileMasthead subline={subline} folioDate={folioDate} />
       <div className="m-body">
         <div className="m-page" key={activeTab}>
-          <hr className="m-rule" />
-          <Placeholder label={TAB_DISPLAY[activeTab]} />
+          {activeTab === 'today' ? (
+            <MobileToday onSubline={setSubline} onFolioDate={setFolioDate} />
+          ) : (
+            <>
+              <hr className="m-rule" />
+              <Placeholder label={TAB_DISPLAY[activeTab]} />
+            </>
+          )}
         </div>
       </div>
       <MobileTabBar activeTab={activeTab} onSelect={setActiveTab} />
