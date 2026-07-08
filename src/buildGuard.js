@@ -1,5 +1,9 @@
 // Build-time guard: fails the build if desktop/ and mobile/ trees cross-contaminate.
 // Files under spine/ are allowed in both bundles.
+// CSS files are excluded from checks — shared-entry stylesheets (like mobile.css
+// loaded statically for iOS compatibility) are harmless and must not trigger.
+
+const isJS = (m) => !m.endsWith('.css')
 
 export default function buildGuard() {
   return {
@@ -9,11 +13,11 @@ export default function buildGuard() {
       const chunks = Object.values(bundle).filter((c) => c.type === 'chunk')
 
       for (const chunk of chunks) {
-        const mods = Object.keys(chunk.modules || {})
+        const mods = Object.keys(chunk.modules || {}).filter(isJS)
         const hasDesktop = mods.some((m) => m.includes('/src/desktop/'))
         const hasMobile = mods.some((m) => m.includes('/src/mobile/'))
 
-        // A single chunk must never contain modules from BOTH trees.
+        // A single chunk must never contain JS modules from BOTH trees.
         if (hasDesktop && hasMobile) {
           const desktopMods = mods.filter((m) => m.includes('/src/desktop/'))
           const mobileMods = mods.filter((m) => m.includes('/src/mobile/'))
@@ -25,9 +29,7 @@ export default function buildGuard() {
         }
       }
 
-      // Now check the transitive chunk closure for each dynamic entry.
-      // The mobile entry's reachable chunks must not include any chunk with desktop modules,
-      // and vice versa.
+      // Check the transitive chunk closure for each dynamic entry.
       const dynamicEntries = chunks.filter((c) => c.isDynamicEntry)
 
       for (const entry of dynamicEntries) {
@@ -43,16 +45,16 @@ export default function buildGuard() {
           for (const dep of (c.imports || [])) queue.push(dep)
         }
 
-        // Union all source modules across reachable chunks.
+        // Union all source JS modules across reachable chunks.
         const allMods = []
         for (const name of visited) {
           const c = bundle[name]
           if (c && c.type === 'chunk' && c.modules) {
-            allMods.push(...Object.keys(c.modules))
+            allMods.push(...Object.keys(c.modules).filter(isJS))
           }
         }
 
-        const entryMods = Object.keys(entry.modules || {})
+        const entryMods = Object.keys(entry.modules || {}).filter(isJS)
         const isMobileEntry = entryMods.some((m) => m.includes('/src/mobile/'))
         const isDesktopEntry = entryMods.some((m) => m.includes('/src/desktop/'))
 

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../spine/data/useAuth'
 import { supabase } from '../spine/data/supabaseClient'
-import './mobile.css'
 
 function Placeholder({ label }) {
   return (
