@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { HOUR_HEIGHT, isSameDay, dayName } from '../dateUtils'
+import { HOUR_HEIGHT, isSameDay, dayName } from '../../spine/logic/dateUtils'
 import { useBlockAppearance } from './useBlockAppearance'
 import WeekColumn from './WeekColumn'
 import AllDayBand from './AllDayBand'

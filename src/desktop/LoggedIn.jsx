@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { weekDays } from './dateUtils'
+import { weekDays } from '../spine/logic/dateUtils'
 import { FocusTotalsProvider } from './focus/focusTotalsContext'
 import { FocusSessionProvider } from './focus/focusSessionContext'
 import FocusGlobalLayer from './focus/FocusGlobalLayer'

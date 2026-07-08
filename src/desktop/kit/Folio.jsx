@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { formatMastheadDate, formatClock } from '../dateUtils'
+import { formatMastheadDate, formatClock } from '../../spine/logic/dateUtils'
 import './kit.css'
 
 // Folio — the line under the nameplate: today's date · a motto · a live ticking

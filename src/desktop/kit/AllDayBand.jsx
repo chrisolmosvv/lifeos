@@ -1,6 +1,6 @@
 import { resolveColor } from '../colorModel'
 import { colorHex, INBOX_COLOR } from '../palette'
-import { monthDay } from '../dateUtils'
+import { monthDay } from '../../spine/logic/dateUtils'
 import './allDayBand.css'
 import './gridCursor.css'
 

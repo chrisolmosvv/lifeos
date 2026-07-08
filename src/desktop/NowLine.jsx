@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { HOUR_HEIGHT } from './dateUtils'
+import { HOUR_HEIGHT } from '../spine/logic/dateUtils'
 
 // The thin red line showing the current time, like Apple Calendar.
 // Updates itself once a minute.

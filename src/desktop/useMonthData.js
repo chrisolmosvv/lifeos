@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../spine/data/supabaseClient'
 import { activeOnly } from './archive'
-import { startOfWeek } from './dateUtils'
+import { startOfWeek } from '../spine/logic/dateUtils'
 import { ensureGeneratedThrough } from './recur/topup'
 
 // Read-only month-range data for the Month view (Phase 7, C6). A sibling of

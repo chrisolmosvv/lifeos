@@ -1,4 +1,4 @@
-import { startOfWeek } from './dateUtils'
+import { startOfWeek } from '../spine/logic/dateUtils'
 
 // Pure layout for the Month grid (Phase 7, C6). No React, no data access — given
 // the month + the range's events/tasks, returns the 42 grid days, each day's

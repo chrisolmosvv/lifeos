@@ -1,7 +1,7 @@
 import { buildDayItems, layoutEvents } from '../eventLayout'
 import { colorHex, INBOX_COLOR } from '../palette'
 import { resolveColor } from '../colorModel'
-import { HOUR_HEIGHT, timeRange } from '../dateUtils'
+import { HOUR_HEIGHT, timeRange } from '../../spine/logic/dateUtils'
 import TintedBlock from './TintedBlock'
 import './gridCursor.css'
 

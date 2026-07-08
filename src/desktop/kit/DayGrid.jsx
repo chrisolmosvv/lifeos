@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { HOUR_HEIGHT, formatHour, timeRange } from '../dateUtils'
+import { HOUR_HEIGHT, formatHour, timeRange } from '../../spine/logic/dateUtils'
 import { buildDayItems, layoutEvents } from '../eventLayout'
 import { colorHex, INBOX_COLOR } from '../palette'
 import { resolveColor } from '../colorModel'

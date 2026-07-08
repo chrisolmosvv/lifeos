@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { HOUR_HEIGHT } from '../dateUtils'
+import { HOUR_HEIGHT } from '../../spine/logic/dateUtils'
 
 // useGridDrag — the ONE timeline-drag hook (Phase 7, C4 Part 2), the merge of the
 // former useTodayGrid + useWeekGrid twins. The shared core (snap/threshold/edge,

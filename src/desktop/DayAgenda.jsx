@@ -5,7 +5,7 @@ import {
   dayNameFull,
   formatLongDate,
   formatHour,
-} from './dateUtils'
+} from '../spine/logic/dateUtils'
 import NowLine from './NowLine'
 
 // Phone view: a single, readable day column for today — not the squished

@@ -1,4 +1,4 @@
-import { HOUR_HEIGHT } from './dateUtils'
+import { HOUR_HEIGHT } from '../spine/logic/dateUtils'
 
 // Pure layout for the day timeline. Given today's events and the ms timestamp of
 // 00:00 local today, return each event with its pixel top/height and its

@@ -3,7 +3,7 @@
 // so the rules are easy to read and change. Display logic only; the DB buckets
 // (Today / This Week / Someday) are untouched. (Phase 7, T4 / Rebuild R1.)
 
-import { isSameDay } from './dateUtils'
+import { isSameDay } from '../spine/logic/dateUtils'
 
 const PRIORITY_RANK = { high: 0, med: 1, low: 2 }
 function rank(p) {

@@ -9,7 +9,7 @@
 // The V2-5 swipe steps whole Mon-weeks via these same navNext/navPrev (one path
 // with the arrows) — there is no free/any-day window.
 
-import { startOfWeek } from './dateUtils'
+import { startOfWeek } from '../spine/logic/dateUtils'
 
 export const HOME = { mode: 'home' }
 

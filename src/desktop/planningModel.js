@@ -8,7 +8,7 @@
 // its DUE date (the target day) if it has one, else its SCHEDULED day (the
 // work-block) — so a scheduled-but-undated task is placed by the day it sits on.
 
-import { isSameDay, startOfWeek } from './dateUtils'
+import { isSameDay, startOfWeek } from '../spine/logic/dateUtils'
 
 const PRIORITY_RANK = { high: 0, med: 1, low: 2 }
 const rank = (p) => PRIORITY_RANK[p] ?? 3
