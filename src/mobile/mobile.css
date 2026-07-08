@@ -1,0 +1,140 @@
+/* Mobile shell — all classes use m- prefix.
+   Colours and fonts from spine/theme/theme.css via custom properties. */
+
+/* ── Layout ── */
+
+.m-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.m-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.m-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--ink-muted);
+}
+
+/* ── Tab bar ── */
+
+.m-tabbar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 10px 0;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+
+.m-tab {
+  all: unset;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  text-align: center;
+}
+
+.m-tab--active {
+  color: var(--ink);
+}
+
+/* ── Placeholder ── */
+
+.m-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 8px;
+}
+
+.m-placeholder-label {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.m-placeholder-hint {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/* ── Login ── */
+
+.m-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 0 32px;
+  gap: 12px;
+}
+
+.m-login-title {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+
+.m-login-field {
+  width: 100%;
+  max-width: 280px;
+  padding: 10px 12px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  -webkit-appearance: none;
+}
+
+.m-login-field::placeholder {
+  color: var(--ink-muted);
+}
+
+.m-login-btn {
+  width: 100%;
+  max-width: 280px;
+  padding: 12px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.m-login-btn:disabled {
+  opacity: 0.5;
+}
+
+.m-login-error {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--overdue);
+  margin: 4px 0 0;
+  text-align: center;
+  max-width: 280px;
+}
