@@ -3,7 +3,6 @@
 // close. Today | Upcoming switcher inside. Status-cycle is the only write.
 
 import { useRef, useState } from 'react'
-import './mobileSheet.css'
 import MSwitcher from './MSwitcher'
 import MobileTaskRow from './MobileTaskRow'
 

@@ -15,7 +15,6 @@ import { colorHex } from '../spine/logic/palette'
 import { upNext, formatUpNext } from './upNext'
 import MobileDayGrid from './MobileDayGrid'
 import MobileTaskSheet from './MobileTaskSheet'
-import './mobileToday.css'
 
 export default function MobileToday({ onSubline, onFolioDate }) {
   const [viewed, setViewed] = useState(() => startOfDay(new Date()))
