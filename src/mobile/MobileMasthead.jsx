@@ -1,24 +1,25 @@
-import { useState, useEffect } from 'react'
-import { mastTime, mastDate, personalEdition } from '../spine/logic/personalEdition'
+import { mastDate, personalEdition } from '../spine/logic/personalEdition'
 
 export default function MobileMasthead() {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(id)
-  }, [])
-
+  const now = new Date()
+  const dateStr = mastDate(now)
+  const lastSpace = dateStr.lastIndexOf(' ')
+  const dayMonth = dateStr.slice(0, lastSpace)
+  const year = dateStr.slice(lastSpace + 1)
   const { age, day } = personalEdition(now)
 
   return (
     <header className="m-masthead">
-      <div className="m-nameplate">LifeOS</div>
-      <div className="m-folio">
-        <span>{mastDate(now)}</span>
-        <span className="m-folio-sep">·</span>
-        <span>Year {age}, Day {day}</span>
-        <span className="m-folio-sep">·</span>
-        <span className="m-folio-clock tnum">{mastTime(now)}</span>
+      <div className="m-mast-row">
+        <div className="m-ear m-ear--left">
+          <span>{dayMonth}</span>
+          <span>{year}</span>
+        </div>
+        <div className="m-nameplate">LifeOS</div>
+        <div className="m-ear m-ear--right">
+          <span>Year {age}</span>
+          <span>Day {day}</span>
+        </div>
       </div>
     </header>
   )

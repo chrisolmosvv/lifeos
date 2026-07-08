@@ -23,7 +23,7 @@ export default function MobileTabBar({ activeTab, onSelect }) {
         >
           {tab.id === 'capture'
             ? <span className="m-capture-glyph">+</span>
-            : <><span className="m-tab-icon"><tab.Icon /></span>{tab.label}</>}
+            : <span className="m-tab-icon"><tab.Icon /></span>}
         </button>
       ))}
     </nav>

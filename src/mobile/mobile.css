@@ -24,9 +24,13 @@
 /* ── Masthead ── */
 .m-masthead {
   flex: none;
-  text-align: center;
-  padding: calc(4px + env(safe-area-inset-top)) 16px 3px;
+  padding: calc(4px + env(safe-area-inset-top)) 12px 3px;
   background: var(--paper);
+}
+.m-mast-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .m-nameplate {
   font-family: var(--font-black);
@@ -34,23 +38,24 @@
   font-size: 1.5rem;
   line-height: 1.1;
   color: var(--ink);
+  white-space: nowrap;
+  flex: none;
 }
-.m-folio {
+.m-ear {
   display: flex;
-  justify-content: center;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.4em;
+  flex-direction: column;
   font-family: var(--font-sans);
-  font-size: 0.6rem;
+  font-size: 0.5rem;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   color: var(--ink-muted);
-  margin-top: 2px;
+  line-height: 1.35;
+  min-width: 0;
+  flex-shrink: 1;
 }
-.m-folio-sep { opacity: 0.5; }
-.m-folio-clock { color: var(--ink); }
+.m-ear--left { text-align: left; }
+.m-ear--right { text-align: right; }
 
 /* ── Subline + rule ── */
 .m-subline {
@@ -121,19 +126,12 @@
   border-radius: 0;
   -webkit-tap-highlight-color: transparent;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-family: var(--font-sans);
-  font-size: 0.62rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  justify-content: center;
   color: var(--ink-muted);
   cursor: pointer;
   padding: 4px 8px 3px;
   border-bottom: 2px solid transparent;
-  text-align: center;
 }
 .m-tab-icon { line-height: 0; }
 .m-tab--active {
