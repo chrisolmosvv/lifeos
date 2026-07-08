@@ -4,6 +4,7 @@ import './spine/theme/theme.css'   // design tokens, applied app-wide
 import './mobile/mobile.css'       // m-prefixed rules, harmless to desktop (classes never appear in its DOM)
 import './mobile/mobileToday.css'  // Today grid + blocks + now-line (static — dynamic-chunk CSS preload broken in Vite 5 ternary imports)
 import './mobile/mobileSheet.css'  // task sheet + task rows + status cycle
+import './mobile/mobileHealth.css' // Health screens (static — CSS-load rule)
 
 // Viewport-gated front door: read once at boot, load exactly one tree.
 // Portrait iPhone (390–430px) always gets mobile; desktop always gets desktop.
