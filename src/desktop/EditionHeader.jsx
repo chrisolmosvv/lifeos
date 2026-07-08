@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Masthead from './kit/Masthead'
 import Popover from './kit/Popover'
-import { mastTime, mastWeekday, mastDate, personalEdition } from './personalEdition'
+import { mastTime, mastWeekday, mastDate, personalEdition } from '../spine/logic/personalEdition'
 import { useFocusSessionCtx } from './focus/focusSessionContext'
 import { useCookSessionCtx } from './food/cookSessionContext'
 import { elapsedClock } from './focus/focusFormat'
