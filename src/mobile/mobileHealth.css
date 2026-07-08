@@ -1,1 +1,149 @@
-/* Mobile Health — styles added when screens ship */
+/* Mobile Health — mh- prefix, tokens from theme.css */
+
+/* ── Overview ── */
+.mh-overview { padding: 0 20px 24px; }
+
+.mh-freshness {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin: 0;
+  padding: 8px 0;
+}
+
+/* ── Block (each face section) ── */
+.mh-block {
+  padding: 16px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.mh-kicker {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
+  margin: 0 0 8px;
+}
+
+/* ── Sleep ── */
+.mh-hero {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.1;
+}
+.mh-detail {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 4px 0 0;
+}
+.mh-stage-bar {
+  display: flex;
+  height: 6px;
+  margin-top: 12px;
+  gap: 1px;
+  overflow: hidden;
+}
+.mh-stage { min-width: 2px; }
+.mh-stage--deep { background: var(--accent); }
+.mh-stage--core { background: var(--ink); opacity: 0.35; }
+.mh-stage--rem  { background: var(--ink); opacity: 0.55; }
+.mh-stage--awake { background: var(--ink); opacity: 0.12; }
+
+.mh-stage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+}
+.mh-stage-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+}
+.mh-stage-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex: none;
+}
+
+/* ── Body ── */
+.mh-body-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+}
+.mh-body-label {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  min-width: 80px;
+}
+.mh-body-value {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+.mh-body-arrow {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin-left: auto;
+}
+.mh-muted { color: var(--ink-muted); }
+
+/* ── Gym ── */
+.mh-gym-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.mh-gym-stat { display: flex; flex-direction: column; }
+.mh-gym-num {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.mh-gym-unit {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  color: var(--ink-muted);
+}
+.mh-gym-label {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+/* ── Empty / Error ── */
+.mh-empty {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0;
+  font-style: italic;
+}
+.mh-error {
+  padding: 16px 20px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}

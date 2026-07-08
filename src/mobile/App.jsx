@@ -4,6 +4,7 @@ import { supabase } from '../spine/data/supabaseClient'
 import MobileMasthead from './MobileMasthead'
 import MobileTabBar from './MobileTabBar'
 import MobileToday from './MobileToday'
+import MobileHealth from './MobileHealth'
 
 function Placeholder({ label }) {
   return (
@@ -79,6 +80,8 @@ export default function MobileShell() {
         <div className="m-page" key={activeTab}>
           {activeTab === 'today' ? (
             <MobileToday onSubline={setSubline} onFolioDate={setFolioDate} />
+          ) : activeTab === 'health' ? (
+            <MobileHealth />
           ) : (
             <>
               <hr className="m-rule" />
