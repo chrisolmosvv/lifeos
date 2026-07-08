@@ -1,9 +1,11 @@
+import { IconSun, IconPulse, IconFork, IconMore } from './BarIcons'
+
 const TABS = [
-  { id: 'today', label: 'Today' },
-  { id: 'health', label: 'Health' },
+  { id: 'today', label: 'Today', Icon: IconSun },
+  { id: 'health', label: 'Health', Icon: IconPulse },
   { id: 'capture' },
-  { id: 'food', label: 'Food' },
-  { id: 'more', label: 'More' },
+  { id: 'food', label: 'Food', Icon: IconFork },
+  { id: 'more', label: 'More', Icon: IconMore },
 ]
 
 export default function MobileTabBar({ activeTab, onSelect }) {
@@ -21,7 +23,7 @@ export default function MobileTabBar({ activeTab, onSelect }) {
         >
           {tab.id === 'capture'
             ? <span className="m-capture-glyph">+</span>
-            : tab.label}
+            : <><span className="m-tab-icon"><tab.Icon /></span>{tab.label}</>}
         </button>
       ))}
     </nav>

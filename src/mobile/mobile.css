@@ -120,6 +120,10 @@
   border: none;
   border-radius: 0;
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   font-family: var(--font-sans);
   font-size: 0.62rem;
   font-weight: 500;
@@ -127,10 +131,11 @@
   letter-spacing: 0.1em;
   color: var(--ink-muted);
   cursor: pointer;
-  padding: 6px 8px 4px;
+  padding: 4px 8px 3px;
   border-bottom: 2px solid transparent;
   text-align: center;
 }
+.m-tab-icon { line-height: 0; }
 .m-tab--active {
   color: var(--accent);
   border-bottom-color: var(--accent);
