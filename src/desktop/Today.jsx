@@ -8,6 +8,7 @@ import { activeTotal } from './allTasksModel'
 import { indexTasks, progressOf, displayCatId, parentTitle } from '../spine/logic/subtasks'
 import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
 import { useTodayData, startOfDay, addDays, localDateStr, friendly } from '../spine/data/useTodayData'
+import { ensureGeneratedThrough } from './recur/topup'
 import { seriesFormHandlers } from './recur/seriesForm'
 import { useGridDrag } from './kit/useGridDrag'
 import TodayAllDay from './kit/TodayAllDay'
@@ -39,7 +40,7 @@ export default function Today({ onOpenPlanning }) {
 
   // Today's data layer lives in its own hook (T10 P5B split): fetch (all-day +
   // overlap + series_id + lazy top-up) + the write primitives.
-  const { tasks, events, cats, busy, setBusy, error, setError, load, writeTask, writeEvent } = useTodayData(viewed)
+  const { tasks, events, cats, busy, setBusy, error, setError, load, writeTask, writeEvent } = useTodayData(viewed, ensureGeneratedThrough)
   const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
   const [expandedToday, setExpandedToday] = useState(new Set()) // parent ids expanded in tasks-today

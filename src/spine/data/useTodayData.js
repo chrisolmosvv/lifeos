@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import { activeOnly } from './activeOnly'
-import { ensureGeneratedThrough } from '../../desktop/recur/topup'
 
 // Today's data layer (Phase 7 / T10 P5): the viewed day's tasks + events + cats and
 // the write primitives, lifted OUT of Today.jsx so the screen stays about render +
@@ -21,7 +20,7 @@ export const friendly = (error) => error.message || 'Something went wrong.'
 const friendlyEvent = (error) =>
   error.code === '23514' ? 'That event ends before it starts — check the times.' : error.message || 'Something went wrong.'
 
-export function useTodayData(viewed) {
+export function useTodayData(viewed, onAfterFetch) {
   const [tasks, setTasks] = useState(null)
   const [cats, setCats] = useState([])
   const [events, setEvents] = useState([]) // the viewed day's events (timed + all-day)
@@ -69,7 +68,7 @@ export function useTodayData(viewed) {
   // only if that added rows (closes the Piece-4 gap for Today). Best-effort.
   async function load() {
     await fetchAndSet()
-    if (await ensureGeneratedThrough(localDateStr(addDays(startOfDay(viewed), 1)))) await fetchAndSet()
+    if (onAfterFetch && await onAfterFetch(localDateStr(addDays(startOfDay(viewed), 1)))) await fetchAndSet()
   }
 
   useEffect(() => {
