@@ -407,6 +407,13 @@ verify_jwt = true
 [functions.meal-estimate]
 verify_jwt = true
 
+# hermes-read is the external Hermes agent's READ-ONLY data surface. It authenticates via
+# the x-hermes-secret header (checked in its own code), NOT a Supabase JWT — the agent on
+# the VPS can't mint a JWT. So JWT verification MUST stay off, or every call is rejected
+# with "missing authorization header" before our code runs. Same pattern as health-ingest.
+[functions.hermes-read]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
