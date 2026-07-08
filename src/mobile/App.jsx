@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useAuth } from '../spine/data/useAuth'
 import { supabase } from '../spine/data/supabaseClient'
+import MobileMasthead from './MobileMasthead'
+import MobileTabBar from './MobileTabBar'
 
 function Placeholder({ label }) {
   return (
@@ -30,24 +32,10 @@ function MobileLogin() {
   return (
     <form className="m-login" onSubmit={handleSubmit}>
       <p className="m-login-title">LifeOS</p>
-      <input
-        className="m-login-field"
-        type="email"
-        required
-        autoComplete="username"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="m-login-field"
-        type="password"
-        required
-        autoComplete="current-password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+      <input className="m-login-field" type="email" required autoComplete="username"
+        placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input className="m-login-field" type="password" required autoComplete="current-password"
+        placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
       <button className="m-login-btn" type="submit" disabled={busy}>
         {busy ? 'Signing in…' : 'Sign in'}
       </button>
@@ -55,14 +43,6 @@ function MobileLogin() {
     </form>
   )
 }
-
-const TABS = [
-  { id: 'today', label: 'Today' },
-  { id: 'health', label: 'Health' },
-  { id: 'capture', label: '➕' },
-  { id: 'food', label: 'Food' },
-  { id: 'more', label: 'More' },
-]
 
 const TAB_DISPLAY = {
   today: 'Today',
@@ -87,20 +67,15 @@ export default function MobileShell() {
 
   return (
     <div className="m-shell">
-      <main className="m-content">
-        <Placeholder label={TAB_DISPLAY[activeTab]} />
-      </main>
-      <nav className="m-tabbar">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            className={`m-tab ${tab.id === activeTab ? 'm-tab--active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+      <MobileMasthead />
+      <div className="m-body">
+        <div className="m-page" key={activeTab}>
+          <div className="m-subline">{'\u2014'}</div>
+          <hr className="m-rule" />
+          <Placeholder label={TAB_DISPLAY[activeTab]} />
+        </div>
+      </div>
+      <MobileTabBar activeTab={activeTab} onSelect={setActiveTab} />
     </div>
   )
 }

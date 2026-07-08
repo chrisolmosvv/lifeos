@@ -1,21 +1,17 @@
-/* Mobile shell — all classes use m- prefix.
-   Colours and fonts from spine/theme/theme.css via custom properties. */
+/* Mobile shell — m- prefix, tokens from theme.css. */
 
-/* ── Layout ── */
-
+/* ── Shell ── */
 .m-shell {
   display: flex;
   flex-direction: column;
   height: 100dvh;
   min-height: -webkit-fill-available;
 }
-
-.m-content {
+.m-body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
-
 .m-center {
   display: flex;
   justify-content: center;
@@ -25,18 +21,97 @@
   color: var(--ink-muted);
 }
 
-/* ── Tab bar ── */
+/* ── Masthead ── */
+.m-masthead {
+  flex: none;
+  text-align: center;
+  padding: calc(8px + env(safe-area-inset-top)) 16px 6px;
+  background: var(--paper);
+}
+.m-nameplate {
+  font-family: var(--font-black);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.m-folio {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+.m-folio-sep { opacity: 0.5; }
+.m-folio-clock { color: var(--ink); }
 
+/* ── Subline + rule ── */
+.m-subline {
+  padding: 10px 16px 8px;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+.m-rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 0;
+}
+
+/* ── Page cross-fade ── */
+.m-page { animation: m-fade-in 180ms ease-out; }
+@keyframes m-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .m-page { animation: none; } }
+
+/* ── Switcher (built-ahead, currently unused) ── */
+.m-switcher {
+  display: flex;
+  gap: 1.2rem;
+  padding: 8px 16px;
+}
+.m-sw-tab {
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  padding: 4px 0 3px;
+  cursor: pointer;
+}
+.m-sw-tab--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Tab bar ── */
 .m-tabbar {
+  flex: none;
   display: flex;
   justify-content: space-around;
   align-items: center;
   border-top: 1px solid var(--rule);
   background: var(--paper);
-  padding: 10px 0;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  padding: 6px 0;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom));
 }
-
 .m-tab {
   -webkit-appearance: none;
   appearance: none;
@@ -46,36 +121,54 @@
   border-radius: 0;
   -webkit-tap-highlight-color: transparent;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 0.62rem;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--ink-muted);
   cursor: pointer;
-  padding: 14px 8px;
+  padding: 6px 8px 4px;
+  border-bottom: 2px solid transparent;
   text-align: center;
 }
-
 .m-tab--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.m-tab--capture {
+  border-bottom: none;
+  padding: 0;
   color: var(--ink);
+}
+.m-capture-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
 }
 
 /* ── Placeholder ── */
-
 .m-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  min-height: 50vh;
   gap: 8px;
+  padding: 0 16px;
 }
-
 .m-placeholder-label {
   font-family: var(--font-serif);
   font-size: 20px;
   color: var(--ink);
   margin: 0;
 }
-
 .m-placeholder-hint {
   font-family: var(--font-sans);
   font-size: 13px;
@@ -83,8 +176,16 @@
   margin: 0;
 }
 
-/* ── Login ── */
+/* ── Skeleton primitives (ready for tabs) ── */
+.m-skeleton { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.m-sk-line { height: 10px; background: var(--rule-faint); animation: m-sk-pulse 1.3s ease-in-out infinite; }
+.m-sk-line--short { width: 40%; }
+.m-sk-line--kicker { width: 25%; height: 8px; }
+.m-sk-block { height: 48px; background: var(--rule-faint); animation: m-sk-pulse 1.3s ease-in-out infinite; }
+@keyframes m-sk-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@media (prefers-reduced-motion: reduce) { .m-sk-line, .m-sk-block { animation: none; } }
 
+/* ── Login ── */
 .m-login {
   display: flex;
   flex-direction: column;
@@ -94,14 +195,12 @@
   padding: 0 32px;
   gap: 12px;
 }
-
 .m-login-title {
   font-family: var(--font-serif);
   font-size: 28px;
   color: var(--ink);
   margin: 0 0 16px;
 }
-
 .m-login-field {
   width: 100%;
   max-width: 280px;
@@ -114,11 +213,7 @@
   border-radius: 0;
   -webkit-appearance: none;
 }
-
-.m-login-field::placeholder {
-  color: var(--ink-muted);
-}
-
+.m-login-field::placeholder { color: var(--ink-muted); }
 .m-login-btn {
   width: 100%;
   max-width: 280px;
@@ -132,11 +227,7 @@
   cursor: pointer;
   margin-top: 4px;
 }
-
-.m-login-btn:disabled {
-  opacity: 0.5;
-}
-
+.m-login-btn:disabled { opacity: 0.5; }
 .m-login-error {
   font-family: var(--font-sans);
   font-size: 13px;
