@@ -4,7 +4,7 @@
 // NEVER pass user_id — gym_pins has `default auth.uid()` and owner-RLS, exactly
 // like tasks/categories inserts elsewhere in src/.
 
-import { supabase } from "../supabaseClient";
+import { supabase } from "../../spine/data/supabaseClient";
 
 // Load the owner's pinned lift ids. { ids: string[] } or { error }.
 export async function loadPins() {

@@ -1,7 +1,7 @@
 // LifeOS — Food → recipe FETCH (F7). Reads recipes + their ingredients/steps + the food_items
 // behind the ingredient FKs (for recipeMacros). No maths, no writes. Mirrors foodLoad.js.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 import { itemToFood } from "./foodShape.js";
 
 async function fetchAll(table, columns, apply = (q) => q) {

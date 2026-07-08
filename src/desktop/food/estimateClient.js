@@ -3,7 +3,7 @@
 // failure (transport, quota-out, the MEAL_ESTIMATE_OFF kill-switch) the caller (EstimateMealPanel)
 // falls to manual entry, so an estimate never hard-stops. Mirrors importClient.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 
 const TIMEOUT_MS = 20000; // backstop so the panel never hangs waiting on the model
 

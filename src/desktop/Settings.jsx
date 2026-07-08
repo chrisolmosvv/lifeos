@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient'
+import { supabase } from '../spine/data/supabaseClient'
 import CategoryManager from './CategoryManager'
 import HevyStatus from './kit/HevyStatus'
 import HealthStatus from './kit/HealthStatus'

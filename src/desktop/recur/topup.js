@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient'
+import { supabase } from '../../spine/data/supabaseClient'
 import { occurrencesBetween, addDaysYMD } from './engine'
 import { tableFor, occurrenceRow } from './series'
 

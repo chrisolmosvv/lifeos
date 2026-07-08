@@ -2,7 +2,7 @@
 // Reads: active session + its events. Writes: event inserts + session status transitions.
 // Every action is an INSERT into cook_event — never an update-in-place on state.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 
 // ── Session reads ─────────────────────────────────────────────────────────────
 

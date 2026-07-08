@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../supabaseClient'
+import { supabase } from '../../spine/data/supabaseClient'
 import './hevyStatus.css'
 
 // A small, READ-ONLY status line for Settings (Health → Gym, G5 Commit B). It shows

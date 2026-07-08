@@ -15,7 +15,7 @@
 // 7/30/90-day figures are just presets of an arbitrary range, so a future custom
 // date-range picker (S6+) reuses these untouched.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 
 // Supabase caps a select at 1000 rows; a wide range (or many readings/day) can
 // exceed that, so page by range — same guard gymLoad uses. `apply` lets a caller

@@ -4,7 +4,7 @@
 // children have no updated_at, so EDIT rewrites them (delete all, re-insert the current set).
 // Reuses the F6 cache-on-log so each matched ingredient FKs to a stable food_items row.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 import { cacheFoodOnLog, insertManualFood } from "./foodWrite.js";
 
 // A food candidate → its food_items row (reuse the F6 cache/insert). Already-FK'd → minimal pass.

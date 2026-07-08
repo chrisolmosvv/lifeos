@@ -8,7 +8,7 @@
 // RLS already scopes every table to the owner (auth.uid() = user_id), so these
 // are plain selects — no user filter needed in the query.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 
 // Supabase caps a select at 1000 rows; sets can exceed that, so page by range.
 async function fetchAll(table, columns) {

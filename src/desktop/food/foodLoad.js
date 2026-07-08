@@ -6,7 +6,7 @@
 // The nutrition GOALS reuse the health goals reader (fetchGoals + resolveGoals), imported
 // where used; this file owns only the entries + the name lookups.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 
 // Supabase caps a select at 1000 rows; page through a wide range. Same guard as healthLoad.
 async function fetchAll(table, columns, apply = (q) => q) {

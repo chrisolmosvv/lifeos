@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from './supabaseClient'
+import { supabase } from '../spine/data/supabaseClient'
 import Masthead from './kit/Masthead'
 import './login.css'
 

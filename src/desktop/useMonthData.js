@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from './supabaseClient'
+import { supabase } from '../spine/data/supabaseClient'
 import { activeOnly } from './archive'
 import { startOfWeek } from './dateUtils'
 import { ensureGeneratedThrough } from './recur/topup'

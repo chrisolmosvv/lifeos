@@ -9,7 +9,7 @@
 // RATE-LIMIT AWARE: ingredient searches run in small batches (not all-at-once) so long recipes
 // (~20 ingredients) don't burst past the Gemini reranker's free-tier 15 req/min limit.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 import { searchFoods } from "./foodLoad.js";
 import { ensureFoodItem } from "./recipeWrite.js";
 import { resolvePortion } from "./portions.js";

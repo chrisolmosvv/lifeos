@@ -4,7 +4,7 @@
 // defaults to auth.uid(). food_items writes set user_id explicitly (so the upsert conflict
 // target user_id+source+source_ref matches). FETCH stays in foodLoad, CALC in foodCalc.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 import { cleanFoodName } from "./cleanName.js";
 
 const RETURN_COLS =

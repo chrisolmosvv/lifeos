@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../supabaseClient'
+import { supabase } from '../../spine/data/supabaseClient'
 import './healthStatus.css'
 
 // LifeOS — Health → Track S, S4 Part B: the read-only "Health sync — last received"

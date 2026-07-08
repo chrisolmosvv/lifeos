@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 import { resolveColor } from "../colorModel";
 import { colorHex, INBOX_COLOR } from "../palette";
 import { fetchSessions } from "./focusLoad.js";

@@ -1,5 +1,5 @@
 import { Fragment, useRef, useState } from 'react'
-import { supabase } from './supabaseClient'
+import { supabase } from '../spine/data/supabaseClient'
 import { isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import { isSameDay, dayNameFull, formatMastheadDate } from './dateUtils'

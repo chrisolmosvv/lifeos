@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from './supabaseClient'
+import { supabase } from '../spine/data/supabaseClient'
 import { orderedTree, isInbox } from './categoryTree'
 import { INBOX_COLOR } from './palette'
 import CategoryRow from './CategoryRow'

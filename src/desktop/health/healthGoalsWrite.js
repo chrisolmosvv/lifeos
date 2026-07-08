@@ -11,7 +11,7 @@
 // `direction` is FROZEN by the caller (computed from the current reading vs the
 // target AT SET TIME) so later passing the target can't flip the progress bar.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 
 export async function setGoal({ goal_type, target_value, unit, direction }) {
   const { error } = await supabase

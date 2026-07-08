@@ -4,7 +4,7 @@
 // is stamped by the APP on every edit (house pattern — no DB trigger, exactly like
 // cook_session / recipes). See focus-module-spec.md §1a / §5.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 
 const COLUMNS =
   "id,started_at,ended_at,mode,target_seconds,break_seconds,task_id,task_title_snapshot,category_id,category_snapshot,segments,source,rating,note,archived_at,created_at,updated_at";

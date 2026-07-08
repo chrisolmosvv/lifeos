@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient'
+import { supabase } from '../../spine/data/supabaseClient'
 import { archiveRows, unarchiveBatch } from '../archive'
 import { occurrencesBetween, wallTimeToInstant, wallOfInstant, ymdInZone, addDaysYMD } from './engine'
 

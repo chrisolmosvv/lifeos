@@ -14,7 +14,7 @@
 // health_goals table (goal_type 'focus_daily'/'focus_weekly'); reuse
 // health/healthLoad.js `fetchGoals()` + health/healthGoals.js `resolveGoals`.
 
-import { supabase } from "../supabaseClient.js";
+import { supabase } from "../../spine/data/supabaseClient.js";
 
 const COLUMNS =
   "id,started_at,ended_at,mode,target_seconds,break_seconds,task_id,task_title_snapshot,category_id,category_snapshot,segments,source,rating,note,created_at,updated_at";
