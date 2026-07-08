@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PALETTE } from '../palette'
+import { PALETTE } from '../../spine/logic/palette'
 import './categoryManager.css'
 
 // One row of the Settings category manager (Phase 7, T13). Sealed kit block.

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { isInbox } from '../categoryTree'
+import { isInbox } from '../../spine/logic/categoryTree'
 import { childrenOf } from '../allTasksModel'
 import PlanningGroup from './PlanningGroup'
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../spine/data/supabaseClient.js";
-import { resolveColor } from "../colorModel";
-import { colorHex, INBOX_COLOR } from "../palette";
+import { resolveColor } from "../../spine/logic/colorModel";
+import { colorHex, INBOX_COLOR } from "../../spine/logic/palette";
 import { fetchSessions } from "./focusLoad.js";
 import { fetchGoals } from "../health/healthLoad.js";
 import { resolveGoals } from "../health/healthGoals.js";

@@ -1,5 +1,5 @@
-import { resolveColor } from '../colorModel'
-import { colorHex, INBOX_COLOR } from '../palette'
+import { resolveColor } from '../../spine/logic/colorModel'
+import { colorHex, INBOX_COLOR } from '../../spine/logic/palette'
 import './todayAllDay.css'
 
 // Today's all-day strip (T10 P5B) — the single-day counterpart to the Week's

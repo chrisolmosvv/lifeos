@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { isInbox } from './categoryTree'
-import { INBOX_COLOR } from './palette'
+import { isInbox } from '../spine/logic/categoryTree'
+import { INBOX_COLOR } from '../spine/logic/palette'
 import { useWeekData } from './useWeekData'
 import { fetchSessions } from './focus/focusLoad'
 import { focusSpans } from './focus/focusCalc'

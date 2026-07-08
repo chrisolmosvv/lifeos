@@ -1,4 +1,4 @@
-import { colorHex } from './palette'
+import { colorHex } from '../spine/logic/palette'
 import './categoryTag.css'
 
 // The reusable category mark: a small coloured dot + a short uppercase tag,

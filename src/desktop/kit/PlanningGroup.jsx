@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { colorHex } from '../palette'
+import { colorHex } from '../../spine/logic/palette'
 import { progressOf } from '../../spine/logic/subtasks'
 import { subtreeCount, inboxCount, ownTasks, orderTasks, childrenOf } from '../allTasksModel'
 import TodayTaskRow from './TodayTaskRow'

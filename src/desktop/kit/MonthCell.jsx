@@ -1,5 +1,5 @@
-import { resolveColor } from '../colorModel'
-import { colorHex, INBOX_COLOR } from '../palette'
+import { resolveColor } from '../../spine/logic/colorModel'
+import { colorHex, INBOX_COLOR } from '../../spine/logic/palette'
 
 // One day cell of the Month grid (Phase 7, C6). Shows up to MAX items (events =
 // solid tinted dot, tasks = hollow/ringed dot — visibly marked), then "+N more".

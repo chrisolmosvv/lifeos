@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { isInbox } from '../categoryTree'
-import { resolveColor } from '../colorModel'
-import { colorHex, INBOX_COLOR } from '../palette'
+import { isInbox } from '../../spine/logic/categoryTree'
+import { resolveColor } from '../../spine/logic/colorModel'
+import { colorHex, INBOX_COLOR } from '../../spine/logic/palette'
 import './trayDrawer.css'
 
 // The unscheduled tray (Phase 7, C5) — a right-side drawer of loose / this-week

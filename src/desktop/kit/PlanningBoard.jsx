@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { isInbox, descendantIds } from '../categoryTree'
+import { isInbox, descendantIds } from '../../spine/logic/categoryTree'
 import { buildBoard } from '../planningModel'
 import PlanningColumn from './PlanningColumn'
 import PlanningCard from './PlanningCard'

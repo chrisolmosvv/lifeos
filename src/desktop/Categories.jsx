@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../spine/data/supabaseClient'
-import { orderedTree, isInbox } from './categoryTree'
-import { INBOX_COLOR } from './palette'
+import { orderedTree, isInbox } from '../spine/logic/categoryTree'
+import { INBOX_COLOR } from '../spine/logic/palette'
 import CategoryRow from './CategoryRow'
 import './categories.css'
 

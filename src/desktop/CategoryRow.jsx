@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { descendantIds, orderedTree, isInbox } from './categoryTree'
-import { PALETTE, INBOX_COLOR } from './palette'
+import { descendantIds, orderedTree, isInbox } from '../spine/logic/categoryTree'
+import { PALETTE, INBOX_COLOR } from '../spine/logic/palette'
 import CategoryTag from './CategoryTag'
 
 // One category line. Tap it to expand calm inline actions: rename, move it

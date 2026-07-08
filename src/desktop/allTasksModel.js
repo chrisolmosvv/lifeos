@@ -3,7 +3,7 @@
 // task is an active (not-done) TOP-LEVEL task; counts always exclude done, and the
 // screen lists top-level tasks (subtasks live under their parent elsewhere).
 
-import { descendantIds } from './categoryTree'
+import { descendantIds } from '../spine/logic/categoryTree'
 
 const countable = (t) => !t.parent_task_id && t.status !== 'done'
 

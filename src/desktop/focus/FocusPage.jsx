@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { INBOX_COLOR } from "../palette";
+import { INBOX_COLOR } from "../../spine/logic/palette";
 import { amsTodayYMD } from "../gym/gymDates.js";
 import { ledgerAll } from "./focusCalc.js";
 import { finalizeSession, archiveSession, unarchiveSession, markTaskDone, addManualSession } from "./focusWrite.js";

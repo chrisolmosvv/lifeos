@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { colorHex } from '../palette'
+import { colorHex } from '../../spine/logic/palette'
 import './todayForm.css'
 
 // CategoryPicker — a drill-in picker that READS the category tree (it never

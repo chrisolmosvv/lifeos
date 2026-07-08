@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useMonthData } from '../useMonthData'
 import { monthLayout, dayKey } from '../monthLayout'
-import { resolveColor } from '../colorModel'
+import { resolveColor } from '../../spine/logic/colorModel'
 import { isSameDay } from '../../spine/logic/dateUtils'
 import { useSwipe } from './useSwipe'
 import MonthCell from './MonthCell'
