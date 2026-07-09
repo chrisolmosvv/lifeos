@@ -1,33 +1,44 @@
-// The ➕ tab — quick-capture: open the Finder, log for today, return.
+// Capture router — the ➕ tab's front door.
+// Shows a type chooser; routes to the right capture form.
 import { useState } from 'react'
-import MobileFinder from './MobileFinder'
-import { loggerFinderConfig } from '../spine/logic/finderConfig'
-import { entryMacros, NUTRIENTS, slotForHour } from '../spine/logic/foodCalc'
-import { cacheFoodOnLog } from '../spine/data/foodWrite'
-import { logEntry } from '../spine/data/foodWrite'
-import { amsTodayYMD, amsClockMinutes } from '../spine/logic/gymDates'
+import MobileFoodCapture from './MobileFoodCapture'
+
+const TYPES = [
+  { id: 'task', label: 'Task' },
+  { id: 'event', label: 'Event' },
+  { id: 'food', label: 'Food' },
+  { id: 'note', label: 'Note' },
+]
 
 export default function MobileCapture({ onDone }) {
-  const [error, setError] = useState(null)
-  const defaultSlot = slotForHour(Math.floor((amsClockMinutes(Date.now()) ?? 720) / 60))
+  const [captureType, setCaptureType] = useState(null)
 
-  async function handleConfirm(food, { amount, unit, slot }) {
-    try {
-      const cached = await cacheFoodOnLog(food)
-      const macros = entryMacros(food, amount, unit)
-      const row = { entry_date: amsTodayYMD(), meal_slot: slot, food_item_id: cached?.id || food.food_item_id || null, amount, unit, entry_source: 'food_search' }
-      for (const k of NUTRIENTS) row[k] = macros[k]
-      await logEntry(row)
-      onDone()
-    } catch {
-      setError("Couldn't log — try again.")
-    }
-  }
+  if (captureType === 'food')
+    return <MobileFoodCapture onDone={onDone} />
+
+  if (captureType)
+    return (
+      <div className="mc-placeholder">
+        <button className="mc-back" onClick={() => setCaptureType(null)}
+          aria-label="Back to chooser">&lsaquo;</button>
+        <p className="mc-placeholder-label">{TYPES.find((t) => t.id === captureType)?.label} capture</p>
+        <p className="mc-placeholder-hint">coming soon</p>
+      </div>
+    )
 
   return (
-    <>
-      <MobileFinder config={loggerFinderConfig} defaultSlot={defaultSlot} onConfirm={handleConfirm} onClose={onDone} />
-      {error && <p className="mf-error" style={{ position: 'fixed', bottom: 80, left: 20, right: 20, background: 'var(--paper)', padding: 8 }}>{error}</p>}
-    </>
+    <div className="mc-chooser">
+      <button className="mc-dismiss" onClick={onDone} aria-label="Cancel">&lsaquo;</button>
+      <p className="mc-kicker">Capture</p>
+      <ul className="mc-list">
+        {TYPES.map((t) => (
+          <li key={t.id}>
+            <button className="mc-option" onClick={() => setCaptureType(t.id)}>
+              {t.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
