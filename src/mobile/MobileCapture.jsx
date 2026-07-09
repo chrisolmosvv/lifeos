@@ -4,6 +4,7 @@ import { useState } from 'react'
 import MobileFoodCapture from './MobileFoodCapture'
 import MobileTaskCapture from './MobileTaskCapture'
 import MobileEventCapture from './MobileEventCapture'
+import MobileNoteCapture from './MobileNoteCapture'
 
 const TYPES = [
   { id: 'task', label: 'Task' },
@@ -24,15 +25,8 @@ export default function MobileCapture({ onDone }) {
   if (captureType === 'event')
     return <MobileEventCapture onDone={onDone} onBack={() => setCaptureType(null)} />
 
-  if (captureType)
-    return (
-      <div className="mc-placeholder">
-        <button className="mc-back" onClick={() => setCaptureType(null)}
-          aria-label="Back to chooser">&lsaquo;</button>
-        <p className="mc-placeholder-label">{TYPES.find((t) => t.id === captureType)?.label} capture</p>
-        <p className="mc-placeholder-hint">coming soon</p>
-      </div>
-    )
+  if (captureType === 'note')
+    return <MobileNoteCapture onDone={onDone} onBack={() => setCaptureType(null)} />
 
   return (
     <div className="mc-chooser">
