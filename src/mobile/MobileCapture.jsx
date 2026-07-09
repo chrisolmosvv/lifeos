@@ -6,12 +6,14 @@ import MobileFoodCapture from './MobileFoodCapture'
 import MobileTaskCapture from './MobileTaskCapture'
 import MobileEventCapture from './MobileEventCapture'
 import MobileNoteCapture from './MobileNoteCapture'
+import MobileDatePickerTest from './MobileDatePickerTest' // THROWAWAY — remove when forms adopt picker
 
 const TYPES = [
   { id: 'task', label: 'Task' },
   { id: 'event', label: 'Event' },
   { id: 'food', label: 'Food' },
   { id: 'note', label: 'Note' },
+  { id: '_pickertest', label: 'Picker test' }, // THROWAWAY
 ]
 
 // A live recurring instance (series member, not yet detached) must NOT be edited
@@ -56,6 +58,10 @@ export default function MobileCapture({ onDone, editItem, editKind, createPrefil
 
   if (captureType === 'note')
     return <MobileNoteCapture onDone={onDone} onBack={() => setCaptureType(null)} />
+
+  // THROWAWAY — remove when forms adopt picker
+  if (captureType === '_pickertest')
+    return <MobileDatePickerTest onBack={() => setCaptureType(null)} />
 
   return (
     <div className="mc-chooser">

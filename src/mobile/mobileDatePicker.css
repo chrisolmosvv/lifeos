@@ -1,0 +1,192 @@
+/* MobileDatePicker — broadsheet calendar grid.
+   Tokens only (theme.css). Fraunces numerals + month heading, Inter controls.
+   Hairline grid, terracotta selection mark, no boxes/shadows/fills. */
+
+.mdp {
+  padding: 0;
+}
+
+/* ---- Chips (quick-select) ---- */
+.mdp-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+
+.mdp-chip {
+  appearance: none;
+  border: 1px solid var(--rule);
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink);
+  padding: 6px 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mdp-chip--on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- Month header ---- */
+.mdp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+}
+
+.mdp-nav {
+  appearance: none;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 22px;
+  color: var(--ink-muted);
+  padding: 8px 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1;
+}
+
+.mdp-month {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+/* ---- Weekday header row ---- */
+.mdp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin: 0 0 2px;
+  border-bottom: 1px solid var(--rule);
+  padding: 0 0 6px;
+}
+
+.mdp-wd {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* ---- Day grid (6 x 7, hairline rows) ---- */
+.mdp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.mdp-day {
+  appearance: none;
+  border: none;
+  border-bottom: 1px solid var(--rule-faint);
+  background: none;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--ink);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  padding: 0;
+}
+
+/* Outside-month days: quiet */
+.mdp-day--dim {
+  color: var(--ink-muted);
+  opacity: 0.35;
+}
+
+/* Today (not selected): terracotta numeral */
+.mdp-day--today {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Selected day / range endpoints: terracotta circle */
+.mdp-day--sel {
+  color: var(--paper);
+  font-weight: 500;
+  z-index: 1;
+}
+.mdp-day--sel::before {
+  content: '';
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  z-index: -1;
+}
+
+/* In-range span: quiet ink tint (NOT terracotta) */
+.mdp-day--range {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+/* ---- Time controls (datetime mode) ---- */
+.mdp-time {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--rule);
+}
+
+.mdp-time-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mdp-time-cap {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.mdp-time-input {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink);
+  padding: 6px 0;
+  width: 100%;
+}
+
+.mdp-time-sep {
+  color: var(--ink-muted);
+  font-size: 18px;
+  padding: 0 0 6px;
+}
+
+/* ---- Test-mount output block ---- */
+.mdp-test-out {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  padding: 8px 10px;
+  margin: 10px 0 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
