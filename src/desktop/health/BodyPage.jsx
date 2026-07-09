@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { amsTodayYMD } from "../../spine/logic/gymDates";
-import { fetchBody, fetchActivity, fetchGoals } from "./healthLoad";
+import { fetchBody, fetchActivity, fetchGoals } from "../../spine/data/healthLoad";
 import { resolveGoals } from "../../spine/logic/healthGoals";
 import { metricView as bodyView, BODY_METRICS } from "../../spine/logic/healthBody";
 import { metricView as activityView } from "../../spine/logic/healthActivity";

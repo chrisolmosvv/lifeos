@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { amsTodayYMD } from "../../spine/logic/gymDates";
-import { fetchActivity, fetchBody } from "./healthLoad";
+import { fetchActivity, fetchBody } from "../../spine/data/healthLoad";
 import {
   metricView as activityView,
   aggregateDaily,

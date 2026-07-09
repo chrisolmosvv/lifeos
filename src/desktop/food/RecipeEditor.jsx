@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchRecipe } from "./recipeLoad";
+import { fetchRecipe } from "../../spine/data/recipeLoad";
 import { recipeMacros } from "../../spine/logic/recipeCalc";
 import { entryMacros } from "../../spine/logic/foodCalc";
 import { fmtNum } from "../../spine/logic/foodFormat";
-import { ensureFoodItem } from "./recipeWrite";
-import { updateDisplayName } from "./foodWrite";
+import { ensureFoodItem } from "../../spine/data/recipeWrite";
+import { updateDisplayName } from "../../spine/data/foodWrite";
 import Finder from "./finder/Finder";
 import { recipeFinderConfig } from "../../spine/logic/finderConfig";
 import ManualMacrosPanel from "./ManualMacrosPanel";

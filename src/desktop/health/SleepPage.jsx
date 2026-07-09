@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { amsTodayYMD, shiftYMD, humanDayLong, humanDayShort } from "../../spine/logic/gymDates";
-import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
+import { fetchSleep, fetchBody, fetchGoals } from "../../spine/data/healthLoad";
 import { resolveGoals } from "../../spine/logic/healthGoals";
 import { sleepView, nightOn } from "../../spine/logic/healthSleep";
 import { rangeBedWakeAverages } from "../../spine/logic/healthRhythm";

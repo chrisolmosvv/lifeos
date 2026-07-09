@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { searchFoods } from "../foodLoad";
+import { searchFoods } from "../../../spine/data/foodLoad";
 import ManualForm from "../ManualForm";
 import { zoneResults } from "../../../spine/logic/finderConfig";
 import FinderResults from "./FinderResults";

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { fetchAnyActiveSession, finishSession } from "./cookEventStore";
+import { fetchAnyActiveSession, finishSession } from "../../spine/data/cookEventStore";
 
 // CookSessionProvider — the global active-cook context. Hosts a single question: "is there
 // an active cook session right now?" Now reads from the event-sourced engine (cookEventStore)

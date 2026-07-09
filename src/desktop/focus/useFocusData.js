@@ -3,7 +3,7 @@ import { supabase } from "../../spine/data/supabaseClient.js";
 import { resolveColor } from "../../spine/logic/colorModel";
 import { colorHex, INBOX_COLOR } from "../../spine/logic/palette";
 import { fetchSessions } from "./focusLoad.js";
-import { fetchGoals } from "../health/healthLoad.js";
+import { fetchGoals } from "../../spine/data/healthLoad";
 import { resolveGoals } from "../../spine/logic/healthGoals";
 
 // useFocusData — the Focus pillar's READ layer, split out of FocusPage to keep that

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { importRecipe } from "./importClient";
+import { importRecipe } from "../../spine/data/importClient";
 import "./cookbook.css";
 
 // ImportScreen — paste recipe text OR a URL → Import → a calm loading state → the F7 editor

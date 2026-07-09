@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MEAL_SLOTS } from "../../spine/logic/foodCalc";
-import { estimateMeal } from "./estimateClient";
+import { estimateMeal } from "../../spine/data/estimateClient";
 import "./foodGoals.css";
 
 // EstimateMealPanel (V2 P5, Feature B) — describe a meal → Gemini ballpark (free key) → the FOUR
