@@ -1,4 +1,4 @@
-import { shiftYMD, humanDayShort } from "../gym/gymDates";
+import { shiftYMD, humanDayShort } from "../../spine/logic/gymDates";
 import { rangeTotals, perGoalHits } from "./foodCalc";
 import { fmtNum } from "./foodFormat";
 import FoodBarChart from "./FoodBarChart";

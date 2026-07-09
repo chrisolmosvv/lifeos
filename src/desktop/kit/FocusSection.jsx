@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { humanDayShort } from "../gym/gymDates.js";
+import { humanDayShort } from "../../spine/logic/gymDates";
 import { fetchTaskSessions } from "../focus/focusLoad.js";
 import { perTaskTotal, taskSessions } from "../focus/focusCalc.js";
 import { finalizeSession, archiveSession, unarchiveSession, markTaskDone } from "../focus/focusWrite.js";

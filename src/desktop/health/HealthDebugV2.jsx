@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { amsTodayYMD } from "../gym/gymDates";
+import { amsTodayYMD } from "../../spine/logic/gymDates";
 import { fetchActivity, fetchBody } from "./healthLoad";
 import {
   metricView as activityView,

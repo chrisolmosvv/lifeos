@@ -1,5 +1,5 @@
 import { topSet, workoutVolume } from '../gym/gymCalc'
-import { humanDayShort } from '../gym/gymDates'
+import { humanDayShort } from '../../spine/logic/gymDates'
 import { formatVolume } from '../gym/gymFormat'
 
 // GymTodayCard — the TL "Gym · today" quadrant: a compact snapshot of the LAST logged

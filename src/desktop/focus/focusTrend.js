@@ -4,7 +4,7 @@
 // definition Gym uses, so the trend and the weekly goal always agree. Shares the
 // ONE day helper (gymDates); never recomputes a duration (defers to focusCalc).
 
-import { amsTodayYMD, shiftYMD } from "../gym/gymDates.js";
+import { amsTodayYMD, shiftYMD } from "../../spine/logic/gymDates";
 import { sessionFocusSeconds, sessionsOnDay } from "./focusCalc.js";
 
 // Focus seconds logged on one Amsterdam day (thin wrapper over focusCalc for reuse).

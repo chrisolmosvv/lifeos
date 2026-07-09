@@ -1,4 +1,4 @@
-import { humanDayShort } from "../gym/gymDates";
+import { humanDayShort } from "../../spine/logic/gymDates";
 import { fmtNum, metaFor } from "./bodyFormat";
 
 // BodyChart — a calm, hand-rolled inline-SVG chart for the Body page (no chart

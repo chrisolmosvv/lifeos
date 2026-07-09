@@ -1,7 +1,7 @@
 import { Movement, Trace, JourneyBar, Band } from "./BodyCells";
 import BodyChart from "./BodyChart";
 import { fmtFull } from "./bodyFormat";
-import { shiftYMD } from "../gym/gymDates";
+import { shiftYMD } from "../../spine/logic/gymDates";
 import { DEADBAND } from "./healthStats";
 import { goalProgress, baselineBand, fixedBand, windowDelta } from "./healthBodyRange";
 import { activityDaysHit } from "./healthActivity";

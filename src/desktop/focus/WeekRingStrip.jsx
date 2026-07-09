@@ -1,4 +1,4 @@
-import { weekdayNarrow } from "../gym/gymDates.js";
+import { weekdayNarrow } from "../../spine/logic/gymDates";
 import { formatDuration, hoursMins, trendLine } from "./focusFormat.js";
 
 // WeekRingStrip (redesign P5) — the full-width week glance under the chart: one ring per

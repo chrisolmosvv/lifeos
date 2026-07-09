@@ -6,7 +6,7 @@
 // for the chart. Reuses gymCalc (prWeight/topSet/best1RM) + gymDates; no recompute,
 // no second date path. Display layers only read this.
 
-import { amsYMD } from "./gymDates.js";
+import { amsYMD } from "../../spine/logic/gymDates";
 import { prWeight, topSet, best1RM } from "./gymCalc.js";
 
 const liftKey = (ex) => ex.exercise_template_id || ex.title || "?";

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { humanDayLong } from "../gym/gymDates.js";
+import { humanDayLong } from "../../spine/logic/gymDates";
 import { clockRange, formatDuration, stars } from "./focusFormat.js";
 
 // FullLedgerPage (spec §7) — the dedicated, flat, filterable session history reached

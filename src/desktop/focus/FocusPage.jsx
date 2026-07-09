@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { INBOX_COLOR } from "../../spine/logic/palette";
-import { amsTodayYMD } from "../gym/gymDates.js";
+import { amsTodayYMD } from "../../spine/logic/gymDates";
 import { ledgerAll } from "./focusCalc.js";
 import { finalizeSession, archiveSession, unarchiveSession, markTaskDone, addManualSession } from "./focusWrite.js";
 import { takePendingFocus, peekPendingFocus } from "./focusNav.js";

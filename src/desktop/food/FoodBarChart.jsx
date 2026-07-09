@@ -1,4 +1,4 @@
-import { humanDayShort } from "../gym/gymDates";
+import { humanDayShort } from "../../spine/logic/gymDates";
 import { fmtNum } from "./foodFormat";
 
 // FoodBarChart (V2 P4, Food-owned — Body's chart code is untouched) — one metric's daily bars over

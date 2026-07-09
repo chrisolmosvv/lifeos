@@ -16,7 +16,7 @@
 //   • The day boundary is Amsterdam — reuse the ONE shared helper (gymDates), never
 //     a new one.
 
-import { amsYMD, amsClockMinutes } from "../gym/gymDates.js";
+import { amsYMD, amsClockMinutes } from "../../spine/logic/gymDates";
 
 const MIN_PER_DAY = 1440;
 

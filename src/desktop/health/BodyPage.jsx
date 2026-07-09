@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { amsTodayYMD } from "../gym/gymDates";
+import { amsTodayYMD } from "../../spine/logic/gymDates";
 import { fetchBody, fetchActivity, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
 import { metricView as bodyView, BODY_METRICS } from "./healthBody";

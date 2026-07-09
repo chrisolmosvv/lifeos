@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchSessions } from "./focusLoad.js";
 import { dayFocusTotal } from "./focusCalc.js";
-import { amsTodayYMD } from "../gym/gymDates.js";
+import { amsTodayYMD } from "../../spine/logic/gymDates";
 
 // useTodayFocus — today's total focus seconds, for the quiet Today glance line (spec
 // §13.3). Reuses the piece-1 getter; refreshes on the focus-changed signal so it stays

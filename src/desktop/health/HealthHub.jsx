@@ -6,7 +6,7 @@ import HubSleepCard from "./HubSleepCard";
 import HubBodyCard from "./HubBodyCard";
 import HubGymCard from "./HubGymCard";
 import { dateLine, asOf } from "./healthFormat";
-import { amsTodayYMD } from "../gym/gymDates";
+import { amsTodayYMD } from "../../spine/logic/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
 import { sleepView } from "./healthSleep";

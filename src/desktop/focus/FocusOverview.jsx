@@ -1,4 +1,4 @@
-import { amsClockMinutes, humanDayShort } from "../gym/gymDates.js";
+import { amsClockMinutes, humanDayShort } from "../../spine/logic/gymDates";
 import { dayArcs, dayLedger, dayFocusTotal, dayRestTotal } from "./focusCalc.js";
 import { rangeBars, weekRingStrip, weekVsTrailingAvg } from "./focusTrend.js";
 import { formatDuration } from "./focusFormat.js";

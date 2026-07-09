@@ -1,4 +1,4 @@
-import { humanDayShort } from "../gym/gymDates.js";
+import { humanDayShort } from "../../spine/logic/gymDates";
 import { formatDuration, trendLine } from "./focusFormat.js";
 
 // RangeView (spec §9/§L) — the Week/Month/90 face: full-width stacked bars per day,

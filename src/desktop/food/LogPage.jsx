@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { amsTodayYMD, amsClockMinutes, shiftYMD, humanDayLong, humanDayShort } from "../gym/gymDates";
+import { amsTodayYMD, amsClockMinutes, shiftYMD, humanDayLong, humanDayShort } from "../../spine/logic/gymDates";
 import { fetchGoals } from "../health/healthLoad";
 import { resolveGoals } from "../health/healthGoals";
 import { useGoalWrites } from "../health/useGoalWrites";

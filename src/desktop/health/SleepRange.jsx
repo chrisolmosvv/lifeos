@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { shiftYMD, humanDayShort } from "../gym/gymDates";
+import { shiftYMD, humanDayShort } from "../../spine/logic/gymDates";
 import { nightsHitGoal, goalStreak, bedtimeConsistency } from "./healthSleep";
 import { rangeBedWakeAverages } from "./healthRhythm";
 import { hm, clockFromMin } from "./healthFormat";

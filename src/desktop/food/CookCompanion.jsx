@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchRecipe } from "./recipeLoad";
 import { recipeMacros } from "./recipeCalc";
 import { slotForHour, NUTRIENTS } from "./foodCalc";
-import { amsTodayYMD, amsClockMinutes } from "../gym/gymDates";
+import { amsTodayYMD, amsClockMinutes } from "../../spine/logic/gymDates";
 import { useCookEvents } from "./useCookEvents";
 import { useCookLog } from "./useCookLog";
 import { useWakeLock } from "./useWakeLock";

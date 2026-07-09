@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { humanDayShort, weekdayNarrow } from "../gym/gymDates.js";
+import { humanDayShort, weekdayNarrow } from "../../spine/logic/gymDates";
 import { formatDuration, hoursMins } from "./focusFormat.js";
 
 // FocusChart (overview redesign, piece 3) — the day-by-day focus chart inside the

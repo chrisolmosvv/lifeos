@@ -1,4 +1,4 @@
-import { humanDayShort } from '../gym/gymDates'
+import { humanDayShort } from '../../spine/logic/gymDates'
 import './formGuide.css'
 
 // ClimbChart — a quiet hand-rolled SVG line of one lift's top-set weight over time,

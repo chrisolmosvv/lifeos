@@ -1,4 +1,4 @@
-import { amsYMD, shiftYMD, amsTodayYMD } from '../gym/gymDates'
+import { amsYMD, shiftYMD, amsTodayYMD } from '../../spine/logic/gymDates'
 import { formatVolume, prettyMuscle } from '../gym/gymFormat'
 
 // GymOverTimeCard — the TR "Gym · over-time" quadrant, governed by the W/M/90 range.

@@ -1,4 +1,4 @@
-import { humanDayShort } from '../gym/gymDates'
+import { humanDayShort } from '../../spine/logic/gymDates'
 
 // WalkingDaysTable — the BR "more ›" terminal drill: one row per day in the window
 // (to-yesterday), joined across the six activity metrics. No deeper drill (walking

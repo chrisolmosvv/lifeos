@@ -1,6 +1,6 @@
 import SessionExercise from './kit/SessionExercise'
 import { workoutVolume, workoutMinutes } from './gym/gymCalc'
-import { amsYMD, humanDayLong } from './gym/gymDates'
+import { amsYMD, humanDayLong } from '../spine/logic/gymDates'
 import { formatVolume, formatDuration } from './gym/gymFormat'
 import { sessionStory } from './gym/gymStory'
 import './kit/sessionReport.css'

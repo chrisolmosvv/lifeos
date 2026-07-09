@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { amsTodayYMD, shiftYMD, humanDayLong, humanDayShort } from "../gym/gymDates";
+import { amsTodayYMD, shiftYMD, humanDayLong, humanDayShort } from "../../spine/logic/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
 import { resolveGoals } from "./healthGoals";
 import { sleepView, nightOn } from "./healthSleep";
