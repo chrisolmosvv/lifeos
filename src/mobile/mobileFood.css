@@ -23,6 +23,17 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ── Range toggle ── */
+.mf-range-toggle { display: flex; gap: 0; padding: 0 20px; }
+.mf-rt {
+  -webkit-appearance: none; appearance: none; background: none; border: none;
+  font-family: var(--font-sans); font-size: 0.62rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-muted); padding: 4px 10px 4px 0; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mf-rt--on { color: var(--ink); font-weight: 600; }
+
 /* ── Log day ── */
 .mf-log { padding: 0 0 24px; }
 .mf-error { padding: 16px 20px; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-muted); }
@@ -89,3 +100,25 @@
   display: flex; gap: 12px; margin-top: 1px;
   font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted);
 }
+
+/* ── Range view ── */
+.mf-range { padding: 0 0 24px; }
+.mf-range-summary { padding: 16px 20px; }
+.mf-rs-hero { display: flex; align-items: baseline; gap: 8px; }
+.mf-rs-num { font-family: var(--font-serif); font-size: 2rem; font-weight: 400; color: var(--ink); }
+.mf-rs-unit { font-family: var(--font-sans); font-size: 0.75rem; color: var(--ink-muted); }
+.mf-rs-macros {
+  display: flex; gap: 12px; margin-top: 4px;
+  font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted);
+}
+.mf-rs-meta {
+  display: flex; gap: 12px; margin-top: 6px;
+  font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted);
+}
+
+/* Macro chart */
+.mf-chart { padding: 10px 20px 4px; }
+.mf-chart-head { display: flex; justify-content: space-between; align-items: baseline; }
+.mf-chart-label { font-family: var(--font-sans); font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); }
+.mf-chart-goal { font-family: var(--font-sans); font-size: 0.58rem; color: var(--ink-muted); }
+.mf-chart-svg { display: block; width: 100%; height: 40px; margin-top: 4px; }
