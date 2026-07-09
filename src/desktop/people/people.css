@@ -1,0 +1,29 @@
+/* Rolodex — page-level styles (D2 stub). Colours/fonts from theme tokens only. */
+
+.people-page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem;
+}
+
+.people-header {
+  margin-bottom: 2rem;
+}
+
+/* First-run empty state — a warm invitation, not an error. */
+.people-empty {
+  padding: 3rem 0;
+  text-align: center;
+}
+.people-empty-lead {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+.people-empty-hint {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
