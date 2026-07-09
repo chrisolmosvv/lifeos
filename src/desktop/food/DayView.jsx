@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { dayLedger, calorieArc } from "./foodCalc";
+import { dayLedger, calorieArc } from "../../spine/logic/foodCalc";
 import CalorieArc from "./CalorieArc";
 import MacroRings from "./MacroRings";
 import MealLedger from "./MealLedger";

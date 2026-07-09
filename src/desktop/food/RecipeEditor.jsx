@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchRecipe } from "./recipeLoad";
 import { recipeMacros } from "./recipeCalc";
-import { entryMacros } from "./foodCalc";
+import { entryMacros } from "../../spine/logic/foodCalc";
 import { fmtNum } from "../../spine/logic/foodFormat";
 import { ensureFoodItem } from "./recipeWrite";
 import { updateDisplayName } from "./foodWrite";

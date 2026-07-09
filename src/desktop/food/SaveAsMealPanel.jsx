@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NUTRIENTS } from "./foodCalc";
+import { NUTRIENTS } from "../../spine/logic/foodCalc";
 import { fmtNum } from "../../spine/logic/foodFormat";
 import "./foodGoals.css";
 

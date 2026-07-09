@@ -3,7 +3,7 @@ import { amsTodayYMD, amsClockMinutes, shiftYMD, humanDayLong, humanDayShort } f
 import { fetchGoals } from "../health/healthLoad";
 import { resolveGoals } from "../health/healthGoals";
 import { useGoalWrites } from "../health/useGoalWrites";
-import { dailyTotals, recentMealsFrom, entryMacros, slotForHour, NUTRIENTS } from "./foodCalc";
+import { dailyTotals, recentMealsFrom, entryMacros, slotForHour, NUTRIENTS } from "../../spine/logic/foodCalc";
 import { recipeMacros } from "./recipeCalc";
 import { fetchEntries, fetchNames, fetchMyFoods } from "./foodLoad";
 import { fetchCookbook } from "./recipeLoad";
