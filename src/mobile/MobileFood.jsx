@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import MobileFoodLog from './MobileFoodLog'
 import MobileFoodRange from './MobileFoodRange'
+import MobileCookbook from './MobileCookbook'
 import { amsTodayYMD, shiftYMD } from '../spine/logic/gymDates'
 
 const RANGE_LABEL = { day: 'Day', week: 'Week', month: 'Month' }
@@ -48,10 +49,7 @@ export default function MobileFood({ onSubline, onFolioDate }) {
           <MobileFoodRange endYMD={viewedYMD} rangeDays={RANGE_STEP[range]} onSwipe={page} onSubline={onSubline} />
         )
       ) : (
-        <div className="m-placeholder">
-          <p className="m-placeholder-label">Cookbook</p>
-          <p className="m-placeholder-hint">coming soon</p>
-        </div>
+        <MobileCookbook />
       )}
 
       {!isToday && (
