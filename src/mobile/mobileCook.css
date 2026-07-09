@@ -1,0 +1,85 @@
+/* Mobile Cook Companion — mc- prefix, tokens from theme.css */
+
+.mc-wrap { padding: 0 0 24px; }
+
+/* ── Alarm overlay ── */
+.mc-alarm { padding: 12px 20px; background: var(--paper); border-bottom: 2px solid var(--accent); }
+.mc-alarm-item { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+.mc-alarm-text { font-family: var(--font-sans); font-size: 0.82rem; color: var(--accent); flex: 1; margin: 0; font-weight: 600; }
+.mc-alarm-btn {
+  -webkit-appearance: none; appearance: none;
+  padding: 6px 14px; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600;
+  color: var(--paper); background: var(--accent); border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Hero ── */
+.mc-hero { padding: 16px 20px; }
+.mc-hero-kicker {
+  font-family: var(--font-sans); font-size: 0.62rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); margin: 0 0 6px;
+}
+.mc-hero-text { font-family: var(--font-serif); font-size: 1.15rem; color: var(--ink); margin: 0; line-height: 1.5; }
+.mc-hero-timer { font-family: var(--font-serif); font-size: 2rem; color: var(--accent); margin: 10px 0 0; }
+.mc-hero-timer--done { animation: mc-pulse 0.8s ease-in-out infinite; }
+@keyframes mc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@media (prefers-reduced-motion: reduce) { .mc-hero-timer--done { animation: none; } }
+.mc-hero-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* ── Actions (shared) ── */
+.mc-action {
+  -webkit-appearance: none; appearance: none;
+  padding: 10px 20px; font-family: var(--font-sans); font-size: 0.78rem; font-weight: 500;
+  color: var(--paper); background: var(--ink); border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mc-action--muted { background: none; color: var(--ink-muted); border: 1px solid var(--rule); }
+
+/* ── Done state ── */
+.mc-done { padding: 20px; }
+.mc-done-text { font-family: var(--font-serif); font-size: 1.1rem; font-style: italic; color: var(--ink); margin: 0 0 12px; }
+
+/* ── Log sheet (inline) ── */
+.mc-log-sheet { margin: 12px 0; }
+.mc-log-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink); }
+.mc-log-stepper { display: flex; align-items: center; gap: 8px; }
+.mc-log-stepper button {
+  -webkit-appearance: none; appearance: none; background: none; border: 1px solid var(--rule);
+  width: 28px; height: 28px; font-size: 1rem; color: var(--ink); cursor: pointer;
+}
+.mc-log-stepper span { font-family: var(--font-serif); font-size: 1.1rem; min-width: 20px; text-align: center; }
+.mc-log-slots { display: flex; gap: 4px; }
+.mc-log-slot {
+  -webkit-appearance: none; appearance: none; background: none; border: 1px solid var(--rule);
+  padding: 4px 8px; font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted); cursor: pointer;
+}
+.mc-log-slot--on { color: var(--accent); border-color: var(--accent); }
+.mc-log-preview { font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); margin: 8px 0; }
+
+/* ── Rail ── */
+.mc-rail { padding: 8px 0; }
+.mc-rail-step {
+  display: flex; align-items: baseline; gap: 6px; padding: 8px 20px;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.mc-rail-step--active { background: var(--rule-faint); }
+.mc-rail-step--done { opacity: 0.4; }
+.mc-rail-num { font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted); min-width: 14px; }
+.mc-rail-text { font-family: var(--font-sans); font-size: 0.75rem; color: var(--ink); flex: 1; }
+.mc-rail-timer { font-family: var(--font-serif); font-size: 0.82rem; color: var(--accent); }
+.mc-rail-alarm { font-size: 0.75rem; }
+.mc-rail-check { font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); }
+
+/* ── Toast ── */
+.mc-toast {
+  position: fixed; bottom: calc(70px + env(safe-area-inset-bottom)); left: 20px; right: 20px;
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  background: var(--ink); color: var(--paper); font-family: var(--font-sans); font-size: 0.75rem;
+  z-index: 20;
+}
+.mc-toast button {
+  -webkit-appearance: none; appearance: none; background: none; border: none;
+  color: var(--paper); font-family: var(--font-sans); font-size: 0.72rem; cursor: pointer; opacity: 0.7;
+}
+.mc-toast span { flex: 1; }

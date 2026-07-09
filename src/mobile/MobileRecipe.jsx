@@ -1,10 +1,13 @@
 import { useState, useRef } from 'react'
 import { useRecipe } from '../spine/data/useCookbook'
 import { fmtNum } from '../spine/logic/foodFormat'
+import { initAudioContext } from '../spine/logic/cookAlarm'
+import MobileCook from './MobileCook'
 
 export default function MobileRecipe({ recipeId, onBack }) {
   const data = useRecipe(recipeId)
   const [servings, setServings] = useState(null) // null = use recipe default
+  const [cooking, setCooking] = useState(false)
   const startX = useRef(null)
   const onTS = (e) => { if (e.touches[0].clientX < 30) startX.current = e.touches[0].clientX }
   const onTE = (e) => {
@@ -13,6 +16,8 @@ export default function MobileRecipe({ recipeId, onBack }) {
       startX.current = null
     }
   }
+
+  if (cooking && !data.loading && !data.error) return <MobileCook recipeData={data} onBack={() => setCooking(false)} />
 
   if (data.loading) return (
     <div className="mh-face" onTouchStart={onTS} onTouchEnd={onTE}>
@@ -101,7 +106,7 @@ export default function MobileRecipe({ recipeId, onBack }) {
 
       {/* Actions (inert) */}
       <div className="mf-rp-actions">
-        {steps.length > 0 && <button className="mf-rp-btn" type="button" onClick={() => {}}>Start cooking</button>}
+        {steps.length > 0 && <button className="mf-rp-btn" type="button" onClick={() => { initAudioContext(); setCooking(true) }}>Start cooking</button>}
         <button className="mf-rp-btn mf-rp-btn--muted" type="button" onClick={() => {}}>Log this meal</button>
       </div>
     </div>
