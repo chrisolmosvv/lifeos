@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../spine/data/supabaseClient'
 import { activeOnly } from '../spine/data/activeOnly'
 import MobileCategoryPicker from './MobileCategoryPicker'
+import MobileDatePicker from './MobileDatePicker'
 
 const pad = (n) => String(n).padStart(2, '0')
 const dateStr = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -89,12 +90,12 @@ export default function MobileEventCapture({ onDone, onBack, item, prefill }) {
     ).then(({ data }) => setCats(data || []))
   }, [])
 
-  function setStartClamped(val) {
-    setStartTime(val)
-    if (val >= endTime) {
-      const [h, m] = val.split(':').map(Number)
-      setEndTime(timeStr(Math.min(h + 1, 23), h + 1 > 23 ? 59 : m))
-    }
+  // Picker datetime change → update form state (write path stays identical).
+  function handlePickerChange(val) {
+    if (!val) return
+    setEventDate(val.date)
+    setStartTime(val.startTime)
+    setEndTime(val.endTime)
   }
 
   const valid = title.trim() && eventDate
@@ -148,41 +149,31 @@ export default function MobileEventCapture({ onDone, onBack, item, prefill }) {
       />
 
       <fieldset className="mc-fieldset">
-        <legend className="mc-legend">Date</legend>
-        <div className="mc-chip-row">
-          {chips.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              className={'mc-chip' + (eventDate === c.value ? ' mc-chip--on' : '')}
-              onClick={() => setEventDate(c.value)}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-        <input
-          className="mc-date-input"
-          type="date"
-          value={eventDate}
-          onChange={(e) => setEventDate(e.target.value || def.date)}
-        />
-      </fieldset>
-
-      <fieldset className="mc-fieldset">
-        <legend className="mc-legend">Time</legend>
+        <legend className="mc-legend">When</legend>
         <label className="mc-allday-label">
           <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
           All day
         </label>
-        {!allDay && (
-          <div className="mc-time-row">
-            <input className="mc-time-input" type="time" value={startTime}
-              onChange={(e) => setStartClamped(e.target.value)} />
-            <span className="mc-time-sep">–</span>
-            <input className="mc-time-input" type="time" value={endTime}
-              onChange={(e) => setEndTime(e.target.value)} />
-          </div>
+        {allDay ? (
+          <>
+            <div className="mc-chip-row">
+              {chips.map((c) => (
+                <button key={c.value} type="button"
+                  className={'mc-chip' + (eventDate === c.value ? ' mc-chip--on' : '')}
+                  onClick={() => setEventDate(c.value)}>{c.label}</button>
+              ))}
+            </div>
+            <input className="mc-date-input" type="date" value={eventDate}
+              onChange={(e) => setEventDate(e.target.value || def.date)} />
+          </>
+        ) : (
+          <MobileDatePicker
+            mode="datetime"
+            value={{ date: eventDate, start: startTime, end: endTime }}
+            onChange={handlePickerChange}
+            chips={chips}
+            required
+          />
         )}
       </fieldset>
 

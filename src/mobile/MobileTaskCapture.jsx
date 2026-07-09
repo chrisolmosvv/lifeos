@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../spine/data/supabaseClient'
 import { activeOnly } from '../spine/data/activeOnly'
 import MobileCategoryPicker from './MobileCategoryPicker'
+import MobileDatePicker from './MobileDatePicker'
 
 const dateStr = (d) => {
   const p = (n) => String(n).padStart(2, '0')
@@ -79,10 +80,6 @@ export default function MobileTaskCapture({ onDone, onBack, item }) {
     onDone()
   }
 
-  function toggleDate(val) {
-    setDueDate((prev) => prev === val ? null : val)
-  }
-
   return (
     <div className="mc-task">
       <button className="mc-back" onClick={onBack} type="button"
@@ -101,24 +98,7 @@ export default function MobileTaskCapture({ onDone, onBack, item }) {
 
       <fieldset className="mc-fieldset">
         <legend className="mc-legend">Due</legend>
-        <div className="mc-chip-row">
-          {chips.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              className={'mc-chip' + (dueDate === c.value ? ' mc-chip--on' : '')}
-              onClick={() => toggleDate(c.value)}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-        <input
-          className="mc-date-input"
-          type="date"
-          value={dueDate || ''}
-          onChange={(e) => setDueDate(e.target.value || null)}
-        />
+        <MobileDatePicker mode="date" value={dueDate} onChange={setDueDate} chips={chips} />
       </fieldset>
 
       <fieldset className="mc-fieldset">

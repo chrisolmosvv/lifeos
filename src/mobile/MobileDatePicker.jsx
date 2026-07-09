@@ -75,7 +75,7 @@ export default function MobileDatePicker({
       onChange(date ? fmtDate(date) : null)
     } else if (mode === 'datetime' && date) {
       const d = fmtDate(date)
-      onChange({ date: d, start: toIso(d, st), end: toIso(d, et) })
+      onChange({ date: d, start: toIso(d, st), end: toIso(d, et), startTime: st, endTime: et })
     } else if (mode === 'range') {
       if (!date || !rEnd) { onChange(null); return }
       const [s, e] = date <= rEnd ? [date, rEnd] : [rEnd, date]
