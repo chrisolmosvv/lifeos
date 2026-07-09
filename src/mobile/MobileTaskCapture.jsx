@@ -48,15 +48,19 @@ export default function MobileTaskCapture({ onDone, onBack }) {
     setSaving(true)
     setError(null)
 
-    const today = dateStr(new Date())
-    const bucket = !dueDate || dueDate === today ? 'Today' : 'This Week'
+    // Row shape matches desktop's buildOneOffFields('task', …) + quick-add.
+    // time_bucket: 'Today' (the capture intent is "do this now"; the form has no
+    // bucket picker — matching ItemForm's Today chip default on create).
     const row = {
       title: trimmed,
       status: 'open',
-      time_bucket: bucket,
+      time_bucket: 'Today',
       due_date: dueDate || null,
       category_id: categoryId || null,
-      source: 'capture',
+      priority: null,
+      scheduled_start: null,
+      scheduled_end: null,
+      notes: null,
     }
     const { error: err } = await supabase.from('tasks').insert(row)
     setSaving(false)
