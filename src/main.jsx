@@ -6,6 +6,7 @@ import './mobile/mobileToday.css'  // Today grid + blocks + now-line (static —
 import './mobile/mobileSheet.css'  // task sheet + task rows + status cycle
 import './mobile/mobileHealth.css' // Health screens (static — CSS-load rule)
 import './mobile/mobileHealthGym.css' // Gym face + session report
+import './mobile/mobileFood.css'     // Food screens (static — CSS-load rule)
 
 // Viewport-gated front door: read once at boot, load exactly one tree.
 // Portrait iPhone (390–430px) always gets mobile; desktop always gets desktop.
