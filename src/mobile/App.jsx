@@ -5,6 +5,7 @@ import MobileMasthead from './MobileMasthead'
 import MobileTabBar from './MobileTabBar'
 import MobileToday from './MobileToday'
 import MobileHealth from './MobileHealth'
+import MobileFood from './MobileFood'
 
 function Placeholder({ label }) {
   return (
@@ -59,9 +60,9 @@ export default function MobileShell() {
   const [subline, setSubline] = useState('')
   const [folioDate, setFolioDate] = useState(null)
 
-  // Clear subline + folio when leaving the Today tab
+  // Clear subline + folio when leaving tabs that manage their own folio
   useEffect(() => {
-    if (activeTab !== 'today') { setSubline(''); setFolioDate(null) }
+    if (activeTab !== 'today' && activeTab !== 'food') { setSubline(''); setFolioDate(null) }
   }, [activeTab])
 
   if (loading)
@@ -82,6 +83,8 @@ export default function MobileShell() {
             <MobileToday onSubline={setSubline} onFolioDate={setFolioDate} />
           ) : activeTab === 'health' ? (
             <MobileHealth />
+          ) : activeTab === 'food' ? (
+            <MobileFood onSubline={setSubline} onFolioDate={setFolioDate} />
           ) : (
             <>
               <hr className="m-rule" />

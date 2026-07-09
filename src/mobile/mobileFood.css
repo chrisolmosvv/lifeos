@@ -1,1 +1,91 @@
-/* Mobile Food — styles added when screens ship */
+/* Mobile Food — mf- prefix, tokens from theme.css */
+
+/* ── Switcher ── */
+.mf-switcher { display: flex; gap: 1.2rem; padding: 8px 20px; }
+.mf-sw {
+  -webkit-appearance: none; appearance: none; background: none; border: none;
+  border-bottom: 2px solid transparent; border-radius: 0;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ink-muted); padding: 4px 0 3px; cursor: pointer;
+}
+.mf-sw--on { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Today chip ── */
+.mf-today-chip {
+  position: fixed; bottom: calc(70px + env(safe-area-inset-bottom)); left: 50%;
+  transform: translateX(-50%);
+  -webkit-appearance: none; appearance: none;
+  font-family: var(--font-sans); font-size: 0.72rem; font-weight: 500;
+  color: var(--paper); background: var(--ink); border: none;
+  padding: 6px 16px; cursor: pointer; z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Log day ── */
+.mf-log { padding: 0 0 24px; }
+.mf-error { padding: 16px 20px; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-muted); }
+
+/* Calorie lead */
+.mf-lead { display: flex; align-items: center; gap: 16px; padding: 16px 20px; }
+.mf-arc { width: 72px; height: 72px; flex: none; }
+.mf-lead-text { display: flex; flex-direction: column; }
+.mf-cal-hero {
+  font-family: var(--font-serif); font-size: 2.2rem; font-weight: 400;
+  color: var(--ink); margin: 0; line-height: 1;
+}
+.mf-cal-sub {
+  font-family: var(--font-sans); font-size: 0.75rem; color: var(--ink-muted); margin: 2px 0 0;
+}
+
+/* Macro split */
+.mf-macros { padding: 0 20px 12px; }
+.mf-macro-bar { display: flex; height: 5px; gap: 2px; overflow: hidden; }
+.mf-mb { min-width: 2px; }
+.mf-mb--p { background: var(--ink); opacity: 0.55; }
+.mf-mb--c { background: var(--ink); opacity: 0.3; }
+.mf-mb--f { background: var(--ink); opacity: 0.15; }
+.mf-macro-labels {
+  display: flex; gap: 12px; margin-top: 4px;
+  font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted);
+}
+
+/* Empty day */
+.mf-empty {
+  font-family: var(--font-serif); font-size: 0.92rem; font-style: italic;
+  color: var(--ink-muted); padding: 24px 20px; margin: 0;
+}
+
+/* Meal section */
+.mf-meal { border-bottom: 1px solid var(--rule-faint); }
+.mf-meal-head {
+  display: flex; align-items: baseline; gap: 6px; width: 100%;
+  -webkit-appearance: none; appearance: none; background: none; border: none;
+  padding: 10px 20px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  text-align: left;
+}
+.mf-meal-label {
+  font-family: var(--font-sans); font-size: 0.68rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted);
+}
+.mf-meal-count {
+  font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted);
+}
+.mf-meal-kcal {
+  margin-left: auto; font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink);
+}
+.mf-meal-caret {
+  font-size: 0.62rem; color: var(--ink-muted); width: 10px; text-align: center;
+}
+
+/* Entry row */
+.mf-entry { padding: 6px 20px 6px 32px; }
+.mf-entry-name {
+  font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink);
+}
+.mf-entry-brand { color: var(--ink-muted); }
+.mf-entry-meta {
+  display: flex; gap: 12px; margin-top: 1px;
+  font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted);
+}
