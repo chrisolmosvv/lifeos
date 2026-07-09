@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MEAL_SLOTS } from "./foodCalc";
-import { fmtNum } from "./foodFormat";
+import { fmtNum } from "../../spine/logic/foodFormat";
 import "./logMealSheet.css";
 
 // LogMealSheet (V2 P8) — the ONE cook→log staging sheet: a calm card that rises from the bottom over a

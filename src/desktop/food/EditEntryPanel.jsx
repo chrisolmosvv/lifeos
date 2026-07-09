@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MEAL_SLOTS, NUTRIENTS, entryMacros } from "./foodCalc";
 import { entryToFood } from "./foodShape";
-import { fmtNum, fmtFull } from "./foodFormat";
+import { fmtNum, fmtFull } from "../../spine/logic/foodFormat";
 import "./foodGoals.css";
 
 // EditEntryPanel (V2 P4) — a FULL-SCREEN editor for a logged entry: amount + slot + the FULL

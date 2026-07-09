@@ -1,4 +1,4 @@
-import { fmtNum } from "./foodFormat";
+import { fmtNum } from "../../spine/logic/foodFormat";
 
 // SummaryStrip (V2 P4) — the Week/Month numeric summary: avg cal · avg P · avg C · avg F (from
 // rangeTotals, averaged over LOGGED days) + the on-target day count (rangeAdherence, e.g. 5/7).

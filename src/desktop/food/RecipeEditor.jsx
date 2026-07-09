@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { fetchRecipe } from "./recipeLoad";
 import { recipeMacros } from "./recipeCalc";
 import { entryMacros } from "./foodCalc";
-import { fmtNum } from "./foodFormat";
+import { fmtNum } from "../../spine/logic/foodFormat";
 import { ensureFoodItem } from "./recipeWrite";
 import { updateDisplayName } from "./foodWrite";
 import Finder from "./finder/Finder";

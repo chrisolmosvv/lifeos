@@ -1,6 +1,6 @@
 // MacroRings (Piece 4) — three rings (protein/carbs/fat), each with per-meal segments in ink
 // shades. Same segment math as CalorieArc. Props: grams, targets, micros, mealTotals.
-import { fmtNum, fmtFull } from "./foodFormat";
+import { fmtNum, fmtFull } from "../../spine/logic/foodFormat";
 import { MEAL_SHADES, MEALS } from "./CalorieArc";
 
 const SIZE = 120;

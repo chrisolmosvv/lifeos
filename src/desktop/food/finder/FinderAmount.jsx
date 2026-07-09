@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MEAL_SLOTS, entryMacros } from "../foodCalc";
 import { resolvePortion } from "../portions";
-import { fmtNum } from "../foodFormat";
+import { fmtNum } from "../../../spine/logic/foodFormat";
 
 // FinderAmount — the shared amount step: a value field + a unit selector (only the units that
 // resolve for THIS food, from config.unitsFor), DEFAULT 100 g, a live macro preview above, and —

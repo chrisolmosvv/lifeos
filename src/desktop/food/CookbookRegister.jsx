@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { recipeMacros, recipeKind } from "./recipeCalc";
-import { fmtNum } from "./foodFormat";
+import { fmtNum } from "../../spine/logic/foodFormat";
 
 // CookbookRegister — the register-style library: a hairline-ruled list with sortable column
 // headers, per-row hover invert + detail unfurl. Data from the existing fetchCookbook result.

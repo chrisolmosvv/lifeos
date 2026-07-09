@@ -1,6 +1,6 @@
 import { shiftYMD, humanDayShort } from "../../spine/logic/gymDates";
 import { rangeTotals, perGoalHits } from "./foodCalc";
-import { fmtNum } from "./foodFormat";
+import { fmtNum } from "../../spine/logic/foodFormat";
 import FoodBarChart from "./FoodBarChart";
 
 // WeekMonthView (Nutrition Slice 2) — consistency-focused Week/Month. Full-width, one-band top,

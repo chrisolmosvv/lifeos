@@ -1,4 +1,4 @@
-import { fmtNum } from "../foodFormat";
+import { fmtNum } from "../../../spine/logic/foodFormat";
 
 // FinderRow — one result row: name · brand · a quiet tabular macro line (kcal · P/C/F per 100g).
 // No chips, no confidence dots — the zone collapse is the signal. `active` marks the keyboard

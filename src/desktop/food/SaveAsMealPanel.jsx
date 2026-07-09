@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NUTRIENTS } from "./foodCalc";
-import { fmtNum } from "./foodFormat";
+import { fmtNum } from "../../spine/logic/foodFormat";
 import "./foodGoals.css";
 
 // SaveAsMealPanel (V2 P5, Feature A) — the left-rail builder shown while multi-selecting today's FOOD

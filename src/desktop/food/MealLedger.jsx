@@ -1,4 +1,4 @@
-import { fmtNum } from "./foodFormat";
+import { fmtNum } from "../../spine/logic/foodFormat";
 
 // MealLedger (V2 P4) — the day's four fixed slots, each a hairline-ruled section. Rows carry an
 // ALWAYS-ON P·C·F shorthand + kcal (no cap, no "+N more", no tap-to-expand — the full 7-number
