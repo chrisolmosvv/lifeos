@@ -2,6 +2,7 @@
 // Shows a type chooser; routes to the right capture form.
 import { useState } from 'react'
 import MobileFoodCapture from './MobileFoodCapture'
+import MobileTaskCapture from './MobileTaskCapture'
 
 const TYPES = [
   { id: 'task', label: 'Task' },
@@ -15,6 +16,9 @@ export default function MobileCapture({ onDone }) {
 
   if (captureType === 'food')
     return <MobileFoodCapture onDone={onDone} />
+
+  if (captureType === 'task')
+    return <MobileTaskCapture onDone={onDone} onBack={() => setCaptureType(null)} />
 
   if (captureType)
     return (
