@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import MobileFoodLog from './MobileFoodLog'
-import TimerSpike from './TimerSpike'
 import { amsTodayYMD, shiftYMD } from '../spine/logic/gymDates'
 
 export default function MobileFood({ onSubline, onFolioDate }) {
@@ -27,7 +26,10 @@ export default function MobileFood({ onSubline, onFolioDate }) {
       {mode === 'log' ? (
         <MobileFoodLog viewedYMD={viewedYMD} isToday={isToday} onSwipe={pageDay} onSubline={onSubline} />
       ) : (
-        <TimerSpike />
+        <div className="m-placeholder">
+          <p className="m-placeholder-label">Cookbook</p>
+          <p className="m-placeholder-hint">coming soon</p>
+        </div>
       )}
       {!isToday && (
         <button className="mf-today-chip" onClick={() => setViewedYMD(today)} type="button">Today</button>
