@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchRecipe } from "./recipeLoad";
-import { recipeMacros } from "./recipeCalc";
+import { recipeMacros } from "../../spine/logic/recipeCalc";
 import { entryMacros } from "../../spine/logic/foodCalc";
 import { fmtNum } from "../../spine/logic/foodFormat";
 import { ensureFoodItem } from "./recipeWrite";
 import { updateDisplayName } from "./foodWrite";
 import Finder from "./finder/Finder";
-import { recipeFinderConfig } from "./finder/finderConfig";
+import { recipeFinderConfig } from "../../spine/logic/finderConfig";
 import ManualMacrosPanel from "./ManualMacrosPanel";
 import EditorSteps from "./EditorSteps";
 import "./cookbook.css";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MEAL_SLOTS, entryMacros } from "../../../spine/logic/foodCalc";
-import { resolvePortion } from "../portions";
+import { resolvePortion } from "../../../spine/logic/portions";
 import { fmtNum } from "../../../spine/logic/foodFormat";
 
 // FinderAmount — the shared amount step: a value field + a unit selector (only the units that

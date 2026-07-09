@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { startAlarm, stopAlarm } from "./cookAlarm";
+import { startAlarm, stopAlarm } from "../../spine/logic/cookAlarm";
 
 // AlarmOverlay — the dismiss-required alarm when a timer reaches zero.
 // Fires a looping two-tone Web Audio beep until dismissed. Actions:

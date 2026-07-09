@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { searchFoods } from "../foodLoad";
 import ManualForm from "../ManualForm";
-import { zoneResults } from "./finderConfig";
+import { zoneResults } from "../../../spine/logic/finderConfig";
 import FinderResults from "./FinderResults";
 import FinderAmount from "./FinderAmount";
 import "../foodModal.css";

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { fetchRecipe } from "./recipeLoad";
-import { recipeMacros } from "./recipeCalc";
+import { recipeMacros } from "../../spine/logic/recipeCalc";
 import { slotForHour, NUTRIENTS } from "../../spine/logic/foodCalc";
 import { amsTodayYMD, amsClockMinutes } from "../../spine/logic/gymDates";
 import { useCookEvents } from "./useCookEvents";
 import { useCookLog } from "./useCookLog";
 import { useWakeLock } from "./useWakeLock";
-import { initAudioContext } from "./cookAlarm";
+import { initAudioContext } from "../../spine/logic/cookAlarm";
 import CookHero from "./CookHero";
 import CookRail from "./CookRail";
 import AlarmOverlay from "./AlarmOverlay";

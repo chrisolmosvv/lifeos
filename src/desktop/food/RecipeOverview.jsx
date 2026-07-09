@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { assignLanes } from "./cookLanes";
-import { cookSchedule } from "./cookSchedule";
+import { assignLanes } from "../../spine/logic/cookLanes";
+import { cookSchedule } from "../../spine/logic/cookSchedule";
 import "./cookOverview.css";
 
 // RecipeOverview — the "Recipe" mode: servings stepper (scales ingredient

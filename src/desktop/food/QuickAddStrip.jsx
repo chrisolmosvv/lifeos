@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { itemToFood } from "./foodShape";
+import { itemToFood } from "../../spine/logic/foodShape";
 
 // QuickAddStrip (Slice 1a restyle) — recent MEALS + favourited MEALS + favourited FOODS.
 // Chips are plain text with a thin bottom hairline underline, generously spaced. Data/logic

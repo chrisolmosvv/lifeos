@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchCookbook } from "./recipeLoad";
-import { recipeKind } from "./recipeCalc";
+import { recipeKind } from "../../spine/logic/recipeCalc";
 import { setRecipeFavourite } from "./recipeWrite";
 import { useRecipeWrites } from "./useRecipeWrites";
 import CookbookRegister from "./CookbookRegister";

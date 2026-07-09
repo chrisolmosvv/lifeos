@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { recipeMacros, recipeKind } from "./recipeCalc";
+import { recipeMacros, recipeKind } from "../../spine/logic/recipeCalc";
 import { fmtNum } from "../../spine/logic/foodFormat";
 
 // CookbookRegister — the register-style library: a hairline-ruled list with sortable column
