@@ -7,9 +7,9 @@ import {
   aggMode,
   ACTIVITY_SUM_METRICS,
   ACTIVITY_AVG_METRICS,
-} from "./healthActivity";
-import { metricView as bodyView } from "./healthBody";
-import { fixedBand } from "./healthBodyRange";
+} from "../../spine/logic/healthActivity";
+import { metricView as bodyView } from "../../spine/logic/healthBody";
+import { fixedBand } from "../../spine/logic/healthBodyRange";
 
 // ⚠️ THROWAWAY — Health V2 P0c verify harness. Mounted behind the #health-debug-v2
 // hash hook in LoggedIn.jsx. Prints every computed number next to its raw inputs so

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { sumVolume, topSet, best1RM, isWarmup } from '../gym/gymCalc'
-import { formatVolume, prettyMuscle } from '../gym/gymFormat'
+import { sumVolume, topSet, best1RM, isWarmup } from '../../spine/logic/gymCalc'
+import { formatVolume, prettyMuscle } from '../../spine/logic/gymFormat'
 import './sessionReport.css'
 
 // SessionExercise — one exercise inside the session report: a calm summary line

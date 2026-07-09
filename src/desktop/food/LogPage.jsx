@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { amsTodayYMD, amsClockMinutes, shiftYMD, humanDayLong, humanDayShort } from "../../spine/logic/gymDates";
 import { fetchGoals } from "../health/healthLoad";
-import { resolveGoals } from "../health/healthGoals";
+import { resolveGoals } from "../../spine/logic/healthGoals";
 import { useGoalWrites } from "../health/useGoalWrites";
 import { dailyTotals, recentMealsFrom, entryMacros, slotForHour, NUTRIENTS } from "../../spine/logic/foodCalc";
 import { recipeMacros } from "./recipeCalc";

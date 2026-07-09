@@ -5,15 +5,15 @@ import BodyPage from "./BodyPage";
 import HubSleepCard from "./HubSleepCard";
 import HubBodyCard from "./HubBodyCard";
 import HubGymCard from "./HubGymCard";
-import { dateLine, asOf } from "./healthFormat";
+import { dateLine, asOf } from "../../spine/logic/healthFormat";
 import { amsTodayYMD } from "../../spine/logic/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
-import { resolveGoals } from "./healthGoals";
-import { sleepView } from "./healthSleep";
-import { metricView as bodyView, BODY_METRICS } from "./healthBody";
+import { resolveGoals } from "../../spine/logic/healthGoals";
+import { sleepView } from "../../spine/logic/healthSleep";
+import { metricView as bodyView, BODY_METRICS } from "../../spine/logic/healthBody";
 import { loadGymData } from "../gym/gymLoad";
-import { buildWorkouts, boxScore } from "../gym/gymCalc";
-import { recentSessions } from "../gym/gymSessions";
+import { buildWorkouts, boxScore } from "../../spine/logic/gymCalc";
+import { recentSessions } from "../../spine/logic/gymSessions";
 import "../kit/healthHub.css";
 
 const START = "2026-01-01"; // backfill start — covers a stale latest reading too

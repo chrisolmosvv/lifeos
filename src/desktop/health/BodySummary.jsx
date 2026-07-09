@@ -1,6 +1,6 @@
 import BodyComposition from "./BodyComposition";
 import { JourneyBar } from "./BodyCells";
-import { composition, goalProgress } from "./healthBodyRange";
+import { composition, goalProgress } from "../../spine/logic/healthBodyRange";
 
 // LifeOS — Body (V2 P2): the two bottom SUMMARY bars, kept across all ranges — they
 // summarise as shapes what the table rows give as numbers:

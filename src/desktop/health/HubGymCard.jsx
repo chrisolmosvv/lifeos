@@ -1,5 +1,5 @@
 import HubCard from "../kit/HubCard";
-import { ageLabel, whole } from "./healthFormat";
+import { ageLabel, whole } from "../../spine/logic/healthFormat";
 
 // Gym card. Headline = THIS WEEK's training volume (the same box-score volume the
 // Gym front page leads with), with sessions as the quiet secondary. Label = time

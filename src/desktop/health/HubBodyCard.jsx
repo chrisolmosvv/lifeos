@@ -1,5 +1,5 @@
 import HubCard from "../kit/HubCard";
-import { ageLabel } from "./healthFormat";
+import { ageLabel } from "../../spine/logic/healthFormat";
 
 // A trend mark: arrow + delta, shown ONLY when both 7-day windows have data
 // (calc returns dir=null otherwise → we render nothing). Non-flat = terracotta (a

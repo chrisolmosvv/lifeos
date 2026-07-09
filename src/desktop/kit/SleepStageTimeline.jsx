@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { clockTime, hm } from "../health/healthFormat";
+import { clockTime, hm } from "../../spine/logic/healthFormat";
 
 // LifeOS — Sleep: the lane-per-stage timeline (V2 "Stage timeline" hero). One lane per
 // stage (Awake / REM / Core / Deep, top→bottom), each block placed by clock time on a

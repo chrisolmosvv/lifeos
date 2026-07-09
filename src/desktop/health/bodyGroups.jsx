@@ -1,10 +1,10 @@
 import { Movement, Trace, JourneyBar, Band } from "./BodyCells";
 import BodyChart from "./BodyChart";
-import { fmtFull } from "./bodyFormat";
+import { fmtFull } from "../../spine/logic/bodyFormat";
 import { shiftYMD } from "../../spine/logic/gymDates";
-import { DEADBAND } from "./healthStats";
-import { goalProgress, baselineBand, fixedBand, windowDelta } from "./healthBodyRange";
-import { activityDaysHit } from "./healthActivity";
+import { DEADBAND } from "../../spine/logic/healthStats";
+import { goalProgress, baselineBand, fixedBand, windowDelta } from "../../spine/logic/healthBodyRange";
+import { activityDaysHit } from "../../spine/logic/healthActivity";
 
 // LifeOS — Body (V2 P2): builds the Latest view's 3-group table config (Composition /
 // Energy / Vitals) with per-cell treatments. Extracted from BodyPage to keep it under the

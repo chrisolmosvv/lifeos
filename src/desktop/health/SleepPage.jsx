@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { amsTodayYMD, shiftYMD, humanDayLong, humanDayShort } from "../../spine/logic/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "./healthLoad";
-import { resolveGoals } from "./healthGoals";
-import { sleepView, nightOn } from "./healthSleep";
-import { rangeBedWakeAverages } from "./healthRhythm";
-import { dailyValueOn } from "./healthBody";
+import { resolveGoals } from "../../spine/logic/healthGoals";
+import { sleepView, nightOn } from "../../spine/logic/healthSleep";
+import { rangeBedWakeAverages } from "../../spine/logic/healthRhythm";
+import { dailyValueOn } from "../../spine/logic/healthBody";
 import { useGoalWrites } from "./useGoalWrites";
 import SleepNight from "./SleepNight";
 import SleepRange from "./SleepRange";

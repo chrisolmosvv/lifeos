@@ -7,7 +7,7 @@
 // no second date path. Display layers only read this.
 
 import { amsYMD } from "../../spine/logic/gymDates";
-import { prWeight, topSet, best1RM } from "./gymCalc.js";
+import { prWeight, topSet, best1RM } from "../../spine/logic/gymCalc";
 
 const liftKey = (ex) => ex.exercise_template_id || ex.title || "?";
 

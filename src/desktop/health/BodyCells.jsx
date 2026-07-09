@@ -1,5 +1,5 @@
 import BodyChart from "./BodyChart";
-import { fmtDelta, fmtFull, fmtNum } from "./bodyFormat";
+import { fmtDelta, fmtFull, fmtNum } from "../../spine/logic/bodyFormat";
 
 // LifeOS — Body (V2 P2): the table's per-cell treatments, shared by all three groups.
 //   Movement  — the trend arrow + delta (terracotta on real movement; ink when steady).

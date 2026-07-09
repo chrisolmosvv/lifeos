@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { amsTodayYMD } from "../../spine/logic/gymDates";
 import { fetchBody, fetchActivity, fetchGoals } from "./healthLoad";
-import { resolveGoals } from "./healthGoals";
-import { metricView as bodyView, BODY_METRICS } from "./healthBody";
-import { metricView as activityView } from "./healthActivity";
-import { metaFor } from "./bodyFormat";
+import { resolveGoals } from "../../spine/logic/healthGoals";
+import { metricView as bodyView, BODY_METRICS } from "../../spine/logic/healthBody";
+import { metricView as activityView } from "../../spine/logic/healthActivity";
+import { metaFor } from "../../spine/logic/bodyFormat";
 import { useGoalWrites } from "./useGoalWrites";
 import { buildLatestGroups, buildRangeGroups } from "./bodyGroups";
 import BodyTable from "./BodyTable";

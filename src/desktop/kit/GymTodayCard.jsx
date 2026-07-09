@@ -1,6 +1,6 @@
-import { topSet, workoutVolume } from '../gym/gymCalc'
+import { topSet, workoutVolume } from '../../spine/logic/gymCalc'
 import { humanDayShort } from '../../spine/logic/gymDates'
-import { formatVolume } from '../gym/gymFormat'
+import { formatVolume } from '../../spine/logic/gymFormat'
 
 // GymTodayCard — the TL "Gym · today" quadrant: a compact snapshot of the LAST logged
 // session (most recent even if days old — point-in-time, NOT ranged). Header = session

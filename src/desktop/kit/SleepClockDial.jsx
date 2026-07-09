@@ -1,4 +1,4 @@
-import { clockFromMin } from "../health/healthFormat";
+import { clockFromMin } from "../../spine/logic/healthFormat";
 
 // LifeOS — Sleep rhythm: a 12-hour clock DIAL for bed or wake (V2 P1 2nd refinement,
 // replacing the "±116 · variable" text). A thin hairline circle, 4 cardinal ticks only

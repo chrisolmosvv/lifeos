@@ -3,7 +3,7 @@ import ClimbChart from './kit/ClimbChart'
 import { liftRecords } from './gym/gymRecords'
 import { loadPins, pinLift, unpinLift } from './gym/gymPins'
 import { humanDayShort } from '../spine/logic/gymDates'
-import { prettyMuscle } from './gym/gymFormat'
+import { prettyMuscle } from '../spine/logic/gymFormat'
 import './kit/formGuide.css'
 import './kit/gymRecords.css'
 

@@ -1,5 +1,5 @@
 import { humanDayShort } from "../../spine/logic/gymDates";
-import { fmtNum, metaFor } from "./bodyFormat";
+import { fmtNum, metaFor } from "../../spine/logic/bodyFormat";
 
 // BodyChart — a calm, hand-rolled inline-SVG chart for the Body page (no chart
 // dependency), mirroring the gym TrendChart in spirit. It ONLY draws the calc

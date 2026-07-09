@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { shiftYMD, humanDayShort } from "../../spine/logic/gymDates";
-import { nightsHitGoal, goalStreak, bedtimeConsistency } from "./healthSleep";
-import { rangeBedWakeAverages } from "./healthRhythm";
-import { hm, clockFromMin } from "./healthFormat";
+import { nightsHitGoal, goalStreak, bedtimeConsistency } from "../../spine/logic/healthSleep";
+import { rangeBedWakeAverages } from "../../spine/logic/healthRhythm";
+import { hm, clockFromMin } from "../../spine/logic/healthFormat";
 import SleepAggStats from "./SleepAggStats";
 import SleepAggLedger from "./SleepAggLedger";
 

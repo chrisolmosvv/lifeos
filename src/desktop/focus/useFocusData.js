@@ -4,7 +4,7 @@ import { resolveColor } from "../../spine/logic/colorModel";
 import { colorHex, INBOX_COLOR } from "../../spine/logic/palette";
 import { fetchSessions } from "./focusLoad.js";
 import { fetchGoals } from "../health/healthLoad.js";
-import { resolveGoals } from "../health/healthGoals.js";
+import { resolveGoals } from "../../spine/logic/healthGoals";
 
 // useFocusData — the Focus pillar's READ layer, split out of FocusPage to keep that
 // file lean. Loads categories, the last ~100 days of sessions, and the focus goals;

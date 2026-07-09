@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { metaFor, fmtFull } from "./bodyFormat";
+import { metaFor, fmtFull } from "../../spine/logic/bodyFormat";
 import "../kit/goalEditor.css";
 
 // GoalEditor — the body of the goal popover. PIECE 2 handles the VALUE goals

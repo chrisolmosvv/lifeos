@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { vsGoal } from "./healthGoals";
-import { clockFromMin } from "./healthFormat";
+import { vsGoal } from "../../spine/logic/healthGoals";
+import { clockFromMin } from "../../spine/logic/healthFormat";
 import "../kit/goalEditor.css";
 
 // SleepGoalEditor — the COMBINED sleep-goals popover (S9): sets sleep DURATION and

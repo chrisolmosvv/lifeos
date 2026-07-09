@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { amsClockMinutes, shiftYMD, humanDayShort } from "../../spine/logic/gymDates";
-import { clockFromMin, hm } from "../health/healthFormat";
+import { clockFromMin, hm } from "../../spine/logic/healthFormat";
 
 // LifeOS — Sleep rhythm: the seven-night CLOCK COLUMNS. An 18-hour vertical window,
 // 18:00 (top) → 12:00 next day (bottom), cropping the dead midday hours so each night's

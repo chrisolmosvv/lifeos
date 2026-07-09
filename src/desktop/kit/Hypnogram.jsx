@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { clockTime, hm } from "../health/healthFormat";
+import { clockTime, hm } from "../../spine/logic/healthFormat";
 
 // Hypnogram — the hero's stage graph. Two modes:
 //   GRAPH (blocks present): a time-axis graph, each segment a coloured block placed

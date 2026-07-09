@@ -1,8 +1,8 @@
 import SessionExercise from './kit/SessionExercise'
-import { workoutVolume, workoutMinutes } from './gym/gymCalc'
+import { workoutVolume, workoutMinutes } from '../spine/logic/gymCalc'
 import { amsYMD, humanDayLong } from '../spine/logic/gymDates'
-import { formatVolume, formatDuration } from './gym/gymFormat'
-import { sessionStory } from './gym/gymStory'
+import { formatVolume, formatDuration } from '../spine/logic/gymFormat'
+import { sessionStory } from '../spine/logic/gymStory'
 import './kit/sessionReport.css'
 
 // SessionReport — the drill-in for ONE workout, reached from the recent-sessions

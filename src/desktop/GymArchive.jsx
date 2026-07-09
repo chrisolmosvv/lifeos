@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { archiveMonths, archiveTotals, matchWorkoutIds } from './gym/gymArchive'
+import { archiveMonths, archiveTotals, matchWorkoutIds } from '../spine/logic/gymArchive'
 import { humanDayShort } from '../spine/logic/gymDates'
-import { formatVolume, formatDuration } from './gym/gymFormat'
+import { formatVolume, formatDuration } from '../spine/logic/gymFormat'
 import './kit/formGuide.css'
 import './kit/gymArchive.css'
 

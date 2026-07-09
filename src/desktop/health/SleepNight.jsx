@@ -2,8 +2,8 @@ import Hypnogram from "../kit/Hypnogram";
 import SleepStageTimeline from "../kit/SleepStageTimeline";
 import SleepClockColumns from "../kit/SleepClockColumns";
 import SleepClockDial from "../kit/SleepClockDial";
-import { parseSegments, proportionBand } from "./hypnogram";
-import { hm, clockTime, clockFromMin } from "./healthFormat";
+import { parseSegments, proportionBand } from "../../spine/logic/hypnogram";
+import { hm, clockTime, clockFromMin } from "../../spine/logic/healthFormat";
 
 // SleepNight — the "Last night" view (V2 "Stage timeline" layout) + the Week/Month bar
 // drill-in. Three FULL-HEIGHT broadsheet columns, full-height hairline rules, chrome

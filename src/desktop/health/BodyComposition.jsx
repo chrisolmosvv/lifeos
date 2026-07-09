@@ -1,4 +1,4 @@
-import { fmtFull } from "./bodyFormat";
+import { fmtFull } from "../../spine/logic/bodyFormat";
 
 // BodyComposition — the fat-vs-lean bar for the Composition group. Pure presentation: it
 // draws the numbers the calc layer already worked out (composition()) — no maths here

@@ -1,5 +1,5 @@
 import HubCard from "../kit/HubCard";
-import { hm } from "./healthFormat";
+import { hm } from "../../spine/logic/healthFormat";
 
 // Sleep card (the richest). Headline = LAST NIGHT's duration only — last night is
 // the night whose wake-up date is today; if there's no row for it we show "no
