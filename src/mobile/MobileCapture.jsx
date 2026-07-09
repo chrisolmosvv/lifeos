@@ -20,8 +20,12 @@ function isLiveRecurring(item) {
   return item && item.series_id && !item.series_detached
 }
 
-export default function MobileCapture({ onDone, editItem, editKind }) {
+export default function MobileCapture({ onDone, editItem, editKind, createPrefill }) {
   const [captureType, setCaptureType] = useState(null)
+
+  // Create-prefill mode (long-press from grid): open Event form with prefilled time.
+  if (createPrefill)
+    return <MobileEventCapture onDone={onDone} onBack={onDone} prefill={createPrefill} />
 
   // Edit mode: route directly to the right form (bypass the chooser).
   if (editItem) {

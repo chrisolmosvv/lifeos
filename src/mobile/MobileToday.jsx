@@ -16,7 +16,7 @@ import { upNext, formatUpNext } from './upNext'
 import MobileDayGrid from './MobileDayGrid'
 import MobileTaskSheet from './MobileTaskSheet'
 
-export default function MobileToday({ onSubline, onFolioDate, onEdit }) {
+export default function MobileToday({ onSubline, onFolioDate, onEdit, onCreate }) {
   const [viewed, setViewed] = useState(() => startOfDay(new Date()))
   const [slideDir, setSlideDir] = useState(null)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -134,6 +134,7 @@ export default function MobileToday({ onSubline, onFolioDate, onEdit }) {
             isToday={isToday}
             onSwipe={goDay}
             onEditBlock={onEdit}
+            onLongPressCreate={onCreate}
           />
         </div>
       </div>

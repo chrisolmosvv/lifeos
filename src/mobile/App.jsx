@@ -63,12 +63,14 @@ export default function MobileShell() {
   const prevTabRef = useRef('today')
   const [editItem, setEditItem] = useState(null)
   const [editKind, setEditKind] = useState(null)
+  const [createPrefill, setCreatePrefill] = useState(null)
 
   function selectTab(tab, params) {
     if (tab === 'capture') {
       prevTabRef.current = activeTab
       setEditItem(params?.editItem || null)
       setEditKind(params?.editKind || null)
+      setCreatePrefill(params?.createPrefill || null)
     }
     setActiveTab(tab)
   }
@@ -94,14 +96,15 @@ export default function MobileShell() {
         <div className="m-page" key={activeTab}>
           {activeTab === 'today' ? (
             <MobileToday onSubline={setSubline} onFolioDate={setFolioDate}
-              onEdit={(item) => selectTab('capture', { editItem: item, editKind: item.start_at ? 'event' : 'task' })} />
+              onEdit={(item) => selectTab('capture', { editItem: item, editKind: item.start_at ? 'event' : 'task' })}
+              onCreate={(prefill) => selectTab('capture', { createPrefill: prefill })} />
           ) : activeTab === 'health' ? (
             <MobileHealth />
           ) : activeTab === 'food' ? (
             <MobileFood onSubline={setSubline} onFolioDate={setFolioDate} />
           ) : activeTab === 'capture' ? (
-            <MobileCapture onDone={() => { setEditItem(null); setEditKind(null); setActiveTab(prevTabRef.current) }}
-              editItem={editItem} editKind={editKind} />
+            <MobileCapture onDone={() => { setEditItem(null); setEditKind(null); setCreatePrefill(null); setActiveTab(prevTabRef.current) }}
+              editItem={editItem} editKind={editKind} createPrefill={createPrefill} />
           ) : (
             <>
               <hr className="m-rule" />

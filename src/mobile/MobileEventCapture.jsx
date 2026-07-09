@@ -65,11 +65,11 @@ function initFromItem(item) {
   }
 }
 
-export default function MobileEventCapture({ onDone, onBack, item }) {
+export default function MobileEventCapture({ onDone, onBack, item, prefill }) {
   const editing = !!item
-  const def = editing ? initFromItem(item) : defaults()
+  const def = editing ? initFromItem(item) : (prefill || defaults())
   const [title, setTitle] = useState(item?.title || '')
-  const [eventDate, setEventDate] = useState(editing ? def.date : defaults().date)
+  const [eventDate, setEventDate] = useState(def.date)
   const [startTime, setStartTime] = useState(def.start)
   const [endTime, setEndTime] = useState(def.end)
   const [allDay, setAllDay] = useState(def.allDay || false)

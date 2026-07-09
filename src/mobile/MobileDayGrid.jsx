@@ -1,5 +1,5 @@
 // The mobile day grid: hour lines, category-tinted blocks, terracotta now-line,
-// touch-swipe for day paging. View-only in Phase 2 (no drag, no long-press-create).
+// touch-swipe for day paging, long-press on empty slot → create event.
 // Blocks positioned via spine's layoutEvents (pure math). 7am–midnight default,
 // expandable to full 24h via "show earlier".
 
@@ -10,14 +10,17 @@ import MobileBlock from './MobileBlock'
 
 const DEFAULT_START = 7
 const END = 24
+const LP_MS = 400 // long-press threshold
 
 export default function MobileDayGrid({
   events, scheduledTasks, cats, viewed, isToday, onSwipe, onEditBlock,
+  onLongPressCreate,
 }) {
   const [showEarly, setShowEarly] = useState(false)
   const [now, setNow] = useState(() => new Date())
   const nowRef = useRef(null)
   const gridRef = useRef(null)
+  const laneRef = useRef(null)
   const touchRef = useRef({})
 
   const startHour = showEarly ? 0 : DEFAULT_START
@@ -36,41 +39,72 @@ export default function MobileDayGrid({
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Touch swipe for day paging (horizontal only)
+  // Touch: swipe for day paging (horizontal) + long-press for create (empty slot).
   useEffect(() => {
     const el = gridRef.current
     if (!el) return
     const t = touchRef.current
+    let lpTimer = null
+
+    function clearLp() { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null } }
+
     function onStart(e) {
       t.sx = e.touches[0].clientX
       t.sy = e.touches[0].clientY
       t.lock = null
+      clearLp()
+      // Arm long-press only on empty lane (not on a block, not outside the lane).
+      const target = e.target
+      if (onLongPressCreate && !target.closest('.m-block') && target.closest('.m-grid-lane')) {
+        const touchY = e.touches[0].clientY
+        lpTimer = setTimeout(() => {
+          lpTimer = null
+          if (!laneRef.current) return
+          const laneRect = laneRef.current.getBoundingClientRect()
+          const rawHour = startHour + (touchY - laneRect.top) / HOUR_HEIGHT
+          const hour = Math.max(0, Math.min(23, Math.floor(rawHour)))
+          const p = (n) => String(n).padStart(2, '0')
+          const dateYmd = `${viewed.getFullYear()}-${p(viewed.getMonth() + 1)}-${p(viewed.getDate())}`
+          const endH = Math.min(hour + 1, 23)
+          onLongPressCreate({
+            date: dateYmd,
+            start: `${p(hour)}:00`,
+            end: endH === hour ? '23:59' : `${p(endH)}:00`,
+          })
+        }, LP_MS)
+      }
     }
+
     function onMove(e) {
       if (t.sx == null) return
       const dx = e.touches[0].clientX - t.sx
       const dy = e.touches[0].clientY - t.sy
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) clearLp()
       if (t.lock === null && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
         t.lock = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v'
       }
       if (t.lock === 'h') e.preventDefault()
     }
+
     function onEnd(e) {
+      clearLp()
       if (t.lock !== 'h') { t.sx = null; return }
       const dx = e.changedTouches[0].clientX - t.sx
       if (Math.abs(dx) > 50) onSwipe(dx < 0 ? 1 : -1)
       t.sx = null
       t.lock = null
     }
+
     el.addEventListener('touchstart', onStart, { passive: true })
     el.addEventListener('touchmove', onMove, { passive: false })
     el.addEventListener('touchend', onEnd, { passive: true })
     return () => {
+      clearLp()
       el.removeEventListener('touchstart', onStart)
       el.removeEventListener('touchmove', onMove)
       el.removeEventListener('touchend', onEnd)
     }
-  }, [onSwipe])
+  }, [onSwipe, onLongPressCreate, startHour, viewed])
 
   // Layout computation
   const dayStartMs = new Date(
@@ -112,7 +146,7 @@ export default function MobileDayGrid({
             </div>
           ))}
         </div>
-        <div className="m-grid-lane">
+        <div className="m-grid-lane" ref={laneRef}>
           {hours.map((h) => <div className="m-grid-hour" key={h} style={{ height: HOUR_HEIGHT }} />)}
 
           {visible.map((it) => {
