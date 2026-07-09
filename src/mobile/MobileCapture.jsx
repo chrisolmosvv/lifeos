@@ -1,5 +1,6 @@
 // Capture router — the ➕ tab's front door.
-// Shows a type chooser; routes to the right capture form.
+// Create: shows a type chooser → routes to the right form.
+// Edit: receives editItem + editKind → routes straight to the form in edit mode.
 import { useState } from 'react'
 import MobileFoodCapture from './MobileFoodCapture'
 import MobileTaskCapture from './MobileTaskCapture'
@@ -13,9 +14,33 @@ const TYPES = [
   { id: 'note', label: 'Note' },
 ]
 
-export default function MobileCapture({ onDone }) {
+// A live recurring instance (series member, not yet detached) must NOT be edited
+// on mobile — the scope prompt (this one / all / following) isn't built yet.
+function isLiveRecurring(item) {
+  return item && item.series_id && !item.series_detached
+}
+
+export default function MobileCapture({ onDone, editItem, editKind }) {
   const [captureType, setCaptureType] = useState(null)
 
+  // Edit mode: route directly to the right form (bypass the chooser).
+  if (editItem) {
+    if (isLiveRecurring(editItem))
+      return (
+        <div className="mc-recurring-block">
+          <button className="mc-back" onClick={onDone} type="button"
+            aria-label="Close">&lsaquo;</button>
+          <p className="mc-recurring-msg">This {editKind || 'item'} repeats — edit it on desktop.</p>
+        </div>
+      )
+
+    if (editKind === 'task')
+      return <MobileTaskCapture item={editItem} onDone={onDone} onBack={onDone} />
+    if (editKind === 'event')
+      return <MobileEventCapture item={editItem} onDone={onDone} onBack={onDone} />
+  }
+
+  // Create mode: chooser → form.
   if (captureType === 'food')
     return <MobileFoodCapture onDone={onDone} />
 

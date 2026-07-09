@@ -61,9 +61,15 @@ export default function MobileShell() {
   const [subline, setSubline] = useState('')
   const [folioDate, setFolioDate] = useState(null)
   const prevTabRef = useRef('today')
+  const [editItem, setEditItem] = useState(null)
+  const [editKind, setEditKind] = useState(null)
 
-  function selectTab(tab) {
-    if (tab === 'capture') prevTabRef.current = activeTab
+  function selectTab(tab, params) {
+    if (tab === 'capture') {
+      prevTabRef.current = activeTab
+      setEditItem(params?.editItem || null)
+      setEditKind(params?.editKind || null)
+    }
     setActiveTab(tab)
   }
 
@@ -93,7 +99,8 @@ export default function MobileShell() {
           ) : activeTab === 'food' ? (
             <MobileFood onSubline={setSubline} onFolioDate={setFolioDate} />
           ) : activeTab === 'capture' ? (
-            <MobileCapture onDone={() => setActiveTab(prevTabRef.current)} />
+            <MobileCapture onDone={() => { setEditItem(null); setEditKind(null); setActiveTab(prevTabRef.current) }}
+              editItem={editItem} editKind={editKind} />
           ) : (
             <>
               <hr className="m-rule" />

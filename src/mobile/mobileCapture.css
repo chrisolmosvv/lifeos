@@ -236,3 +236,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 .mc-cat-row--on { color: var(--accent); }
+
+/* ── Recurring-item edit block ────────────────────────────── */
+.mc-recurring-block { padding: 24px 20px 0; }
+.mc-recurring-msg {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink-muted);
+  margin: 0;
+  line-height: 1.5;
+}

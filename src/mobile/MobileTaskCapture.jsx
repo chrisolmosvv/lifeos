@@ -1,4 +1,4 @@
-// Task quick-capture: title + optional date + optional category → INSERT → return.
+// Task capture: create (insert) OR edit (PATCH-update form-visible columns only).
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../spine/data/supabaseClient'
 import { activeOnly } from '../spine/data/activeOnly'
@@ -23,10 +23,11 @@ function dateChips() {
   ]
 }
 
-export default function MobileTaskCapture({ onDone, onBack }) {
-  const [title, setTitle] = useState('')
-  const [dueDate, setDueDate] = useState(null)
-  const [categoryId, setCategoryId] = useState(null)
+export default function MobileTaskCapture({ onDone, onBack, item }) {
+  const editing = !!item
+  const [title, setTitle] = useState(item?.title || '')
+  const [dueDate, setDueDate] = useState(item?.due_date || null)
+  const [categoryId, setCategoryId] = useState(item?.category_id ?? null)
   const [cats, setCats] = useState([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -48,21 +49,31 @@ export default function MobileTaskCapture({ onDone, onBack }) {
     setSaving(true)
     setError(null)
 
-    // Row shape matches desktop's buildOneOffFields('task', …) + quick-add.
-    // time_bucket: 'Today' (the capture intent is "do this now"; the form has no
-    // bucket picker — matching ItemForm's Today chip default on create).
-    const row = {
-      title: trimmed,
-      status: 'open',
-      time_bucket: 'Today',
-      due_date: dueDate || null,
-      category_id: categoryId || null,
-      priority: null,
-      scheduled_start: null,
-      scheduled_end: null,
-      notes: null,
+    let err
+    if (editing) {
+      // PATCH: only form-visible columns. Preserves status, time_bucket, notes,
+      // priority, scheduled_start/end, source, series_id, etc.
+      const patch = {
+        title: trimmed,
+        due_date: dueDate || null,
+        category_id: categoryId || null,
+      }
+      ;({ error: err } = await supabase.from('tasks').update(patch).eq('id', item.id))
+    } else {
+      // CREATE: full row with defaults (matches desktop's buildOneOffFields).
+      const row = {
+        title: trimmed,
+        status: 'open',
+        time_bucket: 'Today',
+        due_date: dueDate || null,
+        category_id: categoryId || null,
+        priority: null,
+        scheduled_start: null,
+        scheduled_end: null,
+        notes: null,
+      }
+      ;({ error: err } = await supabase.from('tasks').insert(row))
     }
-    const { error: err } = await supabase.from('tasks').insert(row)
     setSaving(false)
     if (err) { setError(err.message || 'Could not save.'); return }
     onDone()
@@ -75,8 +86,8 @@ export default function MobileTaskCapture({ onDone, onBack }) {
   return (
     <div className="mc-task">
       <button className="mc-back" onClick={onBack} type="button"
-        aria-label="Back to chooser">&lsaquo;</button>
-      <p className="mc-kicker">New task</p>
+        aria-label="Back">&lsaquo;</button>
+      <p className="mc-kicker">{editing ? 'Edit task' : 'New task'}</p>
 
       <input
         ref={inputRef}
@@ -121,7 +132,7 @@ export default function MobileTaskCapture({ onDone, onBack }) {
         disabled={!title.trim() || saving}
         onClick={handleSave}
       >
-        {saving ? 'Adding…' : 'Add task'}
+        {saving ? 'Saving…' : editing ? 'Save changes' : 'Add task'}
       </button>
 
       {error && <p className="mc-error">{error}</p>}
