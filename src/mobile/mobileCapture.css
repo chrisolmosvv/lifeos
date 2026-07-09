@@ -28,19 +28,9 @@
   margin: 0 0 20px;
 }
 
-.mc-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.mc-list li {
-  border-top: 1px solid var(--rule);
-}
-
-.mc-list li:last-child {
-  border-bottom: 1px solid var(--rule);
-}
+.mc-list { list-style: none; margin: 0; padding: 0; }
+.mc-list li { border-top: 1px solid var(--rule); }
+.mc-list li:last-child { border-bottom: 1px solid var(--rule); }
 
 .mc-option {
   appearance: none;
@@ -57,38 +47,21 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.mc-option:active {
-  color: var(--accent);
-}
+.mc-option:active { color: var(--accent); }
 
 /* Placeholder for types not yet built */
+.mc-placeholder { padding: 24px 20px 0; }
+.mc-placeholder-label { font-family: var(--font-serif); font-size: 20px; color: var(--ink); margin: 0 0 6px; }
+.mc-placeholder-hint { font-family: var(--font-sans); font-size: 14px; color: var(--ink-muted); margin: 0; }
 
-.mc-placeholder {
+/* ── Shared capture form elements (Task + Event + Note) ───── */
+
+.mc-task,
+.mc-event {
   padding: 24px 20px 0;
 }
 
-.mc-placeholder-label {
-  font-family: var(--font-serif);
-  font-size: 20px;
-  font-weight: 400;
-  color: var(--ink);
-  margin: 0 0 6px;
-}
-
-.mc-placeholder-hint {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  margin: 0;
-}
-
-/* ── Task capture form ────────────────────────────────────── */
-
-.mc-task {
-  padding: 24px 20px 0;
-}
-
-.mc-task-title {
+.mc-field {
   appearance: none;
   border: none;
   border-bottom: 1px solid var(--rule);
@@ -101,16 +74,11 @@
   margin: 0 0 20px;
   outline: none;
 }
-.mc-task-title::placeholder { color: var(--ink-muted); }
+.mc-field::placeholder { color: var(--ink-muted); }
 
-.mc-task-dates,
-.mc-task-cat {
-  border: none;
-  margin: 0 0 20px;
-  padding: 0;
-}
+.mc-fieldset { border: none; margin: 0 0 20px; padding: 0; }
 
-.mc-task-legend {
+.mc-legend {
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
@@ -121,12 +89,7 @@
   padding: 0;
 }
 
-.mc-chip-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 0 0 10px;
-}
+.mc-chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
 
 .mc-chip {
   appearance: none;
@@ -139,12 +102,9 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.mc-chip--on {
-  border-color: var(--accent);
-  color: var(--accent);
-}
+.mc-chip--on { border-color: var(--accent); color: var(--accent); }
 
-.mc-task-date-input {
+.mc-date-input {
   appearance: none;
   -webkit-appearance: none;
   border: none;
@@ -157,7 +117,35 @@
   width: 100%;
 }
 
-.mc-task-save {
+.mc-allday-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink);
+  margin: 0 0 10px;
+  cursor: pointer;
+}
+
+.mc-time-row { display: flex; align-items: center; gap: 8px; }
+
+.mc-time-input {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink);
+  padding: 6px 0;
+  flex: 1;
+}
+
+.mc-time-sep { color: var(--ink-muted); font-size: 16px; }
+
+.mc-save {
   appearance: none;
   border: none;
   background: var(--accent);
@@ -171,17 +159,8 @@
   margin: 8px 0 0;
   -webkit-tap-highlight-color: transparent;
 }
-.mc-task-save:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.mc-task-error {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--overdue);
-  margin: 10px 0 0;
-}
+.mc-save:disabled { opacity: 0.4; cursor: default; }
+.mc-error { font-family: var(--font-sans); font-size: 14px; color: var(--overdue); margin: 10px 0 0; }
 
 /* ── Category picker (reusable) ───────────────────────────── */
 
@@ -210,11 +189,7 @@
 }
 
 .mc-cat-name { flex: 1; text-align: left; }
-
-.mc-cat-caret {
-  color: var(--ink-muted);
-  font-size: 16px;
-}
+.mc-cat-caret { color: var(--ink-muted); font-size: 16px; }
 
 .mc-cat-list {
   list-style: none;

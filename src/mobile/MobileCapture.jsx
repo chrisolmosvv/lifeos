@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import MobileFoodCapture from './MobileFoodCapture'
 import MobileTaskCapture from './MobileTaskCapture'
+import MobileEventCapture from './MobileEventCapture'
 
 const TYPES = [
   { id: 'task', label: 'Task' },
@@ -19,6 +20,9 @@ export default function MobileCapture({ onDone }) {
 
   if (captureType === 'task')
     return <MobileTaskCapture onDone={onDone} onBack={() => setCaptureType(null)} />
+
+  if (captureType === 'event')
+    return <MobileEventCapture onDone={onDone} onBack={() => setCaptureType(null)} />
 
   if (captureType)
     return (

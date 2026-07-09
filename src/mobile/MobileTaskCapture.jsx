@@ -80,7 +80,7 @@ export default function MobileTaskCapture({ onDone, onBack }) {
 
       <input
         ref={inputRef}
-        className="mc-task-title"
+        className="mc-field"
         type="text"
         placeholder="What needs doing?"
         value={title}
@@ -88,8 +88,8 @@ export default function MobileTaskCapture({ onDone, onBack }) {
         onKeyDown={(e) => e.key === 'Enter' && handleSave()}
       />
 
-      <fieldset className="mc-task-dates">
-        <legend className="mc-task-legend">Due</legend>
+      <fieldset className="mc-fieldset">
+        <legend className="mc-legend">Due</legend>
         <div className="mc-chip-row">
           {chips.map((c) => (
             <button
@@ -103,20 +103,20 @@ export default function MobileTaskCapture({ onDone, onBack }) {
           ))}
         </div>
         <input
-          className="mc-task-date-input"
+          className="mc-date-input"
           type="date"
           value={dueDate || ''}
           onChange={(e) => setDueDate(e.target.value || null)}
         />
       </fieldset>
 
-      <fieldset className="mc-task-cat">
-        <legend className="mc-task-legend">Category</legend>
+      <fieldset className="mc-fieldset">
+        <legend className="mc-legend">Category</legend>
         <MobileCategoryPicker cats={cats} value={categoryId} onPick={setCategoryId} />
       </fieldset>
 
       <button
-        className="mc-task-save"
+        className="mc-save"
         type="button"
         disabled={!title.trim() || saving}
         onClick={handleSave}
@@ -124,7 +124,7 @@ export default function MobileTaskCapture({ onDone, onBack }) {
         {saving ? 'Adding…' : 'Add task'}
       </button>
 
-      {error && <p className="mc-task-error">{error}</p>}
+      {error && <p className="mc-error">{error}</p>}
     </div>
   )
 }
