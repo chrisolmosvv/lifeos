@@ -208,3 +208,6 @@
   padding: 32px 16px;
   margin: 0;
 }
+
+/* Tap affordance on grid blocks */
+.m-block { cursor: pointer; -webkit-tap-highlight-color: transparent; }

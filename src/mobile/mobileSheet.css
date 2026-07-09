@@ -108,3 +108,9 @@
 .m-stat.is-done { color: var(--ink-muted); }
 .m-stat:disabled { opacity: 0.4; }
 .m-stat-mark { width: 16px; height: 16px; }
+
+/* Recurring indicator (shared by task rows + grid blocks) */
+.m-recur { color: var(--ink-muted); font-size: 0.8em; margin-left: 2px; }
+
+/* Tap affordance on task rows */
+.m-task-row { cursor: pointer; -webkit-tap-highlight-color: transparent; }

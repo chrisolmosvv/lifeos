@@ -93,7 +93,8 @@ export default function MobileShell() {
       <div className="m-body">
         <div className="m-page" key={activeTab}>
           {activeTab === 'today' ? (
-            <MobileToday onSubline={setSubline} onFolioDate={setFolioDate} />
+            <MobileToday onSubline={setSubline} onFolioDate={setFolioDate}
+              onEdit={(item) => selectTab('capture', { editItem: item, editKind: item.start_at ? 'event' : 'task' })} />
           ) : activeTab === 'health' ? (
             <MobileHealth />
           ) : activeTab === 'food' ? (

@@ -12,7 +12,7 @@ const DEFAULT_START = 7
 const END = 24
 
 export default function MobileDayGrid({
-  events, scheduledTasks, cats, viewed, isToday, onSwipe,
+  events, scheduledTasks, cats, viewed, isToday, onSwipe, onEditBlock,
 }) {
   const [showEarly, setShowEarly] = useState(false)
   const [now, setNow] = useState(() => new Date())
@@ -126,6 +126,7 @@ export default function MobileDayGrid({
                 top={it.top - offset} height={it.height}
                 col={it.col} cols={Math.min(it.cols, 2)}
                 isPast={isPast}
+                onEdit={onEditBlock}
               />
             )
           })}

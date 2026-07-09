@@ -16,7 +16,7 @@ export default function MobileTaskSheet({
   todayItems, next7, undated, total,
   catById, inboxColor, busy,
   dispCat, progressFn, parentTitleFn,
-  onSetStatus,
+  onSetStatus, onEdit,
 }) {
   const [tab, setTab] = useState('today')
   const [dragY, setDragY] = useState(0)
@@ -73,7 +73,7 @@ export default function MobileTaskSheet({
                 key={t.id}
                 task={t} cat={dispCat(t)} catById={catById}
                 inboxColor={inboxColor} busy={busy}
-                onSetStatus={onSetStatus}
+                onSetStatus={onSetStatus} onEdit={onEdit}
                 progress={progressFn(t)}
                 isSub={!!t.parent_task_id}
                 subLabel={t.parent_task_id ? parentTitleFn(t) : undefined}
