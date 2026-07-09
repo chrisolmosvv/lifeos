@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../spine/data/useAuth'
 import { supabase } from '../spine/data/supabaseClient'
 import MobileMasthead from './MobileMasthead'
@@ -6,6 +6,7 @@ import MobileTabBar from './MobileTabBar'
 import MobileToday from './MobileToday'
 import MobileHealth from './MobileHealth'
 import MobileFood from './MobileFood'
+import MobileCapture from './MobileCapture'
 
 function Placeholder({ label }) {
   return (
@@ -59,6 +60,12 @@ export default function MobileShell() {
   const [activeTab, setActiveTab] = useState('today')
   const [subline, setSubline] = useState('')
   const [folioDate, setFolioDate] = useState(null)
+  const prevTabRef = useRef('today')
+
+  function selectTab(tab) {
+    if (tab === 'capture') prevTabRef.current = activeTab
+    setActiveTab(tab)
+  }
 
   // Clear subline + folio when leaving tabs that manage their own folio
   useEffect(() => {
@@ -85,6 +92,8 @@ export default function MobileShell() {
             <MobileHealth />
           ) : activeTab === 'food' ? (
             <MobileFood onSubline={setSubline} onFolioDate={setFolioDate} />
+          ) : activeTab === 'capture' ? (
+            <MobileCapture onDone={() => setActiveTab(prevTabRef.current)} />
           ) : (
             <>
               <hr className="m-rule" />
@@ -93,7 +102,7 @@ export default function MobileShell() {
           )}
         </div>
       </div>
-      <MobileTabBar activeTab={activeTab} onSelect={setActiveTab} />
+      <MobileTabBar activeTab={activeTab} onSelect={selectTab} />
     </div>
   )
 }

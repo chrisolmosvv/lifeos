@@ -9,7 +9,7 @@ import { fetchGoals } from './healthLoad.js'
 import { resolveGoals } from '../logic/healthGoals.js'
 import { dayLedger, calorieArc, macroSplit } from '../logic/foodCalc.js'
 
-export function useFoodDay(viewedYMD) {
+export function useFoodDay(viewedYMD, refreshKey = 0) {
   const [state, setState] = useState({ loading: true })
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export function useFoodDay(viewedYMD) {
       if (alive) setState({ loading: false, ledger, arc, split })
     })().catch(e => alive && setState({ loading: false, error: e.message || String(e) }))
     return () => { alive = false }
-  }, [viewedYMD])
+  }, [viewedYMD, refreshKey])
 
   return state
 }

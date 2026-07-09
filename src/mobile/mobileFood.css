@@ -183,3 +183,66 @@
   -webkit-tap-highlight-color: transparent;
 }
 .mf-rp-btn--muted { background: none; color: var(--ink-muted); border: 1px solid var(--rule); }
+
+/* ── Finder ── */
+.mfi-wrap { padding: 0 0 24px; }
+.mfi-search {
+  display: block; width: calc(100% - 40px); margin: 8px 20px;
+  padding: 10px 12px; font-family: var(--font-sans); font-size: 16px;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--rule);
+  border-radius: 0; -webkit-appearance: none;
+}
+.mfi-search::placeholder { color: var(--ink-muted); }
+.mfi-status { font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink-muted); padding: 8px 20px; margin: 0; }
+.mfi-results { max-height: 50vh; overflow-y: auto; }
+.mfi-row {
+  display: flex; align-items: baseline; gap: 4px; padding: 10px 20px;
+  border-bottom: 1px solid var(--rule-faint); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.mfi-row-name { font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink); flex: 1; }
+.mfi-row-brand { font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted); }
+.mfi-row-kcal { font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted); min-width: 32px; text-align: right; }
+.mfi-amount { padding: 8px 20px; }
+.mfi-name { font-family: var(--font-sans); font-size: 0.88rem; color: var(--ink); margin: 0 0 8px; }
+.mfi-units { display: flex; gap: 4px; flex-wrap: wrap; }
+.mfi-chip {
+  -webkit-appearance: none; appearance: none; background: none; border: 1px solid var(--rule);
+  padding: 4px 10px; font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.mfi-chip--on { color: var(--accent); border-color: var(--accent); }
+.mfi-input {
+  display: block; width: 100px; margin: 10px 0; padding: 8px 10px;
+  font-family: var(--font-sans); font-size: 16px; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 0; -webkit-appearance: none;
+}
+.mfi-preview {
+  display: flex; gap: 10px; margin: 8px 0;
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted);
+}
+.mfi-confirm {
+  -webkit-appearance: none; appearance: none; margin-top: 12px;
+  padding: 10px 24px; font-family: var(--font-sans); font-size: 0.82rem; font-weight: 500;
+  color: var(--paper); background: var(--accent); border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Log add/remove ── */
+.mf-meal-head { display: flex; align-items: center; width: 100%; }
+.mf-meal-toggle {
+  display: flex; align-items: baseline; gap: 6px; flex: 1;
+  -webkit-appearance: none; appearance: none; background: none; border: none;
+  padding: 10px 0 10px 20px; cursor: pointer; -webkit-tap-highlight-color: transparent; text-align: left;
+}
+.mf-add-btn {
+  -webkit-appearance: none; appearance: none; background: none; border: none;
+  font-size: 1.2rem; color: var(--ink-muted); padding: 10px 20px 10px 8px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mf-entry { display: flex; align-items: flex-start; }
+.mf-entry-left { flex: 1; padding: 6px 0 6px 32px; }
+.mf-entry-rm {
+  -webkit-appearance: none; appearance: none; background: none; border: none;
+  font-size: 0.72rem; color: var(--ink-muted); padding: 8px 20px 8px 8px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; opacity: 0.5;
+}
