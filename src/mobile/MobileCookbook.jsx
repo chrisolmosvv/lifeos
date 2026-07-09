@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import MobileRecipe from './MobileRecipe'
+import MobileImport from './MobileImport'
 import { useCookbookList } from '../spine/data/useCookbook'
 import { fmtNum } from '../spine/logic/foodFormat'
 
@@ -13,9 +14,11 @@ const FILTERS = [
 export default function MobileCookbook() {
   const data = useCookbookList()
   const [recipeId, setRecipeId] = useState(null)
+  const [importing, setImporting] = useState(false)
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')
 
+  if (importing) return <MobileImport onBack={() => setImporting(false)} onSaved={(id) => { setImporting(false); setRecipeId(id) }} />
   if (recipeId) return <MobileRecipe recipeId={recipeId} onBack={() => setRecipeId(null)} />
 
   if (data.loading) return (
@@ -47,6 +50,7 @@ export default function MobileCookbook() {
       </div>
       <input className="mf-cb-search" type="text" placeholder="Search recipes…"
         value={query} onChange={e => setQuery(e.target.value)} />
+      <button className="mf-cb-import" onClick={() => setImporting(true)} type="button">+ Import recipe</button>
       {filtered.length === 0 ? (
         <p className="mf-empty">{query ? 'No matches.' : 'No recipes yet.'}</p>
       ) : (

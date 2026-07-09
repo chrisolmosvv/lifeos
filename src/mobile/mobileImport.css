@@ -1,0 +1,51 @@
+/* Mobile Import — mi- prefix, tokens from theme.css */
+
+.mi-wrap { padding: 0 0 24px; }
+.mi-section { padding: 8px 20px; }
+.mi-heading { font-family: var(--font-serif); font-size: 1.2rem; color: var(--ink); margin: 0 0 8px; }
+
+.mi-input {
+  display: block; width: 100%; padding: 10px; font-family: var(--font-sans); font-size: 14px;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--rule);
+  border-radius: 0; -webkit-appearance: none; resize: vertical;
+}
+.mi-parse, .mi-save {
+  -webkit-appearance: none; appearance: none; margin-top: 12px;
+  padding: 10px 24px; font-family: var(--font-sans); font-size: 0.82rem; font-weight: 500;
+  color: var(--paper); background: var(--accent); border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mi-parse:disabled, .mi-save:disabled { opacity: 0.5; }
+
+.mi-title {
+  display: block; width: 100%; padding: 6px 0; font-family: var(--font-serif);
+  font-size: 1.2rem; color: var(--ink); background: none; border: none;
+  border-bottom: 1px solid var(--rule); -webkit-appearance: none; outline: none;
+}
+.mi-meta { margin: 6px 0; font-family: var(--font-sans); font-size: 0.75rem; color: var(--ink-muted); }
+.mi-num {
+  width: 48px; padding: 4px 6px; margin-left: 6px; font-family: var(--font-sans);
+  font-size: 0.82rem; color: var(--ink); background: var(--paper); border: 1px solid var(--rule);
+  border-radius: 0; -webkit-appearance: none;
+}
+.mi-macros {
+  display: flex; gap: 10px; margin: 6px 0;
+  font-family: var(--font-sans); font-size: 0.72rem; color: var(--ink-muted);
+}
+.mi-flag { font-family: var(--font-sans); font-size: 0.62rem; font-style: italic; color: var(--ink-muted); margin: 4px 0 0; }
+.mi-error { font-family: var(--font-sans); font-size: 0.78rem; color: var(--overdue); margin: 8px 0; }
+
+.mi-ing {
+  display: flex; gap: 8px; padding: 5px 0; cursor: pointer;
+  font-family: var(--font-sans); font-size: 0.78rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.mi-ing--unmatched { opacity: 0.6; font-style: italic; }
+.mi-ing-amt { color: var(--ink); min-width: 56px; }
+.mi-ing-name { color: var(--ink-muted); flex: 1; }
+.mi-ing-fix { font-size: 0.62rem; color: var(--accent); font-style: normal; }
+
+.mi-step { display: flex; gap: 8px; padding: 4px 0; font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink); line-height: 1.5; }
+.mi-step-num { font-size: 0.62rem; color: var(--ink-muted); min-width: 14px; text-align: right; padding-top: 2px; }
+
+.mi-actions { padding: 16px 20px; }
