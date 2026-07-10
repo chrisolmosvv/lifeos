@@ -99,21 +99,34 @@
   font-size: 0.78rem;
   color: var(--ink-muted);
 }
+.fin-bill-occ-edit,
 .fin-bill-occ-del {
   background: none;
   border: none;
   padding: 0 0.2rem;
-  font-size: 0.82rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
   color: var(--ink-muted);
   cursor: pointer;
   opacity: 0;
 }
+.fin-bill-occ:hover .fin-bill-occ-edit,
 .fin-bill-occ:hover .fin-bill-occ-del { opacity: 1; }
+.fin-bill-occ-edit:hover,
+.fin-bill-occ-del:hover { color: var(--ink); }
 
 /* ── Actions ─────────────────────────────────────────────────────────────── */
 
 .fin-bill-actions {
+  display: flex;
+  gap: 1rem;
   margin-top: 0.4rem;
+}
+.fin-bill-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 360px;
 }
 .fin-bill-action {
   background: none;
