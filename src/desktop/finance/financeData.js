@@ -188,3 +188,45 @@ export async function createCategory(name) {
   if (error) throw error
   return data
 }
+
+// ── CSV import helpers ──────────────────────────────────────────────────────
+
+// Build the dedup key: account_id|entry_date|amount|description (lowercased, trimmed).
+export function buildCsvMatchKey(accountId, row) {
+  return `${accountId}|${row.entry_date}|${row.amount}|${(row.description || '').trim().toLowerCase()}`
+}
+
+// Check which csv_match_keys already exist on this account (one query for all).
+export async function findExistingKeys(accountId, keys) {
+  if (!keys.length) return new Set()
+  const { data, error } = await supabase
+    .from('finance_transactions')
+    .select('csv_match_key')
+    .eq('account_id', accountId)
+    .in('csv_match_key', keys)
+    .is('archived_at', null)
+  if (error) throw error
+  return new Set((data || []).map((r) => r.csv_match_key))
+}
+
+// Batch insert: insert all included rows, skipping those whose key is in existingKeys.
+// Returns { imported: number, skipped: number }.
+export async function batchImportTransactions(accountId, rows) {
+  const toInsert = rows.map((r) => ({
+    account_id: accountId,
+    entry_date: r.entry_date,
+    amount: r.amount,
+    txn_type: r.amount >= 0 ? 'income' : 'expense',
+    category_id: r.category_id || null,
+    description: r.description || null,
+    source: 'csv_import',
+    csv_match_key: buildCsvMatchKey(accountId, r),
+  }))
+  if (!toInsert.length) return { imported: 0, skipped: 0 }
+  const { data, error } = await supabase
+    .from('finance_transactions')
+    .insert(toInsert)
+    .select('id')
+  if (error) throw error
+  return { imported: (data || []).length, skipped: 0 }
+}

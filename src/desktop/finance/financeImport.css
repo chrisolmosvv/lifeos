@@ -1,0 +1,134 @@
+/* Finance import — the preview table + result screen (Piece 5a).
+   All colour/type from theme tokens — no raw hex. Ink/hairline only (no terracotta). */
+
+.fin-import {
+  padding: 1rem 0;
+}
+
+.fin-import-summary {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0.5rem 0 0.75rem;
+}
+
+.fin-import-done {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: var(--ink);
+  margin: 1rem 0;
+}
+.fin-import-close {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+/* ── Preview table ───────────────────────────────────────────────────────── */
+
+.fin-import-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+.fin-import-th {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  text-align: left;
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--rule);
+  font-weight: 400;
+}
+.fin-import-th-amt { text-align: right; }
+
+.fin-import-td {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink);
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--rule-faint);
+  vertical-align: middle;
+}
+
+.fin-import-date {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.fin-import-amt {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.fin-import-amt.is-pos { color: var(--ink); }
+.fin-import-amt.is-neg { color: var(--ink-muted); }
+
+.fin-import-desc {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fin-import-dupe-tag {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.fin-import-row.is-dupe .fin-import-td { color: var(--ink-muted); }
+.fin-import-row.is-excluded .fin-import-td { opacity: 0.5; }
+
+.fin-import-cat {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule-faint);
+  border-radius: 0;
+  padding: 0.2rem 0;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  max-width: 120px;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+
+.fin-import-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.fin-import-go {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+.fin-import-go:disabled { color: var(--ink-muted); cursor: default; }
+.fin-import-cancel {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.fin-import-cancel:hover { color: var(--ink); }
