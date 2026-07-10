@@ -7,6 +7,7 @@ import AccountList from './AccountList'
 import AccountDetail from './AccountDetail'
 import AccountForm from './AccountForm'
 import Ledger from './Ledger'
+import RecurringScreen from './RecurringScreen'
 import { listAccounts, listArchivedAccounts, createAccount, updateAccount, archiveAccount, restoreAccount } from './financeData'
 import './finance.css'
 
@@ -15,7 +16,7 @@ import './finance.css'
 // Mirrors HealthHub's sub-state pattern exactly.
 export default function FinancePage() {
   const [accounts, setAccounts] = useState(null) // null = loading
-  const [sub, setSub] = useState('ledger') // 'ledger' | 'accounts'
+  const [sub, setSub] = useState('ledger') // 'ledger' | 'accounts' | 'recurring'
   const [selectedId, setSelectedId] = useState(null)
   const [toast, setToast] = useState(null)
   const [showArchived, setShowArchived] = useState(false)
@@ -96,8 +97,17 @@ export default function FinancePage() {
   if (sub === 'ledger') {
     return (
       <div className="finance-page">
-        <Ledger accounts={accounts} onNavigateAccounts={() => setSub('accounts')} />
+        <Ledger accounts={accounts} onNavigateAccounts={() => setSub('accounts')} onNavigateRecurring={() => setSub('recurring')} />
         {toast && <Toast text={toast.text} onUndo={toast.onUndo} onDismiss={() => setToast(null)} />}
+      </div>
+    )
+  }
+
+  // ── Recurring bills ──────────────────────────────────────────────────────
+  if (sub === 'recurring') {
+    return (
+      <div className="finance-page">
+        <RecurringScreen accounts={accounts} onBack={() => setSub('ledger')} />
       </div>
     )
   }

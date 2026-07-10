@@ -57,3 +57,11 @@ export function rangeLabel(unit, offset) {
 export function isCurrentPeriod(offset) {
   return offset >= 0
 }
+
+// Today as YYYY-MM-DD (local time). Used as the upper cap on the Ledger fetch
+// so future-dated recurring-bill occurrences stay invisible in the Ledger
+// (they're only visible via the Recurring screen's upcoming-3 list).
+export function todayYMD() {
+  const { y, m, d } = todayParts()
+  return `${y}-${pad(m + 1)}-${pad(d)}`
+}

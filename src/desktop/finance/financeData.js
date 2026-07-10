@@ -189,6 +189,8 @@ export async function createCategory(name) {
   return data
 }
 
+// Recurring-bill queries in financeRecurringData.js (split to stay under ~250 lines).
+
 // ── CSV import helpers ──────────────────────────────────────────────────────
 
 // Build the dedup key: account_id|entry_date|amount|description (lowercased, trimmed).

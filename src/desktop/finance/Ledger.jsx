@@ -4,7 +4,7 @@ import RangeSwitcher from '../kit/RangeSwitcher'
 import Toast from '../kit/Toast'
 import LedgerRow from './LedgerRow'
 import TransactionForm from './TransactionForm'
-import { dateRange, rangeLabel, isCurrentPeriod } from './ledgerRange'
+import { dateRange, rangeLabel, isCurrentPeriod, todayYMD } from './ledgerRange'
 import { ensureGeneratedThrough } from '../recur/topup'
 import { listTransactions, createTransaction, createTransfer, updateTransaction, fetchTransaction, softDeleteTransaction, restoreTransaction, listCategories, createCategory } from './financeData'
 import './financeLedger.css'
@@ -39,7 +39,7 @@ function lastAccount(accounts) {
 }
 function saveLastAccount(id) { try { localStorage.setItem(LAST_ACCT_KEY, id) } catch { /* */ } }
 
-export default function Ledger({ accounts, onNavigateAccounts }) {
+export default function Ledger({ accounts, onNavigateAccounts, onNavigateRecurring }) {
   const [txns, setTxns] = useState(null)
   const [cats, setCats] = useState([])
   const [adding, setAdding] = useState(false)
@@ -66,7 +66,11 @@ export default function Ledger({ accounts, onNavigateAccounts }) {
     // Today/Calendar use for event/task series). Best-effort — if it inserted rows,
     // the fetch below picks them up; if not, no harm.
     if (await ensureGeneratedThrough(to)) { /* topup inserted rows — the fetch below picks them up */ }
-    const [t, c] = await Promise.all([listTransactions(from, to), listCategories()])
+    // Cap at today — future-dated recurring-bill occurrences stay invisible in the
+    // Ledger (they show only in the Recurring screen's upcoming-3 list).
+    const cap = todayYMD()
+    const effectiveTo = to <= cap ? to : cap
+    const [t, c] = await Promise.all([listTransactions(from, effectiveTo), listCategories()])
     setTxns(t)
     setCats(c)
   }, [rangeUnit, rangeOffset])
@@ -157,6 +161,7 @@ export default function Ledger({ accounts, onNavigateAccounts }) {
         </div>
         <div className="fin-ledger-right">
           <RangeSwitcher ranges={RANGES} value={rangeUnit} ariaLabel="Ledger range" onChange={changeRange} />
+          <button className="fin-ledger-accts-link" onClick={onNavigateRecurring}>Recurring</button>
           <button className="fin-ledger-accts-link" onClick={onNavigateAccounts}>Accounts</button>
         </div>
       </div>

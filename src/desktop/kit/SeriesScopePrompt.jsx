@@ -5,8 +5,8 @@ import './seriesScopePrompt.css'
 // only when saving an edit to an occurrence that belongs to a series. onPick returns
 // 'one' | 'following' | 'all'; onCancel aborts the save (nothing written).
 export default function SeriesScopePrompt({ kind, mode = 'edit', onPick, onCancel }) {
-  const one = kind === 'task' ? 'This task' : 'This event'
-  const all = kind === 'task' ? 'All tasks' : 'All events'
+  const one = kind === 'transaction' ? 'This occurrence' : (kind === 'task' ? 'This task' : 'This event')
+  const all = kind === 'transaction' ? 'All occurrences' : (kind === 'task' ? 'All tasks' : 'All events')
   const heading = mode === 'delete' ? 'Delete…' : 'Apply your change to…'
   return (
     <div className="tk-form-scrim" onClick={onCancel}>
