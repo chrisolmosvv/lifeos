@@ -33,6 +33,74 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Finance Piece 4: transaction ledger + add/edit flow (COMPLETE)
+
+WHAT CHANGED (four commits, one piece):
+- **(4a) Core create+see loop.** Ledger.jsx: the day-grouped transaction list, fetching by date
+  range, grouping client-side. TransactionForm.jsx: type-first toggle (Income/Expense/Transfer),
+  account picker (last-used via localStorage), CategoryPicker (with new inline "+ New category"
+  via an onCreate prop added to kit/CategoryPicker.jsx). Transfers create two paired rows (negative
+  on source, positive on destination, linked by paired_transaction_id — a three-step insert: first
+  row, second row with first's id, patch first with second's id). financeData.js extended with all
+  transaction CRUD. FinancePage re-routed: Ledger is the default landing, Accounts reached via an
+  "Accounts" link (HealthHub sub-state pattern).
+- **(4b) Edit + delete/undo.** Tap a ledger row to edit inline (TransactionForm pre-filled). For
+  transfer legs: fetches the pair via paired_transaction_id, writes both rows on save (date/amount/
+  description synced, accounts locked — V1 constraint). Delete stamps archived_at directly on the
+  row(s) — no archive_batches involvement (per Planner ruling). Toast undo clears archived_at on
+  the same ids. Transfer deletes stamp BOTH rows together; undo restores both together.
+- **(4c) Filters + range switcher + search.** Month/Quarter/Year range switcher wired via the
+  existing kit/RangeSwitcher.jsx (zero modification). Prev/next arrows step by the active unit,
+  mirroring Food's stepper convention (‹ › with disabled-at-current). Inline filter controls
+  (account, category, type) + text search — all client-side, composable. "Clear" resets all.
+  ledgerRange.js extracted for pure date-range logic. CSS split (financeLedgerFilters.css) to stay
+  under ~250 lines.
+- **(4d) FinancePage routing confirmed.** The sub-state routing (Ledger default, Accounts reached
+  via link, "← Ledger" back-link) was pre-delivered in 4a. Verified: Ledger state does a clean
+  reset on return from Accounts (component re-mounts).
+
+FILES TOUCHED:
+- src/desktop/finance/FinancePage.jsx (rewritten — sub-state routing)
+- src/desktop/finance/Ledger.jsx (NEW)
+- src/desktop/finance/LedgerRow.jsx (NEW)
+- src/desktop/finance/TransactionForm.jsx (NEW)
+- src/desktop/finance/ledgerRange.js (NEW)
+- src/desktop/finance/financeData.js (extended — transaction CRUD + category helpers)
+- src/desktop/finance/financeLedger.css (NEW)
+- src/desktop/finance/financeLedgerFilters.css (NEW — split from financeLedger.css)
+- src/desktop/kit/CategoryPicker.jsx (added optional onCreate prop + inline create affordance)
+- src/desktop/kit/todayForm.css (added tk-pick-create-* styles)
+
+HOW TO VERIFY (all PASSED by the owner across the four commits):
+1. Log one income, one expense, one transfer → all appear day-grouped, transfer as two legs,
+   amounts signed/formatted correctly. Category "+ New" creates + auto-selects. Reload persists.
+2. Edit a plain expense → persists on reload. Edit a transfer leg → both legs sync correctly.
+3. Delete a plain expense → vanishes, Undo brings it back, reload confirms DB write. Delete a
+   transfer → both legs vanish together, Undo restores both, reload confirms.
+4. Range switcher Month/Quarter/Year changes the data set. Arrows step correctly. Disabled at
+   current period.
+5. Account/category/type filters + text search compose correctly (the intersection narrows, Clear
+   resets). Combinations work under any range setting.
+6. Finance opens to the Ledger by default. "Accounts" link reaches Piece 3's screen (fully
+   functional). "← Ledger" returns. Ledger state resets cleanly on return.
+
+KNOWN GAPS / RISKS:
+- **Transfer edits restricted** to date/amount/description — no account reassignment. Permanently
+  a V1 constraint.
+- **No archive_batches involvement** for Finance deletes — a future "recently deleted across the
+  app" view won't include Finance until Piece 6a widens archive_batches.source_type.
+- **starting_balance freely editable** post-creation (Piece 3 debt) — more relevant now that real
+  transactions exist against accounts. Still unaddressed.
+- **Recurring bills, CSV import, budgets, net worth/analysis charts** all still ahead.
+
+NEXT: Piece 5 — CSV import (ING + Revolut parsers, dedup on account+date+amount+description, a
+per-account Import entry point on Accounts, full editable preview table before commit, category
+auto-guess from past categorizations).
+
+FOR THE CHECKER: nothing — all four commits were src-only, no schema changes anywhere in Piece 4.
+
+---
+
 ### 2026-07-10 — Finance Piece 3: Accounts screen + snapshot logging
 
 WHAT CHANGED (two commits, one piece):

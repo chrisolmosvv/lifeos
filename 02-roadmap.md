@@ -8,6 +8,14 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-10 — Finance Piece 4: transaction ledger + add/edit flow ✅ (4a-4d)
+The full transaction ledger is built: create income/expense/transfer (two-row paired insert),
+edit inline (transfer-pair-aware), soft-delete + Toast undo (direct archived_at, no archive_batches),
+Month/Quarter/Year range switcher + inline filters (account/category/type) + text search. Finance
+now opens to the Ledger by default; Accounts is a secondary screen reached via a link. Ten files
+touched (6 new, 4 extended). CategoryPicker gained an optional inline "+ New category" affordance.
+**NEXT: Piece 5 — CSV import (ING + Revolut parsers, dedup, preview table).**
+
 ## Session note — 2026-07-10 — Finance Piece 3: Accounts screen + snapshot logging ✅
 Accounts CRUD (empty state, create/edit/archive, cash-then-investment order, Toast undo) and
 investment snapshot logging (upsert on same-date, reverse-chronological list) — both owner-verified.
