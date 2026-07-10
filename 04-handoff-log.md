@@ -33,6 +33,44 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Finance Piece 6a: recurrence engine schema extension (checker approved)
+
+WHAT CHANGED:
+- **db/45_finance_recurrence.sql** (NEW): three additive changes to two existing tables, no new
+  tables, no data migration.
+  - **recurrences.target_kind CHECK** widened from `('event','task')` to include `'transaction'` —
+    the repeat-recipe engine can now generate recurring financial transactions.
+  - **Four nullable columns** added to `recurrences`: `amount`, `account_id`,
+    `transfer_account_id`, `txn_type` — the template for a recurring bill. All NULL on every
+    existing event/task recipe row (completely unaffected). `account_id` and
+    `transfer_account_id` are **plain values, NOT foreign keys** — recurrences stays generic
+    shared infrastructure, not wired to Finance specifically.
+  - **archive_batches.source_type CHECK** widened to include `'transaction'` — needed later
+    (Piece 6c) for recurring-bill series "this and following" batch-undo.
+
+FILES TOUCHED: db/45_finance_recurrence.sql (NEW — 101 lines, run-once migration)
+
+HOW TO VERIFY (already done):
+- Existing recurrence rows confirmed untouched (all new columns NULL, target_kind still 'event').
+- A throwaway `target_kind='transaction'` recipe persisted correctly with amount, account_id, and
+  txn_type populated — confirms the widened CHECK accepts 'transaction'.
+- A bogus target_kind ('nonsense') was correctly rejected (CHECK violation) — confirms the
+  constraint is doing real work, not wide open.
+- Throwaway cleaned up, zero ZZTEST rows remain.
+- PostgREST cache reloaded (NOTIFY in the migration file).
+
+KNOWN GAPS / RISKS:
+- The recurrence engine code (series.js) still only handles 'event' and 'task' kinds — the schema
+  is ready, but the code wiring is Piece 6b.
+
+NEXT: Piece 6b — engine wiring: extend series.js's kind-dispatched helpers (tableFor,
+occurrenceRow, occYMDof, dateCol, contentFields, timeFields, templateFromFields) to handle
+'transaction', per the original Recon #2's seven-touch-point breakdown.
+
+FOR THE CHECKER: approved (exact words). Nothing further needed on this file.
+
+---
+
 ### 2026-07-10 — Finance Piece 5a: CSV import infrastructure (parsers STUBBED)
 
 WHAT CHANGED:

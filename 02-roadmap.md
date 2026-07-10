@@ -8,6 +8,13 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-10 — Finance Piece 6a: recurrence schema extension ✅ (checker approved)
+Widened recurrences.target_kind to accept 'transaction'; added four nullable template columns
+(amount, account_id, transfer_account_id, txn_type — all plain values, no FK); widened
+archive_batches.source_type to accept 'transaction'. Existing rows unaffected. Verified by
+throwaway write + negative test + cleanup.
+**NEXT: Piece 6b — engine wiring (series.js helpers extended for 'transaction').**
+
 ## Session note — 2026-07-10 — Finance Piece 5a: CSV import infrastructure ✅ (parsers STUBBED)
 Import preview table, dedup via csv_match_key, batched category auto-guess, batch insert — all
 built and verified against fixture data. ING + Revolut parsers are honest stubs; Piece 5b needs
