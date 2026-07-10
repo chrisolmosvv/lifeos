@@ -4,6 +4,7 @@ import HairlineRule from '../kit/HairlineRule'
 import PersonEdit from './PersonEdit'
 import ConnectionEditor from './ConnectionEditor'
 import ConnectionWeb from './ConnectionWeb'
+import CatchupLogger from './CatchupLogger'
 import { loadPersonFile, listCircles, listPeople } from '../../spine/data/peopleLoad'
 import './personFile.css'
 
@@ -177,20 +178,9 @@ export default function PersonFile({ personId, onBack, startEditing, onArchive, 
             </div>
           )}
 
-          {catchups.length > 0 && (
-            <div className="pfile-section">
-              <SmallCapsLabel>Catch-up history</SmallCapsLabel>
-              <ul className="pfile-list">
-                {catchups.map((cu) => (
-                  <li key={cu.id} className="pfile-catchup-row">
-                    <span className="tnum">{cu.interaction_date}</span>
-                    <span className="pfile-chan">{CHANNEL_LABEL[cu.channel] || cu.channel}</span>
-                    {cu.note && <span className="pfile-cu-note">{cu.note}</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <div className="pfile-section">
+            <CatchupLogger personId={personId} catchups={catchups} onChanged={load} />
+          </div>
 
           {lastContact && (
             <div className="pfile-section">

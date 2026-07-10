@@ -187,6 +187,52 @@ export async function removeConnection(connectionId) {
   if (error) throw new Error(error.message)
 }
 
+// ── Interactions (catch-ups) ─────────────────────────────────────────────────
+
+const todayYMD = () => {
+  const d = new Date()
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
+export async function logInteraction(personId, { date, time, channel, note }) {
+  const { data, error } = await supabase
+    .from('people_interactions')
+    .insert({
+      person_id: personId,
+      interaction_date: date || todayYMD(),
+      interaction_time: time || null,
+      channel: channel || 'in_person',
+      note: note?.trim() || null,
+      source: 'app',
+    })
+    .select('id')
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function updateInteraction(id, fields) {
+  const patch = { updated_at: new Date().toISOString() }
+  if (fields.date !== undefined) patch.interaction_date = fields.date
+  if (fields.time !== undefined) patch.interaction_time = fields.time || null
+  if (fields.channel !== undefined) patch.channel = fields.channel
+  if (fields.note !== undefined) patch.note = fields.note?.trim() || null
+  const { error } = await supabase
+    .from('people_interactions')
+    .update(patch)
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function deleteInteraction(id) {
+  const { error } = await supabase
+    .from('people_interactions')
+    .delete()
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
 // Update a person's scalar fields. `fields` is { name, how_you_know, notes, phone, email, other_contact }.
 export async function updatePerson(id, fields) {
   const { data, error } = await supabase
