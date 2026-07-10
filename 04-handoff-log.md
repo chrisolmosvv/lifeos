@@ -33,6 +33,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — Finance Piece 6b: recurrence engine wired for transactions
+
+WHAT CHANGED (two commits):
+- **(Split-first) recur/kinds.js** (NEW — 119 lines): extracted all seven kind-specific helpers
+  (tableFor, occurrenceRow, templateFromFields, contentFields, timeFields, occYMDof, dateCol,
+  timeChanged) from series.js. series.js re-exports tableFor+occurrenceRow for topup.js.
+  Behavior-neutral — existing event/task recurrences verified unchanged.
+- **(Transaction wiring) kinds.js**: added the third branch for `target_kind='transaction'` to
+  all seven helpers:
+  - tableFor → 'finance_transactions'
+  - occurrenceRow → { entry_date, amount, txn_type, account_id, category_id, description
+    (from recipe.title), source:'recurring' }
+  - templateFromFields/contentFields → transaction content fields
+  - timeFields → { entry_date: ymd } (no time component)
+  - occYMDof → occ.entry_date
+  - dateCol → 'entry_date'
+- **archive.js**: added 'finance_transactions' to unarchiveBatch + hardDeleteBatch table lists.
+- **Ledger.jsx**: added Finance topup trigger (calls ensureGeneratedThrough on load, same as
+  Today/Calendar).
+
+FILES TOUCHED: src/desktop/recur/kinds.js (NEW), src/desktop/recur/series.js (trimmed 244→189),
+src/desktop/archive.js, src/desktop/finance/Ledger.jsx
+
+HOW TO VERIFY (scripted, not on-screen — no Recurring Bills UI exists yet):
+- Created a test weekly transaction recipe (end_count=3) via the JS materialiser → exactly 3
+  finance_transactions rows generated with correct entry_dates (weekly), amount, txn_type,
+  account_id, source='recurring', series_id set, series_detached=false.
+- editThisOccurrence detached one occurrence correctly (series_detached=true, others unchanged).
+- editWholeSeries stamped content on all non-detached siblings, leaving the detached one alone.
+- deleteOccurrenceScope('one') archived one occurrence via archive_batches (source_type=
+  'transaction' accepted by the widened CHECK from Piece 6a).
+- CRITICAL REGRESSION: existing event birthday series confirmed intact (occurrences unchanged).
+  Topup ran successfully through the extracted kinds.js, inserted new event occurrences.
+- All test data cleaned up.
+
+KNOWN GAPS:
+- **No Recurring Bills UI** — the engine-level plumbing is proven correct but nothing surfaces it
+  to the owner yet. That's Piece 6c.
+- series.js now writes `amount`, `account_id`, `transfer_account_id`, `txn_type` into the
+  recurrences recipe row (the columns Piece 6a added). These are ignored for event/task recipes
+  (they're all null).
+
+NEXT: Piece 6c — the Recurring Bills UI: its own screen/list, the setup form, the this-and-future
+vs just-this-one edit model, an upcoming list showing the next 3 occurrences.
+
+FOR THE CHECKER: nothing — src-only, no schema this piece (6a already shipped everything needed).
+
+---
+
 ### 2026-07-10 — Finance Piece 6a: recurrence engine schema extension (checker approved)
 
 WHAT CHANGED:

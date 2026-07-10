@@ -8,6 +8,12 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-11 — Finance Piece 6b: recurrence engine wired for transactions ✅
+Extracted kind-specific helpers to recur/kinds.js (series.js 244→189 lines). Added transaction
+branches to all 7 dispatch points. archive.js extended. Finance topup trigger added. Verified:
+materialiser creates correct occurrences, edit/delete dispatch works, event/task regression clean.
+**NEXT: Piece 6c — Recurring Bills UI (screen, form, upcoming list).**
+
 ## Session note — 2026-07-10 — Finance Piece 6a: recurrence schema extension ✅ (checker approved)
 Widened recurrences.target_kind to accept 'transaction'; added four nullable template columns
 (amount, account_id, transfer_account_id, txn_type — all plain values, no FK); widened
