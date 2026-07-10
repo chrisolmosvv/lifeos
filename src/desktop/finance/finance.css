@@ -11,6 +11,11 @@
   flex: none;
   padding: 1.5rem 2rem 0;
 }
+.fin-header-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
 
 /* The SplitPane fills the remaining height below the header. */
 .finance-page .kit-split {

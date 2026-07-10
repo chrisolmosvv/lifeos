@@ -9,8 +9,12 @@ import './todayForm.css'
 // filters across all nodes. "Inbox" maps to category_id = null (the data model's
 // "uncategorised"). Sealed kit block. Colour shown as-is (no inheritance yet).
 //
-// Props: cats (flat rows), value (selected id | null), inboxColor, onPick(id|null).
-export default function CategoryPicker({ cats, value, inboxColor, onPick }) {
+// Props: cats (flat rows), value (selected id | null), inboxColor, onPick(id|null),
+//         onCreate(name) — optional; when present, a "+ New" affordance appears at
+//         the bottom. The parent handles the actual insert + list refresh.
+export default function CategoryPicker({ cats, value, inboxColor, onPick, onCreate }) {
+  const [addingNew, setAddingNew] = useState(false)
+  const [newName, setNewName] = useState('')
   // The real categories form the tree; the literal "Inbox" row is represented by
   // the null option instead (a task/event means Inbox by having no category).
   const real = cats.filter((c) => !(c.parent_id == null && c.name === 'Inbox'))
@@ -117,6 +121,24 @@ export default function CategoryPicker({ cats, value, inboxColor, onPick }) {
           </p>
         )}
       </div>
+      {onCreate && !searching && parentId === null && (
+        addingNew ? (
+          <form className="tk-pick-create" onSubmit={(e) => {
+            e.preventDefault()
+            const n = newName.trim()
+            if (!n) return
+            onCreate(n)
+            setNewName('')
+            setAddingNew(false)
+          }}>
+            <input className="tk-pick-create-input" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Category name" autoFocus />
+            <button type="submit" className="tk-pick-create-go" disabled={!newName.trim()}>Create</button>
+            <button type="button" className="tk-pick-create-cancel" onClick={() => { setAddingNew(false); setNewName('') }}>Cancel</button>
+          </form>
+        ) : (
+          <button type="button" className="tk-pick-create-btn" onClick={() => setAddingNew(true)}>+ New category</button>
+        )
+      )}
     </div>
   )
 }

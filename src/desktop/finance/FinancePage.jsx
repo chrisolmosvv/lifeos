@@ -6,14 +6,16 @@ import Toast from '../kit/Toast'
 import AccountList from './AccountList'
 import AccountDetail from './AccountDetail'
 import AccountForm from './AccountForm'
+import Ledger from './Ledger'
 import { listAccounts, listArchivedAccounts, createAccount, updateAccount, archiveAccount, restoreAccount } from './financeData'
 import './finance.css'
 
-// FinancePage — the Finance pillar shell (Piece 3). Zero accounts → the warm
-// empty-state invite. One or more → the Accounts split-pane (Rolodex-shaped).
-// Piece 4 replaces this landing with the Ledger; Accounts moves to a sub-view.
+// FinancePage — the Finance pillar shell. Zero accounts → empty-state invite.
+// ≥1 account → sub-view: 'ledger' (default) or 'accounts' (Piece 3's screen).
+// Mirrors HealthHub's sub-state pattern exactly.
 export default function FinancePage() {
   const [accounts, setAccounts] = useState(null) // null = loading
+  const [sub, setSub] = useState('ledger') // 'ledger' | 'accounts'
   const [selectedId, setSelectedId] = useState(null)
   const [toast, setToast] = useState(null)
   const [showArchived, setShowArchived] = useState(false)
@@ -71,10 +73,6 @@ export default function FinancePage() {
   if (accounts === null) {
     return (
       <div className="finance-page">
-        <div className="fin-header">
-          <SmallCapsLabel>Finance</SmallCapsLabel>
-          <HairlineRule />
-        </div>
         <p className="fin-loading">Loading…</p>
       </div>
     )
@@ -94,13 +92,26 @@ export default function FinancePage() {
     )
   }
 
+  // ── Ledger (default landing) ────────────────────────────────────────────
+  if (sub === 'ledger') {
+    return (
+      <div className="finance-page">
+        <Ledger accounts={accounts} onNavigateAccounts={() => setSub('accounts')} />
+        {toast && <Toast text={toast.text} onUndo={toast.onUndo} onDismiss={() => setToast(null)} />}
+      </div>
+    )
+  }
+
   // ── Accounts screen ─────────────────────────────────────────────────────
   const selected = accounts.find((a) => a.id === selectedId)
 
   return (
     <div className="finance-page">
       <div className="fin-header">
-        <SmallCapsLabel>Finance</SmallCapsLabel>
+        <div className="fin-header-top">
+          <SmallCapsLabel>Accounts</SmallCapsLabel>
+          <button className="fin-ledger-accts-link" onClick={() => setSub('ledger')}>← Ledger</button>
+        </div>
         <HairlineRule />
       </div>
       <SplitPane

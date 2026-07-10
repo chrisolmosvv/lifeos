@@ -81,3 +81,110 @@ export async function deleteSnapshot(id) {
   const { error } = await supabase.from('finance_account_snapshots').delete().eq('id', id)
   if (error) throw error
 }
+
+// ── Transactions ────────────────────────────────────────────────────────────
+
+const TXN_COLS = 'id,account_id,entry_date,amount,txn_type,category_id,transfer_account_id,paired_transaction_id,description,notes,series_id,series_detached,source,archived_at,created_at,updated_at'
+
+export async function listTransactions(from, to) {
+  const { data, error } = await supabase
+    .from('finance_transactions')
+    .select(TXN_COLS)
+    .gte('entry_date', from)
+    .lte('entry_date', to)
+    .is('archived_at', null)
+    .order('entry_date', { ascending: false })
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function createTransaction(fields) {
+  const { data, error } = await supabase
+    .from('finance_transactions')
+    .insert(fields)
+    .select(TXN_COLS)
+    .single()
+  if (error) throw error
+  return data
+}
+
+// A transfer = two rows: negative on source, positive on destination, linked.
+export async function createTransfer({ account_id, transfer_account_id, entry_date, amount, description, notes }) {
+  const abs = Math.abs(parseFloat(amount))
+  const src = await createTransaction({
+    account_id, entry_date, amount: -abs, txn_type: 'transfer',
+    transfer_account_id, description, notes, source: 'manual',
+  })
+  const dst = await createTransaction({
+    account_id: transfer_account_id, entry_date, amount: abs, txn_type: 'transfer',
+    transfer_account_id: account_id, paired_transaction_id: src.id,
+    description, notes, source: 'manual',
+  })
+  // patch the source row with the destination's id to complete the pair link
+  await supabase.from('finance_transactions')
+    .update({ paired_transaction_id: dst.id, updated_at: new Date().toISOString() })
+    .eq('id', src.id)
+  return { src, dst }
+}
+
+export async function updateTransaction(id, fields) {
+  const { data, error } = await supabase
+    .from('finance_transactions')
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select(TXN_COLS)
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function fetchTransaction(id) {
+  const { data, error } = await supabase
+    .from('finance_transactions')
+    .select(TXN_COLS)
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return data
+}
+
+// Soft-delete: stamp archived_at. For transfers, stamp BOTH rows.
+export async function softDeleteTransaction(id, pairedId) {
+  const stamp = { archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+  const ids = pairedId ? [id, pairedId] : [id]
+  const { error } = await supabase.from('finance_transactions').update(stamp).in('id', ids)
+  if (error) throw error
+  return ids
+}
+
+// Undo: clear archived_at on the id(s).
+export async function restoreTransaction(ids) {
+  const { error } = await supabase.from('finance_transactions')
+    .update({ archived_at: null, updated_at: new Date().toISOString() })
+    .in('id', ids)
+  if (error) throw error
+}
+
+// ── Categories (read-only + inline create for the picker) ───────────────────
+
+export async function listCategories() {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('id,name,parent_id,color,sort_order')
+    .is('archived_at', null)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function createCategory(name) {
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({ name })
+    .select('id,name,parent_id,color,sort_order')
+    .single()
+  if (error) throw error
+  return data
+}

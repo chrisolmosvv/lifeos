@@ -388,6 +388,35 @@
   padding: 0.5rem 0.4rem;
 }
 
+/* "+ New category" inline create (optional, via onCreate prop) */
+.tk-pick-create-btn {
+  display: block; width: 100%; text-align: left;
+  background: none; border: none; border-top: 1px solid var(--rule-faint);
+  padding: 0.5rem 0.4rem; margin-top: 0.25rem;
+  font-family: var(--font-sans); font-size: 0.78rem; color: var(--ink-muted);
+  cursor: pointer;
+}
+.tk-pick-create-btn:hover { color: var(--ink); }
+.tk-pick-create {
+  display: flex; gap: 0.4rem; align-items: center;
+  border-top: 1px solid var(--rule-faint); padding: 0.5rem 0.4rem; margin-top: 0.25rem;
+}
+.tk-pick-create-input {
+  flex: 1; font-family: var(--font-sans); font-size: 0.82rem;
+  color: var(--ink); background: none; border: none;
+  border-bottom: 1px solid var(--rule); padding: 0.2rem 0; outline: none;
+}
+.tk-pick-create-input:focus { border-bottom-color: var(--ink-muted); }
+.tk-pick-create-go, .tk-pick-create-cancel {
+  background: none; border: none; padding: 0;
+  font-family: var(--font-sans); font-size: 0.72rem;
+  cursor: pointer;
+}
+.tk-pick-create-go { color: var(--ink); font-weight: 500; }
+.tk-pick-create-go:disabled { color: var(--ink-muted); cursor: default; }
+.tk-pick-create-cancel { color: var(--ink-muted); }
+.tk-pick-create-cancel:hover { color: var(--ink); }
+
 /* --- The undo toast ------------------------------------------------------- */
 .tk-toast {
   position: fixed;
