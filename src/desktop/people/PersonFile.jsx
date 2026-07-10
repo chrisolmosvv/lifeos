@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
+import PersonEdit from './PersonEdit'
 import { loadPersonFile } from '../../spine/data/peopleLoad'
 import './personFile.css'
 
-// PersonFile — the full person dossier (D6). Two-column, view-only. Every section
-// with no data is omitted (honest omission). Edit toggle + archive arrive in D7.
+// PersonFile — the full person dossier (D6/D7a). Two-column layout with an Edit
+// toggle that makes the left-column scalar fields editable in place. Every section
+// with no data is omitted (honest omission). Archive arrives in D7b.
 
 const CHANNEL_LABEL = {
   in_person: 'In person', call: 'Call', video: 'Video',
@@ -30,18 +32,21 @@ function formatDateNoYear(d) {
   return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
 }
 
-export default function PersonFile({ personId, onBack }) {
+export default function PersonFile({ personId, onBack, startEditing }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(!!startEditing)
 
-  useEffect(() => {
+  function load() {
     let cancelled = false
     setLoading(true)
     loadPersonFile(personId)
       .then((d) => { if (!cancelled) { setData(d); setLoading(false) } })
       .catch((e) => { console.error('PersonFile load:', e); if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [personId])
+  }
+
+  useEffect(load, [personId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return <div className="pfile"><p className="people-loading">Loading…</p></div>
   if (!data) return null
@@ -50,56 +55,74 @@ export default function PersonFile({ personId, onBack }) {
   const birthday = dates.find((d) => d.kind === 'birthday')
   const customDates = dates.filter((d) => d.kind === 'custom')
 
+  const homeName = homeCircle?.name || 'Unfiled'
+
   return (
     <div className="pfile">
-      <button className="pfile-back" onClick={onBack}>‹ Rolodex</button>
+      <div className="pfile-topbar">
+        <button className="pfile-back" onClick={onBack}>‹ Rolodex</button>
+        {!editing && (
+          <button className="pfile-edit-btn" onClick={() => setEditing(true)}>Edit</button>
+        )}
+      </div>
 
       <div className="pfile-cols">
-        {/* LEFT — the human stuff */}
+        {/* LEFT — scalar fields: view or edit */}
         <div className="pfile-left">
-          <SmallCapsLabel>{homeCircle?.name || 'Unfiled'}</SmallCapsLabel>
-          <h1 className="pfile-name">{person.name}</h1>
-          {person.how_you_know && <p className="pfile-hyk">{person.how_you_know}</p>}
-          <HairlineRule />
+          {editing ? (
+            <PersonEdit
+              person={person}
+              homeCircleName={homeName}
+              onSaved={() => { setEditing(false); load() }}
+              onCancel={() => setEditing(false)}
+            />
+          ) : (
+            <>
+              <SmallCapsLabel>{homeName}</SmallCapsLabel>
+              <h1 className="pfile-name">{person.name}</h1>
+              {person.how_you_know && <p className="pfile-hyk">{person.how_you_know}</p>}
+              <HairlineRule />
 
-          {otherCircles.length > 0 && (
-            <div className="pfile-section">
-              <SmallCapsLabel>Also in</SmallCapsLabel>
-              <p className="pfile-meta">{otherCircles.map((c) => c.name).join(', ')}</p>
-            </div>
-          )}
-
-          {person.notes && (
-            <div className="pfile-section">
-              <SmallCapsLabel>Notes</SmallCapsLabel>
-              <p className="pfile-notes">{person.notes}</p>
-            </div>
-          )}
-
-          {(person.phone || person.email || person.other_contact) && (
-            <div className="pfile-section">
-              <SmallCapsLabel>Contact</SmallCapsLabel>
-              {person.phone && <p className="pfile-meta"><a href={'tel:' + person.phone}>{person.phone}</a></p>}
-              {person.email && <p className="pfile-meta"><a href={'mailto:' + person.email}>{person.email}</a></p>}
-              {person.other_contact && <p className="pfile-meta">{person.other_contact}</p>}
-            </div>
-          )}
-
-          {(birthday || customDates.length > 0) && (
-            <div className="pfile-section">
-              <SmallCapsLabel>Key dates</SmallCapsLabel>
-              {birthday && (
-                <p className="pfile-meta">
-                  Birthday: {birthday.year_known ? formatDate(birthday.date_value) : formatDateNoYear(birthday.date_value)}
-                  {birthday.year_known && <span className="pfile-age"> (age {age(birthday.date_value)})</span>}
-                </p>
+              {otherCircles.length > 0 && (
+                <div className="pfile-section">
+                  <SmallCapsLabel>Also in</SmallCapsLabel>
+                  <p className="pfile-meta">{otherCircles.map((c) => c.name).join(', ')}</p>
+                </div>
               )}
-              {customDates.map((d) => (
-                <p className="pfile-meta" key={d.id}>
-                  {d.label || 'Date'}: {d.year_known ? formatDate(d.date_value) : formatDateNoYear(d.date_value)}
-                </p>
-              ))}
-            </div>
+
+              {person.notes && (
+                <div className="pfile-section">
+                  <SmallCapsLabel>Notes</SmallCapsLabel>
+                  <p className="pfile-notes">{person.notes}</p>
+                </div>
+              )}
+
+              {(person.phone || person.email || person.other_contact) && (
+                <div className="pfile-section">
+                  <SmallCapsLabel>Contact</SmallCapsLabel>
+                  {person.phone && <p className="pfile-meta"><a href={'tel:' + person.phone}>{person.phone}</a></p>}
+                  {person.email && <p className="pfile-meta"><a href={'mailto:' + person.email}>{person.email}</a></p>}
+                  {person.other_contact && <p className="pfile-meta">{person.other_contact}</p>}
+                </div>
+              )}
+
+              {(birthday || customDates.length > 0) && (
+                <div className="pfile-section">
+                  <SmallCapsLabel>Key dates</SmallCapsLabel>
+                  {birthday && (
+                    <p className="pfile-meta">
+                      Birthday: {birthday.year_known ? formatDate(birthday.date_value) : formatDateNoYear(birthday.date_value)}
+                      {birthday.year_known && <span className="pfile-age"> (age {age(birthday.date_value)})</span>}
+                    </p>
+                  )}
+                  {customDates.map((d) => (
+                    <p className="pfile-meta" key={d.id}>
+                      {d.label || 'Date'}: {d.year_known ? formatDate(d.date_value) : formatDateNoYear(d.date_value)}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 

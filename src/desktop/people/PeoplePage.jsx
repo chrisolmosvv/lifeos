@@ -30,20 +30,28 @@ export default function PeoplePage() {
 
   useEffect(() => { load() }, [load])
 
+  const [fileEditing, setFileEditing] = useState(false)
+
   async function handleCreate(name) {
     const created = await createPerson(name)
     await load()
     if (created?.id) setSelectedId(created.id)
   }
 
-  function openFile(id) { setFileId(id) }
-  function closeFile() { setFileId(null) }
+  async function handleCreateWithDetails(name) {
+    const created = await createPerson(name)
+    await load()
+    if (created?.id) { setFileId(created.id); setFileEditing(true) }
+  }
+
+  function openFile(id) { setFileId(id); setFileEditing(false) }
+  function closeFile() { setFileId(null); setFileEditing(false); load() }
 
   // File page view
   if (fileId) {
     return (
       <div className="people-page">
-        <PersonFile personId={fileId} onBack={closeFile} />
+        <PersonFile personId={fileId} onBack={closeFile} startEditing={fileEditing} />
       </div>
     )
   }
@@ -67,10 +75,10 @@ export default function PeoplePage() {
                 <p className="people-empty-lead">No one in your Rolodex yet.</p>
                 <p className="people-empty-hint">Add someone to start building your people file.</p>
               </div>
-              <Directory people={[]} circles={[]} onCreated={handleCreate} selectedId={selectedId} onSelect={setSelectedId} />
+              <Directory people={[]} circles={[]} onCreated={handleCreate} onCreatedWithDetails={handleCreateWithDetails} selectedId={selectedId} onSelect={setSelectedId} />
             </div>
           ) : (
-            <Directory people={people} circles={circles} onCreated={handleCreate} selectedId={selectedId} onSelect={setSelectedId} />
+            <Directory people={people} circles={circles} onCreated={handleCreate} onCreatedWithDetails={handleCreateWithDetails} selectedId={selectedId} onSelect={setSelectedId} />
           )
         }
         right={

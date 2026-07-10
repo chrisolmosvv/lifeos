@@ -5,7 +5,7 @@ import SmallCapsLabel from '../kit/SmallCapsLabel'
 // (Unfiled last), with live search, the "+ Add" terracotta quick-add, and
 // click-to-select (D5). `selectedId` / `onSelect` drive the focus panel.
 
-export default function Directory({ people, circles, onCreated, selectedId, onSelect }) {
+export default function Directory({ people, circles, onCreated, onCreatedWithDetails, selectedId, onSelect }) {
   const [query, setQuery] = useState('')
   const [adding, setAdding] = useState(false)
   const [addName, setAddName] = useState('')
@@ -110,10 +110,15 @@ export default function Directory({ people, circles, onCreated, selectedId, onSe
               if (e.key === 'Enter') { e.preventDefault(); handleAdd() }
               if (e.key === 'Escape') cancelAdd()
             }}
-            onBlur={() => { if (!addName.trim()) cancelAdd() }}
+            onBlur={() => { if (!addName.trim()) setTimeout(cancelAdd, 150) }}
             placeholder="Name"
             disabled={busy}
           />
+          {addName.trim() && onCreatedWithDetails && (
+            <button className="pdir-add-details" onClick={async () => { const n = addName.trim(); if (n && !busy) { setBusy(true); try { await onCreatedWithDetails(n); setAddName(''); setAdding(false) } catch (e) { console.error(e) } finally { setBusy(false) } } }}>
+              with details →
+            </button>
+          )}
         </div>
       ) : (
         <button className="pdir-add-btn" onClick={startAdd}>+ Add</button>

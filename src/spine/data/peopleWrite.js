@@ -14,3 +14,15 @@ export async function createPerson(name) {
   if (error) throw new Error(error.message)
   return data
 }
+
+// Update a person's scalar fields. `fields` is { name, how_you_know, notes, phone, email, other_contact }.
+export async function updatePerson(id, fields) {
+  const { data, error } = await supabase
+    .from('people')
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id')
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
