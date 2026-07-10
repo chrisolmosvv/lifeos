@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import { upsertBirthday, addCustomDate, deleteDate } from '../../spine/data/peopleWrite'
+import { syncBirthdayCalendar, retireBirthdaySeries } from './peopleCalendar'
 
-// DatesEditor — add/edit/delete birthday + custom dates on the file (D12 Commit 1).
-// Birthday: day + month always, year OPTIONAL. Custom: label + day + month + optional year.
-// No calendar wiring this commit — that's Commit 2.
+// DatesEditor — add/edit/delete birthday + custom dates on the file (D12).
+// Birthday defaults show-on-calendar ON; saving syncs the calendar event.
 
-export default function DatesEditor({ personId, dates, onChanged }) {
+export default function DatesEditor({ personId, personName, dates, onChanged }) {
   const birthday = dates.find((d) => d.kind === 'birthday')
   const customs = dates.filter((d) => d.kind === 'custom')
 
@@ -28,7 +28,10 @@ export default function DatesEditor({ personId, dates, onChanged }) {
     if (!d || !m || d < 1 || d > 31 || m < 1 || m > 12) return
     setBusy(true)
     try {
-      await upsertBirthday(personId, { month: m, day: d, year: bYear ? Number(bYear) : null })
+      const dateId = await upsertBirthday(personId, { month: m, day: d, year: bYear ? Number(bYear) : null, showOnCalendar: true })
+      const yr = bYear ? Number(bYear) : 2000
+      const dateValue = `${yr}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      await syncBirthdayCalendar(dateId, personName, dateValue, true, birthday?.recurrence_id || null)
       onChanged()
     } catch (e) { console.error(e) }
     finally { setBusy(false) }
@@ -36,8 +39,11 @@ export default function DatesEditor({ personId, dates, onChanged }) {
 
   async function removeBirthday() {
     if (!birthday) return
-    try { await deleteDate(birthday.id); onChanged() }
-    catch (e) { console.error(e) }
+    try {
+      if (birthday.recurrence_id) await retireBirthdaySeries(birthday.recurrence_id)
+      await deleteDate(birthday.id)
+      onChanged()
+    } catch (e) { console.error(e) }
   }
 
   async function handleAddCustom() {

@@ -7,8 +7,10 @@ import Directory from './Directory'
 import FocusPanel from './FocusPanel'
 import PersonFile from './PersonFile'
 import ManageCircles from './ManageCircles'
+import { supabase } from '../../spine/data/supabaseClient'
 import { listDirectory, listCircles, listArchived } from '../../spine/data/peopleLoad'
 import { createPerson, archivePerson, restorePerson } from '../../spine/data/peopleWrite'
+import { retireBirthdaySeries } from './peopleCalendar'
 import './people.css'
 
 // PeoplePage — the Rolodex shell (D7b). Two internal views: 'directory' (the D3–D5
@@ -54,10 +56,16 @@ export default function PeoplePage() {
   function closeFile() { setFileId(null); setFileEditing(false); load() }
 
   async function handleArchive(id, name) {
+    // Retire any birthday series before archiving (suspend-on-archive, D12)
+    try {
+      const { data: bday } = await supabase.from('people_dates').select('recurrence_id').eq('person_id', id).eq('kind', 'birthday').maybeSingle()
+      if (bday?.recurrence_id) await retireBirthdaySeries(bday.recurrence_id)
+    } catch (e) { console.error('Birthday retire on archive:', e) }
     await archivePerson(id)
     setFileId(null)
     setSelectedId(null)
     await load()
+    // Note: restore does NOT re-create the birthday event — re-save the birthday to recreate it.
     setToast({ text: `Archived ${name}`, onUndo: async () => { setToast(null); await restorePerson(id); await load() } })
   }
 

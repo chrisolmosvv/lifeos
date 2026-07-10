@@ -106,7 +106,7 @@ export default function PersonEdit({ person, homeCircleName, availableCircles, c
 
       {/* Key dates — writes directly (not batched with Save) */}
       <div className="pedit-field">
-        <DatesEditor personId={person.id} dates={dates || []} onChanged={onDatesChanged || (() => {})} />
+        <DatesEditor personId={person.id} personName={person.name} dates={dates || []} onChanged={onDatesChanged || (() => {})} />
       </div>
 
       {err && <p className="pedit-err">{err}</p>}
