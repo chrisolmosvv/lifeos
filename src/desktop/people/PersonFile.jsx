@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import PersonEdit from './PersonEdit'
-import { loadPersonFile } from '../../spine/data/peopleLoad'
+import { loadPersonFile, listCircles } from '../../spine/data/peopleLoad'
 import './personFile.css'
 
 // PersonFile — the full person dossier (D6/D7a). Two-column layout with an Edit
@@ -34,14 +34,15 @@ function formatDateNoYear(d) {
 
 export default function PersonFile({ personId, onBack, startEditing, onArchive }) {
   const [data, setData] = useState(null)
+  const [availCircles, setAvailCircles] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(!!startEditing)
 
   function load() {
     let cancelled = false
     setLoading(true)
-    loadPersonFile(personId)
-      .then((d) => { if (!cancelled) { setData(d); setLoading(false) } })
+    Promise.all([loadPersonFile(personId), listCircles()])
+      .then(([d, c]) => { if (!cancelled) { setData(d); setAvailCircles(c); setLoading(false) } })
       .catch((e) => { console.error('PersonFile load:', e); if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }
@@ -76,6 +77,8 @@ export default function PersonFile({ personId, onBack, startEditing, onArchive }
             <PersonEdit
               person={person}
               homeCircleName={homeName}
+              availableCircles={availCircles}
+              currentCircles={allCircles}
               onSaved={() => { setEditing(false); load() }}
               onCancel={() => setEditing(false)}
             />

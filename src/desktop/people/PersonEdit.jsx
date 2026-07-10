@@ -1,23 +1,32 @@
 import { useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
-import { updatePerson } from '../../spine/data/peopleWrite'
+import { updatePerson, setPersonCircles } from '../../spine/data/peopleWrite'
 import './personEdit.css'
 
-// PersonEdit — the in-place edit form for a person's scalar fields (D7a).
-// Renders in the left column of the file page when the Edit toggle is active.
-// Save writes via updatePerson; Cancel discards. Only scalar fields — circles,
-// connections, dates, catch-ups stay read-only until their own pieces.
+// PersonEdit — the in-place edit form for a person's scalar fields + circle
+// assignments (D7a/D8). Save writes scalars via updatePerson + circles via
+// setPersonCircles. Cancel discards all changes.
 
-export default function PersonEdit({ person, homeCircleName, onSaved, onCancel }) {
+export default function PersonEdit({ person, homeCircleName, availableCircles, currentCircles, onSaved, onCancel }) {
   const [name, setName] = useState(person.name)
   const [hyk, setHyk] = useState(person.how_you_know || '')
   const [notes, setNotes] = useState(person.notes || '')
   const [phone, setPhone] = useState(person.phone || '')
   const [email, setEmail] = useState(person.email || '')
   const [other, setOther] = useState(person.other_contact || '')
+  // Circle state
+  const initHome = (currentCircles || []).find((c) => c.isHome)
+  const [homeId, setHomeId] = useState(initHome?.id || '')
+  const [otherIds, setOtherIds] = useState(
+    (currentCircles || []).filter((c) => !c.isHome).map((c) => c.id)
+  )
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
+
+  function toggleOther(cid) {
+    setOtherIds((prev) => prev.includes(cid) ? prev.filter((x) => x !== cid) : [...prev, cid])
+  }
 
   async function save() {
     const n = name.trim()
@@ -32,6 +41,7 @@ export default function PersonEdit({ person, homeCircleName, onSaved, onCancel }
         email: email.trim() || null,
         other_contact: other.trim() || null,
       })
+      await setPersonCircles(person.id, homeId || null, otherIds)
       onSaved()
     } catch (e) {
       setErr(e.message)
@@ -55,6 +65,27 @@ export default function PersonEdit({ person, homeCircleName, onSaved, onCancel }
       </div>
 
       <HairlineRule />
+
+      {/* Circle pickers */}
+      {availableCircles && availableCircles.length > 0 && (
+        <div className="pedit-field">
+          <SmallCapsLabel>Home circle</SmallCapsLabel>
+          <select className="pedit-select" value={homeId} onChange={(e) => setHomeId(e.target.value)}>
+            <option value="">Unfiled</option>
+            {availableCircles.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+
+          <SmallCapsLabel>Other circles</SmallCapsLabel>
+          <div className="pedit-checks">
+            {availableCircles.filter((c) => c.id !== homeId).map((c) => (
+              <label key={c.id} className="pedit-check">
+                <input type="checkbox" checked={otherIds.includes(c.id)} onChange={() => toggleOther(c.id)} />
+                <span>{c.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="pedit-field">
         <SmallCapsLabel>Notes</SmallCapsLabel>

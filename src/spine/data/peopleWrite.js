@@ -74,6 +74,30 @@ export async function deleteCircle(id) {
   if (error) throw new Error(error.message)
 }
 
+// ── Circle membership ───────────────────────────────────────────────────────
+
+// Set a person's circle memberships: exactly one home (or null = Unfiled) + zero
+// or more others. Replaces all existing memberships for this person.
+export async function setPersonCircles(personId, homeCircleId, otherCircleIds) {
+  // 1. Delete all existing memberships
+  const { error: de } = await supabase
+    .from('people_circle_members')
+    .delete()
+    .eq('person_id', personId)
+  if (de) throw new Error(de.message)
+
+  // 2. Insert the new set
+  const rows = []
+  if (homeCircleId) rows.push({ person_id: personId, circle_id: homeCircleId, is_home: true })
+  for (const cid of otherCircleIds || []) {
+    if (cid !== homeCircleId) rows.push({ person_id: personId, circle_id: cid, is_home: false })
+  }
+  if (rows.length) {
+    const { error: ie } = await supabase.from('people_circle_members').insert(rows)
+    if (ie) throw new Error(ie.message)
+  }
+}
+
 // Update a person's scalar fields. `fields` is { name, how_you_know, notes, phone, email, other_contact }.
 export async function updatePerson(id, fields) {
   const { data, error } = await supabase
