@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 
-// Directory — the Rolodex left pane (D4). Shows people grouped by home circle
-// (Unfiled last), with live search and the "+ Add" terracotta quick-add.
-// Click-to-select wiring arrives in D5; here each row is present but passive.
+// Directory — the Rolodex left pane (D4/D5). Shows people grouped by home circle
+// (Unfiled last), with live search, the "+ Add" terracotta quick-add, and
+// click-to-select (D5). `selectedId` / `onSelect` drive the focus panel.
 
-export default function Directory({ people, circles, onCreated }) {
+export default function Directory({ people, circles, onCreated, selectedId, onSelect }) {
   const [query, setQuery] = useState('')
   const [adding, setAdding] = useState(false)
   const [addName, setAddName] = useState('')
@@ -127,10 +127,15 @@ export default function Directory({ people, circles, onCreated }) {
               <SmallCapsLabel>{key === '__unfiled' ? 'Unfiled' : circleMap.get(key)}</SmallCapsLabel>
             </div>
             {groups.get(key).map((p) => (
-              <div className="pdir-row" key={p.id}>
+              <button
+                type="button"
+                className={'pdir-row' + (selectedId === p.id ? ' is-selected' : '')}
+                key={p.id}
+                onClick={() => onSelect?.(p.id)}
+              >
                 <span className="pdir-name">{p.name}</span>
                 <span className="pdir-last">{lastContactLabel(p.last_contact)}</span>
-              </div>
+              </button>
             ))}
           </div>
         ))}

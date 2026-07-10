@@ -3,16 +3,18 @@ import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import SplitPane from '../kit/SplitPane'
 import Directory from './Directory'
+import FocusPanel from './FocusPanel'
 import { listDirectory, listCircles } from '../../spine/data/peopleLoad'
 import { createPerson } from '../../spine/data/peopleWrite'
 import './people.css'
 
-// PeoplePage — the Rolodex shell (D4). Two-pane broadsheet: directory on the
-// left (with search + quick-add), focus panel on the right. Loads people +
-// circles on mount. Quick-add creates a name-only person and reloads.
+// PeoplePage — the Rolodex shell (D5). Two-pane broadsheet: directory on the
+// left (search + quick-add + click-to-select), focus panel on the right showing
+// the selected person's glance. No selection → resting invitation.
 export default function PeoplePage() {
   const [people, setPeople] = useState(null) // null = loading
   const [circles, setCircles] = useState([])
+  const [selectedId, setSelectedId] = useState(null)
 
   const load = useCallback(async () => {
     try {
@@ -28,8 +30,9 @@ export default function PeoplePage() {
   useEffect(() => { load() }, [load])
 
   async function handleCreate(name) {
-    await createPerson(name)
+    const created = await createPerson(name)
     await load()
+    if (created?.id) setSelectedId(created.id)
   }
 
   const empty = people !== null && people.length === 0
@@ -50,16 +53,20 @@ export default function PeoplePage() {
                 <p className="people-empty-lead">No one in your Rolodex yet.</p>
                 <p className="people-empty-hint">Add someone to start building your people file.</p>
               </div>
-              <Directory people={[]} circles={[]} onCreated={handleCreate} />
+              <Directory people={[]} circles={[]} onCreated={handleCreate} selectedId={selectedId} onSelect={setSelectedId} />
             </div>
           ) : (
-            <Directory people={people} circles={circles} onCreated={handleCreate} />
+            <Directory people={people} circles={circles} onCreated={handleCreate} selectedId={selectedId} onSelect={setSelectedId} />
           )
         }
         right={
-          <div className="people-focus">
-            <p className="people-focus-rest">Pick someone from the directory, or search by name.</p>
-          </div>
+          selectedId ? (
+            <FocusPanel personId={selectedId} />
+          ) : (
+            <div className="people-focus">
+              <p className="people-focus-rest">Pick someone from the directory, or search by name.</p>
+            </div>
+          )
         }
       />
     </div>

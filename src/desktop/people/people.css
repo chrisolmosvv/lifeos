@@ -122,14 +122,18 @@
 .pdir-group { margin-bottom: 1rem; }
 .pdir-group-label { margin-bottom: 0.35rem; }
 
-/* Person row */
+/* Person row (a button for click-to-select) */
 .pdir-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  width: 100%;
   padding: 0.35rem 0;
+  border: none;
   border-bottom: 1px solid var(--rule-faint);
-  cursor: default;
+  background: none;
+  cursor: pointer;
+  text-align: left;
 }
 .pdir-name {
   font-family: var(--font-serif);
@@ -156,3 +160,13 @@
   color: var(--ink-muted);
   margin: 1rem 0 0;
 }
+
+/* Selected row — a calm weight shift, no fill or box */
+.pdir-row.is-selected {
+  border-bottom-color: var(--rule);
+}
+.pdir-row.is-selected .pdir-name {
+  font-weight: 500;
+}
+
+/* Focus panel styles in focusPanel.css */

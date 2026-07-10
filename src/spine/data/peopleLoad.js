@@ -71,3 +71,87 @@ export async function listDirectory() {
     last_contact: lastByPerson.get(p.id) || null,
   }))
 }
+
+// ── Person summary (for the focus panel) ──────────────────────────────────
+// Returns the person's core info + connections (with per-side labels) +
+// last 2–3 catch-ups. For a name-only person most sections come back empty.
+
+const FULL_COLS = 'id, name, how_you_know, notes, phone, email, other_contact, source, created_at'
+
+export async function loadPersonSummary(personId) {
+  // 1. The person
+  const { data: person, error: pe } = await supabase
+    .from('people')
+    .select(FULL_COLS)
+    .eq('id', personId)
+    .is('archived_at', null)
+    .single()
+  if (pe) throw new Error('people: ' + pe.message)
+
+  // 2. Home circle
+  const { data: homeMem } = await supabase
+    .from('people_circle_members')
+    .select('circle_id')
+    .eq('person_id', personId)
+    .eq('is_home', true)
+    .maybeSingle()
+  let homeCircleName = null
+  if (homeMem?.circle_id) {
+    const { data: circ } = await supabase
+      .from('people_circles')
+      .select('name')
+      .eq('id', homeMem.circle_id)
+      .single()
+    homeCircleName = circ?.name || null
+  }
+
+  // 3. Connections (direct links) — fetch both sides
+  const { data: connsA } = await supabase
+    .from('people_connections')
+    .select('id, person_b_id, label_a_to_b')
+    .eq('person_a_id', personId)
+  const { data: connsB } = await supabase
+    .from('people_connections')
+    .select('id, person_a_id, label_b_to_a')
+    .eq('person_b_id', personId)
+
+  // Resolve connected person names
+  const connIds = [
+    ...((connsA || []).map((c) => c.person_b_id)),
+    ...((connsB || []).map((c) => c.person_a_id)),
+  ]
+  const nameMap = new Map()
+  if (connIds.length) {
+    const { data: names } = await supabase
+      .from('people')
+      .select('id, name')
+      .in('id', connIds)
+      .is('archived_at', null)
+    for (const n of names || []) nameMap.set(n.id, n.name)
+  }
+
+  const connections = [
+    ...((connsA || []).filter((c) => nameMap.has(c.person_b_id)).map((c) => ({
+      id: c.id, personId: c.person_b_id, name: nameMap.get(c.person_b_id), label: c.label_a_to_b,
+    }))),
+    ...((connsB || []).filter((c) => nameMap.has(c.person_a_id)).map((c) => ({
+      id: c.id, personId: c.person_a_id, name: nameMap.get(c.person_a_id), label: c.label_b_to_a,
+    }))),
+  ]
+
+  // 4. Last 3 catch-ups
+  const { data: catchups } = await supabase
+    .from('people_interactions')
+    .select('id, interaction_date, channel, note')
+    .eq('person_id', personId)
+    .order('interaction_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(3)
+
+  return {
+    person,
+    homeCircleName,
+    connections,
+    catchups: catchups || [],
+  }
+}

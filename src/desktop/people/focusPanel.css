@@ -1,0 +1,85 @@
+/* Rolodex — Focus Panel styles (D5). Colours/fonts from theme tokens only. */
+
+.pfocus { padding-top: 0.25rem; }
+
+.pfocus-name {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 0.3rem 0 0.15rem;
+  line-height: 1.2;
+}
+.pfocus-hyk {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--ink-muted);
+  margin: 0 0 0.75rem;
+}
+
+.pfocus-section {
+  margin-top: 1rem;
+}
+
+.pfocus-notes {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--ink);
+  margin: 0.35rem 0 0;
+  line-height: 1.55;
+}
+
+/* Connections list */
+.pfocus-conn-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+}
+.pfocus-conn-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+}
+.pfocus-conn-name { color: var(--ink); }
+.pfocus-conn-label {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+}
+
+/* Catch-up list */
+.pfocus-catchup-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+}
+.pfocus-catchup-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.pfocus-catchup-date {
+  color: var(--ink);
+  flex: none;
+}
+.pfocus-catchup-chan {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  flex: none;
+}
+.pfocus-catchup-note {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
