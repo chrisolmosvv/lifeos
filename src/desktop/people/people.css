@@ -1,13 +1,28 @@
-/* Rolodex — page-level styles (D2 stub). Colours/fonts from theme tokens only. */
+/* Rolodex — page-level styles (D3). Colours/fonts from theme tokens only. */
 
 .people-page {
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .people-header {
-  margin-bottom: 2rem;
+  flex: none;
+  padding: 1.5rem 2rem 0;
+}
+
+/* The SplitPane fills the remaining height below the header. */
+.people-page .kit-split {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Loading state */
+.people-loading {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0;
 }
 
 /* First-run empty state — a warm invitation, not an error. */
@@ -26,4 +41,14 @@
   font-size: 0.82rem;
   color: var(--ink-muted);
   margin: 0;
+}
+
+/* Focus panel resting state */
+.people-focus-rest {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  margin: 0;
+  padding: 3rem 0;
+  text-align: center;
 }

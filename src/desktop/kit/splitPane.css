@@ -1,0 +1,24 @@
+/* SplitPane — a two-pane desktop layout, separated by a vertical hairline.
+   Left = the narrower directory; right = the wider focus/detail area.
+   All colour from theme tokens — never a raw hex. */
+
+.kit-split {
+  display: grid;
+  grid-template-columns: 320px 1px 1fr;
+  min-height: 0;
+  height: 100%;
+}
+
+.kit-split-left {
+  overflow-y: auto;
+  padding: 1.5rem 1.25rem;
+}
+
+.kit-split-divider {
+  background: var(--rule);
+}
+
+.kit-split-right {
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+}
