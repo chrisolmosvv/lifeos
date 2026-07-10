@@ -2,20 +2,24 @@ import { useCallback, useEffect, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import SplitPane from '../kit/SplitPane'
+import Toast from '../kit/Toast'
 import Directory from './Directory'
 import FocusPanel from './FocusPanel'
 import PersonFile from './PersonFile'
-import { listDirectory, listCircles } from '../../spine/data/peopleLoad'
-import { createPerson } from '../../spine/data/peopleWrite'
+import { listDirectory, listCircles, listArchived } from '../../spine/data/peopleLoad'
+import { createPerson, archivePerson, restorePerson } from '../../spine/data/peopleWrite'
 import './people.css'
 
-// PeoplePage — the Rolodex shell (D6). Two internal views: 'directory' (the D3–D5
-// split pane) and 'file' (a person's full dossier). State-based, no router.
+// PeoplePage — the Rolodex shell (D7b). Two internal views: 'directory' (the D3–D5
+// split pane) and 'file' (a person's full dossier). Archive + restore + toast.
 export default function PeoplePage() {
   const [people, setPeople] = useState(null) // null = loading
   const [circles, setCircles] = useState([])
   const [selectedId, setSelectedId] = useState(null)
-  const [fileId, setFileId] = useState(null) // non-null → show the file page
+  const [fileId, setFileId] = useState(null)
+  const [toast, setToast] = useState(null)
+  const [showArchived, setShowArchived] = useState(false)
+  const [archived, setArchived] = useState([])
 
   const load = useCallback(async () => {
     try {
@@ -47,11 +51,33 @@ export default function PeoplePage() {
   function openFile(id) { setFileId(id); setFileEditing(false) }
   function closeFile() { setFileId(null); setFileEditing(false); load() }
 
+  async function handleArchive(id, name) {
+    await archivePerson(id)
+    setFileId(null)
+    setSelectedId(null)
+    await load()
+    setToast({ text: `Archived ${name}`, onUndo: async () => { setToast(null); await restorePerson(id); await load() } })
+  }
+
+  async function handleShowArchived() {
+    const a = await listArchived()
+    setArchived(a)
+    setShowArchived(true)
+  }
+
+  async function handleRestore(id) {
+    await restorePerson(id)
+    setArchived((prev) => prev.filter((p) => p.id !== id))
+    await load()
+    if (archived.length <= 1) setShowArchived(false)
+  }
+
   // File page view
   if (fileId) {
     return (
       <div className="people-page">
-        <PersonFile personId={fileId} onBack={closeFile} startEditing={fileEditing} />
+        <PersonFile personId={fileId} onBack={closeFile} startEditing={fileEditing} onArchive={handleArchive} />
+        {toast && <Toast text={toast.text} onUndo={toast.onUndo} onDismiss={() => setToast(null)} />}
       </div>
     )
   }
@@ -78,7 +104,23 @@ export default function PeoplePage() {
               <Directory people={[]} circles={[]} onCreated={handleCreate} onCreatedWithDetails={handleCreateWithDetails} selectedId={selectedId} onSelect={setSelectedId} />
             </div>
           ) : (
-            <Directory people={people} circles={circles} onCreated={handleCreate} onCreatedWithDetails={handleCreateWithDetails} selectedId={selectedId} onSelect={setSelectedId} />
+            <>
+              <Directory people={people} circles={circles} onCreated={handleCreate} onCreatedWithDetails={handleCreateWithDetails} selectedId={selectedId} onSelect={setSelectedId} />
+              {showArchived ? (
+                <div className="pdir-archived">
+                  <button className="pdir-archived-toggle" onClick={() => setShowArchived(false)}>Hide archived</button>
+                  {archived.map((p) => (
+                    <div className="pdir-archived-row" key={p.id}>
+                      <span className="pdir-archived-name">{p.name}</span>
+                      <button className="pdir-restore-btn" onClick={() => handleRestore(p.id)}>Restore</button>
+                    </div>
+                  ))}
+                  {archived.length === 0 && <p className="pdir-no-match">No archived people.</p>}
+                </div>
+              ) : (
+                <button className="pdir-archived-toggle" onClick={handleShowArchived}>Show archived</button>
+              )}
+            </>
           )
         }
         right={
@@ -91,6 +133,7 @@ export default function PeoplePage() {
           )
         }
       />
+      {toast && <Toast text={toast.text} onUndo={toast.onUndo} onDismiss={() => setToast(null)} />}
     </div>
   )
 }

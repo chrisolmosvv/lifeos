@@ -15,6 +15,24 @@ export async function createPerson(name) {
   return data
 }
 
+// Archive a person (soft-delete: set archived_at). Birthday-event suspend is deferred to D11.
+export async function archivePerson(id) {
+  const { error } = await supabase
+    .from('people')
+    .update({ archived_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+// Restore an archived person (clear archived_at).
+export async function restorePerson(id) {
+  const { error } = await supabase
+    .from('people')
+    .update({ archived_at: null })
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
 // Update a person's scalar fields. `fields` is { name, how_you_know, notes, phone, email, other_contact }.
 export async function updatePerson(id, fields) {
   const { data, error } = await supabase

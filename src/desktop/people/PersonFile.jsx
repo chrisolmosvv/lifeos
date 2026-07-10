@@ -32,7 +32,7 @@ function formatDateNoYear(d) {
   return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
 }
 
-export default function PersonFile({ personId, onBack, startEditing }) {
+export default function PersonFile({ personId, onBack, startEditing, onArchive }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(!!startEditing)
@@ -62,7 +62,10 @@ export default function PersonFile({ personId, onBack, startEditing }) {
       <div className="pfile-topbar">
         <button className="pfile-back" onClick={onBack}>‹ Rolodex</button>
         {!editing && (
-          <button className="pfile-edit-btn" onClick={() => setEditing(true)}>Edit</button>
+          <div className="pfile-topbar-actions">
+            {onArchive && <button className="pfile-archive-btn" onClick={() => onArchive(person.id, person.name)}>Archive</button>}
+            <button className="pfile-edit-btn" onClick={() => setEditing(true)}>Edit</button>
+          </div>
         )}
       </div>
 

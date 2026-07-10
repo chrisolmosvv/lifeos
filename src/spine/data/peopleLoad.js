@@ -6,6 +6,17 @@
 
 import { supabase } from './supabaseClient.js'
 
+// ── Archived people (for the restore view) ────────────────────────────────
+export async function listArchived() {
+  const { data, error } = await supabase
+    .from('people')
+    .select('id, name, archived_at')
+    .not('archived_at', 'is', null)
+    .order('archived_at', { ascending: false })
+  if (error) throw new Error('people (archived): ' + error.message)
+  return data || []
+}
+
 // ── Circles (custom sort order) ─────────────────────────────────────────────
 export async function listCircles() {
   const { data, error } = await supabase

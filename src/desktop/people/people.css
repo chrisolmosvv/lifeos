@@ -169,6 +169,47 @@
   font-weight: 500;
 }
 
+/* Archived view (D7b) */
+.pdir-archived {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule-faint);
+}
+.pdir-archived-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  display: block;
+}
+.pdir-archived-toggle:hover { color: var(--ink); }
+.pdir-archived-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.pdir-archived-name {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+}
+.pdir-restore-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.pdir-restore-btn:hover { color: var(--ink); }
+
 /* "with details" link in the add row */
 .pdir-add-details {
   background: none;
