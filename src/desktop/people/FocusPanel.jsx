@@ -18,7 +18,7 @@ const CHANNEL_LABEL = {
   other: 'Other',
 }
 
-export default function FocusPanel({ personId }) {
+export default function FocusPanel({ personId, onOpenFile }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -83,6 +83,12 @@ export default function FocusPanel({ personId }) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+      {/* Open file link */}
+      {onOpenFile && (
+        <div className="pfocus-section">
+          <button className="pfocus-open" onClick={onOpenFile}>Open full file →</button>
         </div>
       )}
     </div>

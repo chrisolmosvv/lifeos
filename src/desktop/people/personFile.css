@@ -1,0 +1,131 @@
+/* Rolodex — Person File page styles (D6). Tokens only. */
+
+.pfile {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+}
+
+.pfile-back {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+.pfile-back:hover { color: var(--ink); }
+
+.pfile-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+}
+
+.pfile-name {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 0.3rem 0 0.15rem;
+  line-height: 1.2;
+}
+.pfile-hyk {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--ink-muted);
+  margin: 0 0 0.75rem;
+}
+
+.pfile-section {
+  margin-top: 1.25rem;
+}
+.pfile-section .kit-kicker {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.pfile-notes {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.pfile-meta {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink);
+  margin: 0.15rem 0 0;
+}
+.pfile-meta a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 2px;
+}
+.pfile-meta a:hover { text-decoration-color: var(--ink); }
+
+.pfile-age {
+  color: var(--ink-muted);
+}
+
+/* Lists (connections / catch-ups) */
+.pfile-list {
+  list-style: none;
+  margin: 0.3rem 0 0;
+  padding: 0;
+}
+
+.pfile-conn-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.pfile-conn-label {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+}
+
+.pfile-group { margin-top: 0.4rem; }
+.pfile-group-name {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0;
+}
+
+.pfile-catchup-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.pfile-chan {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  flex: none;
+}
+.pfile-cu-note {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}

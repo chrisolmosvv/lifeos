@@ -83,3 +83,15 @@
   flex: 1;
   min-width: 0;
 }
+
+/* Open full file link */
+.pfocus-open {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.pfocus-open:hover { color: var(--ink); }

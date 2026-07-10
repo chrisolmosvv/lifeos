@@ -4,17 +4,18 @@ import HairlineRule from '../kit/HairlineRule'
 import SplitPane from '../kit/SplitPane'
 import Directory from './Directory'
 import FocusPanel from './FocusPanel'
+import PersonFile from './PersonFile'
 import { listDirectory, listCircles } from '../../spine/data/peopleLoad'
 import { createPerson } from '../../spine/data/peopleWrite'
 import './people.css'
 
-// PeoplePage — the Rolodex shell (D5). Two-pane broadsheet: directory on the
-// left (search + quick-add + click-to-select), focus panel on the right showing
-// the selected person's glance. No selection → resting invitation.
+// PeoplePage — the Rolodex shell (D6). Two internal views: 'directory' (the D3–D5
+// split pane) and 'file' (a person's full dossier). State-based, no router.
 export default function PeoplePage() {
   const [people, setPeople] = useState(null) // null = loading
   const [circles, setCircles] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const [fileId, setFileId] = useState(null) // non-null → show the file page
 
   const load = useCallback(async () => {
     try {
@@ -35,6 +36,19 @@ export default function PeoplePage() {
     if (created?.id) setSelectedId(created.id)
   }
 
+  function openFile(id) { setFileId(id) }
+  function closeFile() { setFileId(null) }
+
+  // File page view
+  if (fileId) {
+    return (
+      <div className="people-page">
+        <PersonFile personId={fileId} onBack={closeFile} />
+      </div>
+    )
+  }
+
+  // Directory view (the split pane)
   const empty = people !== null && people.length === 0
 
   return (
@@ -61,7 +75,7 @@ export default function PeoplePage() {
         }
         right={
           selectedId ? (
-            <FocusPanel personId={selectedId} />
+            <FocusPanel personId={selectedId} onOpenFile={() => openFile(selectedId)} />
           ) : (
             <div className="people-focus">
               <p className="people-focus-rest">Pick someone from the directory, or search by name.</p>
