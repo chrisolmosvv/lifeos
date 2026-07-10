@@ -1,0 +1,133 @@
+/* Finance — detail pane + form styles (Piece 3, split from finance.css).
+   All colour/type from theme tokens — no raw hex. */
+
+/* ── Detail (right pane) ─────────────────────────────────────────────────── */
+
+.fin-detail {
+  padding: 0.5rem 0;
+}
+.fin-detail-name {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 0.3rem 0 0.15rem;
+}
+.fin-detail-inst {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0 0 0.75rem;
+}
+.fin-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.6rem 0;
+}
+.fin-detail-label {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+.fin-detail-value {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.fin-detail-actions {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.fin-detail-edit,
+.fin-detail-archive {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.fin-detail-edit:hover,
+.fin-detail-archive:hover { color: var(--ink); }
+
+/* Rest state (no account selected) */
+.fin-rest { padding: 3rem 0; text-align: center; }
+.fin-rest-text {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/* ── Account form ────────────────────────────────────────────────────────── */
+
+.fin-form { display: flex; flex-direction: column; gap: 0.6rem; }
+.fin-form-types { display: flex; gap: 0.5rem; margin-bottom: 0.25rem; }
+.fin-form-type {
+  background: none;
+  border: 1px solid var(--rule);
+  padding: 0.35rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.fin-form-type.is-on {
+  color: var(--ink);
+  border-color: var(--ink);
+  font-weight: 500;
+}
+.fin-form-hint {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.fin-form-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  outline: none;
+}
+.fin-form-input:focus { border-bottom-color: var(--ink-muted); }
+.fin-form-input::placeholder {
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+}
+.fin-form-num { font-variant-numeric: tabular-nums; }
+.fin-form-actions { display: flex; gap: 1rem; margin-top: 0.5rem; }
+.fin-form-save {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+.fin-form-save:disabled { color: var(--ink-muted); cursor: default; }
+.fin-form-cancel {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.fin-form-cancel:hover { color: var(--ink); }
