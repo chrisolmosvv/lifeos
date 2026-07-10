@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
+import Toast from '../kit/Toast'
 import LedgerRow from './LedgerRow'
 import TransactionForm from './TransactionForm'
-import { listTransactions, createTransaction, createTransfer, listCategories, createCategory } from './financeData'
+import { listTransactions, createTransaction, createTransfer, updateTransaction, fetchTransaction, softDeleteTransaction, restoreTransaction, listCategories, createCategory } from './financeData'
 import './financeLedger.css'
 
-// Ledger — the day-grouped transaction list (Piece 4a). Fetches this calendar
-// month's transactions (range switcher comes in 4c), groups by entry_date,
-// renders day sections. "+ Add transaction" (terracotta) opens the form inline.
-// No edit/delete/filters yet — that's 4b/4c.
+// Ledger — the day-grouped transaction list (Piece 4a+4b). Fetches this
+// calendar month (range switcher comes in 4c). Edit inline, delete with Toast
+// undo, transfer-pair-aware on both operations.
 
 const LAST_ACCT_KEY = 'lifeos.finance.lastAccount'
 
@@ -51,7 +51,9 @@ export default function Ledger({ accounts, onNavigateAccounts }) {
   const [txns, setTxns] = useState(null)
   const [cats, setCats] = useState([])
   const [adding, setAdding] = useState(false)
-  const [selectedId, setSelectedId] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [editInitial, setEditInitial] = useState(null)
+  const [toast, setToast] = useState(null)
 
   const acctMap = new Map(accounts.map((a) => [a.id, a]))
   const catMap = new Map(cats.map((c) => [c.id, c]))
@@ -65,14 +67,14 @@ export default function Ledger({ accounts, onNavigateAccounts }) {
 
   useEffect(() => { load() }, [load])
 
+  // ── Create ──────────────────────────────────────────────────────────────
   async function handleSave(fields) {
     saveLastAccount(fields.account_id)
     if (fields.txn_type === 'transfer') {
       await createTransfer({
         account_id: fields.account_id,
         transfer_account_id: fields.transfer_account_id,
-        entry_date: fields.entry_date,
-        amount: fields.amount,
+        entry_date: fields.entry_date, amount: fields.amount,
         description: fields.description,
       })
     } else {
@@ -85,6 +87,67 @@ export default function Ledger({ accounts, onNavigateAccounts }) {
     }
     setAdding(false)
     await load()
+  }
+
+  // ── Edit ────────────────────────────────────────────────────────────────
+  async function openEdit(id) {
+    if (editingId === id) { setEditingId(null); setEditInitial(null); return }
+    const txn = txns.find((t) => t.id === id)
+    if (!txn) return
+    // For transfers, load the paired row so the form can show both accounts
+    if (txn.txn_type === 'transfer' && txn.paired_transaction_id) {
+      try {
+        const pair = await fetchTransaction(txn.paired_transaction_id)
+        setEditInitial({ ...txn, _pair: pair })
+      } catch { setEditInitial(txn) }
+    } else {
+      setEditInitial(txn)
+    }
+    setEditingId(id)
+  }
+
+  async function handleEdit(fields) {
+    const txn = editInitial
+    if (txn.txn_type === 'transfer') {
+      // Update both legs: date, amount (signed correctly), description
+      const abs = Math.abs(fields.amount)
+      const isSource = Number(txn.amount) < 0
+      await updateTransaction(txn.id, {
+        entry_date: fields.entry_date, amount: isSource ? -abs : abs,
+        description: fields.description,
+      })
+      if (txn.paired_transaction_id) {
+        await updateTransaction(txn.paired_transaction_id, {
+          entry_date: fields.entry_date, amount: isSource ? abs : -abs,
+          description: fields.description,
+        })
+      }
+    } else {
+      const signedAmt = fields.txn_type === 'expense' ? -Math.abs(fields.amount) : Math.abs(fields.amount)
+      await updateTransaction(txn.id, {
+        entry_date: fields.entry_date, amount: signedAmt,
+        category_id: fields.category_id, description: fields.description,
+      })
+    }
+    setEditingId(null)
+    setEditInitial(null)
+    await load()
+  }
+
+  // ── Delete (soft) + Undo ────────────────────────────────────────────────
+  async function handleDelete(txn) {
+    const ids = await softDeleteTransaction(txn.id, txn.paired_transaction_id)
+    setEditingId(null)
+    setEditInitial(null)
+    await load()
+    setToast({
+      text: `Deleted ${txn.description || 'transaction'}`,
+      onUndo: async () => {
+        setToast(null)
+        await restoreTransaction(ids)
+        await load()
+      },
+    })
   }
 
   async function handleCreateCategory(name) {
@@ -115,7 +178,7 @@ export default function Ledger({ accounts, onNavigateAccounts }) {
           />
         </div>
       ) : (
-        <button className="fin-add-btn" onClick={() => setAdding(true)}>+ Add transaction</button>
+        <button className="fin-add-btn" onClick={() => { setAdding(true); setEditingId(null) }}>+ Add transaction</button>
       )}
 
       {txns === null ? (
@@ -130,19 +193,35 @@ export default function Ledger({ accounts, onNavigateAccounts }) {
               {rows.map((t) => {
                 const acct = acctMap.get(t.account_id)
                 const cat = catMap.get(t.category_id)
+                if (editingId === t.id && editInitial) {
+                  return (
+                    <div className="fin-ledger-form-wrap" key={t.id}>
+                      <TransactionForm
+                        accounts={accounts} cats={cats}
+                        initial={editInitial}
+                        onSave={handleEdit}
+                        onCreateCategory={handleCreateCategory}
+                        onCancel={() => { setEditingId(null); setEditInitial(null) }}
+                      />
+                      <button className="fin-ledger-delete" onClick={() => handleDelete(t)}>Delete</button>
+                    </div>
+                  )
+                }
                 return (
                   <LedgerRow key={t.id} txn={t}
                     accountName={acct?.name || '?'}
                     categoryName={cat?.name}
                     categoryColor={cat?.color}
-                    isSelected={t.id === selectedId}
-                    onSelect={setSelectedId} />
+                    isSelected={editingId === t.id}
+                    onSelect={openEdit} />
                 )
               })}
             </div>
           ))}
         </div>
       )}
+
+      {toast && <Toast text={toast.text} onUndo={toast.onUndo} onDismiss={() => setToast(null)} />}
     </div>
   )
 }
