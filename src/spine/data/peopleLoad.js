@@ -124,5 +124,14 @@ export async function listDirectory() {
   }))
 }
 
+// ── All connections (for the constellation map, D13) ─────────────────────
+export async function listConnections() {
+  const { data, error } = await supabase
+    .from('people_connections')
+    .select('id, person_a_id, person_b_id')
+  if (error) throw new Error('people_connections: ' + error.message)
+  return data || []
+}
+
 // Detail loaders (summary + file) split to peopleLoadDetail.js for the 250-line ceiling.
 export { loadPersonSummary, loadPersonFile } from './peopleLoadDetail.js'

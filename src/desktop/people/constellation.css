@@ -1,0 +1,94 @@
+/* Constellation map — the whole-web view (D13). Tokens only. */
+
+.cmap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0 2rem;
+}
+
+.cmap-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.cmap-search {
+  width: 150px;
+  box-sizing: border-box;
+  padding: 0.3rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  outline: none;
+}
+.cmap-search::placeholder { color: var(--ink-muted); }
+.cmap-search:focus { border-bottom-color: var(--ink-muted); }
+
+.cmap-chips { display: flex; gap: 0; }
+.cmap-chip {
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule-faint);
+  padding: 0.25rem 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.cmap-chip:hover { color: var(--ink); border-bottom-color: var(--rule); }
+.cmap-chip--on { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+
+.cmap-svg { flex: 1; min-height: 0; width: 100%; }
+
+/* Cluster label — faint uppercase near each cluster */
+.cmap-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  fill: var(--rule);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+/* Connection lines — hidden at rest, revealed on focus */
+.cmap-line { stroke-width: 0.75; }
+.cmap-line--rest { stroke: var(--rule-faint); opacity: 0; }
+.cmap-line--active { stroke: var(--ink-muted); opacity: 1; transition: opacity 0.2s ease; }
+.cmap-line--hide { opacity: 0; }
+
+/* Person nodes */
+.cmap-node circle { fill: var(--ink-muted); transition: fill 0.15s ease; }
+.cmap-node text {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  fill: var(--ink);
+  pointer-events: none;
+  transition: fill 0.15s ease;
+}
+
+/* Focused person — the single terracotta mark */
+.cmap-node--focus circle { fill: var(--accent); }
+.cmap-node--focus text { fill: var(--accent); font-weight: 500; }
+
+/* Connected to focused — full ink */
+.cmap-node--tie circle { fill: var(--ink); }
+.cmap-node--tie text { fill: var(--ink); }
+
+/* Dimmed — not connected to focused */
+.cmap-node--dim circle { fill: var(--rule); }
+.cmap-node--dim text { fill: var(--rule); }
+
+/* Search match */
+.cmap-node--match circle { fill: var(--accent); }
+.cmap-node--match text { fill: var(--accent); }

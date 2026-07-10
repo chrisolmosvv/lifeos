@@ -33,6 +33,56 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Rolodex D13: the constellation map (SRC-ONLY)
+
+WHAT CHANGED:
+- **Constellation map.** A new "Map" view on the Rolodex front page: a full-page SVG showing
+  ALL your people clustered by home circle, with connection ties revealed on hover. Calm at
+  rest (no lines drawn). Hover a person → only their ties light up in hairline ink, the
+  focused person gets the single terracotta mark, everything else dims. Move away → calm again.
+- **Circle chips.** A row of circle filters (All + each circle + Unfiled) above the map.
+  Clicking one isolates that cluster — shows only those people, re-centres the layout.
+- **Search on the map.** The search field highlights matching names with terracotta, dims the
+  rest.
+- **Click → file.** Clicking a person node opens their file (the D6 file view). Returning
+  from the file goes back to the map.
+- **Directory / Map toggle.** A calm hairline toggle in the Rolodex header. Directory is the
+  default. Toggle state persists across file views.
+
+FILES TOUCHED:
+- src/desktop/people/constellationLayout.js (NEW — pure layout math)
+- src/desktop/people/ConstellationMap.jsx (NEW — the SVG map + interactions)
+- src/desktop/people/constellation.css (NEW — map styles)
+- src/spine/data/peopleLoad.js (added listConnections)
+- src/desktop/people/PeoplePage.jsx (toggle + map view)
+- src/desktop/people/people.css (toggle styles)
+
+HOW TO VERIFY:
+1. Open **People** → you see the existing directory. Above the hairline, a **DIRECTORY / MAP**
+   toggle appears (only if you have people).
+2. Click **MAP** → the constellation: names clustered by circle, faint circle labels, QUIET at
+   rest (no lines).
+3. **Hover** a person → ONLY their ties light up as hairlines, the focused person goes
+   terracotta, unconnected people dim. Move away → calm again.
+4. Click a **circle chip** (e.g. "Family") → just that cluster, centred. Click **All** →
+   everyone.
+5. **Search** → matching names go terracotta, the rest dim.
+6. **Click** a person node → their file opens. Close it → you're back on the map.
+7. Toggle back to **Directory** → the split view is intact.
+8. Reload → defaults to Directory. No console errors; other sections fine.
+
+KNOWN GAPS / RISKS:
+- The map is read/browse only — no editing from the map.
+- Layout is a golden-angle spiral within circle clusters on an ellipse — deterministic, no
+  physics. Large datasets (50+ people) may get dense; personal scale (20–40) is the target.
+- Desktop only — mobile deferred.
+- Connection lines hidden at rest (by design — the mess-defeater).
+
+NEXT: Piece D14 — HERMES integration (add / note / catch-up / link / query — the last piece;
+touches edge functions + the box skill).
+
+---
+
 ### 2026-07-10 — Rolodex D12/2b: restore re-materialise + custom-date calendar toggle (SRC-ONLY)
 
 WHAT CHANGED:

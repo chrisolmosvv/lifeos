@@ -7,8 +7,9 @@ import Directory from './Directory'
 import FocusPanel from './FocusPanel'
 import PersonFile from './PersonFile'
 import ManageCircles from './ManageCircles'
+import ConstellationMap from './ConstellationMap'
 import { supabase } from '../../spine/data/supabaseClient'
-import { listDirectory, listCircles, listArchived } from '../../spine/data/peopleLoad'
+import { listDirectory, listCircles, listArchived, listConnections } from '../../spine/data/peopleLoad'
 import { createPerson, archivePerson, restorePerson } from '../../spine/data/peopleWrite'
 import { retireBirthdaySeries, rematerialisePersonDates } from './peopleCalendar'
 import './people.css'
@@ -24,12 +25,15 @@ export default function PeoplePage() {
   const [showArchived, setShowArchived] = useState(false)
   const [archived, setArchived] = useState([])
   const [manageView, setManageView] = useState(false)
+  const [mapView, setMapView] = useState(false)
+  const [conns, setConns] = useState([])
 
   const load = useCallback(async () => {
     try {
-      const [p, c] = await Promise.all([listDirectory(), listCircles()])
+      const [p, c, cn] = await Promise.all([listDirectory(), listCircles(), listConnections()])
       setPeople(p)
       setCircles(c)
+      setConns(cn)
     } catch (e) {
       console.error('Rolodex load:', e)
       setPeople([])
@@ -117,9 +121,21 @@ export default function PeoplePage() {
   return (
     <div className="people-page">
       <div className="people-header">
-        <SmallCapsLabel>Rolodex</SmallCapsLabel>
+        <div className="people-header-top">
+          <SmallCapsLabel>Rolodex</SmallCapsLabel>
+          {people && people.length > 0 && (
+            <div className="people-toggle">
+              <button className={'people-tog' + (!mapView ? ' is-on' : '')} onClick={() => setMapView(false)}>Directory</button>
+              <span className="people-tog-sep">/</span>
+              <button className={'people-tog' + (mapView ? ' is-on' : '')} onClick={() => setMapView(true)}>Map</button>
+            </div>
+          )}
+        </div>
         <HairlineRule />
       </div>
+      {mapView && people && people.length > 0 ? (
+        <ConstellationMap people={people} circles={circles} connections={conns} onOpenPerson={openFile} />
+      ) : (
       <SplitPane
         left={
           people === null ? (
@@ -163,6 +179,7 @@ export default function PeoplePage() {
           )
         }
       />
+      )}
       {toast && <Toast text={toast.text} onUndo={toast.onUndo} onDismiss={() => setToast(null)} />}
     </div>
   )
