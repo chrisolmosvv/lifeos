@@ -9,9 +9,38 @@
 
 .fin-ledger-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   padding-top: 1.5rem;
+  gap: 1rem;
+}
+.fin-ledger-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.fin-ledger-step {
+  background: none;
+  border: none;
+  padding: 0 0.15rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.fin-ledger-step:hover { color: var(--ink); }
+.fin-ledger-step:disabled { color: var(--rule); cursor: default; }
+.fin-ledger-label {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-left: 0.4rem;
+}
+.fin-ledger-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 .fin-ledger-accts-link {
   background: none;
@@ -24,6 +53,8 @@
   letter-spacing: 0.04em;
 }
 .fin-ledger-accts-link:hover { color: var(--ink); }
+
+/* Filter bar styles in financeLedgerFilters.css */
 
 .fin-ledger-empty {
   font-family: var(--font-sans);
