@@ -33,6 +33,41 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Rolodex D14a: Hermes read — people section in snapshot (EDGE FUNCTION)
+
+WHAT CHANGED:
+- **people.ts** (new): builds the `people` section for the Hermes read snapshot. Per non-archived
+  person: name, how-you-know, notes (truncated to 500 chars), home circle name, birthday (date
+  + year_known), connections (other person's name + label from this person's side, only between
+  active people), last-contact date, and last 2 catch-ups (date, channel, note truncated to 200).
+  All owner-scoped via `ownerPlain()`/`ownerActive()`, bounded (500 people, 500 connections, 500
+  interactions).
+- **index.ts**: imports `buildPeopleSection`, adds it to the parallel Promise.all, includes the
+  result under a `people` key in the JSON response.
+- NO schema change. Read-only addition.
+
+FILES TOUCHED:
+- supabase/functions/hermes-read/people.ts (NEW — 94 lines)
+- supabase/functions/hermes-read/index.ts (import + 3 insertion points)
+
+HOW TO VERIFY:
+1. Deploy: `SUPABASE_ACCESS_TOKEN="<token>" npx supabase functions deploy hermes-read --project-ref cntlptuacsujbdtwvbis`
+2. Call: `curl -X POST https://cntlptuacsujbdtwvbis.supabase.co/functions/v1/hermes-read -H "x-hermes-secret: <secret>" -H "Content-Type: application/json" -d '{"days":7}'`
+3. The JSON response now has a `"people"` key with an array of person objects.
+4. Each person has: name, how_you_know, notes, home_circle, birthday, connections, last_contact, recent_catchups.
+5. Archived people are absent. Connection labels are correct (A→B vs B→A).
+6. Confirm verify_jwt still false: `curl -I https://cntlptuacsujbdtwvbis.supabase.co/functions/v1/hermes-read` → should NOT return 401 for missing JWT.
+
+KNOWN GAPS / RISKS:
+- Read only — Hermes can't WRITE people yet (D14b).
+- The box skill doesn't know to use the people data yet (D14c).
+- Notes truncated to 500 chars, catch-up notes to 200 chars — keeps the snapshot lean.
+- Connections limited to 500 rows; interactions limited to 500 (last 2 kept per person in JS).
+
+NEXT: D14b — hermes-write people kinds (create person, append note, log catch-up, link people).
+
+---
+
 ### 2026-07-10 — Rolodex D13: the constellation map (SRC-ONLY)
 
 WHAT CHANGED:

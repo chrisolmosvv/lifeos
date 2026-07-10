@@ -38,6 +38,7 @@
 
 import { addDaysYMD, localToUtc, todayYMD } from "../_shared/datetime.ts";
 import { configured, ownerActive, ownerPlain, select, selectAll } from "./sb.ts";
+import { buildPeopleSection } from "./people.ts";
 
 const SECRET = Deno.env.get("HERMES_READ_SECRET");
 
@@ -136,6 +137,7 @@ Deno.serve(async (req) => {
     focus,
     gymWorkouts,
     healthGoals,
+    peopleSection,
   ] = await Promise.all([
     // Categories — all (bounded by design, no archive column).
     select(
@@ -181,6 +183,8 @@ Deno.serve(async (req) => {
     select(
       `health_goals?${ownerPlain()}&active=eq.true&select=goal_type,target_value,unit,direction,active&order=set_at.desc&limit=50`,
     ),
+    // People — all non-archived with circle, birthday, connections, last contact.
+    buildPeopleSection(),
   ]);
 
   // Merge open + recently completed tasks (deduplicated by id, open tasks first).
@@ -211,5 +215,6 @@ Deno.serve(async (req) => {
     focus,
     gym_workouts: gymWorkouts,
     health_goals: healthGoals,
+    people: peopleSection,
   });
 });
