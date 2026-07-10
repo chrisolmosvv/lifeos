@@ -143,6 +143,11 @@
 }
 .pfile-link:hover { text-decoration-color: var(--ink); }
 
+/* Connection editor (D10) */
+.pconn-editor { padding-top: 0.25rem; }
+.pconn-editor .kit-kicker { display: block; margin-bottom: 0.3rem; }
+.pconn-add { margin-top: 0.5rem; }
+
 .pfile-group { margin-top: 0.4rem; }
 .pfile-group-name {
   font-family: var(--font-sans);

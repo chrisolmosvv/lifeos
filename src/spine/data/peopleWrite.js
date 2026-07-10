@@ -142,6 +142,51 @@ export async function removeGroupMember(groupId, personId) {
   if (error) throw new Error(error.message)
 }
 
+// ── Connections ─────────────────────────────────────────────────────────────
+
+// The directional presets: { label → inverse }. Symmetric presets just map to themselves.
+const INVERSE = {
+  parent: 'child', child: 'parent',
+  grandparent: 'grandchild', grandchild: 'grandparent',
+  mentor: 'mentee', mentee: 'mentor',
+  'aunt/uncle': 'niece/nephew', 'niece/nephew': 'aunt/uncle',
+}
+
+// Add or update a connection between two people. `label` is the word the CALLER
+// uses to describe the other person (e.g. caller adds otherPerson as "parent" →
+// on caller's file otherPerson shows as "parent", on otherPerson's file the caller
+// shows as "child"). Canonical ordering: person_a_id < person_b_id.
+export async function addConnection(callerId, otherPersonId, label) {
+  const a = callerId < otherPersonId ? callerId : otherPersonId
+  const b = callerId < otherPersonId ? otherPersonId : callerId
+  const callerIsA = callerId === a
+
+  // Resolve the two-sided labels
+  const inverse = INVERSE[label] || label || null
+  const callerLabel = label || null
+  const otherLabel = inverse
+  const labelAtoB = callerIsA ? callerLabel : otherLabel
+  const labelBtoA = callerIsA ? otherLabel : callerLabel
+
+  // Upsert on the unique (person_a_id, person_b_id) — update label if already connected
+  const { data, error } = await supabase
+    .from('people_connections')
+    .upsert({ person_a_id: a, person_b_id: b, label_a_to_b: labelAtoB, label_b_to_a: labelBtoA, source: 'app' },
+      { onConflict: 'person_a_id,person_b_id' })
+    .select('id')
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function removeConnection(connectionId) {
+  const { error } = await supabase
+    .from('people_connections')
+    .delete()
+    .eq('id', connectionId)
+  if (error) throw new Error(error.message)
+}
+
 // Update a person's scalar fields. `fields` is { name, how_you_know, notes, phone, email, other_contact }.
 export async function updatePerson(id, fields) {
   const { data, error } = await supabase

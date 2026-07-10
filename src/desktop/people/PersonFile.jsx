@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import PersonEdit from './PersonEdit'
-import { loadPersonFile, listCircles } from '../../spine/data/peopleLoad'
+import ConnectionEditor from './ConnectionEditor'
+import { loadPersonFile, listCircles, listPeople } from '../../spine/data/peopleLoad'
 import './personFile.css'
 
 // PersonFile — the full person dossier (D6/D7a). Two-column layout with an Edit
@@ -35,14 +36,15 @@ function formatDateNoYear(d) {
 export default function PersonFile({ personId, onBack, startEditing, onArchive, onOpenPerson }) {
   const [data, setData] = useState(null)
   const [availCircles, setAvailCircles] = useState([])
+  const [allPeople, setAllPeople] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(!!startEditing)
 
   function load() {
     let cancelled = false
     setLoading(true)
-    Promise.all([loadPersonFile(personId), listCircles()])
-      .then(([d, c]) => { if (!cancelled) { setData(d); setAvailCircles(c); setLoading(false) } })
+    Promise.all([loadPersonFile(personId), listCircles(), listPeople()])
+      .then(([d, c, p]) => { if (!cancelled) { setData(d); setAvailCircles(c); setAllPeople(p); setLoading(false) } })
       .catch((e) => { console.error('PersonFile load:', e); if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }
@@ -134,19 +136,23 @@ export default function PersonFile({ personId, onBack, startEditing, onArchive, 
 
         {/* RIGHT — ties & history */}
         <div className="pfile-right">
-          {connections.length > 0 && (
+          {editing ? (
+            <div className="pfile-section">
+              <ConnectionEditor personId={personId} connections={connections} allPeople={allPeople} onChanged={load} />
+            </div>
+          ) : connections.length > 0 ? (
             <div className="pfile-section">
               <SmallCapsLabel>Connections</SmallCapsLabel>
               <ul className="pfile-list">
                 {connections.map((c) => (
                   <li key={c.id} className="pfile-conn-row">
-                    <span>{c.name}</span>
+                    {onOpenPerson ? <button className="pfile-link" onClick={() => onOpenPerson(c.personId)}>{c.name}</button> : <span>{c.name}</span>}
                     {c.label && <span className="pfile-conn-label">{c.label}</span>}
                   </li>
                 ))}
               </ul>
             </div>
-          )}
+          ) : null}
 
           {groups.length > 0 && (
             <div className="pfile-section">
