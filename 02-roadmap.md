@@ -8,6 +8,14 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-11 — Finance Piece 6 COMPLETE ✅ (6a+6b+6c)
+Recurring bills: schema extension (checker-approved), engine wiring (kinds.js extraction + 7
+transaction dispatch points), and the full UI (Recurring screen with create/list/upcoming-3 +
+three-mode edit/delete scope reusing the calendar's SeriesScopePrompt verbatim). Ledger capped at
+today. Repeat-pattern editing not supported (same constraint as calendar). Event/task regression
+clean across both 6c commits.
+**NEXT: Piece 7 — Budgets (per-category monthly limits, "everything else" line, brick bar).**
+
 ## Session note — 2026-07-11 — Finance Piece 6b: recurrence engine wired for transactions ✅
 Extracted kind-specific helpers to recur/kinds.js (series.js 244→189 lines). Added transaction
 branches to all 7 dispatch points. archive.js extended. Finance topup trigger added. Verified:

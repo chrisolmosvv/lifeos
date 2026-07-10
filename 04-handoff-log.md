@@ -33,6 +33,66 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — Finance Piece 6 COMPLETE (6a schema + 6b engine + 6c UI)
+
+WHAT CHANGED (the full arc, five commits across three sub-pieces):
+- **(6a) Schema extension** (checker-approved): widened recurrences.target_kind CHECK to include
+  'transaction'; added four nullable template columns (amount, account_id, transfer_account_id,
+  txn_type — all plain values, no FK); widened archive_batches.source_type to include 'transaction'.
+- **(6b) Engine wiring** (two commits): extracted kind-specific helpers to recur/kinds.js
+  (series.js 244→189); added transaction branches to all 7 dispatch points; extended archive.js
+  table lists; added Finance topup trigger in Ledger.jsx.
+- **(6c-i) Recurring Bills screen + setup form**: RecurringScreen.jsx (list of active bills with
+  upcoming-3), RecurringBillForm.jsx (type-first income/expense, reuses calendar's RepeatField
+  verbatim), "Recurring" link in Ledger masthead. Ledger's entry_date capped at today so
+  future-dated bill occurrences stay invisible there (they only show in the upcoming-3 list).
+  SeriesScopePrompt extended for kind='transaction' labels.
+- **(6c-ii) Edit/delete scope wiring**: three-mode scope prompt (This one / This and following /
+  All) reused verbatim from the calendar. Edit opens an inline form for description + amount.
+  Delete uses the archive_batches batch path (source_type='transaction'). Detached occurrences
+  preserved correctly. No repeat-pattern editing (same create-only constraint as calendar events).
+
+FILES TOUCHED:
+- db/45_finance_recurrence.sql (NEW — schema, 6a)
+- src/desktop/recur/kinds.js (NEW — extracted helpers, 6b)
+- src/desktop/recur/series.js (trimmed + transaction template fields, 6b)
+- src/desktop/archive.js (finance_transactions added to table lists, 6b)
+- src/desktop/finance/Ledger.jsx (topup trigger + today cap, 6b+6c)
+- src/desktop/finance/FinancePage.jsx ('recurring' sub-view, 6c)
+- src/desktop/finance/RecurringScreen.jsx (NEW, 6c)
+- src/desktop/finance/RecurringBillForm.jsx (NEW, 6c)
+- src/desktop/finance/RecurringBillCard.jsx (NEW — list+edit+delete, 6c)
+- src/desktop/finance/financeRecurring.css (NEW, 6c)
+- src/desktop/finance/financeRecurringData.js (NEW — recurring queries, 6c)
+- src/desktop/finance/financeData.js (split, 6c)
+- src/desktop/finance/ledgerRange.js (todayYMD export, 6c)
+- src/desktop/kit/SeriesScopePrompt.jsx (transaction labels, 6c)
+
+HOW TO VERIFY (all PASSED):
+- 6a: existing recurrence rows unaffected; throwaway transaction recipe persisted; CHECK rejects
+  bogus values; cleanup clean.
+- 6b: materialiser creates 3 correct weekly occurrences; edit-one detaches; edit-all stamps
+  siblings; delete-one archives via batch; event/task regression clean; topup works.
+- 6c-i: create a recurring bill → appears in list with upcoming-3 dates; past-dated occurrences
+  show in Ledger, future ones don't; Ledger's existing Piece 4 functionality intact; nav works.
+- 6c-ii: edit-one changes only one occurrence (detached); subsequent edit-all skips the detached
+  one; edit-following splits correctly; delete-one removes only one; delete-all batch-removes
+  all future occurrences; calendar event/task series editing UNAFFECTED.
+
+KNOWN GAPS:
+- **Recurring transfers** remain out of V1 scope — parked, not forgotten.
+- **Repeat-pattern editing** not supported (same constraint as calendar events/tasks — create-only).
+- **Ledger's entry_date <= today cap** is a permanent behavior change — future-dated rows from any
+  source are invisible in the Ledger (only the Recurring screen's upcoming list shows them).
+
+NEXT: Piece 7 — Budgets (dedicated screen, per-category monthly limits, "everything else"
+aggregate line, budget-vs-actual with the brick over-budget bar).
+
+FOR THE CHECKER: nothing — src-only across all Piece 6 commits (6a's schema was separately
+checker-approved and already shipped).
+
+---
+
 ### 2026-07-11 — Finance Piece 6b: recurrence engine wired for transactions
 
 WHAT CHANGED (two commits):
