@@ -33,6 +33,538 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Rolodex D12: key dates + birthday → calendar event (SRC-ONLY, 2 commits)
+
+WHAT CHANGED (Commit 1 — dates on the file):
+- **DatesEditor** (new): set/clear a birthday (day + month + optional year), add/delete
+  custom labelled dates. View mode shows birthday + age (if year known) + custom dates.
+  Year-unknown uses placeholder year 2000. peopleWrite dates split for the 250-line ceiling.
+
+WHAT CHANGED (Commit 2 — birthday → yearly calendar event):
+- **peopleCalendar.js** (new): the People→Calendar bridge. On saving a birthday
+  (show-on-calendar defaults ON), creates a yearly all-day recurring event via the
+  recurrence engine, in a find-or-created **"Birthdays" category** (plum colour).
+  The **recurrence_id** (recipe uuid) is stored on the people_dates row as a PLAIN
+  VALUE — no FK into the spine. Editing the birthday retires the old series + creates
+  a fresh one. Deleting the birthday or archiving the person retires the series +
+  archives its events. **No source tag** on the event — identified via the
+  recurrence_id → events.series_id chain.
+- **Suspend-on-archive** (deferred from D7b): archiving a person now retires their
+  birthday series. **Restore does NOT re-create the event** — re-save the birthday
+  to recreate it. (Noted as known behaviour.)
+
+FILES TOUCHED:
+- src/desktop/people/DatesEditor.jsx (NEW in Commit 1; calendar sync in Commit 2)
+- src/desktop/people/PersonEdit.jsx (dates wiring)
+- src/desktop/people/PersonFile.jsx (dates prop)
+- src/desktop/people/personFile.css (dates editor styles)
+- src/desktop/people/peopleCalendar.js (NEW — the bridge)
+- src/desktop/people/PeoplePage.jsx (archive → retire birthday)
+- src/spine/data/peopleWrite.js (re-export dates)
+- src/spine/data/peopleWriteDates.js (NEW — date CRUD)
+
+HOW TO VERIFY:
+1. Open a person → Edit → set birthday **15 / 3 / 1990** → ✓ → Save.
+2. Open the **Calendar** → navigate to **March 15** → you should see an all-day event
+   **"<Name>'s birthday"** in the Birthdays category (plum). Navigate forward a year
+   → it repeats.
+3. Edit the birthday → change the date (e.g. to April 20) → Save → the calendar event
+   **moves** to the new date.
+4. Delete the birthday (×) → the calendar event **disappears**.
+5. Re-add it → archive the person → the calendar event **disappears** (suspend-on-archive).
+6. Restore the person → the event stays gone. Re-save the birthday → it recreates.
+7. Birthday with no year → shows date + no age; calendar event still works.
+8. Custom dates: add "Anniversary" → shown on the file; delete → gone. (Custom dates
+   default show-on-calendar OFF.)
+9. Reload → all persisted. No console errors. No new calendar code was needed.
+
+KNOWN GAPS / RISKS:
+- Year-unknown birthdays use placeholder year 2000 in the recurrence start_date.
+- Restore-after-archive does NOT re-create the birthday event (by design — re-save).
+- Birthday events are plain (no deep-link to the person file, no special brief).
+- The "Birthdays" category is auto-created with colour 'plum' on first use.
+
+NEXT: Piece D13 — the "whole web" CONSTELLATION toggle on the front page.
+
+---
+
+### 2026-07-10 — Rolodex D11: catch-ups — log, edit, delete + last-contact (SRC-ONLY)
+
+WHAT CHANGED:
+- **CatchupLogger** (new): on the file page, "Log today" one-tap creates a catch-up
+  for today (channel = in-person). Click "with details" to expand: pick a channel,
+  type a note, set any date (backdatable). The history below shows all catch-ups
+  reverse-chronological with per-row edit (✎) and delete (×).
+- **Last-contact rollup**: the directory's faint markers now show real relative dates
+  (e.g. "3d ago", "1w ago") instead of "not yet" once a catch-up exists. Within a
+  circle, people sort by most-recent-contact first.
+- **Focus panel**: already renders the last 2–3 catch-ups from D5 — now they appear
+  once data exists.
+- **peopleWrite**: logInteraction, updateInteraction, deleteInteraction.
+
+FILES TOUCHED:
+- src/desktop/people/CatchupLogger.jsx (NEW)
+- src/desktop/people/PersonFile.jsx (CatchupLogger replaces read-only history)
+- src/desktop/people/personFile.css (catch-up logger styles)
+- src/spine/data/peopleWrite.js (interaction CRUD)
+
+HOW TO VERIFY:
+1. Open a person's file → "**Log today**" → a catch-up appears in the history;
+   the faint last-contact in the directory updates from "not yet" to "today".
+2. Click "**with details**" → set channel = Call, a note, a PAST date → Log → it
+   slots into the history; last-contact = the most recent of them.
+3. Click **✎** on a catch-up → edit its channel/note/date → save. Click **×** →
+   delete → gone; last-contact recomputes.
+4. In the **focus panel** (directory click) → the last 2–3 catch-ups show.
+5. In the directory, people with catch-ups **sort above** "not yet" ones.
+6. Reload → persisted. Calm. No console errors.
+
+KNOWN GAPS / RISKS:
+- Any channel counts as contact. Backdatable to any date. Edit/delete allowed.
+- The directory sort by last-contact is within a circle; the overall circle order
+  follows the owner's custom sort.
+
+NEXT: Piece D12 — KEY DATES (birthday [year optional, age] + custom dates, and
+birthday → yearly all-day calendar events via the recurrence engine).
+
+---
+
+### 2026-07-10 — Rolodex D10: connections — labels, smart inverse, and the web (SRC-ONLY, 2 commits)
+
+WHAT CHANGED (Commit 1 — create / label / remove + labelled list):
+- **ConnectionEditor** (new): in the file's Edit mode, add connections by picking a
+  person + a label (symmetric presets, directional presets with smart inverse, custom
+  free text, or no label). Remove with ×. Upserts on the unique pair → re-labelling
+  an existing connection just updates it.
+- **Smart inverse** works: adding B as "parent" → A's file shows B as "parent", B's
+  file shows A as "child". Custom labels are symmetric. No label = bare connected name.
+- Connection names are **clickable links** in view mode → open that person's file.
+- **addConnection / removeConnection** in peopleWrite; allPeople loaded in PersonFile.
+
+WHAT CHANGED (Commit 2 — the connection web):
+- **ConnectionWeb** (new): a calm SVG — this person centred, direct connections as
+  named nodes arranged in a circle, thin hairline lines. Capped at 8 nodes. Nodes
+  clickable → open that file. Shown on the file page (above the labelled list) and
+  the focus panel. Omitted when the person has no connections.
+
+FILES TOUCHED:
+- src/desktop/people/ConnectionEditor.jsx (NEW)
+- src/desktop/people/ConnectionWeb.jsx (NEW)
+- src/desktop/people/PersonFile.jsx (editor in edit mode + web in view mode)
+- src/desktop/people/FocusPanel.jsx (web)
+- src/desktop/people/personFile.css (web + editor styles)
+- src/spine/data/peopleWrite.js (addConnection, removeConnection + INVERSE map)
+
+HOW TO VERIFY:
+1. Open A's file → Edit → add B as **"Parent"** → Add → Save. A's file lists B as
+   "parent"; B's file lists A as "child" (smart inverse). ✓
+2. Add a **custom label** ("gym buddy") → same both sides. Add with no label → bare
+   name. Remove one → gone from both files.
+3. A person with 3–4 connections: a **small web** appears above the connection list —
+   them centred, nodes around, hairline lines. Click a node → their file opens.
+4. The same web appears in the **focus panel** (click a person in the directory).
+5. A person with no connections → no web (omitted). Calm. No console errors.
+
+KNOWN GAPS / RISKS:
+- Direct links only — no friends-of-friends. Web capped at 8 nodes.
+- The full-page constellation (the "whole web" map toggle) is a later piece.
+- Archived people's connections are hidden from others' files (already wired in D7b).
+
+NEXT: Piece D11 — CATCH-UPS (the interaction log — add/edit/delete, channel picker,
+"last contact" rollup).
+
+---
+
+### 2026-07-10 — Rolodex D9: groups — manage + co-members on files (SRC-ONLY)
+
+WHAT CHANGED:
+- **ManageGroups component** (new): the Groups section in the manage screen. Create
+  groups (inline), rename (click name), delete (quiet confirm). Expand a group to
+  manage members: add from a person picker (dropdown), remove with ×.
+- **Co-member links on the file**: a person's groups section shows each group name
+  with its other members as clickable links that navigate to their file.
+- `loadPersonFile` returns co-members as `{id, name}` objects (was just names).
+- **peopleLoad split** into two files: `peopleLoad.js` (list functions) +
+  `peopleLoadDetail.js` (summary + file loaders) for the 250-line ceiling.
+- **peopleWrite**: createGroup, renameGroup, deleteGroup, addGroupMember,
+  removeGroupMember. **peopleLoad**: listGroups (groups + members), listPeople
+  (active people for pickers).
+
+FILES TOUCHED:
+- src/desktop/people/ManageGroups.jsx (NEW)
+- src/desktop/people/ManageCircles.jsx (replaced placeholder with ManageGroups)
+- src/desktop/people/PersonFile.jsx (clickable co-member links)
+- src/desktop/people/PeoplePage.jsx (onOpenPerson wiring)
+- src/desktop/people/manage.css (member + picker styles)
+- src/desktop/people/personFile.css (link button style)
+- src/spine/data/peopleLoad.js (listGroups, listPeople, split)
+- src/spine/data/peopleLoadDetail.js (NEW — summary + file loaders)
+- src/spine/data/peopleWrite.js (group CRUD + membership)
+
+HOW TO VERIFY:
+1. Rolodex → Manage circles → scroll to **Groups** → "**+ Add group**" → type
+   "The Uni Crew" → Enter.
+2. Click **▸ 0** to expand → use "Add a person…" dropdown to add 2–3 members.
+3. Open one of those members' file → right column shows "The Uni Crew" with
+   the other members as **clickable links** → click one → their file opens.
+4. Back to manage → add a 4th member → appears on everyone's file.
+5. Remove a member (×) → they drop off others' files. Rename the group →
+   label updates. Delete the group → gone everywhere.
+6. Reload → all persisted. Calm, no boxes. No console errors.
+
+KNOWN GAPS / RISKS:
+- Groups are virtual (no connection rows) — by design.
+- No standalone group page (not in V1).
+- Pairwise connections (D10) are a different thing.
+
+NEXT: Piece D10 — CONNECTIONS (mutual person-to-person links with preset + custom
+labels, smart inverse, and the connection web/list on files).
+
+---
+
+### 2026-07-10 — Rolodex D8: circles — manage screen + assign from the file (SRC-ONLY, 2 commits)
+
+WHAT CHANGED (Commit 1 — the manage screen):
+- **ManageCircles component** (new): reached via "Manage circles" in the directory.
+  Create circles (inline), rename (click the name), reorder (↑/↓ → sort_order),
+  delete (its people become Unfiled). Groups section placeholder slots in for D9.
+- **peopleWrite**: createCircle, renameCircle, reorderCircles, deleteCircle.
+
+WHAT CHANGED (Commit 2 — assign circles on the file):
+- **PersonEdit** now shows a **home circle** picker (single-select, or "Unfiled") +
+  **other circles** checkboxes in Edit mode. Save writes via `setPersonCircles`
+  (delete-all + reinsert memberships). The person leaves Unfiled and appears under
+  their home circle in the directory.
+- **PersonFile** loads available circles alongside the person data.
+- **peopleWrite**: setPersonCircles(personId, homeCircleId, otherCircleIds).
+
+FILES TOUCHED:
+- src/desktop/people/ManageCircles.jsx (NEW)
+- src/desktop/people/manage.css (NEW)
+- src/desktop/people/PeoplePage.jsx (manage view routing)
+- src/desktop/people/PersonEdit.jsx (circle pickers)
+- src/desktop/people/PersonFile.jsx (loads available circles)
+- src/desktop/people/personEdit.css (select + checkbox styles)
+- src/spine/data/peopleWrite.js (circle CRUD + setPersonCircles)
+
+HOW TO VERIFY:
+1. Rolodex → "Manage circles" → create Family, Work, Friends → reorder → rename one
+   → delete one → back to directory → circle order matches. Reload → persisted.
+2. Open a person → Edit → pick a home circle (e.g. Family) → Save → in the directory
+   they appear under **Family** instead of Unfiled. The file's kicker shows "Family".
+3. Edit again → add another circle as "other" → Save → the file shows "Also in: Work".
+4. Delete that circle in Manage → the person falls back to Unfiled. Reload → persisted.
+5. Calm — no boxes. No console errors; other sections fine.
+
+KNOWN GAPS / RISKS:
+- Groups not built yet (placeholder in the manage view — D9).
+- One home per person enforced by the DB partial-unique index.
+- Circle delete cascades memberships (people become Unfiled) — by design.
+
+NEXT: Piece D9 — GROUPS (create groups + members in the manage screen, co-members
+shown on member files).
+
+---
+
+### 2026-07-10 — Rolodex D7b: archive + restore — the way to remove people (SRC-ONLY)
+
+WHAT CHANGED:
+- **Archive action** on the file page: a calm secondary button (not terracotta) at
+  the top-right. Click → the person is soft-deleted, you return to the directory,
+  and a toast shows "Archived <Name> · Undo". Undo restores immediately.
+- **"Show archived"** link at the bottom of the directory: lists archived people with
+  a Restore button each. Restoring returns them to the live directory.
+- **archivePerson / restorePerson** added to peopleWrite.
+- **listArchived** added to peopleLoad.
+- Archived people are already excluded from the directory, search, and others'
+  connection lists (the existing `archived_at IS NULL` filters handle this).
+
+FILES TOUCHED:
+- src/desktop/people/PeoplePage.jsx (archive/restore flow + toast + show-archived)
+- src/desktop/people/PersonFile.jsx (Archive button)
+- src/desktop/people/personFile.css (archive button + topbar-actions styles)
+- src/desktop/people/people.css (archived view styles)
+- src/spine/data/peopleWrite.js (archivePerson + restorePerson)
+- src/spine/data/peopleLoad.js (listArchived)
+
+HOW TO VERIFY:
+1. Rolodex → a person → Open full file → click **Archive** (muted, next to Edit).
+2. You return to the directory, the person is **gone** from the list, and a toast
+   shows "Archived <Name> · Undo".
+3. Click **Undo** on the toast → the person **reappears**. Reload → still there.
+4. Archive someone again → click **"Show archived"** at the bottom of the directory
+   → they're listed → click **Restore** → they rejoin the directory. Reload → persisted.
+5. Archived people do NOT appear in the normal directory or search.
+6. Calm — archive is a quiet secondary action (no terracotta). No console errors.
+
+KNOWN GAPS / RISKS:
+- Soft archive only — no hard delete (matches the rest of the app).
+- Birthday-event suspend-on-archive deferred to D11 (no birthday events exist yet).
+- Connection-hiding is wired but only visibly testable once links exist (D9).
+
+NEXT: Piece D8 — the Circles & Groups management screen (create circles so people
+can leave "Unfiled", plus groups).
+
+---
+
+### 2026-07-10 — Rolodex D7a: add-with-details + edit toggle on the file (SRC-ONLY)
+
+WHAT CHANGED:
+- **Edit toggle** on the file page: click Edit (terracotta, top-right) → the left
+  column's scalar fields become editable in place (name, how-you-know, notes, phone,
+  email, other-contact). Save writes via `updatePerson`; Cancel discards. The right
+  column (connections, groups, catch-ups) stays read-only until their own pieces.
+- **"with details →"** in the "+ Add" flow: type a name, then click "with details →"
+  instead of Enter → creates the person and opens their file in edit mode to fill in
+  the rest. Enter still does the quick name-only add.
+- **PersonEdit component** (new): the in-place edit form, extracted into its own file.
+- **updatePerson** added to peopleWrite (plain supabase update + updated_at stamp).
+
+FILES TOUCHED:
+- src/desktop/people/PersonEdit.jsx (NEW)
+- src/desktop/people/personEdit.css (NEW)
+- src/desktop/people/PersonFile.jsx (Edit toggle + PersonEdit wiring)
+- src/desktop/people/personFile.css (topbar + edit button styles)
+- src/desktop/people/PeoplePage.jsx (add-with-details flow)
+- src/desktop/people/Directory.jsx ("with details →" link)
+- src/desktop/people/people.css ("with details" style)
+- src/spine/data/peopleWrite.js (updatePerson)
+
+HOW TO VERIFY:
+1. Rolodex → a person → Open full file → click **Edit** (terracotta, top-right).
+2. The left column becomes editable — change the name, add a how-you-know, type
+   some notes, add a phone/email → click **Save**.
+3. The file shows the changes. The directory reflects the new name. Reload → persisted.
+4. Edit again → change something → **Cancel** → nothing changed.
+5. Directory → **+ Add** → type a name → click **"with details →"** → the person is
+   created and their file opens in edit mode → fill in → Save.
+6. Phone/email render tappable (tel:/mailto:) in view mode.
+7. Calm — hairlines + whitespace; terracotta on Edit/Save + "+ Add" only. No console errors.
+
+KNOWN GAPS / RISKS:
+- Scalar fields only — no circle assignment, connection/catch-up/date editing yet.
+- Still no way to REMOVE a person — that's D7b (archive).
+
+NEXT: Piece D7b — ARCHIVE (soft-delete + restore, the way to remove people, hiding
+their connections from others' files).
+
+---
+
+### 2026-07-10 — Rolodex D6: person file page + "Open full file" (SRC-ONLY)
+
+WHAT CHANGED:
+- **PersonFile component** (new): the full two-column dossier. Left = home circle
+  kicker + name + how-you-know + other circles + plain-text notes + contact fields
+  (phone/email tappable) + key dates (birthday with age if year known; custom dates).
+  Right = connections with labels + groups with co-members + full catch-up history +
+  rolled-up last contact. Sections with no data omitted (honest omission).
+- **"Open full file →"** link added to the focus panel — opens the file page.
+- **"‹ Rolodex" back link** returns to the directory (state-based, no router).
+- **loadPersonFile** added to peopleLoad: full person + all circles + connections +
+  groups (with co-member names) + full catch-up history + all dates.
+
+FILES TOUCHED:
+- src/desktop/people/PersonFile.jsx (NEW)
+- src/desktop/people/personFile.css (NEW)
+- src/desktop/people/PeoplePage.jsx (directory ⇄ file view switch)
+- src/desktop/people/FocusPanel.jsx ("Open full file →" link)
+- src/desktop/people/focusPanel.css (link style)
+- src/spine/data/peopleLoad.js (loadPersonFile)
+
+HOW TO VERIFY:
+1. Open the app, click **Rolodex**, click a person in the directory.
+2. In the focus panel on the right, click **"Open full file →"**.
+3. A two-column **file page** opens: left = name + kicker + any info; right = any
+   connections / groups / catch-ups. For name-only people it's intentionally sparse.
+4. Click **"‹ Rolodex"** at the top → returns to the directory split, intact.
+5. Calm — two clean columns, hairlines + whitespace, no boxes.
+6. No console errors; other sections still fine.
+
+KNOWN GAPS / RISKS:
+- View-only — no edit toggle, no archive, no add-with-details yet.
+- Page is sparse until notes / connections / catch-ups / dates are created (those
+  creation UIs are in later pieces).
+
+NEXT: Piece D7 — add-with-details + the Edit toggle on the file + ARCHIVE (the way
+to remove a person).
+
+---
+
+### 2026-07-10 — Rolodex D5: focus panel — click a name to see their glance (SRC-ONLY)
+
+WHAT CHANGED:
+- **Click-to-select** in the directory: clicking a row highlights it (calm weight
+  shift, no fill) and populates the right pane.
+- **FocusPanel component** (new): shows the selected person's glance — home circle
+  as a small-caps kicker, name in Fraunces, how-you-know in italic, a notes snippet,
+  connections (direct links with per-side labels), and the last 2–3 catch-ups.
+  Sections with no data are omitted entirely (honest omission).
+- **loadPersonSummary** added to peopleLoad: fetches person + home circle name +
+  connections (both sides, with names) + last 3 catch-ups.
+- Focus panel CSS split into its own file (people.css was at 256 lines).
+
+FILES TOUCHED:
+- src/desktop/people/FocusPanel.jsx (NEW)
+- src/desktop/people/focusPanel.css (NEW — split from people.css)
+- src/desktop/people/Directory.jsx (click-to-select)
+- src/desktop/people/PeoplePage.jsx (selection state + FocusPanel wiring)
+- src/desktop/people/people.css (selected-row style; panel styles moved out)
+- src/spine/data/peopleLoad.js (loadPersonSummary)
+
+HOW TO VERIFY:
+1. Open the app, click **Rolodex**.
+2. You should see people in the directory (add one if you haven't yet).
+3. **Click a person's name** → the right pane fills with their name, "Unfiled"
+   kicker, and any available info. For name-only people it's intentionally sparse.
+4. Click a **different person** → the panel updates; the selected row shifts weight.
+5. **Reload the page** → the right pane shows the resting "pick someone" invitation.
+6. Calm: text + hairlines, no boxes. No console errors.
+
+KNOWN GAPS / RISKS:
+- Panel is sparse until notes / connections / catch-ups exist (creation UIs for
+  those are in later pieces).
+- No "Open full file →" link yet (arrives in D6 with the file page).
+- No edit / archive / delete of a person yet.
+
+NEXT: Piece D6 — the full person file page (two-column view + "Open full file →"
+from the panel).
+
+---
+
+### 2026-07-10 — Rolodex D4: directory list with quick-add and search (SRC-ONLY)
+
+WHAT CHANGED:
+- **Directory component** (left pane): people listed grouped by home circle in the
+  owner's custom sort order, Unfiled last. Each row shows name (Fraunces) + a faint
+  last-contact marker ("not yet" / "3d ago" / etc.). Within a circle, most-recent-
+  contact first; never-contacted people fall to name A–Z.
+- **Live search**: filters the loaded list over name + how-you-know.
+- **"+ Add" quick-add** (the one terracotta mark): click → inline text field → type a
+  name → Enter creates a name-only person → they appear in the directory under Unfiled.
+- **peopleWrite.js**: `createPerson(name)` — inserts a people row (source='app').
+- Empty state preserved: with zero people, the invite line shows above the "+ Add".
+
+FILES TOUCHED:
+- src/desktop/people/Directory.jsx (NEW)
+- src/desktop/people/PeoplePage.jsx (wired directory + add flow)
+- src/desktop/people/people.css (directory styles)
+- src/spine/data/peopleWrite.js (NEW)
+
+HOW TO VERIFY:
+1. Open the app, click **Rolodex**.
+2. You see the two-pane layout. Left pane has the search + "+ Add" + the empty invite.
+3. Click **+ Add** → type a name (a real person you want, or a test) → **Enter**.
+4. The person appears in the directory under "Unfiled" with "not yet" last-contact.
+5. Add a couple more → they list under Unfiled, sorted by name.
+6. Type in the search field → the list filters live.
+7. Calm: text + hairlines, terracotta only on "+ Add". No console errors.
+8. Other sections (Today / Calendar / Food) still fine.
+
+KNOWN GAPS / RISKS:
+- Name-only add — no how-you-know, circles, details, or edit yet.
+- Everyone lands under "Unfiled" until circles can be created in D8.
+- No click-to-focus — clicking a name does nothing yet (D5).
+- No archive / edit / delete of a person yet (D7).
+- These are real entries on your account. Add people you want to keep, or ones you're
+  fine with until archive arrives.
+
+NEXT: Piece D5 — the focus panel (click a name → populate the right pane with the
+snippet, last 2–3 catch-ups, connection web + list, and "Open full file →").
+
+---
+
+### 2026-07-10 — Rolodex D3: SplitPane + read data layer + two-pane shell (SRC-ONLY)
+
+WHAT CHANGED:
+- New **SplitPane** kit component: a two-pane desktop layout separated by a single
+  vertical hairline (CSS grid, 320px left / 1fr right). Sealed kit block.
+- New **peopleLoad.js** in the spine data layer: `listDirectory()` (all non-archived
+  people with home circle + last-contact, shaped for directory grouping) and
+  `listCircles()` (circles in custom sort order). Read-only, mirrors foodLoad.
+- **PeoplePage** rewired from the D2 stub to the real two-pane shell: loads data on
+  mount, renders the SplitPane with the directory empty state on the left and the
+  focus panel's resting invitation on the right.
+
+FILES TOUCHED:
+- src/desktop/kit/SplitPane.jsx (NEW)
+- src/desktop/kit/splitPane.css (NEW)
+- src/spine/data/peopleLoad.js (NEW)
+- src/desktop/people/PeoplePage.jsx (rewritten from stub)
+- src/desktop/people/people.css (updated for two-pane layout)
+
+HOW TO VERIFY:
+1. Open the app on your Mac, click Rolodex in the nav.
+2. The page now shows a **two-pane split**: a hairline divider down the middle.
+3. Left pane: "No one in your Rolodex yet." (the empty state).
+4. Right pane: "Pick someone from the directory, or search by name."
+5. Both panes are calm, aligned, no boxes — just text and the hairline.
+6. No console errors (the data layer ran and returned empty).
+7. Other sections (Today / Calendar / Food) still work fine.
+
+KNOWN GAPS / RISKS:
+- Empty shell — no add flow, no real directory rows, no focus panel content yet.
+- Responsive stacking deferred to the mobile layer.
+- peopleWrite (the write layer) arrives with the add piece.
+
+NEXT: Piece D4 — the directory list (render real people grouped by home circle in
+the left pane, the "+ Add" terracotta mark, and search).
+
+---
+
+### 2026-07-09 — Rolodex D2: nav wiring + stub page (SRC-ONLY)
+
+WHAT CHANGED:
+- "Rolodex" added to the nav band as a top-level section (after Food, before Settings).
+- Clicking it mounts a calm stub page with a broadsheet header + a warm first-run empty state.
+- New feature folder `src/desktop/people/` created (mirrors Food's structure).
+
+FILES TOUCHED:
+- src/desktop/EditionHeader.jsx (NAV array: added `{ id: 'people', label: 'Rolodex' }`)
+- src/desktop/LoggedIn.jsx (PILLARS array + import + view branch)
+- src/desktop/people/PeoplePage.jsx (NEW — stub page)
+- src/desktop/people/people.css (NEW — page styles)
+
+HOW TO VERIFY:
+1. Open the app on your Mac.
+2. The nav band shows "Rolodex" as the last item before Settings.
+3. Click Rolodex — the stub page mounts; the terracotta underline lands on it.
+4. You see "Rolodex" as a small-caps header, then "No one in your Rolodex yet."
+5. Click Today / Calendar / Food and back — each still works, active state correct.
+6. No console errors.
+
+KNOWN GAPS / RISKS:
+- This is a stub — the directory, data layer, panels, add/edit, circles, connections,
+  catch-ups, dates, and constellation are all still to come (D3+).
+
+NEXT: Piece D3 — spine data layer (peopleLoad / peopleWrite) + the SplitPane kit component.
+
+---
+
+### 2026-07-09 — Rolodex D1: People schema (DB-ONLY, checker-approved)
+
+WHAT CHANGED:
+- 8 new People tables created (people, people_circles, people_circle_members,
+  people_connections, people_groups, people_group_members, people_interactions,
+  people_dates) + archive_batches.source_type CHECK expanded to include 'person'.
+- Owner-only RLS on all 8 tables. Indexes on every FK/filter column. Partial-unique
+  indexes enforce one home circle per person and one birthday per person.
+- NO changes to categories / tasks / events. recurrence_id on people_dates is a
+  plain value (no FK into the spine).
+
+FILES TOUCHED:
+- db/43_people.sql (NEW)
+
+HOW VERIFIED:
+- Migration run manually in the Supabase SQL editor (Frankfurt cntlptuacsujbdtwvbis).
+- PostgREST cache reloaded (notify pgrst, 'reload schema').
+- All 8 tables return HTTP 200 via the REST API (PostgREST sees them).
+
+FOR THE CHECKER: checker approved.
+
+NEXT: Piece D2 (nav wiring + stub page, src-only) — done above.
+
+---
+
 ### 2026-07-08 — Step 7 Piece 5: editor remap + confirm surface (SRC-ONLY, 3 commits)
 
 WHAT CHANGED (three ordered commits):
