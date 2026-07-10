@@ -2,11 +2,11 @@ import { useRef, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import { createCircle, renameCircle, reorderCircles, deleteCircle } from '../../spine/data/peopleWrite'
+import ManageGroups from './ManageGroups'
 import './manage.css'
 
-// ManageCircles — the Circles section of the manage screen (D8 Commit 1).
-// Create, rename, reorder (up/down), delete circles. Inline, no modals.
-// Groups section placeholder slots below (built in D9).
+// ManageCircles — the Circles + Groups manage screen (D8/D9).
+// Circles: create, rename, reorder (up/down), delete. Groups: D9 component below.
 
 export default function ManageCircles({ circles, onBack, onChanged }) {
   const [items, setItems] = useState(circles)
@@ -106,12 +106,7 @@ export default function ManageCircles({ circles, onBack, onChanged }) {
         )}
       </div>
 
-      {/* Groups section placeholder — built in D9 */}
-      <div className="pmanage-section">
-        <SmallCapsLabel>Groups</SmallCapsLabel>
-        <HairlineRule faint />
-        <p className="people-loading">Coming soon.</p>
-      </div>
+      <ManageGroups onChanged={onChanged} />
     </div>
   )
 }

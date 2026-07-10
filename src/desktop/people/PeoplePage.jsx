@@ -87,7 +87,7 @@ export default function PeoplePage() {
   if (fileId) {
     return (
       <div className="people-page">
-        <PersonFile personId={fileId} onBack={closeFile} startEditing={fileEditing} onArchive={handleArchive} />
+        <PersonFile personId={fileId} onBack={closeFile} startEditing={fileEditing} onArchive={handleArchive} onOpenPerson={openFile} />
         {toast && <Toast text={toast.text} onUndo={toast.onUndo} onDismiss={() => setToast(null)} />}
       </div>
     )

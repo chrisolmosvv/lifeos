@@ -70,3 +70,32 @@
 .pmanage-del:hover { color: var(--overdue); }
 
 .pmanage-add-row { margin-top: 0.5rem; }
+
+/* Group members (D9) */
+.pmanage-members {
+  padding: 0.25rem 0 0.5rem 1rem;
+}
+.pmanage-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.pmanage-picker {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--rule-faint);
+  border-radius: 0;
+  padding: 0.3rem 0.4rem;
+  outline: none;
+}
+.pmanage-picker:focus { border-color: var(--ink-muted); }

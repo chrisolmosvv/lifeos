@@ -98,6 +98,50 @@ export async function setPersonCircles(personId, homeCircleId, otherCircleIds) {
   }
 }
 
+// ── Groups ──────────────────────────────────────────────────────────────────
+
+export async function createGroup(name) {
+  const { data, error } = await supabase
+    .from('people_groups')
+    .insert({ name })
+    .select('id, name')
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function renameGroup(id, name) {
+  const { error } = await supabase
+    .from('people_groups')
+    .update({ name, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function deleteGroup(id) {
+  const { error } = await supabase
+    .from('people_groups')
+    .delete()
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function addGroupMember(groupId, personId) {
+  const { error } = await supabase
+    .from('people_group_members')
+    .insert({ group_id: groupId, person_id: personId })
+  if (error) throw new Error(error.message)
+}
+
+export async function removeGroupMember(groupId, personId) {
+  const { error } = await supabase
+    .from('people_group_members')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('person_id', personId)
+  if (error) throw new Error(error.message)
+}
+
 // Update a person's scalar fields. `fields` is { name, how_you_know, notes, phone, email, other_contact }.
 export async function updatePerson(id, fields) {
   const { data, error } = await supabase

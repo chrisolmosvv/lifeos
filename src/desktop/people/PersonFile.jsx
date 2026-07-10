@@ -32,7 +32,7 @@ function formatDateNoYear(d) {
   return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
 }
 
-export default function PersonFile({ personId, onBack, startEditing, onArchive }) {
+export default function PersonFile({ personId, onBack, startEditing, onArchive, onOpenPerson }) {
   const [data, setData] = useState(null)
   const [availCircles, setAvailCircles] = useState([])
   const [loading, setLoading] = useState(true)
@@ -154,7 +154,16 @@ export default function PersonFile({ personId, onBack, startEditing, onArchive }
               {groups.map((g) => (
                 <div key={g.id} className="pfile-group">
                   <p className="pfile-group-name">{g.name}</p>
-                  {g.coMembers.length > 0 && <p className="pfile-meta">{g.coMembers.join(', ')}</p>}
+                  {g.coMembers.length > 0 && (
+                    <p className="pfile-meta">
+                      {g.coMembers.map((m, i) => (
+                        <span key={m.id}>
+                          {i > 0 && ', '}
+                          {onOpenPerson ? <button className="pfile-link" onClick={() => onOpenPerson(m.id)}>{m.name}</button> : m.name}
+                        </span>
+                      ))}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
