@@ -2,11 +2,13 @@ import { useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import AccountForm from './AccountForm'
+import SnapshotLog from './SnapshotLog'
 import './financeDetail.css'
 
 // AccountDetail — the right pane for a selected account. Shows name, type,
 // institution, and starting_balance (cash only). "Edit" opens the form inline;
-// "Archive" flips is_archived. Investment snapshot log is Commit B.
+// "Archive" flips is_archived. Investment accounts show a SnapshotLog (the
+// value-over-time log with upsert on same-date re-entry).
 export default function AccountDetail({ account, onUpdate, onArchive }) {
   const [editing, setEditing] = useState(false)
 
@@ -49,6 +51,7 @@ export default function AccountDetail({ account, onUpdate, onArchive }) {
         <button className="fin-detail-edit" onClick={() => setEditing(true)}>Edit</button>
         <button className="fin-detail-archive" onClick={() => onArchive(account.id, account.name)}>Archive</button>
       </div>
+      {!isCash && <SnapshotLog accountId={account.id} />}
     </div>
   )
 }
