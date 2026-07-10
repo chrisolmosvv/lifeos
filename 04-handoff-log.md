@@ -33,6 +33,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Rolodex D14b: Hermes write — four people kinds (EDGE FUNCTION)
+
+WHAT CHANGED:
+- **people.ts** (new): four write handlers for hermes-write, extracted to stay under 250 lines.
+  - **kind:"person"** — create a person (confirmed=true required). Dedup: if exact name already
+    exists, returns it without duplicating. source='hermes'. Undo-logged.
+  - **kind:"note"** — append text to a person's notes. matchPerson by name (case-insensitive
+    ILIKE; exact match prioritised; zero→"add them first"; multiple→disambiguation list).
+    Direct-log (no confirm). Undo restores previous notes via kind:'edit' in marty_actions.
+  - **kind:"catchup"** — log an interaction. matchPerson as above. Channel mapped from free
+    text (texted→message, called→call, saw/met→in_person, etc.). Default today; past dates
+    allowed. source='hermes'. Undo-logged.
+  - **kind:"connect"** — link two people (confirmed=true required). matchPerson BOTH names.
+    Canonical ordering (a_id < b_id). Smart-inverse labels match the app exactly
+    (parent↔child, mentor↔mentee, etc.). Upserts on the unique pair. source='hermes'. Undo-logged.
+- **Confirm-gate extended:** person + connect now require confirmed=true (alongside weight/sleep).
+  Note + catchup direct-log (they operate on a matched existing person).
+- **handleUndo extended:** now handles kind:'edit' (patches back `before` values), not just
+  kind:'create'. This enables undo of note appends.
+- **sb.ts:** added `patch` function for PostgREST PATCH calls.
+
+FILES TOUCHED:
+- supabase/functions/hermes-write/people.ts (NEW — 200 lines)
+- supabase/functions/hermes-write/index.ts (import, confirm-gate, switch, undo extension)
+- supabase/functions/hermes-write/sb.ts (added patch)
+
+HOW TO VERIFY (real calls — replace <SECRET> with the write secret):
+1. **Confirm-gate:** `kind:"person"` WITHOUT confirmed → 422. Same for `kind:"connect"`.
+2. **Create person:** `{"kind":"person","data":{"name":"Test Hermes","how_you_know":"testing"},"confirmed":true}` → ok, id. Open Rolodex in the app → person appears.
+3. **Log catch-up:** `{"kind":"catchup","data":{"name":"Test Hermes","channel":"texted","note":"quick hello"}}` → ok, channel="message". App → person's file → catch-up shows.
+4. **Append note:** `{"kind":"note","data":{"name":"Test Hermes","text":"Note from Hermes"}}` → ok. App → person's file → notes updated.
+5. **Connect:** `{"kind":"connect","data":{"person_a":"Test Hermes","person_b":"<another person>","label":"friend"},"confirmed":true}` → ok. App → both files show the connection.
+6. **Disambiguation:** a name matching two people → returns `ambiguous_name` + candidates list.
+7. **Undo:** `{"kind":"undo"}` → reverses the last action (check marty_actions).
+8. All rows tagged source='hermes'. verify_jwt still false (405 on HEAD, not 401).
+
+KNOWN GAPS / RISKS:
+- V1 = add + query only — no edit/delete of people via Hermes.
+- The box skill doesn't know these kinds yet (D14c).
+- index.ts is 358 lines (was 342 pre-change; existing handlers were already over 250;
+  the new people logic is extracted to people.ts at 200 lines).
+- Note undo restores the FULL previous notes text (correct but may surprise if notes
+  were edited from the app between the append and the undo).
+
+NEXT: D14c — box skills (teach Hermes the people domain via SSH on the Hetzner box).
+
+---
+
 ### 2026-07-10 — Rolodex D14a: Hermes read — people section in snapshot (EDGE FUNCTION)
 
 WHAT CHANGED:

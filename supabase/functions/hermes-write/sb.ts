@@ -77,6 +77,25 @@ export async function select(
   }
 }
 
+// Patch (update) rows for a raw PostgREST query; returns the first patched row or null.
+export async function patch(
+  query: string,
+  fields: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/${query}`, {
+      method: "PATCH",
+      headers: headers({ Prefer: "return=representation" }),
+      body: JSON.stringify(fields),
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) ? (rows[0] ?? null) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Delete rows for a raw PostgREST query; returns deleted rows or null.
 export async function del(
   query: string,

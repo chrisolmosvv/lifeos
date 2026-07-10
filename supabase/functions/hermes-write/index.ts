@@ -20,7 +20,8 @@
 //   OWNER_USER_ID, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — auto-injected / Vault.
 
 import { addDaysYMD, localToUtc, todayYMD } from "../_shared/datetime.ts";
-import { configured, del, insert, OWNER_USER_ID, select, upsert } from "./sb.ts";
+import { configured, del, insert, OWNER_USER_ID, patch, select, upsert } from "./sb.ts";
+import { handlePerson, handleNote, handleCatchup, handleConnect } from "./people.ts";
 
 const SECRET = Deno.env.get("HERMES_WRITE_SECRET");
 
@@ -281,18 +282,29 @@ async function handleUndo(): Promise<Result> {
   if (rows === null) return fail("couldn't reach the undo log", 500);
   if (rows.length === 0) return fail("nothing to undo");
 
-  const action = rows[0] as { id: string; kind: string; label?: string; items: Array<{ table: string; id: string; title?: string }> };
+  const action = rows[0] as { id: string; kind: string; label?: string; items: Array<{ table: string; id: string; title?: string; before?: Record<string, unknown> }> };
   const items = Array.isArray(action.items) ? action.items : [];
-  if (action.kind !== "create") return fail("only create actions can be undone via hermes-write");
 
   const reversed: string[] = [];
   const gone: string[] = [];
   let failed = false;
-  for (const item of items) {
-    const deleted = await del(`${item.table}?id=eq.${item.id}&user_id=eq.${OWNER_USER_ID}&select=id`);
-    if (deleted === null) { failed = true; continue; }
-    if (deleted.length > 0) reversed.push(item.title ?? "");
-    else gone.push(item.title ?? "");
+
+  if (action.kind === "create") {
+    for (const item of items) {
+      const deleted = await del(`${item.table}?id=eq.${item.id}&user_id=eq.${OWNER_USER_ID}&select=id`);
+      if (deleted === null) { failed = true; continue; }
+      if (deleted.length > 0) reversed.push(item.title ?? "");
+      else gone.push(item.title ?? "");
+    }
+  } else if (action.kind === "edit") {
+    for (const item of items) {
+      if (!item.before) { gone.push(item.title ?? ""); continue; }
+      const patched = await patch(`${item.table}?id=eq.${item.id}&user_id=eq.${OWNER_USER_ID}`, item.before);
+      if (patched === null) { failed = true; continue; }
+      reversed.push(item.title ?? "");
+    }
+  } else {
+    return fail("only create and edit actions can be undone via hermes-write");
   }
 
   if (failed) return fail("couldn't fully undo — try again", 500);
@@ -324,8 +336,8 @@ Deno.serve(async (req) => {
   const data = (body.data && typeof body.data === "object" ? body.data : {}) as D;
   const confirmed = body.confirmed === true;
 
-  // Confirm-gate: body/sleep and estimated food require confirmed=true
-  if ((kind === "weight" || kind === "sleep") && !confirmed) {
+  // Confirm-gate: body/sleep/person/connect and estimated food require confirmed=true
+  if ((kind === "weight" || kind === "sleep" || kind === "person" || kind === "connect") && !confirmed) {
     return fail(`${kind} requires confirmed=true`, 422);
   }
 
@@ -336,7 +348,11 @@ Deno.serve(async (req) => {
     case "weight": return await handleWeight(data);
     case "sleep": return await handleSleep(data);
     case "focus": return await handleFocus(data);
+    case "person": return await handlePerson(data);
+    case "note": return await handleNote(data);
+    case "catchup": return await handleCatchup(data);
+    case "connect": return await handleConnect(data);
     case "undo": return await handleUndo();
-    default: return fail(`unknown kind "${kind}" — use task, event, food, weight, sleep, focus, or undo`);
+    default: return fail(`unknown kind "${kind}" — use task, event, food, weight, sleep, focus, person, note, catchup, connect, or undo`);
   }
 });
