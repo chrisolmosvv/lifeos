@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
+import ConnectionWeb from './ConnectionWeb'
 import { loadPersonSummary } from '../../spine/data/peopleLoad'
 import './focusPanel.css'
+import './personFile.css' // for the .cweb-* web styles
 
 // FocusPanel — the Rolodex right pane (D5). Shows the selected person's glance:
 // home circle kicker, name, how-you-know, a notes snippet, connections (if any),
@@ -59,6 +61,7 @@ export default function FocusPanel({ personId, onOpenFile }) {
       {connections.length > 0 && (
         <div className="pfocus-section">
           <SmallCapsLabel>Connections</SmallCapsLabel>
+          <ConnectionWeb personName={person.name} connections={connections} />
           <ul className="pfocus-conn-list">
             {connections.map((c) => (
               <li key={c.id} className="pfocus-conn-row">

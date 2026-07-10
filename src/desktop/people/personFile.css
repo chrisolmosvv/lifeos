@@ -143,6 +143,23 @@
 }
 .pfile-link:hover { text-decoration-color: var(--ink); }
 
+/* Connection web (D10/2) */
+.cweb { display: block; margin: 0.5rem auto 0; }
+.cweb-line { stroke: var(--rule); stroke-width: 1; }
+.cweb-center { fill: var(--ink); }
+.cweb-dot { fill: var(--ink-muted); }
+.cweb-node:hover .cweb-dot { fill: var(--ink); }
+.cweb-label {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  fill: var(--ink-muted);
+}
+.cweb-label--center {
+  fill: var(--ink);
+  font-weight: 500;
+}
+.cweb-node:hover .cweb-label { fill: var(--ink); }
+
 /* Connection editor (D10) */
 .pconn-editor { padding-top: 0.25rem; }
 .pconn-editor .kit-kicker { display: block; margin-bottom: 0.3rem; }

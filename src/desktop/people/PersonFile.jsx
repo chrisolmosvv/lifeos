@@ -3,6 +3,7 @@ import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import PersonEdit from './PersonEdit'
 import ConnectionEditor from './ConnectionEditor'
+import ConnectionWeb from './ConnectionWeb'
 import { loadPersonFile, listCircles, listPeople } from '../../spine/data/peopleLoad'
 import './personFile.css'
 
@@ -143,6 +144,7 @@ export default function PersonFile({ personId, onBack, startEditing, onArchive, 
           ) : connections.length > 0 ? (
             <div className="pfile-section">
               <SmallCapsLabel>Connections</SmallCapsLabel>
+              <ConnectionWeb personName={person.name} connections={connections} onOpenPerson={onOpenPerson} />
               <ul className="pfile-list">
                 {connections.map((c) => (
                   <li key={c.id} className="pfile-conn-row">
