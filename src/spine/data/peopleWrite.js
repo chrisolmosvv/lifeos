@@ -233,6 +233,9 @@ export async function deleteInteraction(id) {
   if (error) throw new Error(error.message)
 }
 
+// Dates (birthday + custom) split to peopleWriteDates.js for the 250-line ceiling.
+export { upsertBirthday, addCustomDate, updateDate, deleteDate } from './peopleWriteDates.js'
+
 // Update a person's scalar fields. `fields` is { name, how_you_know, notes, phone, email, other_contact }.
 export async function updatePerson(id, fields) {
   const { data, error } = await supabase

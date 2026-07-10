@@ -83,8 +83,10 @@ export default function PersonFile({ personId, onBack, startEditing, onArchive, 
               homeCircleName={homeName}
               availableCircles={availCircles}
               currentCircles={allCircles}
+              dates={dates}
               onSaved={() => { setEditing(false); load() }}
               onCancel={() => setEditing(false)}
+              onDatesChanged={load}
             />
           ) : (
             <>

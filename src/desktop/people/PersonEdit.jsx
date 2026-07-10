@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
+import DatesEditor from './DatesEditor'
 import { updatePerson, setPersonCircles } from '../../spine/data/peopleWrite'
 import './personEdit.css'
 
@@ -8,7 +9,7 @@ import './personEdit.css'
 // assignments (D7a/D8). Save writes scalars via updatePerson + circles via
 // setPersonCircles. Cancel discards all changes.
 
-export default function PersonEdit({ person, homeCircleName, availableCircles, currentCircles, onSaved, onCancel }) {
+export default function PersonEdit({ person, homeCircleName, availableCircles, currentCircles, dates, onSaved, onCancel, onDatesChanged }) {
   const [name, setName] = useState(person.name)
   const [hyk, setHyk] = useState(person.how_you_know || '')
   const [notes, setNotes] = useState(person.notes || '')
@@ -101,6 +102,11 @@ export default function PersonEdit({ person, homeCircleName, availableCircles, c
           placeholder="Email" aria-label="Email" type="email" />
         <input className="pedit-input" value={other} onChange={(e) => setOther(e.target.value)}
           placeholder="Other contact" aria-label="Other contact" />
+      </div>
+
+      {/* Key dates — writes directly (not batched with Save) */}
+      <div className="pedit-field">
+        <DatesEditor personId={person.id} dates={dates || []} onChanged={onDatesChanged || (() => {})} />
       </div>
 
       {err && <p className="pedit-err">{err}</p>}
