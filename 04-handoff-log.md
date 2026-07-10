@@ -33,6 +33,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Rolodex D14c: box skills — teach Hermes the people domain (HETZNER BOX)
+
+WHAT CHANGED (on the box, NOT in the repo — box skills are not version-controlled):
+- **read-lifeos/SKILL.md** (v1.1.0): added `people` to the frontmatter tags + description.
+  Documented the `people` section fields (name, how_you_know, notes, home_circle, birthday,
+  connections, last_contact, recent_catchups). Added a "People queries" section with example
+  questions Hermes can answer: "what do I know about X", "when's X's birthday", "who is X
+  connected to", "who haven't I been in touch with lately".
+- **write-lifeos/SKILL.md** (v1.1.0): added four new kind sections (person, note, catchup,
+  connect) in the existing format. Added the channel verb→enum mapping table. Added the
+  "Name matching" section with the graceful two-step UX (no match → offer to create; multiple
+  → ask which; person/connect → propose and wait for yes). Updated Responses section with
+  new response shapes (already_existed, ambiguous_name).
+- **Agent restarted** via `systemctl --user -M root@ restart hermes-gateway.service` to pick
+  up skill changes.
+
+FILES ON THE BOX:
+- /root/.hermes/skills/lifeos/read-lifeos/SKILL.md (edited)
+- /root/.hermes/skills/lifeos/write-lifeos/SKILL.md (edited)
+- Backups: SKILL.md.bak-20260710 alongside each (the only rollback)
+
+HOW TO VERIFY (Phase 3 — over Telegram to @lifeos_marty_bot):
+1. "Add my friend Sarah Chen" → Hermes proposes → yes → she appears in the Rolodex app.
+2. "I had coffee with Sarah today" → logs an in_person catch-up → shows on her file.
+3. "Note on Sarah: she's an architect" → appended to her notes.
+4. "Sarah and [another person] are siblings" → proposes → yes → both files show the connection.
+5. "What do I know about Sarah?" → Hermes answers from the read snapshot.
+6. A note for a name Hermes doesn't have → it offers to add them first.
+7. An ambiguous name (two Toms) → it asks which one.
+
+KNOWN GAPS / RISKS:
+- **Box skills are NOT version-controlled** — a known gap. Backups on the box are the only
+  rollback. If the box dies, the skill files are lost (they'd need to be re-created from
+  this handoff entry or the D14c build instructions).
+- People via Hermes is V1: add + query only (no edit/delete).
+- The agent restart method: `sudo XDG_RUNTIME_DIR=/run/user/0 systemctl --user -M root@
+  restart hermes-gateway.service` (root user-level systemd unit).
+
+NEXT: Module CLOSE (prove-dead + docs + re-upload brain docs). This is the LAST build piece.
+
+---
+
 ### 2026-07-10 — Rolodex D14b: Hermes write — four people kinds (EDGE FUNCTION)
 
 WHAT CHANGED:
