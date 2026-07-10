@@ -33,6 +33,51 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Rolodex D12/2b: restore re-materialise + custom-date calendar toggle (SRC-ONLY)
+
+WHAT CHANGED:
+- **Restore re-materialises.** Unarchiving a person now re-creates their calendar events
+  (birthday AND any show-on-calendar custom dates). Guards against duplicates: only creates
+  a series for date rows that don't already have live events. Works from both the Restore
+  button and the undo-archive toast.
+- **Custom-date calendar toggle.** Each custom date now has a "Calendar" checkbox (default
+  OFF). When toggled ON, creates a yearly all-day event titled **"<Name> — <Label>"** via the
+  same recurrence engine path as birthday. Toggling OFF retires the series. Deleting a
+  custom date also retires its series if one exists.
+- **Archive broadened.** Archiving now retires ALL show_on_calendar date series (not just
+  the birthday) — covers custom dates too.
+- Both locked amendments honoured: stores recurrence_id (not event id); no source tag.
+
+FILES TOUCHED:
+- src/desktop/people/peopleCalendar.js (generalised title, added rematerialisePersonDates)
+- src/desktop/people/DatesEditor.jsx (custom-date calendar toggle + retire on delete)
+- src/desktop/people/PeoplePage.jsx (restore re-materialise, archive all cal dates)
+- src/desktop/people/personFile.css (calendar-toggle style)
+
+HOW TO VERIFY (all D12 — birthday + custom dates + archive/restore):
+1. Open a person → Edit → set birthday **15 / 3 / 1990** → ✓ → Save.
+2. Open **Calendar** → navigate to **March 15** → all-day **"<Name>'s birthday"** in
+   Birthdays (plum). Forward a year → repeats.
+3. Edit birthday → change date → Save → event **moves**. Year unknown → still shows.
+4. Delete birthday (×) → event **disappears**.
+5. Re-add it → archive the person → event **disappears**.
+6. **Restore the person → birthday event RETURNS.** Navigate the calendar to confirm.
+7. Custom date: add "Anniversary 20/6" → the checkbox "Calendar" appears (OFF).
+   Toggle it ON → a yearly all-day **"<Name> — Anniversary"** event appears on the
+   calendar. Navigate next year → repeats.
+8. Toggle it OFF → event disappears. Delete the custom date → gone.
+9. Reload → all persisted. No console errors. Today / Calendar / Food still fine.
+
+KNOWN GAPS / RISKS:
+- Year-unknown dates use placeholder year 2000 in the recurrence start_date.
+- Birthday events are plain (no deep-link to the person file, no special brief).
+- The "Birthdays" category is auto-created with colour 'plum' on first use.
+- Birthday and custom-date events share the same "Birthdays" category.
+
+NEXT: Piece D13 — the "whole web" CONSTELLATION toggle on the front page.
+
+---
+
 ### 2026-07-10 — Rolodex D12: key dates + birthday → calendar event (SRC-ONLY, 2 commits)
 
 WHAT CHANGED (Commit 1 — dates on the file):
@@ -50,8 +95,7 @@ WHAT CHANGED (Commit 2 — birthday → yearly calendar event):
   archives its events. **No source tag** on the event — identified via the
   recurrence_id → events.series_id chain.
 - **Suspend-on-archive** (deferred from D7b): archiving a person now retires their
-  birthday series. **Restore does NOT re-create the event** — re-save the birthday
-  to recreate it. (Noted as known behaviour.)
+  birthday series.
 
 FILES TOUCHED:
 - src/desktop/people/DatesEditor.jsx (NEW in Commit 1; calendar sync in Commit 2)
@@ -63,28 +107,7 @@ FILES TOUCHED:
 - src/spine/data/peopleWrite.js (re-export dates)
 - src/spine/data/peopleWriteDates.js (NEW — date CRUD)
 
-HOW TO VERIFY:
-1. Open a person → Edit → set birthday **15 / 3 / 1990** → ✓ → Save.
-2. Open the **Calendar** → navigate to **March 15** → you should see an all-day event
-   **"<Name>'s birthday"** in the Birthdays category (plum). Navigate forward a year
-   → it repeats.
-3. Edit the birthday → change the date (e.g. to April 20) → Save → the calendar event
-   **moves** to the new date.
-4. Delete the birthday (×) → the calendar event **disappears**.
-5. Re-add it → archive the person → the calendar event **disappears** (suspend-on-archive).
-6. Restore the person → the event stays gone. Re-save the birthday → it recreates.
-7. Birthday with no year → shows date + no age; calendar event still works.
-8. Custom dates: add "Anniversary" → shown on the file; delete → gone. (Custom dates
-   default show-on-calendar OFF.)
-9. Reload → all persisted. No console errors. No new calendar code was needed.
-
-KNOWN GAPS / RISKS:
-- Year-unknown birthdays use placeholder year 2000 in the recurrence start_date.
-- Restore-after-archive does NOT re-create the birthday event (by design — re-save).
-- Birthday events are plain (no deep-link to the person file, no special brief).
-- The "Birthdays" category is auto-created with colour 'plum' on first use.
-
-NEXT: Piece D13 — the "whole web" CONSTELLATION toggle on the front page.
+NEXT: D12/2b gap fix (restore re-materialise + custom-date calendar toggle).
 
 ---
 

@@ -207,6 +207,9 @@
 }
 .pdates-year:focus { border-bottom-color: var(--ink-muted); }
 .pdates-num::placeholder, .pdates-year::placeholder { color: var(--ink-muted); font-size: 0.72rem; }
+.pdates-cal-toggle { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; }
+.pdates-cal-toggle input { margin: 0; }
+.pdates-cal-lbl { font-family: var(--font-sans); font-size: 0.68rem; color: var(--ink-muted); }
 
 .pfile-group { margin-top: 0.4rem; }
 .pfile-group-name {

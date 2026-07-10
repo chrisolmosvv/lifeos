@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
-import { upsertBirthday, addCustomDate, deleteDate } from '../../spine/data/peopleWrite'
-import { syncBirthdayCalendar, retireBirthdaySeries } from './peopleCalendar'
+import { upsertBirthday, addCustomDate, updateDate, deleteDate } from '../../spine/data/peopleWrite'
+import { syncDateCalendar, retireBirthdaySeries, createBirthdaySeries } from './peopleCalendar'
 
 // DatesEditor — add/edit/delete birthday + custom dates on the file (D12).
 // Birthday defaults show-on-calendar ON; saving syncs the calendar event.
@@ -31,7 +31,7 @@ export default function DatesEditor({ personId, personName, dates, onChanged }) 
       const dateId = await upsertBirthday(personId, { month: m, day: d, year: bYear ? Number(bYear) : null, showOnCalendar: true })
       const yr = bYear ? Number(bYear) : 2000
       const dateValue = `${yr}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-      await syncBirthdayCalendar(dateId, personName, dateValue, true, birthday?.recurrence_id || null)
+      await syncDateCalendar(dateId, personName, dateValue, true, birthday?.recurrence_id || null)
       onChanged()
     } catch (e) { console.error(e) }
     finally { setBusy(false) }
@@ -58,9 +58,31 @@ export default function DatesEditor({ personId, personName, dates, onChanged }) 
     finally { setBusy(false) }
   }
 
-  async function removeCustom(id) {
-    try { await deleteDate(id); onChanged() }
-    catch (e) { console.error(e) }
+  async function removeCustom(dateRow) {
+    try {
+      if (dateRow.recurrence_id) await retireBirthdaySeries(dateRow.recurrence_id)
+      await deleteDate(dateRow.id)
+      onChanged()
+    } catch (e) { console.error(e) }
+  }
+
+  async function toggleCustomCalendar(dateRow) {
+    const newShow = !dateRow.show_on_calendar
+    try {
+      await updateDate(dateRow.id, { showOnCalendar: newShow })
+      const title = `${personName} — ${dateRow.label || 'Date'}`
+      if (newShow) {
+        if (dateRow.recurrence_id) await retireBirthdaySeries(dateRow.recurrence_id)
+        const newId = await createBirthdaySeries(personName, dateRow.date_value, title)
+        await updateDate(dateRow.id, { recurrenceId: newId })
+      } else {
+        if (dateRow.recurrence_id) {
+          await retireBirthdaySeries(dateRow.recurrence_id)
+          await updateDate(dateRow.id, { recurrenceId: null })
+        }
+      }
+      onChanged()
+    } catch (e) { console.error(e) }
   }
 
   return (
@@ -85,7 +107,11 @@ export default function DatesEditor({ personId, personName, dates, onChanged }) 
           <span className="pdates-label">{d.label || 'Date'}</span>
           <div className="pdates-fields">
             <span className="pfile-meta tnum">{d.date_value}</span>
-            <button className="pmanage-btn pmanage-del" onClick={() => removeCustom(d.id)}>×</button>
+            <label className="pdates-cal-toggle">
+              <input type="checkbox" checked={!!d.show_on_calendar} onChange={() => toggleCustomCalendar(d)} />
+              <span className="pdates-cal-lbl">Calendar</span>
+            </label>
+            <button className="pmanage-btn pmanage-del" onClick={() => removeCustom(d)}>×</button>
           </div>
         </div>
       ))}
