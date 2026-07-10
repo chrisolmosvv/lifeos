@@ -1,31 +1,36 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import SplitPane from '../kit/SplitPane'
+import Directory from './Directory'
 import { listDirectory, listCircles } from '../../spine/data/peopleLoad'
+import { createPerson } from '../../spine/data/peopleWrite'
 import './people.css'
 
-// PeoplePage — the Rolodex shell (D3). A two-pane broadsheet layout: directory
-// on the left, focus panel on the right. Loads people + circles on mount. With
-// zero people, both panes show their first-run empty states. The add flow, real
-// directory rows, and focus panel contents arrive in later pieces.
+// PeoplePage — the Rolodex shell (D4). Two-pane broadsheet: directory on the
+// left (with search + quick-add), focus panel on the right. Loads people +
+// circles on mount. Quick-add creates a name-only person and reloads.
 export default function PeoplePage() {
   const [people, setPeople] = useState(null) // null = loading
   const [circles, setCircles] = useState([])
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [p, c] = await Promise.all([listDirectory(), listCircles()])
-        setPeople(p)
-        setCircles(c)
-      } catch (e) {
-        console.error('Rolodex load:', e)
-        setPeople([])
-      }
+  const load = useCallback(async () => {
+    try {
+      const [p, c] = await Promise.all([listDirectory(), listCircles()])
+      setPeople(p)
+      setCircles(c)
+    } catch (e) {
+      console.error('Rolodex load:', e)
+      setPeople([])
     }
-    load()
   }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleCreate(name) {
+    await createPerson(name)
+    await load()
+  }
 
   const empty = people !== null && people.length === 0
 
@@ -37,16 +42,19 @@ export default function PeoplePage() {
       </div>
       <SplitPane
         left={
-          <div className="people-dir">
-            {people === null ? (
-              <p className="people-loading">Loading…</p>
-            ) : empty ? (
+          people === null ? (
+            <p className="people-loading">Loading…</p>
+          ) : empty ? (
+            <div className="people-dir-empty">
               <div className="people-empty">
                 <p className="people-empty-lead">No one in your Rolodex yet.</p>
                 <p className="people-empty-hint">Add someone to start building your people file.</p>
               </div>
-            ) : null /* real directory rows arrive in D4 */}
-          </div>
+              <Directory people={[]} circles={[]} onCreated={handleCreate} />
+            </div>
+          ) : (
+            <Directory people={people} circles={circles} onCreated={handleCreate} />
+          )
         }
         right={
           <div className="people-focus">
