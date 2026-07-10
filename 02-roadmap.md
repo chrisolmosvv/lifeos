@@ -8,6 +8,13 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-10 — Finance Piece 1: schema ✅ (checker approved)
+Four new tables (finance_accounts, finance_transactions, finance_account_snapshots, finance_budgets)
+for the Finance module. Additive; spine-safe (category_id is plain value everywhere); sign-consistency
+CHECK enforced at DB level; account-delete guard (RESTRICT) prevents orphaned history. All verified
+by real writes + negative tests. Recurrences extension (for recurring bills) deferred to Piece 6a.
+**NEXT: Piece 2 — nav wiring + stub + empty state (src-only).**
+
 ## Session note — 2026-07-10 — Rolodex (People module) SHIPPED ✅ (D1–D14)
 The full People/Rolodex module is built end-to-end: 8 tables (db/43, checker-gated), the
 desktop UI (Directory+Focus split, constellation map, person file with Edit, circles+groups,

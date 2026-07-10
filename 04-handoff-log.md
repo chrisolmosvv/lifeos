@@ -33,6 +33,53 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Finance Piece 1: schema (checker approved)
+
+WHAT CHANGED:
+- **db/44_finance.sql** (NEW): four brand-new tables for the Finance module — `finance_accounts`
+  (the owner's bank/cash/investment accounts), `finance_transactions` (every money movement —
+  income, expense, or transfer), `finance_account_snapshots` (periodic investment valuations),
+  and `finance_budgets` (monthly spend limits per category, append-only like health_goals).
+- **Additive only** — zero changes to any existing table (categories, tasks, events, recurrences,
+  archive_batches, etc.). No ALTER, DROP, or RENAME anywhere.
+- **Spine-safe** — `category_id` on transactions and budgets is a plain uuid value (NOT a foreign
+  key), so deleting a spine category never blocks or cascades into finance. `series_id` on
+  transactions points OUT to `recurrences` (ON DELETE SET NULL), same link events/tasks already use.
+- **Sign-consistency CHECK** — the database enforces income > 0, expense < 0, transfer ≠ 0 at
+  the row level. A mismatched amount/type is rejected before it can persist.
+- **Account-delete guard** — `account_id` on transactions and snapshots has NO ON DELETE clause
+  (Postgres RESTRICT), so the database blocks deleting an account that still has history. The
+  account must be archived instead. This is intentional, not an oversight.
+- **Transfer pair link** — `paired_transaction_id` (self-referencing, SET NULL) lets a transfer's
+  two rows find each other for editing/deleting as a unit.
+- Owner-only RLS (four policies) on all four tables.
+
+FILES TOUCHED: db/44_finance.sql (NEW — 313 lines, run-once migration)
+
+HOW TO VERIFY (already done):
+- Real writes on all four tables persisted and read back correctly via the API (all columns visible,
+  including nullable ones like category_id, series_id, paired_transaction_id).
+- The sign-consistency CHECK rejected a mismatched expense/positive-amount row (23514 constraint
+  violation — correct).
+- The account-delete RESTRICT guard blocked deletion while a transaction referenced the account
+  (23503 FK violation — correct), then succeeded once the transaction was removed first.
+- PostgREST cache reloaded (NOTIFY in the migration file).
+- All throwaway test rows cleaned up — zero rows remain in all four tables.
+
+KNOWN GAPS / RISKS:
+- **Recurrences extension deferred** — the `recurrences.target_kind` CHECK widening + transaction
+  template columns are Piece 6a (a later checker-gated schema step). `series_id` on transactions
+  is wired and ready but unused until then.
+- **archive_batches.source_type** expansion (`'transaction'`) is also Piece 6a.
+- **No updated_at trigger** — the app must explicitly set `updated_at` on every update call
+  (same pattern as people, focus_sessions, cook_session, etc.).
+
+NEXT: Piece 2 — nav wiring + stub Finance view + the zero-account empty state (src-only).
+
+FOR THE CHECKER: approved (exact words). Nothing further needed on this file.
+
+---
+
 ### 2026-07-10 — Rolodex D14c: box skills — teach Hermes the people domain (HETZNER BOX)
 
 WHAT CHANGED (on the box, NOT in the repo — box skills are not version-controlled):
