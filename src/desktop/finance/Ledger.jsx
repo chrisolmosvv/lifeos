@@ -5,6 +5,7 @@ import Toast from '../kit/Toast'
 import LedgerRow from './LedgerRow'
 import TransactionForm from './TransactionForm'
 import { dateRange, rangeLabel, isCurrentPeriod } from './ledgerRange'
+import { ensureGeneratedThrough } from '../recur/topup'
 import { listTransactions, createTransaction, createTransfer, updateTransaction, fetchTransaction, softDeleteTransaction, restoreTransaction, listCategories, createCategory } from './financeData'
 import './financeLedger.css'
 import './financeLedgerFilters.css'
@@ -61,6 +62,10 @@ export default function Ledger({ accounts, onNavigateAccounts }) {
 
   const load = useCallback(async () => {
     const { from, to } = dateRange(rangeUnit, rangeOffset)
+    // Topup any 'never'-ending recurring-bill series near this range (same trigger
+    // Today/Calendar use for event/task series). Best-effort — if it inserted rows,
+    // the fetch below picks them up; if not, no harm.
+    if (await ensureGeneratedThrough(to)) { /* topup inserted rows — the fetch below picks them up */ }
     const [t, c] = await Promise.all([listTransactions(from, to), listCategories()])
     setTxns(t)
     setCats(c)

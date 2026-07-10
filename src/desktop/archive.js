@@ -42,7 +42,7 @@ export async function archiveRows(label, sourceType, sets) {
 // all three tables), then delete the now-empty batch row. Used by the undo toast
 // and as the failure-compensation above.
 export async function unarchiveBatch(batchId) {
-  for (const table of ['tasks', 'events', 'categories']) {
+  for (const table of ['tasks', 'events', 'categories', 'finance_transactions']) {
     const { error } = await supabase
       .from(table)
       .update({ archived_at: null, archive_batch_id: null })
@@ -163,7 +163,7 @@ export async function listArchiveBatches() {
 // we STOP and report `partial` — a hard delete can't be rolled back, but the batch
 // row is left intact so the remaining rows still list in Archive for a retry.
 export async function hardDeleteBatch(batchId) {
-  for (const table of ['tasks', 'events', 'categories']) {
+  for (const table of ['tasks', 'events', 'categories', 'finance_transactions']) {
     const { error } = await supabase
       .from(table)
       .delete()
