@@ -1,0 +1,72 @@
+/* Rolodex — Manage Circles & Groups styles (D8). Tokens only. */
+
+.pmanage {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+}
+
+.pmanage-section {
+  margin-top: 1.5rem;
+}
+.pmanage-section .kit-kicker {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.pmanage-list { margin-top: 0.5rem; }
+
+.pmanage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
+
+.pmanage-name {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+.pmanage-name:hover { text-decoration: underline; text-decoration-color: var(--rule); }
+
+.pmanage-edit-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--accent);
+  border-radius: 0;
+  padding: 0.2rem 0;
+  outline: none;
+}
+
+.pmanage-actions {
+  display: flex;
+  gap: 0.35rem;
+  margin-left: 0.75rem;
+  flex: none;
+}
+
+.pmanage-btn {
+  background: none;
+  border: none;
+  padding: 0.1rem 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.pmanage-btn:hover { color: var(--ink); }
+.pmanage-btn:disabled { opacity: 0.3; cursor: default; }
+.pmanage-del { color: var(--ink-muted); }
+.pmanage-del:hover { color: var(--overdue); }
+
+.pmanage-add-row { margin-top: 0.5rem; }

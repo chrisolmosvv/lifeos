@@ -33,6 +33,47 @@ export async function restorePerson(id) {
   if (error) throw new Error(error.message)
 }
 
+// ── Circles ─────────────────────────────────────────────────────────────────
+
+export async function createCircle(name) {
+  const { data, error } = await supabase
+    .from('people_circles')
+    .insert({ name })
+    .select('id, name, sort_order')
+    .single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function renameCircle(id, name) {
+  const { error } = await supabase
+    .from('people_circles')
+    .update({ name, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+// Write the sort_order for each circle. `orderedIds` is the array of circle ids in the desired order.
+export async function reorderCircles(orderedIds) {
+  for (let i = 0; i < orderedIds.length; i++) {
+    const { error } = await supabase
+      .from('people_circles')
+      .update({ sort_order: i })
+      .eq('id', orderedIds[i])
+    if (error) throw new Error(error.message)
+  }
+}
+
+// Delete a circle. ON DELETE CASCADE on people_circle_members means members lose
+// that membership → if it was their home circle, they become Unfiled.
+export async function deleteCircle(id) {
+  const { error } = await supabase
+    .from('people_circles')
+    .delete()
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
 // Update a person's scalar fields. `fields` is { name, how_you_know, notes, phone, email, other_contact }.
 export async function updatePerson(id, fields) {
   const { data, error } = await supabase

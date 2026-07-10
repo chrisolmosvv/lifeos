@@ -6,6 +6,7 @@ import Toast from '../kit/Toast'
 import Directory from './Directory'
 import FocusPanel from './FocusPanel'
 import PersonFile from './PersonFile'
+import ManageCircles from './ManageCircles'
 import { listDirectory, listCircles, listArchived } from '../../spine/data/peopleLoad'
 import { createPerson, archivePerson, restorePerson } from '../../spine/data/peopleWrite'
 import './people.css'
@@ -20,6 +21,7 @@ export default function PeoplePage() {
   const [toast, setToast] = useState(null)
   const [showArchived, setShowArchived] = useState(false)
   const [archived, setArchived] = useState([])
+  const [manageView, setManageView] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -72,6 +74,15 @@ export default function PeoplePage() {
     if (archived.length <= 1) setShowArchived(false)
   }
 
+  // Manage view
+  if (manageView) {
+    return (
+      <div className="people-page">
+        <ManageCircles circles={circles} onBack={() => { setManageView(false); load() }} onChanged={load} />
+      </div>
+    )
+  }
+
   // File page view
   if (fileId) {
     return (
@@ -120,6 +131,7 @@ export default function PeoplePage() {
               ) : (
                 <button className="pdir-archived-toggle" onClick={handleShowArchived}>Show archived</button>
               )}
+              <button className="pdir-archived-toggle" onClick={() => setManageView(true)}>Manage circles</button>
             </>
           )
         }
