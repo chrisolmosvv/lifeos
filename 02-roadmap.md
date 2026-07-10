@@ -8,6 +8,24 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-10 — Rolodex (People module) SHIPPED ✅ (D1–D14)
+The full People/Rolodex module is built end-to-end: 8 tables (db/43, checker-gated), the
+desktop UI (Directory+Focus split, constellation map, person file with Edit, circles+groups,
+connections with smart-inverse, catch-up log, key dates with birthday → calendar events,
+archive with restore re-materialise), and the Hermes integration (read snapshot + 4 write
+kinds + box skills). 14 pieces, all committed + owner-verified.
+**DEBT / FOLLOW-UPS (Rolodex pile):**
+- **Box SKILL.md files NOT version-controlled** — they live on the Hetzner box at
+  `/root/.hermes/skills/lifeos/{read,write}-lifeos/SKILL.md`; backups as `.bak-20260710`.
+  Known gap; if the box dies, the skills must be re-created from the D14c handoff entry.
+- **Mobile Rolodex** deferred to its own doc (desktop shipped first).
+- **Hermes people = add + query only** — no edit/delete of people via Hermes in V1. The owner
+  uses the app for edits/removals (or undo).
+- **No import** — manual entry only in V1 (no contact import from phone/Google/etc.).
+- **index.ts (hermes-write) at 358 lines** — was 342 pre-Rolodex; the people handlers are
+  extracted to people.ts (200 lines) but the main file is over ~250. A future split of the
+  existing domain handlers would bring it under.
+
 ## Session note — 2026-07-08 — Step 7 smart-layer build ✅ (6 pieces, schema-free)
 Repaired + wired the recipe structure data that drives the cook companion's smart features.
 Pieces: (1) depends_on deterministic repair + backfill; (2/2b) step_position heuristic (head-noun

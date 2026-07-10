@@ -170,6 +170,29 @@ Cook layer (**event-sourced**, db/39 — replaced the original db/34 single-row 
   reload/backgrounding because a timer = start-timestamp + duration, computed against the wall
   clock on read.
 
+#### People / Rolodex module tables (R-track, `db/43`)
+Eight tables (all additive, owner-RLS, intra-module FKs only, `source` CHECK `('app','hermes')`
+where applicable). `archive_batches.source_type` gained `'person'` (additive CHECK expansion).
+- **`people`** — the person record: `name`, `how_you_know`, `notes`, `phone`, `email`,
+  `other_contact`, `source`, `archived_at` (soft-delete), `created_at`, `updated_at`.
+- **`people_circles`** — owner-defined groupings: `name`, `sort_order`. Start blank.
+- **`people_circle_members`** — person↔circle: `person_id` (FK CASCADE), `circle_id` (FK
+  CASCADE), `is_home`. At most one home per person (app-enforced). UNIQUE pair.
+- **`people_connections`** — mutual person-to-person links: `person_a_id`, `person_b_id`
+  (CHECK a < b), `label_a_to_b`, `label_b_to_a` (smart-inverse), `source`. UNIQUE pair.
+- **`people_groups`** — named cliques: `name`.
+- **`people_group_members`** — person↔group: `person_id`, `group_id`. UNIQUE pair. Groups
+  render virtually (no materialised connection rows).
+- **`people_interactions`** — the catch-up log: `person_id`, `interaction_date`,
+  `interaction_time`, `channel` CHECK 6 values, `note`, `source`. "Last contact" =
+  MAX(interaction_date), computed on read.
+- **`people_dates`** — birthday + custom dates: `person_id`, `kind` (`'birthday'`/`'custom'`),
+  `label`, `date_value`, `year_known`, `show_on_calendar`, `recurrence_id` (**plain uuid, NOT
+  an FK** — points at a `recurrences` row; the engine can regenerate events with new ids, so the
+  recipe id is stored, not the event id). Birthday events live in a "Birthdays" category (plum),
+  carry no source tag (events has no source column), and are identified via the
+  `people_dates.recurrence_id` → `events.series_id` chain.
+
 ## How the pieces connect (runtime)
 You → the app → Supabase (read/write your data). Supabase runs **two edge functions** —
 the public `telegram` webhook (Marty's chat) and the private `brief` (the proactive sends).

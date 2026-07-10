@@ -3251,3 +3251,28 @@ HONEST STATUSES (recorded truthfully, not fake-greened):
   `.cm2` frame; overflow lives ONLY on the inner `.cm2-body` (width 100%), so the scrollbar can't
   trip the horizontal-overflow trap. Parent chain activated via `:has(.cm2)` so Log tab and other
   Cookbook views are unaffected.
+
+### 2026-07-10 — Rolodex (People module) shipped (D1–D14)
+- **[AMENDMENT] Store the recurrence recipe id on people_dates, not the generated event id.**
+  The recurrence engine can regenerate events with new ids during edit/split; the recipe id is
+  stable. Events found via `events.series_id = recurrence_id`. **Why:** a stored event id would
+  go stale after any series mutation. **Trade-off:** finding the event requires a chain lookup
+  (people_dates → recurrences → events) instead of a direct id — acceptable for a personal dataset.
+- **[AMENDMENT] Birthday events carry NO source tag.** The events table has no source column;
+  adding one would be a spine change (forbidden). Birthday events are identified through the
+  `people_dates.recurrence_id` → `events.series_id` chain and live in a "Birthdays" category
+  (plum). **Why:** spine integrity. **Trade-off:** no single-column audit trail for birthday events
+  — identified structurally instead.
+- **[LOCKED] Name "Rolodex"** (over People/Friends). The nav says Rolodex.
+- **[LOCKED] Circles start blank** — no seeded starters. The owner builds their own from scratch.
+- **[LOCKED] Map "whole web" view in V1** — was headed for "later toggle." Quiet at rest (no
+  lines drawn until hover) is the mess-defeater that made it shippable.
+- **[LOCKED] "Last contact" = any channel counts** (in_person, call, video, message, letter, other).
+  Computed on read as MAX(interaction_date). No stored derived column.
+- **[LOCKED] Connection smart-inverse** — directional presets (parent↔child, mentor↔mentee,
+  grandparent↔grandchild, aunt/uncle↔niece/nephew) auto-fill both label columns. Symmetric/custom
+  labels are the same on both sides. Two stored words, not a relationship-type lookup table.
+- **[LOCKED] Archive-only removal** — no hard delete of people in V1. Restore re-materialises
+  calendar events. The undo toast also re-materialises on unarchive.
+- **[LOCKED] Info-dump soul** — recall-first, not a reconnection engine. Contact frequency is a
+  quiet "last contact" stat; no proactive "you haven't spoken to X" nudges.

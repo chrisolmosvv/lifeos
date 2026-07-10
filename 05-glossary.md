@@ -170,6 +170,27 @@
   or the whole series.
 - **Top-up** — a "forever" repeat keeps about a year of occurrences ready and quietly
   makes more as you scroll further ahead — done in the app, no server alarm.
+- **Rolodex** — the People module: a personal reference file on the people in
+  your life. The nav section is called "Rolodex."
+- **Circle** — an owner-defined grouping of people (e.g. Family, Work, Uni).
+  Custom sort order; managed from the Circles screen.
+- **Home circle** — the one circle a person is primarily filed under in the
+  directory. A person can be in many circles, but at most one is "home."
+- **Unfiled** — people with no home circle. Always rendered last in the
+  directory. Not a real row — just a virtual bucket.
+- **Connection** — a mutual link between two people, with an optional label
+  (friend, parent, sibling, or free text). One row per pair. The smart-
+  inverse auto-fills both sides for directional presets (parent ↔ child).
+- **Group** — a named clique (e.g. "the uni crew"). Members are linked
+  virtually — no individual connection rows are created. Co-members show
+  on each other's files under the group name.
+- **Catch-up** — a logged interaction with a person (date + channel + note).
+  Channels: in person, call, video, message, letter, other.
+- **Last contact** — the most recent catch-up date for a person, computed on
+  read (not stored). Any channel counts.
+- **Constellation** — the "whole web" map view on the Rolodex front page.
+  All people shown as a map, clustered by circle. Quiet at rest (no lines);
+  hover a person to reveal only their ties. The mess-defeater.
 - **Hero + Rail** — the cook companion's layout: one big calm directive (the Hero =
   the step you're actively doing) beside a rail showing what's cooking on its own
   (Parked) and what's next (Not yet).
