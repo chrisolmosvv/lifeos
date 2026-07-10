@@ -8,6 +8,12 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-10 — Finance Piece 3: Accounts screen + snapshot logging ✅
+Accounts CRUD (empty state, create/edit/archive, cash-then-investment order, Toast undo) and
+investment snapshot logging (upsert on same-date, reverse-chronological list) — both owner-verified.
+Eight new/rewritten files in src/desktop/finance/. No schema change.
+**NEXT: Piece 4 — transaction ledger + add flow (needs its own recon first).**
+
 ## Session note — 2026-07-10 — Finance Piece 2: nav wiring + stub ✅
 Finance appears in the nav (between Food and Rolodex). A calm broadsheet placeholder renders —
 SmallCapsLabel + HairlineRule + italic note. No data query, no button. Three files touched (one new).

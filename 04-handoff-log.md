@@ -33,6 +33,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Finance Piece 3: Accounts screen + snapshot logging
+
+WHAT CHANGED (two commits, one piece):
+- **(a) Accounts CRUD.** FinancePage now fetches `finance_accounts` and branches: zero accounts →
+  a warm empty-state invite with a working "+ Add your first account" button; one or more → the
+  Accounts split-pane (Rolodex-shaped). **AccountList.jsx** renders cash accounts first, investment
+  after (fixed order, small-caps group labels), with a terracotta "+ Add account" action and a
+  "Show archived" / Restore toggle at the bottom. **AccountDetail.jsx** shows name, type,
+  institution, and starting_balance (cash only); "Edit" opens the form inline; "Archive" flips
+  `is_archived` with a Toast + Undo. **AccountForm.jsx** uses the type-first pattern (Cash /
+  Investment toggle on create, locked on edit); starting_balance field only shown for cash.
+  **financeData.js** holds all Supabase queries. **finance.css** + **financeDetail.css** (split
+  at ~250 to stay under the guardrail).
+- **(b) Snapshot logging.** **SnapshotLog.jsx** renders on investment account detail panes only: a
+  "VALUE LOG" section with a date+value inline form (date defaults to today) + a reverse-
+  chronological list of past `finance_account_snapshots`. Uses `.upsert()` with
+  `onConflict: 'account_id,snapshot_date'` so re-logging a value on a date that already has one
+  OVERWRITES it rather than duplicating or erroring. Cash accounts show no snapshot UI.
+
+FILES TOUCHED:
+- src/desktop/finance/FinancePage.jsx (rewritten from stub)
+- src/desktop/finance/AccountList.jsx (NEW)
+- src/desktop/finance/AccountDetail.jsx (NEW)
+- src/desktop/finance/AccountForm.jsx (NEW)
+- src/desktop/finance/SnapshotLog.jsx (NEW)
+- src/desktop/finance/financeData.js (NEW)
+- src/desktop/finance/finance.css (NEW)
+- src/desktop/finance/financeDetail.css (NEW)
+
+HOW TO VERIFY (all PASSED by the owner):
+1. Zero accounts → empty-state invite renders; "+ Add first account" opens working form.
+2. Create one cash + one investment account → both appear, cash first.
+3. Edit each (name/institution/starting_balance) → changes persist across reload.
+4. Archive cash account → toast with Undo → "Show archived" reveals it → Restore brings it back.
+5. Investment detail shows VALUE LOG; log two entries on different dates → most-recent first.
+6. Re-log a value on an already-used date → overwrites (one entry per date, new value), not
+   duplicate or error.
+7. Cash detail shows no snapshot UI.
+8. All other pillars (Today/Calendar/Health/Food/Rolodex/Settings) unaffected.
+
+KNOWN GAPS / RISKS:
+- **starting_balance freely editable** — once Piece 4 adds real transactions, silently changing
+  the opening balance could make the compute-on-read balance drift. Flag for Piece 4 to decide
+  whether this needs a lock, a warning, or is fine as-is.
+- **Account detail = the ledger, pre-filtered** (the spec's plan) is still not built — Piece 4
+  delivers the real ledger; at that point Accounts stops being Finance's landing page and becomes
+  a secondary screen reached from the ledger.
+- **No hard-delete UI** — by design; the schema physically blocks deleting an account with history.
+
+NEXT: Piece 4 — the transaction ledger + add flow (the big one: day-grouped combined ledger,
+inline filters, tap-to-edit, Month/Quarter/Year range switcher, type-first add form with the
+CategoryPicker and transfer pair-row handling). Needs its own recon before a build prompt.
+
+FOR THE CHECKER: nothing — src-only throughout Piece 3, no schema changes.
+
+---
+
 ### 2026-07-10 — Finance Piece 2: nav wiring + stub screen
 
 WHAT CHANGED:
