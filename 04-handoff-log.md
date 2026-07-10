@@ -33,6 +33,39 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Finance Piece 2: nav wiring + stub screen
+
+WHAT CHANGED:
+- **EditionHeader.jsx**: added `{ id: 'finance', label: 'Finance' }` to the NAV array, between
+  Food and Rolodex. The live nav is now: Today · Focus · Calendar · Health · Food · **Finance** ·
+  Rolodex · Settings.
+- **LoggedIn.jsx**: added `'finance'` to the PILLARS array, imported FinancePage, and added the
+  view branch (same `<div className="cal-wrap"><FinancePage /></div>` pattern as every other pillar).
+- **finance/FinancePage.jsx** (NEW — 16 lines): the stub Finance screen. Uses the existing kit
+  components (SmallCapsLabel + HairlineRule) and the `.fg-note` class for the placeholder message.
+  No data query, no button, no table read — pure static placeholder.
+
+FILES TOUCHED: src/desktop/EditionHeader.jsx, src/desktop/LoggedIn.jsx,
+src/desktop/finance/FinancePage.jsx (NEW)
+
+HOW TO VERIFY:
+1. Open the app, log in. "Finance" appears in the nav bar between Food and Rolodex.
+2. Tap Finance — a calm page with the "FINANCE" kicker, hairline, and italic "The ledger is
+   coming together." note renders. Nothing else.
+3. All other pillars (Today, Calendar, Health, Food, Rolodex, Settings) unchanged.
+4. Phone nav unchanged (no mobile files touched).
+
+KNOWN GAPS / RISKS:
+- This is a STUB — no real empty-state, no query, no "+ add" action. That's Piece 3 by design.
+- Eight nav items on phone might be snug — worth an eyes-on check later when Finance goes mobile.
+
+NEXT: Piece 3 — Accounts screen (create/edit/archive both account types, fixed order
+cash-then-investment, the REAL zero-account empty state with a working "+ add first account" action).
+
+FOR THE CHECKER: nothing — src-only piece, no schema change.
+
+---
+
 ### 2026-07-10 — Finance Piece 1: schema (checker approved)
 
 WHAT CHANGED:

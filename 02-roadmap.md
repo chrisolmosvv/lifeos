@@ -8,6 +8,11 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-10 — Finance Piece 2: nav wiring + stub ✅
+Finance appears in the nav (between Food and Rolodex). A calm broadsheet placeholder renders —
+SmallCapsLabel + HairlineRule + italic note. No data query, no button. Three files touched (one new).
+**NEXT: Piece 3 — Accounts screen (create/edit/archive, real empty state).**
+
 ## Session note — 2026-07-10 — Finance Piece 1: schema ✅ (checker approved)
 Four new tables (finance_accounts, finance_transactions, finance_account_snapshots, finance_budgets)
 for the Finance module. Additive; spine-safe (category_id is plain value everywhere); sign-consistency
