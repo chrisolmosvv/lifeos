@@ -8,6 +8,12 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-10 — Finance Piece 5a: CSV import infrastructure ✅ (parsers STUBBED)
+Import preview table, dedup via csv_match_key, batched category auto-guess, batch insert — all
+built and verified against fixture data. ING + Revolut parsers are honest stubs; Piece 5b needs
+real sample exports from the owner before implementation. Six files touched (4 new).
+**NEXT: Piece 5b — real parsers once sample data arrives. BLOCKED on owner supplying samples.**
+
 ## Session note — 2026-07-10 — Finance Piece 4: transaction ledger + add/edit flow ✅ (4a-4d)
 The full transaction ledger is built: create income/expense/transfer (two-row paired insert),
 edit inline (transfer-pair-aware), soft-delete + Toast undo (direct archived_at, no archive_batches),

@@ -33,6 +33,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-10 — Finance Piece 5a: CSV import infrastructure (parsers STUBBED)
+
+WHAT CHANGED:
+- **csvParsers.js** (NEW): `parseINGCsv` and `parseRevolutCsv` are STUBS that throw — they need
+  real de-identified sample export rows from the owner before implementation. A `getFixtureImportRows`
+  function provides 8 hand-written test rows for end-to-end verification.
+- **importGuess.js** (NEW): batched category auto-guess — for all unique descriptions in an import,
+  finds the most common category_id among existing transactions on the same account with a matching
+  description (case-insensitive exact match). One query, returns a lookup map.
+- **ImportPreview.jsx** (NEW): editable preview table — each parsed row gets a checkbox (include/
+  exclude), date, amount (tabular figures), description, and a category select (pre-filled from the
+  auto-guess). Rows matching an existing csv_match_key show "already imported" and default to
+  excluded. Summary line ("N new, M already imported"). Import/Cancel buttons.
+- **financeData.js** (extended): `buildCsvMatchKey`, `findExistingKeys`, `batchImportTransactions` —
+  the dedup key format is `account_id|entry_date|amount|description(trimmed,lowercased)`.
+- **AccountDetail.jsx** (extended): "Import" button appears for CASH accounts only, opens the
+  ImportPreview inline.
+- **financeImport.css** (NEW): preview table styles, ink/hairline only.
+
+FILES TOUCHED: src/desktop/finance/{AccountDetail.jsx, ImportPreview.jsx, csvParsers.js,
+importGuess.js, financeData.js, financeImport.css}
+
+HOW TO VERIFY:
+1. On a cash account, tap "Import" → preview table renders 8 fixture rows.
+2. Toggle include/exclude, change categories — both stick in the UI before committing.
+3. Tap "Import N transactions" → included rows land in finance_transactions with csv_match_key
+   set. Reload the ledger → they appear correctly.
+4. Re-open Import with the SAME fixture data → previously-imported rows show "already imported"
+   and are excluded by default (proves dedup works against real committed rows).
+5. Confirm "Import" does NOT appear on investment accounts.
+6. Other pillars unaffected.
+
+KNOWN GAPS (stated clearly):
+- **parseINGCsv and parseRevolutCsv are STUBS that throw.** Piece 5b needs real de-identified
+  sample export rows from the owner (ING and Revolut, ~5-10 rows with headers) before the actual
+  file-upload parsing can be built. Everything else (dedup, category guess, preview table, commit
+  logic) is built and verified against fixture data.
+- Category auto-guess requires an existing manually-logged transaction with a matching description
+  on the same account to produce a hit — first-time imports on a fresh account will have no
+  guesses (all default to Inbox).
+
+NEXT: Piece 5b — once sample data arrives: implement the two real parsers, wire a file-upload
+input in place of the fixture call.
+
+FOR THE CHECKER: nothing — src-only, no schema.
+
+---
+
 ### 2026-07-10 — Finance Piece 4: transaction ledger + add/edit flow (COMPLETE)
 
 WHAT CHANGED (four commits, one piece):
