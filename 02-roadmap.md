@@ -8,6 +8,11 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-11 — Finance Piece 8b: spending/income/top-categories charts ✅
+Three new chart components on TrendsScreen: stacked spend-by-category bar, income-vs-expense paired
+bar, top-5 ranked list. All share the range switcher, all exclude transfers, all one-fetch/multi-view.
+**NEXT: Piece 8c — month-over-month deltas + average-spend baseline on Budgets screen.**
+
 ## Session note — 2026-07-11 — Finance Piece 8a: net worth trend chart ✅
 Pure calc layer (financeCalc.js) + hand-rolled SVG line chart (NetWorthChart.jsx) + TrendsScreen.
 Combined/per-account/cash-vs-investment views. 6m/1y/2y range switcher. One-pass running balance

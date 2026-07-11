@@ -33,6 +33,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — Finance Piece 8b: spending, income/expense, top categories charts
+
+WHAT CHANGED:
+- **financeCalc.js** (extended): three new pure functions — `spendByCategoryByMonth` (expenses
+  grouped by category per month for the stacked bar), `incomeVsExpenseByMonth` (income + expense
+  totals per month), `topCategories` (top N by total expense spend, ranked). All exclude transfers.
+- **SpendByCategoryChart.jsx** (NEW — 61 lines): stacked CSS-div bars per month, category-colored
+  from the palette, hover shows per-category breakdown.
+- **IncomeExpenseChart.jsx** (NEW — 50 lines): paired bars per month (income = ink, expense =
+  ink-muted), hover shows exact values for that month.
+- **TopCategories.jsx** (NEW — 26 lines): ranked list, dot + name + amount, top 5.
+- **TrendsScreen.jsx** (extended): wires all three below the net worth chart, all sharing the same
+  range switcher. Income/expense and top categories sit side-by-side on wide screens.
+- **financeTrendsCharts.css** (NEW — 168 lines): styles for the three new chart types.
+
+FILES TOUCHED: src/desktop/finance/{financeCalc.js, TrendsScreen.jsx, SpendByCategoryChart.jsx,
+IncomeExpenseChart.jsx, TopCategories.jsx, financeTrendsCharts.css}
+
+HOW TO VERIFY:
+1. Spot-check the net worth chart — does the current value look right by hand?
+2. Log expenses in 2+ categories across 2+ months → SpendByCategoryChart shows correctly segmented,
+   consistently colored bars per month.
+3. IncomeExpenseChart shows income and expense as distinct series — cross-check one month by hand.
+4. TopCategories shows highest-spend categories in correct order, capped at 5.
+5. Switch range (6m/1y/2y) → all four charts update together.
+6. Transfers do NOT affect any of these three views.
+7. Empty range → quiet "no data" message, no broken chart.
+8. Reload → recomputes correctly.
+9. Ledger/Accounts/Recurring/Budgets unaffected.
+
+KNOWN GAPS:
+- Month-over-month deltas and average-spend baseline are 8c.
+- Investment gain/loss and the spending heatmap are 8d.
+
+NEXT: Piece 8c — month-over-month category deltas + average-spend baseline on Budgets screen.
+
+FOR THE CHECKER: nothing — src-only, no schema.
+
+---
+
 ### 2026-07-11 — Finance Piece 8a: net worth trend chart + calc layer
 
 WHAT CHANGED:
