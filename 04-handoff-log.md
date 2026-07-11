@@ -33,6 +33,50 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — Finance Piece 8c: month-over-month deltas + average-spend baseline
+
+WHAT CHANGED:
+- **financeCalcSpend.js** (NEW — 114 lines): extracted all spending-analysis pure functions from
+  financeCalc.js (which was at 258 lines, over the ceiling). Includes the 8b functions
+  (spendByCategoryByMonth, incomeVsExpenseByMonth, topCategories) plus two new ones:
+  `monthOverMonthDeltas` (per-category current vs prior month, with delta) and
+  `averageSpendBaseline` (trailing-6-month average for one category, excluding current month).
+- **DeltaList.jsx** (NEW — 35 lines): ranked list on TrendsScreen. Per category: current total,
+  direction arrow (↑/↓), delta from last month. Categories in only one month get "new this month"
+  / "nothing this month" labels. Ink only, no colour-coding by direction.
+- **BudgetsScreen.jsx** (extended): the cross-piece touch point from Piece 7. Each budgeted
+  category now shows a quiet italic baseline below its bar: "typically €X/month" — the trailing-
+  6-month average. Only shown when history exists; no baseline = nothing rendered.
+- **financeBudgets.css** (extended): `.fin-budget-baseline` style.
+- **financeTrendsCharts.css** (extended): `.fin-delta-*` styles.
+
+FILES TOUCHED: src/desktop/finance/{financeCalc.js (trimmed), financeCalcSpend.js (NEW),
+TrendsScreen.jsx, DeltaList.jsx (NEW), BudgetsScreen.jsx, financeTrendsCharts.css, financeBudgets.css}
+
+HOW TO VERIFY (with actual numbers from the live database):
+- **DeltaList cross-check**: the database currently has 2 expense transactions, both on July 11,
+  both uncategorised: "Pitcher of Beer" (€23.70) + "Mcdonalds Bathroom" (€1.02) = **€24.72**
+  total. June has €0 expense. The DeltaList should show: "Uncategorised: €24,72 — new this month."
+  Confirm this exact number appears.
+- **Category with spend in only one month**: since all current spend is in July (none in June),
+  every category appearing in the delta list should show "new this month" — confirm this label.
+- **Budgets baseline**: with only ~1 day of history, no budgeted category has trailing-6-month
+  data yet → no baseline line should appear on any budget row. Confirm this is the case (clean
+  absence, not a broken "€0.00/month").
+- Confirm Piece 7's budget bars (limit, spend, brick threshold) are completely unaffected.
+- Reload → everything recomputes.
+- Ledger/Accounts/Recurring/Trends(8a/8b) all unaffected.
+
+KNOWN GAPS:
+- Investment gain/loss + the spending heatmap are 8d (the last sub-piece).
+
+NEXT: Piece 8d — investment gain/loss ("since last check") + the spending heatmap (calendar-grid,
+darker = more spent).
+
+FOR THE CHECKER: nothing — src-only, no schema.
+
+---
+
 ### 2026-07-11 — Finance Piece 8b: spending, income/expense, top categories charts
 
 WHAT CHANGED:

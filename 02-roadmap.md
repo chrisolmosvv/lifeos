@@ -8,6 +8,12 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-11 — Finance Piece 8c: deltas + baseline ✅
+DeltaList on TrendsScreen (month-over-month with ↑↓ arrows, "new this month" for one-month-only).
+Average-spend baseline on Budgets screen (cross-piece from Piece 7, trailing 6 months, italic).
+financeCalc.js split to financeCalcSpend.js. Cross-check: €24.72 uncategorised in July matches.
+**NEXT: Piece 8d — investment gain/loss + spending heatmap (last sub-piece of Piece 8).**
+
 ## Session note — 2026-07-11 — Finance Piece 8b: spending/income/top-categories charts ✅
 Three new chart components on TrendsScreen: stacked spend-by-category bar, income-vs-expense paired
 bar, top-5 ranked list. All share the range switcher, all exclude transfers, all one-fetch/multi-view.
