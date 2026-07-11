@@ -1,0 +1,121 @@
+/* Finance budgets screen (Piece 7). Terracotta reserved for "+ Set a budget"
+   only. Brick (#A85C44) for over-budget bars (added in 7b). All tokens from theme.css. */
+
+.fin-budgets {
+  padding: 0 2rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.fin-budgets-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 1.5rem;
+}
+.fin-budgets-empty {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  text-align: center;
+  padding: 3rem 0;
+  margin: 0;
+}
+.fin-budgets-list { margin-top: 0.5rem; }
+
+/* ── Budget row ──────────────────────────────────────────────────────────── */
+
+.fin-budget-row {
+  border-bottom: 1px solid var(--rule-faint);
+}
+.fin-budget-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.fin-budget-name {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.fin-budget-limit {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+}
+
+/* ── Set form ────────────────────────────────────────────────────────────── */
+
+.fin-budget-set {
+  padding: 0.5rem 0 1rem;
+  max-width: 360px;
+}
+
+/* ── Edit popover ────────────────────────────────────────────────────────── */
+
+.fin-budget-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 180px;
+}
+
+/* ── Budget bar (added in 7b) ────────────────────────────────────────────── */
+
+.fin-budget-bar-wrap {
+  padding: 0.15rem 0 0.3rem;
+}
+.fin-budget-bar {
+  height: 4px;
+  background: var(--rule-faint);
+  position: relative;
+}
+.fin-budget-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--ink-muted);
+  max-width: 100%;
+}
+.fin-budget-bar-fill.is-over {
+  background: var(--overdue);
+  max-width: none;
+}
+.fin-budget-spend {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  margin-top: 0.15rem;
+}
+.fin-budget-spend.is-over {
+  color: var(--overdue);
+}
+
+/* ── Everything else line ────────────────────────────────────────────────── */
+
+.fin-budget-else {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--rule);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.fin-budget-else-label {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+.fin-budget-else-amt {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
