@@ -85,6 +85,45 @@ export function netWorthSplitCashVsInvestment(transactions, snapshots, accounts,
   }
 }
 
+// ── Investment gain/loss ─────────────────────────────────────────────────────
+// For one investment account, walk its snapshots in date order and compute the
+// diff between consecutive pairs. Returns { latest, diffs[] } where latest is
+// the most recent diff ("since last check") and diffs is the full history.
+export function investmentGainLoss(snapshots, accountId) {
+  const acctSnaps = snapshots
+    .filter((s) => s.account_id === accountId)
+    .sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date))
+  if (acctSnaps.length < 2) return { latest: null, diffs: [] }
+  const diffs = []
+  for (let i = 1; i < acctSnaps.length; i++) {
+    const prev = Number(acctSnaps[i - 1].value)
+    const curr = Number(acctSnaps[i].value)
+    diffs.push({
+      date: acctSnaps[i].snapshot_date,
+      fromDate: acctSnaps[i - 1].snapshot_date,
+      value: curr,
+      prev,
+      diff: curr - prev,
+    })
+  }
+  return { latest: diffs[diffs.length - 1], diffs }
+}
+
+// ── Daily spend totals (for the heatmap) ────────────────────────────────────
+// Returns a Map<date, totalExpense> for every day in [from, to]. Days with no
+// expense get 0 (so the heatmap grid has an entry for every cell).
+export function dailySpendTotals(transactions, from, to) {
+  const days = datesBetween(from, to)
+  const totals = new Map()
+  for (const day of days) totals.set(day, 0)
+  for (const t of transactions) {
+    if (t.txn_type !== 'expense') continue
+    if (t.entry_date < from || t.entry_date > to) continue
+    totals.set(t.entry_date, (totals.get(t.entry_date) || 0) + Math.abs(Number(t.amount)))
+  }
+  return totals
+}
+
 // Spending analysis functions in financeCalcSpend.js (split to stay under ~250 lines).
 
 // ── Internal: cash running balance per day ──────────────────────────────────

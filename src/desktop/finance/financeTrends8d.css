@@ -1,0 +1,58 @@
+/* Finance trends — gain/loss + heatmap styles (Piece 8d, split from
+   financeTrendsCharts.css). All tokens from theme.css. */
+
+/* ── Gain/loss (investment) ──────────────────────────────────────────────── */
+
+.fin-gl { margin-bottom: 1rem; }
+.fin-gl-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--rule-faint);
+}
+.fin-gl-name {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  color: var(--ink);
+  flex: 1;
+}
+.fin-gl-val {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.fin-gl-diff {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+.fin-gl-since {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+}
+.fin-gl-hint {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+/* ── Spending heatmap ────────────────────────────────────────────────────── */
+
+.fin-heatmap { margin-bottom: 1.5rem; }
+.fin-heatmap-wrap { overflow-x: auto; padding: 0.3rem 0; }
+.fin-heatmap-svg { display: block; }
+.fin-hm-cell { fill: var(--ink); cursor: crosshair; }
+.fin-hm-day {
+  font-family: var(--font-sans);
+  font-size: 7px;
+  fill: var(--ink-muted);
+}
+.fin-hm-tooltip {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink);
+  margin: 0.3rem 0 0;
+}

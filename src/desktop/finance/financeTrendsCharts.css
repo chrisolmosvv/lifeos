@@ -206,3 +206,5 @@
   min-width: 140px;
   text-align: right;
 }
+
+/* Gain/loss + heatmap styles in financeTrends8d.css (split to stay under ~250). */

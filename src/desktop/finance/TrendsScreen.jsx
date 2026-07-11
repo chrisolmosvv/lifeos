@@ -7,13 +7,16 @@ import SpendByCategoryChart from './SpendByCategoryChart'
 import IncomeExpenseChart from './IncomeExpenseChart'
 import TopCategories from './TopCategories'
 import DeltaList from './DeltaList'
-import { netWorthByDay, netWorthByDayForAccount, netWorthSplitCashVsInvestment } from './financeCalc'
+import GainLoss from './GainLoss'
+import SpendHeatmap from './SpendHeatmap'
+import { netWorthByDay, netWorthByDayForAccount, netWorthSplitCashVsInvestment, investmentGainLoss, dailySpendTotals } from './financeCalc'
 import { spendByCategoryByMonth, incomeVsExpenseByMonth, topCategories, monthOverMonthDeltas } from './financeCalcSpend'
 import { fetchAllTransactions, fetchAllSnapshots, fetchLatestSnapshotsBefore } from './financeTrendsData'
 import { listCategories } from './financeData'
 import { amsTodayYMD, shiftYMD } from '../../spine/logic/gymDates'
 import './financeTrends.css'
 import './financeTrendsCharts.css'
+import './financeTrends8d.css'
 
 // TrendsScreen — the analysis/chart sub-view. Net worth (8a) + spending,
 // income/expense, and top categories (8b). All share the same range switcher.
@@ -71,6 +74,17 @@ export default function TrendsScreen({ accounts, onBack }) {
     catch { return currentMonth }
   })()
 
+  // ── Investment gain/loss ────────────────────────────────────────────────
+  const gainLossMap = new Map()
+  if (data) {
+    for (const a of accounts.filter((a) => a.account_type === 'investment')) {
+      gainLossMap.set(a.id, investmentGainLoss(data.snaps, a.id))
+    }
+  }
+
+  // ── Heatmap ─────────────────────────────────────────────────────────────
+  const heatmapData = data ? dailySpendTotals(data.txns, data.from, data.to) : null
+
   return (
     <div className="fin-trends">
       <div className="fin-trends-head">
@@ -113,6 +127,14 @@ export default function TrendsScreen({ accounts, onBack }) {
           <HairlineRule faint />
           <div className="fin-trends-section">
             <DeltaList data={deltaData} currentMonthLabel={currentMonthLabel} />
+          </div>
+          <HairlineRule faint />
+          <div className="fin-trends-section">
+            <GainLoss accounts={accounts} gainLossMap={gainLossMap} />
+          </div>
+          <HairlineRule faint />
+          <div className="fin-trends-section">
+            <SpendHeatmap dailyTotals={heatmapData} />
           </div>
         </>
       )}
