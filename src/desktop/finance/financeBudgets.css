@@ -96,6 +96,13 @@
 .fin-budget-spend.is-over {
   color: var(--overdue);
 }
+.fin-budget-baseline {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+  font-style: italic;
+  margin: 0.1rem 0 0;
+}
 
 /* ── Everything else line ────────────────────────────────────────────────── */
 

@@ -85,69 +85,7 @@ export function netWorthSplitCashVsInvestment(transactions, snapshots, accounts,
   }
 }
 
-// ── Spending by category by month ────────────────────────────────────────────
-// Returns [{ month:'YYYY-MM', categories:[{ id, name, color, total }] }] sorted by month.
-// Only expenses (txn_type='expense'), transfers excluded.
-export function spendByCategoryByMonth(transactions, categories, from, to) {
-  const catMap = new Map(categories.map((c) => [c.id, c]))
-  const months = new Map() // 'YYYY-MM' → Map<category_id, total>
-  for (const t of transactions) {
-    if (t.txn_type !== 'expense') continue
-    if (t.entry_date < from || t.entry_date > to) continue
-    const m = t.entry_date.slice(0, 7)
-    if (!months.has(m)) months.set(m, new Map())
-    const catId = t.category_id || '__none__'
-    const buckets = months.get(m)
-    buckets.set(catId, (buckets.get(catId) || 0) + Math.abs(Number(t.amount)))
-  }
-  return [...months.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([month, buckets]) => ({
-      month,
-      categories: [...buckets.entries()].map(([id, total]) => {
-        const cat = catMap.get(id)
-        return { id, name: cat?.name || 'Uncategorised', color: cat?.color || null, total }
-      }).sort((a, b) => b.total - a.total),
-    }))
-}
-
-// ── Income vs expense by month ──────────────────────────────────────────────
-// Returns [{ month, income, expense }] sorted by month. Transfers excluded.
-export function incomeVsExpenseByMonth(transactions, from, to) {
-  const months = new Map() // 'YYYY-MM' → { income, expense }
-  for (const t of transactions) {
-    if (t.txn_type === 'transfer') continue
-    if (t.entry_date < from || t.entry_date > to) continue
-    const m = t.entry_date.slice(0, 7)
-    if (!months.has(m)) months.set(m, { income: 0, expense: 0 })
-    const bucket = months.get(m)
-    if (t.txn_type === 'income') bucket.income += Number(t.amount)
-    else bucket.expense += Math.abs(Number(t.amount))
-  }
-  return [...months.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([month, v]) => ({ month, income: v.income, expense: v.expense }))
-}
-
-// ── Top N categories by total expense spend ─────────────────────────────────
-// Returns [{ id, name, color, total }] ranked, capped at n.
-export function topCategories(transactions, categories, from, to, n = 5) {
-  const catMap = new Map(categories.map((c) => [c.id, c]))
-  const totals = new Map()
-  for (const t of transactions) {
-    if (t.txn_type !== 'expense') continue
-    if (t.entry_date < from || t.entry_date > to) continue
-    const catId = t.category_id || '__none__'
-    totals.set(catId, (totals.get(catId) || 0) + Math.abs(Number(t.amount)))
-  }
-  return [...totals.entries()]
-    .map(([id, total]) => {
-      const cat = catMap.get(id)
-      return { id, name: cat?.name || 'Uncategorised', color: cat?.color || null, total }
-    })
-    .sort((a, b) => b.total - a.total)
-    .slice(0, n)
-}
+// Spending analysis functions in financeCalcSpend.js (split to stay under ~250 lines).
 
 // ── Internal: cash running balance per day ──────────────────────────────────
 function buildCashBalancesByDay(transactions, cashAccounts, days) {

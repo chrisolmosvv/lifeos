@@ -5,7 +5,9 @@ import Popover from '../kit/Popover'
 import CategoryPicker from '../kit/CategoryPicker'
 import { listBudgets, setBudget, thisMonthSpendByCategory } from './budgetData'
 import { listCategories, createCategory } from './financeData'
-import { amsTodayYMD } from '../../spine/logic/gymDates'
+import { fetchAllTransactions } from './financeTrendsData'
+import { averageSpendBaseline } from './financeCalcSpend'
+import { amsTodayYMD, shiftYMD } from '../../spine/logic/gymDates'
 import './financeBudgets.css'
 
 // BudgetsScreen — per-category monthly limits + spend bars (Piece 7a+7b).
@@ -25,6 +27,7 @@ export default function BudgetsScreen({ onBack }) {
   const [budgets, setBudgets] = useState(null)
   const [cats, setCats] = useState([])
   const [spend, setSpend] = useState(new Map()) // category_id → total expense (positive)
+  const [baselines, setBaselines] = useState(new Map()) // category_id → avg monthly spend
   const [adding, setAdding] = useState(false)
   const [editCat, setEditCat] = useState(null)
   const [editVal, setEditVal] = useState('')
@@ -34,10 +37,22 @@ export default function BudgetsScreen({ onBack }) {
 
   const load = useCallback(async () => {
     const { from, to } = monthBounds()
-    const [b, c, s] = await Promise.all([listBudgets(), listCategories(), thisMonthSpendByCategory(from, to)])
+    const today = amsTodayYMD()
+    const histFrom = shiftYMD(today, -183) // ~6 months back for baseline
+    const [b, c, s, histTxns] = await Promise.all([
+      listBudgets(), listCategories(), thisMonthSpendByCategory(from, to),
+      fetchAllTransactions(histFrom, today),
+    ])
     setBudgets(b)
     setCats(c)
     setSpend(s)
+    // Compute baselines for all budgeted categories.
+    const bl = new Map()
+    for (const budget of b) {
+      const avg = averageSpendBaseline(histTxns, budget.category_id)
+      if (avg != null) bl.set(budget.category_id, avg)
+    }
+    setBaselines(bl)
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -103,6 +118,9 @@ export default function BudgetsScreen({ onBack }) {
                     <p className={'fin-budget-spend' + (isOver ? ' is-over' : '')}>
                       €{fmtAmt(spent)} of €{fmtAmt(limit)}{isOver ? ' — over budget' : ''}
                     </p>
+                    {baselines.has(b.category_id) && (
+                      <p className="fin-budget-baseline">typically €{fmtAmt(baselines.get(b.category_id))}/month</p>
+                    )}
                   </div>
                 </div>
               )

@@ -6,7 +6,9 @@ import NetWorthChart from './NetWorthChart'
 import SpendByCategoryChart from './SpendByCategoryChart'
 import IncomeExpenseChart from './IncomeExpenseChart'
 import TopCategories from './TopCategories'
-import { netWorthByDay, netWorthByDayForAccount, netWorthSplitCashVsInvestment, spendByCategoryByMonth, incomeVsExpenseByMonth, topCategories } from './financeCalc'
+import DeltaList from './DeltaList'
+import { netWorthByDay, netWorthByDayForAccount, netWorthSplitCashVsInvestment } from './financeCalc'
+import { spendByCategoryByMonth, incomeVsExpenseByMonth, topCategories, monthOverMonthDeltas } from './financeCalcSpend'
 import { fetchAllTransactions, fetchAllSnapshots, fetchLatestSnapshotsBefore } from './financeTrendsData'
 import { listCategories } from './financeData'
 import { amsTodayYMD, shiftYMD } from '../../spine/logic/gymDates'
@@ -58,10 +60,16 @@ export default function TrendsScreen({ accounts, onBack }) {
     }
   }
 
-  // ── Spending / income / top categories ──────────────────────────────────
+  // ── Spending / income / top categories / deltas ─────────────────────────
   const spendData = data ? spendByCategoryByMonth(data.txns, data.cats, data.from, data.to) : null
   const ieData = data ? incomeVsExpenseByMonth(data.txns, data.from, data.to) : null
   const topData = data ? topCategories(data.txns, data.cats, data.from, data.to) : null
+  const currentMonth = amsTodayYMD().slice(0, 7)
+  const deltaData = data ? monthOverMonthDeltas(data.txns, data.cats, currentMonth) : null
+  const currentMonthLabel = (() => {
+    try { return new Date(currentMonth + '-15T12:00:00').toLocaleDateString('en-GB', { month: 'long' }) }
+    catch { return currentMonth }
+  })()
 
   return (
     <div className="fin-trends">
@@ -101,6 +109,10 @@ export default function TrendsScreen({ accounts, onBack }) {
             <div className="fin-trends-half">
               <TopCategories data={topData} />
             </div>
+          </div>
+          <HairlineRule faint />
+          <div className="fin-trends-section">
+            <DeltaList data={deltaData} currentMonthLabel={currentMonthLabel} />
           </div>
         </>
       )}
