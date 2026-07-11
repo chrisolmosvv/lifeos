@@ -1,0 +1,12 @@
+Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance
+Card Payment,Current,2026-01-05 10:15:22,2026-01-06 09:30:00,Supermarkt Bravo,-12.50,0.00,EUR,COMPLETED,487.50
+Card Payment,Current,2026-01-05 14:20:33,2026-01-06 09:30:00,Coffee Corner,-3.80,0.00,EUR,COMPLETED,483.70
+Topup,Current,2026-01-07 08:00:00,2026-01-07 08:00:01,Payment from Employer BV,2500.00,0.00,EUR,COMPLETED,2983.70
+Transfer,Current,2026-01-08 11:00:00,2026-01-08 11:00:01,Transfer to Savings Account,-500.00,0.00,EUR,COMPLETED,2483.70
+Card Payment,Current,2026-01-09 19:45:00,2026-01-10 10:00:00,Restaurant Het Kompas,-42.00,0.00,EUR,COMPLETED,2441.70
+Interest,Deposit,2026-01-10 04:00:00,2026-01-10 04:00:00,"Net Interest Paid to 'Savings' for Jan 10, 2026",0.03,0.00,EUR,COMPLETED,100.03
+Card Payment,Current,2026-01-10 16:30:00,2026-01-11 10:00:00,Pharmacy Centrum,-8.95,0.00,EUR,COMPLETED,2432.75
+Card Payment,Current,2026-01-11 09:00:00,2026-01-11 10:00:00,Train Ticket,-4.20,0.00,EUR,COMPLETED,2428.55
+Card Payment,Current,2026-01-12 20:00:00,2026-01-13 10:00:00,Cinema Palace,-15.00,0.00,EUR,COMPLETED,2413.55
+Card Payment,Current,2026-01-13 12:00:00,,Pending Bakery,-2.50,0.00,EUR,PENDING,2411.05
+Exchange,Current,2026-01-14 15:00:00,2026-01-14 15:00:01,Exchange to USD,-50.00,0.00,USD,COMPLETED,2361.05

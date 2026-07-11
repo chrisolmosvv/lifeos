@@ -132,6 +132,22 @@
 }
 .fin-form-cancel:hover { color: var(--ink); }
 
+/* Import file input — hidden, triggered by label click */
+.fin-import-label { cursor: pointer; position: relative; }
+.fin-import-file-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.fin-import-error {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--overdue);
+  margin: 0.5rem 0 0;
+}
+
 /* ── Snapshot log (investment accounts) ──────────────────────────────────── */
 
 .fin-snap { margin-top: 1.5rem; }
