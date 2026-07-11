@@ -33,6 +33,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — Finance Piece 7 COMPLETE: Budgets (7a limits + 7b spend bars)
+
+WHAT CHANGED (two commits):
+- **(7a) Budgets screen + set/edit limits.** BudgetsScreen.jsx: list of live budgets (newest row
+  per category_id, append-only). "+ Set a budget" opens CategoryPicker → amount field → insert.
+  Tap a row → Popover for inline limit editing (writes a NEW row, never an update — same
+  discipline as health_goals). budgetData.js: listBudgets (resolve newest per category),
+  setBudget (append), thisMonthSpendByCategory. financeBudgets.css.
+- **(7b) Budget-vs-actual bars + "everything else."** For each budgeted category, computes this
+  calendar month's expense spend (sum of finance_transactions where txn_type='expense',
+  entry_date within the month, archived_at IS NULL — income and transfers excluded). BudgetBar:
+  fill proportional to spend/limit, ink-colored normally, BRICK (#A85C44) ONLY when spend
+  STRICTLY EXCEEDS the limit (exactly 100% is NOT brick — per the locked spec). "Everything else"
+  line: total expense spend in categories without a live budget + null-category expenses. Month
+  boundary uses the shared Amsterdam-day helper (amsTodayYMD from gymDates.js).
+
+FILES TOUCHED:
+- src/desktop/finance/BudgetsScreen.jsx (NEW)
+- src/desktop/finance/budgetData.js (NEW)
+- src/desktop/finance/financeBudgets.css (NEW)
+- src/desktop/finance/FinancePage.jsx ('budgets' sub-view)
+- src/desktop/finance/Ledger.jsx ("Budgets" link in masthead)
+
+HOW TO VERIFY (all to be confirmed by the owner):
+- Set a budget on a category → appears in the list.
+- Edit the limit → list shows new value; both rows exist in finance_budgets (append-only confirmed).
+- Log an expense under the limit → bar fills proportionally, ink-colored, no brick.
+- Log enough to exceed the limit → bar turns brick with "over budget" label.
+- Get spend to EXACTLY the limit → bar is NOT brick at exactly 100% (per spec).
+- Log an expense in an unbudgeted category → shows in "everything else," not in any budgeted bar.
+- Income and transfer transactions do not affect any bar or total.
+- Backdate an expense to last month → it does NOT count toward this month's budget.
+- Reload → everything recalculates correctly from fresh data.
+- Ledger, Accounts, Recurring all unaffected.
+
+KNOWN GAPS:
+- **Average-spend baseline** per category deferred to Piece 8 by design.
+- **No budget-removal UI** — a budget can be changed (a new row) but never cleared. Matches the
+  locked spec (no clear/remove concept documented).
+- **Category-id can be null** on an expense (confirmed live) — those go into "everything else."
+
+NEXT: Piece 8 — net worth trend + analysis views (category-over-time bar, income-vs-expense, top
+categories, month-over-month deltas, average-spend baselines, investment gain/loss, spending
+heatmap — the largest remaining piece, will need its own sub-split).
+
+FOR THE CHECKER: nothing — src-only, no schema (finance_budgets already shipped in Piece 1).
+
+---
+
 ### 2026-07-11 — Finance Piece 6 COMPLETE (6a schema + 6b engine + 6c UI)
 
 WHAT CHANGED (the full arc, five commits across three sub-pieces):
