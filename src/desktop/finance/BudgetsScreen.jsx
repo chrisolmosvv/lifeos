@@ -3,28 +3,41 @@ import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import Popover from '../kit/Popover'
 import CategoryPicker from '../kit/CategoryPicker'
-import { listBudgets, setBudget } from './budgetData'
+import { listBudgets, setBudget, thisMonthSpendByCategory } from './budgetData'
 import { listCategories, createCategory } from './financeData'
+import { amsTodayYMD } from '../../spine/logic/gymDates'
 import './financeBudgets.css'
 
-// BudgetsScreen — per-category monthly limits (Piece 7a). Append-only writes:
-// editing a limit inserts a new finance_budgets row (never an update). No clear/
-// remove UI — budgets can only be changed, not deleted, per spec.
+// BudgetsScreen — per-category monthly limits + spend bars (Piece 7a+7b).
+// Append-only writes. Brick bar ONLY when spend STRICTLY EXCEEDS the limit
+// (exactly 100% is NOT brick — per the locked spec).
+
+function monthBounds() {
+  const today = amsTodayYMD()
+  const y = parseInt(today.slice(0, 4), 10)
+  const m = parseInt(today.slice(5, 7), 10)
+  const p = (n) => String(n).padStart(2, '0')
+  const last = new Date(y, m, 0).getDate()
+  return { from: `${y}-${p(m)}-01`, to: `${y}-${p(m)}-${p(last)}` }
+}
 
 export default function BudgetsScreen({ onBack }) {
   const [budgets, setBudgets] = useState(null)
   const [cats, setCats] = useState([])
+  const [spend, setSpend] = useState(new Map()) // category_id → total expense (positive)
   const [adding, setAdding] = useState(false)
-  const [editCat, setEditCat] = useState(null) // category_id being edited
+  const [editCat, setEditCat] = useState(null)
   const [editVal, setEditVal] = useState('')
   const editRef = useRef(null)
 
   const catMap = new Map(cats.map((c) => [c.id, c]))
 
   const load = useCallback(async () => {
-    const [b, c] = await Promise.all([listBudgets(), listCategories()])
+    const { from, to } = monthBounds()
+    const [b, c, s] = await Promise.all([listBudgets(), listCategories(), thisMonthSpendByCategory(from, to)])
     setBudgets(b)
     setCats(c)
+    setSpend(s)
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -34,16 +47,19 @@ export default function BudgetsScreen({ onBack }) {
     await load()
   }
 
-  function openEdit(catId, currentLimit) {
-    setEditCat(catId)
-    setEditVal(String(currentLimit))
-  }
-
+  function openEdit(catId, currentLimit) { setEditCat(catId); setEditVal(String(currentLimit)) }
   async function submitEdit() {
     const amt = parseFloat(editVal)
     if (!amt || amt <= 0 || !editCat) return
     await handleSet(editCat, amt)
     setEditCat(null)
+  }
+
+  // "Everything else": total expense spend in categories WITHOUT a live budget + null-category.
+  const budgetedCatIds = new Set((budgets || []).map((b) => b.category_id))
+  let elseTotal = 0
+  for (const [catId, total] of spend) {
+    if (!budgetedCatIds.has(catId)) elseTotal += total
   }
 
   return (
@@ -55,7 +71,7 @@ export default function BudgetsScreen({ onBack }) {
       <HairlineRule />
 
       {adding ? (
-        <BudgetSetForm cats={cats} existingCatIds={new Set((budgets || []).map((b) => b.category_id))} onSet={async (catId, amt) => { await handleSet(catId, amt); setAdding(false) }} onCancel={() => setAdding(false)} />
+        <BudgetSetForm cats={cats} existingCatIds={budgetedCatIds} onSet={async (catId, amt) => { await handleSet(catId, amt); setAdding(false) }} onCancel={() => setAdding(false)} />
       ) : (
         <button className="fin-add-btn" onClick={() => setAdding(true)}>+ Set a budget</button>
       )}
@@ -65,19 +81,38 @@ export default function BudgetsScreen({ onBack }) {
       ) : budgets.length === 0 ? (
         <p className="fin-budgets-empty">No budgets set yet. Pick a category and set a monthly limit.</p>
       ) : (
-        <div className="fin-budgets-list">
-          {budgets.map((b) => {
-            const cat = catMap.get(b.category_id)
-            return (
-              <div className="fin-budget-row" key={b.category_id}>
-                <button className="fin-budget-label" ref={editCat === b.category_id ? editRef : null} onClick={() => openEdit(b.category_id, b.monthly_limit)}>
-                  <span className="fin-budget-name">{cat?.name || 'Unknown'}</span>
-                  <span className="fin-budget-limit tnum">€{fmtAmt(b.monthly_limit)}</span>
-                </button>
-              </div>
-            )
-          })}
-        </div>
+        <>
+          <div className="fin-budgets-list">
+            {budgets.map((b) => {
+              const cat = catMap.get(b.category_id)
+              const spent = spend.get(b.category_id) || 0
+              const limit = Number(b.monthly_limit)
+              const pct = limit > 0 ? (spent / limit) * 100 : 0
+              // Strictly OVER the limit = brick. Exactly at 100% = NOT brick.
+              const isOver = spent > limit && limit > 0
+              return (
+                <div className="fin-budget-row" key={b.category_id}>
+                  <button className="fin-budget-label" ref={editCat === b.category_id ? editRef : null} onClick={() => openEdit(b.category_id, b.monthly_limit)}>
+                    <span className="fin-budget-name">{cat?.name || 'Unknown'}</span>
+                    <span className="fin-budget-limit tnum">€{fmtAmt(b.monthly_limit)}</span>
+                  </button>
+                  <div className="fin-budget-bar-wrap">
+                    <div className="fin-budget-bar">
+                      <span className={'fin-budget-bar-fill' + (isOver ? ' is-over' : '')} style={{ width: `${Math.min(pct, 100)}%` }} />
+                    </div>
+                    <p className={'fin-budget-spend' + (isOver ? ' is-over' : '')}>
+                      €{fmtAmt(spent)} of €{fmtAmt(limit)}{isOver ? ' — over budget' : ''}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="fin-budget-else">
+            <span className="fin-budget-else-label">Everything else</span>
+            <span className="fin-budget-else-amt tnum">€{fmtAmt(elseTotal)}</span>
+          </div>
+        </>
       )}
 
       {editCat && (
