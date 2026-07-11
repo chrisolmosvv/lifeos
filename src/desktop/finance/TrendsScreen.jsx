@@ -3,14 +3,18 @@ import SmallCapsLabel from '../kit/SmallCapsLabel'
 import HairlineRule from '../kit/HairlineRule'
 import RangeSwitcher from '../kit/RangeSwitcher'
 import NetWorthChart from './NetWorthChart'
-import { netWorthByDay, netWorthByDayForAccount, netWorthSplitCashVsInvestment } from './financeCalc'
+import SpendByCategoryChart from './SpendByCategoryChart'
+import IncomeExpenseChart from './IncomeExpenseChart'
+import TopCategories from './TopCategories'
+import { netWorthByDay, netWorthByDayForAccount, netWorthSplitCashVsInvestment, spendByCategoryByMonth, incomeVsExpenseByMonth, topCategories } from './financeCalc'
 import { fetchAllTransactions, fetchAllSnapshots, fetchLatestSnapshotsBefore } from './financeTrendsData'
+import { listCategories } from './financeData'
 import { amsTodayYMD, shiftYMD } from '../../spine/logic/gymDates'
 import './financeTrends.css'
+import './financeTrendsCharts.css'
 
-// TrendsScreen — the analysis/chart sub-view (Piece 8a). Starts with net worth
-// only; spending/income/heatmap charts added in later sub-pieces (8b-8d) as
-// composable sections below the net worth section.
+// TrendsScreen — the analysis/chart sub-view. Net worth (8a) + spending,
+// income/expense, and top categories (8b). All share the same range switcher.
 
 const RANGES = [
   { id: '6m', label: '6 months' },
@@ -21,45 +25,43 @@ const RANGE_DAYS = { '6m': 183, '1y': 365, '2y': 730 }
 
 export default function TrendsScreen({ accounts, onBack }) {
   const [range, setRange] = useState('6m')
-  const [viewMode, setViewMode] = useState('combined') // 'combined' | 'split' | account_id
+  const [viewMode, setViewMode] = useState('combined')
   const [data, setData] = useState(null)
 
   const load = useCallback(async () => {
     const today = amsTodayYMD()
     const from = shiftYMD(today, -RANGE_DAYS[range])
     const to = today
-    const [txns, snaps, priorSnaps] = await Promise.all([
+    const [txns, snaps, priorSnaps, cats] = await Promise.all([
       fetchAllTransactions(from, to),
       fetchAllSnapshots(from, to),
       fetchLatestSnapshotsBefore(from),
+      listCategories(),
     ])
-    // Merge prior snapshots with in-range snapshots so the step function has
-    // a value to carry forward from before the range start.
     const allSnaps = [...priorSnaps, ...snaps]
-    setData({ txns, snaps: allSnaps, from, to })
+    setData({ txns, snaps: allSnaps, cats, from, to })
   }, [range])
 
   useEffect(() => { load() }, [load])
 
-  // Compute chart series from the loaded raw data.
-  let series = null
-  let splitSeries = null
-  let chartLabel = 'Net worth'
-
+  // ── Net worth series ────────────────────────────────────────────────────
+  let nwSeries = null, nwSplit = null, nwLabel = 'Net worth'
   if (data) {
     if (viewMode === 'split') {
-      splitSeries = netWorthSplitCashVsInvestment(data.txns, data.snaps, accounts, data.from, data.to)
-      chartLabel = 'Net worth — cash vs. investment'
+      nwSplit = netWorthSplitCashVsInvestment(data.txns, data.snaps, accounts, data.from, data.to)
+      nwLabel = 'Net worth — cash vs. investment'
     } else if (viewMode !== 'combined') {
       const acct = accounts.find((a) => a.id === viewMode)
-      if (acct) {
-        series = netWorthByDayForAccount(data.txns, data.snaps, acct, data.from, data.to)
-        chartLabel = acct.name
-      }
+      if (acct) { nwSeries = netWorthByDayForAccount(data.txns, data.snaps, acct, data.from, data.to); nwLabel = acct.name }
     } else {
-      series = netWorthByDay(data.txns, data.snaps, accounts, data.from, data.to)
+      nwSeries = netWorthByDay(data.txns, data.snaps, accounts, data.from, data.to)
     }
   }
+
+  // ── Spending / income / top categories ──────────────────────────────────
+  const spendData = data ? spendByCategoryByMonth(data.txns, data.cats, data.from, data.to) : null
+  const ieData = data ? incomeVsExpenseByMonth(data.txns, data.from, data.to) : null
+  const topData = data ? topCategories(data.txns, data.cats, data.from, data.to) : null
 
   return (
     <div className="fin-trends">
@@ -83,12 +85,25 @@ export default function TrendsScreen({ accounts, onBack }) {
       {!data ? (
         <p className="fin-loading">Loading…</p>
       ) : (
-        <div className="fin-trends-section">
-          <NetWorthChart series={series} splitSeries={splitSeries} label={chartLabel} />
-        </div>
+        <>
+          <div className="fin-trends-section">
+            <NetWorthChart series={nwSeries} splitSeries={nwSplit} label={nwLabel} />
+          </div>
+          <HairlineRule faint />
+          <div className="fin-trends-section">
+            <SpendByCategoryChart data={spendData} />
+          </div>
+          <HairlineRule faint />
+          <div className="fin-trends-row">
+            <div className="fin-trends-half">
+              <IncomeExpenseChart data={ieData} />
+            </div>
+            <div className="fin-trends-half">
+              <TopCategories data={topData} />
+            </div>
+          </div>
+        </>
       )}
-
-      {/* Future sub-pieces (8b-8d) add their chart sections here. */}
     </div>
   )
 }
