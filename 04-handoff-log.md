@@ -33,6 +33,72 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-12 — H-fin-b: hermes-read Finance section (deployed + live-verified)
+
+WHAT CHANGED:
+- **NEW finance.ts (110 lines)** added to hermes-read, mirroring the existing people.ts
+  extraction pattern. It builds a `finance` section for the read snapshot with four parts:
+  - **accounts** — active only (is_archived = false), each carrying a **pre-computed
+    `current_balance`**. Cash = starting_balance + SUM(all non-archived txns ≤ today);
+    investment = latest snapshot value on/before today (else starting_balance). Mirrors the
+    desktop financeCalc.js balance model exactly.
+  - **transactions** — most recent 500 rich rows (id, account_id, entry_date, amount,
+    txn_type, category_id, description). Deliberately NOT tied to the snapshot's small
+    `days` window — money questions (month-over-month spend) need months of history, so the
+    500-row cap is the real bound instead.
+  - **snapshots** — recent investment snapshots (newest first) for current investment values.
+  - **budgets** — resolved to the LIVE limit per category (newest row per category_id wins),
+    the same resolution the desktop Budgets screen uses.
+- **index.ts (220 → 229 lines)**: imports buildFinanceSection, adds it to the parallel
+  Promise.all, adds `finance` to the response JSON, and updates the header/caps doc comments.
+  Both files comfortably under 250.
+- WHY pre-computed balances (design call, reported): the rich transaction payload is capped
+  at 500 rows, so an account with more history would sum to a WRONG balance on the agent
+  side. A separate lightweight (account_id, amount) sweep of ALL non-archived rows makes the
+  balance correct regardless of the cap. WHY a separate file (design call): the balance +
+  budget resolution logic is substantial enough that inlining would crowd index.ts — the
+  people.ts pattern is the house style for exactly this.
+- **hermes-read is READ-ONLY BY CONSTRUCTION** — re-verified across all files: sb.ts exports
+  only select/selectAll, no insert/update/delete/upsert/PATCH anywhere. This new section adds
+  SELECT queries only. Deployed to Frankfurt (cntlptuacsujbdtwvbis) with --no-verify-jwt;
+  config.toml verify_jwt=false pin for hermes-read confirmed by reading the file first.
+
+FILES TOUCHED: supabase/functions/hermes-read/{finance.ts (new), index.ts}
+
+HOW VERIFIED (live, real Telegram messages — AFTER the owner explicitly confirmed to the
+Planner that financial data may flow to Hermes; that AI-boundary gate was its own explicit yes):
+1. **Balance** — "what's my balance" → Marty: **Revolut €396.81**; desktop Accounts screen:
+   **€396.81**. Exact match. ✓ (numbers captured)
+2. **Budget** — "am I near my budget on [category]" → owner confirmed it cleared against the
+   desktop Budgets screen. ✓ (owner-confirmed; exact figures not captured — owner chose to move
+   fast, recorded honestly rather than overclaimed)
+3. **Spend vs last month** — "am I spending more on [category] than last month" → owner
+   confirmed it passed against the Ledger's two-month totals. ✓ (owner-confirmed; exact figures
+   not captured)
+4. **Regression (H-fin-a still works)** — "spent €3 on ZZTEST regression check" → landed in the
+   Ledger; then "undo" removed it cleanly. ✓ Zero ZZTEST rows remain.
+
+KNOWN GAPS / RISKS:
+- **The box READ-skill is not written yet (H-fin-c).** Today's live tests passed because Marty's
+  underlying model is smart enough to use the raw finance data sensibly on its own — but there is
+  no skill text yet teaching him HOW to phrase/handle balance/budget/comparison queries. It should
+  still be written to lock in the right long-term behaviour, mirroring how H-fin-a added a write
+  skill. (Read-side counterpart to that write skill.)
+- **No proactive budget-nudge.** Marty answers finance questions when asked but does not yet
+  reach out on his own ("you're near your dining budget"). That depends on Hermes's not-yet-built
+  proactive/cron infrastructure — deferred, not part of this piece.
+- Budget tests 2 & 3 were owner-confirmed but their raw figures weren't captured in this session
+  (Test 1 and the regression were fully number-verified).
+
+NEXT: **H-fin-c** — the box-skill text teaching Marty HOW to use this new read data for
+balance/budget/comparison questions. Built by the Builder (this pattern of file), pasted onto the
+Hetzner box by the owner, then a Hermes restart — exactly how H-fin-a's write-skill addition worked.
+
+FOR THE CHECKER: no schema change this piece — hermes-read gained new SELECT queries only. No new
+table, no altered column, no write capability of any kind. Read-only-by-construction re-verified.
+
+---
+
 ### 2026-07-11 — H-0: hermes-write split-first refactor (deployed + live-verified)
 
 WHAT CHANGED:
