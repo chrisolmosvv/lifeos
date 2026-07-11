@@ -35,10 +35,16 @@ export function netWorthByDay(transactions, snapshots, accounts, from, to) {
   // Investment: step-function per account per day.
   const investByDay = buildInvestmentValuesByDay(snapshots, investAccounts, days)
 
-  return days.map((day) => ({
+  // Only include days where at least one account contributes (trim leading zeros
+  // from before any account existed — avoids a long flat-at-zero stretch).
+  const raw = days.map((day) => ({
     date: day,
     value: (cashByDay.get(day) || 0) + (investByDay.get(day) || 0),
+    hasData: cashByDay.has(day) || investByDay.has(day),
   }))
+  const firstIdx = raw.findIndex((p) => p.hasData)
+  if (firstIdx < 0) return []
+  return raw.slice(firstIdx).map(({ date, value }) => ({ date, value }))
 }
 
 // ── Net worth for a single account ──────────────────────────────────────────
@@ -46,12 +52,15 @@ export function netWorthByDayForAccount(transactions, snapshots, account, from, 
   const days = datesBetween(from, to)
   if (!days.length) return []
 
-  if (account.account_type === 'cash') {
-    const cashByDay = buildCashBalancesByDay(transactions, [account], days)
-    return days.map((day) => ({ date: day, value: cashByDay.get(day) || 0 }))
-  }
-  const investByDay = buildInvestmentValuesByDay(snapshots, [account], days)
-  return days.map((day) => ({ date: day, value: investByDay.get(day) || 0 }))
+  const byDay = account.account_type === 'cash'
+    ? buildCashBalancesByDay(transactions, [account], days)
+    : buildInvestmentValuesByDay(snapshots, [account], days)
+
+  // Trim leading days before the account contributed.
+  const raw = days.map((day) => ({ date: day, value: byDay.get(day) || 0, hasData: byDay.has(day) }))
+  const firstIdx = raw.findIndex((p) => p.hasData)
+  if (firstIdx < 0) return []
+  return raw.slice(firstIdx).map(({ date, value }) => ({ date, value }))
 }
 
 // ── Net worth split: cash vs investment ─────────────────────────────────────
@@ -65,9 +74,14 @@ export function netWorthSplitCashVsInvestment(transactions, snapshots, accounts,
   const cashByDay = buildCashBalancesByDay(transactions, cashAccounts, days)
   const investByDay = buildInvestmentValuesByDay(snapshots, investAccounts, days)
 
+  // Trim: start from the first day ANY account contributes.
+  const firstIdx = days.findIndex((day) => cashByDay.has(day) || investByDay.has(day))
+  if (firstIdx < 0) return { cash: [], investment: [] }
+  const trimmed = days.slice(firstIdx)
+
   return {
-    cash: days.map((day) => ({ date: day, value: cashByDay.get(day) || 0 })),
-    investment: days.map((day) => ({ date: day, value: investByDay.get(day) || 0 })),
+    cash: trimmed.map((day) => ({ date: day, value: cashByDay.get(day) || 0 })),
+    investment: trimmed.map((day) => ({ date: day, value: investByDay.get(day) || 0 })),
   }
 }
 
