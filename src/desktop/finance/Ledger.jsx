@@ -39,7 +39,7 @@ function lastAccount(accounts) {
 }
 function saveLastAccount(id) { try { localStorage.setItem(LAST_ACCT_KEY, id) } catch { /* */ } }
 
-export default function Ledger({ accounts, onNavigateAccounts, onNavigateRecurring, onNavigateBudgets }) {
+export default function Ledger({ accounts, onNavigateAccounts, onNavigateRecurring, onNavigateBudgets, onNavigateTrends }) {
   const [txns, setTxns] = useState(null)
   const [cats, setCats] = useState([])
   const [adding, setAdding] = useState(false)
@@ -161,6 +161,7 @@ export default function Ledger({ accounts, onNavigateAccounts, onNavigateRecurri
         </div>
         <div className="fin-ledger-right">
           <RangeSwitcher ranges={RANGES} value={rangeUnit} ariaLabel="Ledger range" onChange={changeRange} />
+          <button className="fin-ledger-accts-link" onClick={onNavigateTrends}>Trends</button>
           <button className="fin-ledger-accts-link" onClick={onNavigateBudgets}>Budgets</button>
           <button className="fin-ledger-accts-link" onClick={onNavigateRecurring}>Recurring</button>
           <button className="fin-ledger-accts-link" onClick={onNavigateAccounts}>Accounts</button>

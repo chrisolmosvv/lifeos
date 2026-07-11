@@ -1,0 +1,103 @@
+/* Finance trends — the analysis/chart screen (Piece 8a). No terracotta —
+   this is a read-only view. All tokens from theme.css. */
+
+.fin-trends {
+  padding: 0 2rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.fin-trends-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 1.5rem;
+}
+.fin-trends-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+}
+.fin-trends-view {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.fin-trends-section {
+  margin-top: 0.5rem;
+}
+.fin-trends-empty {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  text-align: center;
+  padding: 3rem 0;
+  margin: 0;
+}
+
+/* ── Net worth chart ─────────────────────────────────────────────────────── */
+
+.fin-nw-chart { margin-bottom: 1.5rem; }
+.fin-nw-label {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0 0 0.3rem;
+}
+.fin-nw-svg {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  display: block;
+  cursor: crosshair;
+}
+.fin-nw-grid {
+  stroke: var(--rule-faint);
+  stroke-width: 0.5;
+}
+.fin-nw-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.fin-nw-line--cash {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.fin-nw-line--invest {
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  stroke-linejoin: round;
+}
+.fin-nw-dot { fill: var(--ink); }
+.fin-nw-cross {
+  stroke: var(--rule);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 2;
+}
+.fin-nw-ytick {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  fill: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.fin-nw-xtick {
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  fill: var(--ink-muted);
+}
+.fin-nw-tooltip {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink);
+  margin: 0.3rem 0 0;
+}
