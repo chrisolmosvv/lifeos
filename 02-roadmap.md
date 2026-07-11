@@ -8,6 +8,12 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-11 — H-0: hermes-write split-first refactor ✅ (deployed + live-verified)
+Extracted food/weight/sleep/focus handlers to health.ts (170 lines). index.ts 358→221 lines.
+Logic byte-for-byte identical. Deployed to Frankfurt, live-verified via two real Telegram messages
+(task handler in index.ts + focus handler in health.ts). ZZTEST rows cleaned up.
+**NEXT: retro Checker pass over hermes-write + hermes-read (the Hermes track's outstanding tidy-up).**
+
 ## Session note — 2026-07-11 — Finance Piece 5b: Revolut CSV parser ✅
 Real parseRevolutCsv: quoted-field support, State/Currency filtering with skip counts, file picker.
 29/29 rows from the real file parsed correctly. Synthetic fixture committed (no real data in repo).

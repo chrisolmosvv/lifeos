@@ -33,6 +33,43 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — H-0: hermes-write split-first refactor (deployed + live-verified)
+
+WHAT CHANGED:
+- **hermes-write/index.ts** (358 → 221 lines): food, weight/body, sleep, and focus handlers
+  extracted to a new **health.ts** (170 lines), mirroring the existing people.ts extraction
+  pattern exactly. Task, event, undo, and the dispatcher/helpers remain in index.ts. Logic is
+  byte-for-byte identical — only file location changed. people.ts (200 lines) and sb.ts (114
+  lines) are untouched.
+- **Deployed** to Frankfurt (`cntlptuacsujbdtwvbis`) with `--no-verify-jwt`.
+  `config.toml` `verify_jwt=false` pin for hermes-write confirmed present before deploy.
+
+HOW VERIFIED (live, end-to-end, stronger than any direct HTTP test):
+1. Owner sent "add task: ZZTEST split check" via Telegram → exercised the task handler (stayed
+   in index.ts, untouched by the split) → task appeared in the LifeOS app's Today view. ✓
+2. Owner sent "log focus: 5 minutes reading" via Telegram → exercised the focus handler (newly
+   extracted to health.ts) → focus session appeared in the LifeOS app's Focus view. ✓
+Both confirm the full production pipeline (Telegram → Hetzner box → deployed hermes-write →
+Supabase → LifeOS app) works identically after the split.
+- ZZTEST cleanup: both verification rows (task + focus) deleted from the database post-verify.
+  Zero ZZTEST rows remain.
+
+KNOWN GAPS:
+- **Finance transaction domain not yet added** — gated on the retro Checker pass (next step).
+- The retro Checker pass over hermes-write + hermes-read has been outstanding since the Hermes
+  track's initial build (tidy-up #2 in 00-hermes-track.md). This split was done partly to
+  prepare for that pass — the files are now a more reviewable size.
+
+NEXT: A retro Checker pass over the now-split hermes-write (index.ts + health.ts + people.ts +
+sb.ts) AND hermes-read (index.ts + people.ts + sb.ts), covering schema-safety AND security
+(secret handling, RLS bypass patterns, no raw SQL, no arbitrary table/column, confirm-gate
+behavior, dedup correctness). Only after that passes does the Finance transaction domain get added.
+
+FOR THE CHECKER: this piece itself needed no schema review (nothing schema changed) — but this
+handoff IS the trigger for the overdue retro pass on both edge functions.
+
+---
+
 ### 2026-07-11 — Finance Piece 5b: real Revolut CSV parser + file picker
 
 WHAT CHANGED:
