@@ -8,6 +8,11 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-11 — Finance Piece 5b: Revolut CSV parser ✅
+Real parseRevolutCsv: quoted-field support, State/Currency filtering with skip counts, file picker.
+29/29 rows from the real file parsed correctly. Synthetic fixture committed (no real data in repo).
+ING still stubbed. **Finance V1 is now COMPLETE (all pieces shipped except ING parser = Piece 5c).**
+
 ## Session note — 2026-07-11 — Finance Piece 8 COMPLETE ✅ (8a-8d: all analysis views)
 Net worth trend (line chart, combined/per-account/split, hover tooltip, leading-zero-trim fix),
 spending-by-category (stacked bars), income-vs-expense (paired bars), top-5 categories, month-over-

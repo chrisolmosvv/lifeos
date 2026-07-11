@@ -33,6 +33,50 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — Finance Piece 5b: real Revolut CSV parser + file picker
+
+WHAT CHANGED:
+- **csvParsers.js** (rewritten): `parseRevolutCsv` now handles the real Revolut export format.
+  Parses comma-delimited CSV with quoted-field support (descriptions can contain commas). Filters
+  by State=COMPLETED and Currency=EUR, reports skip counts for non-matching rows. entry_date =
+  date portion of Completed Date; amount = signed value AS-IS; txn_type = income (positive) or
+  expense (negative), never transfer. ING parser remains stubbed.
+- **AccountDetail.jsx** (rewritten): "Import" button now labeled "Import (Revolut)" and opens a
+  native file picker (accept=".csv"). Reads the file text, parses via parseRevolutCsv, passes the
+  parsed rows + skip counts to ImportPreview. Error handling for unparseable files.
+- **ImportPreview.jsx** (updated): now receives `parsedRows`, `skippedState`, `skippedCurrency`
+  as props instead of calling the fixture function internally. Displays skip counts in the summary
+  line when nonzero.
+- **financeDetail.css** (extended): hidden file input + error message styles.
+- **fixtures/revolut-sample.csv** (NEW — SYNTHETIC): 11 invented rows in the same column shape,
+  including one PENDING and one USD row for skip-count testing. NO real personal data.
+
+FILES TOUCHED: src/desktop/finance/{csvParsers.js, AccountDetail.jsx, ImportPreview.jsx,
+financeDetail.css, fixtures/revolut-sample.csv}
+
+HOW TO VERIFY (using the owner's REAL local file):
+- **Row counts**: the real file has 30 lines (1 header + 29 data rows). All 29 are COMPLETED+EUR,
+  so skip counts should be 0/0 and all 29 should appear in the preview table.
+- **Cross-check ONE specific row**: raw CSV line "Card Payment,...,2026-07-04 14:05:57,...
+  Normal,-7.30,..." → Ledger should show: entry_date=2026-07-04, amount=-€7,30, description=
+  "Normal" (from the Description column), txn_type=expense (derived from negative sign).
+- **Quoted-field test**: rows 25-29 have quoted Description fields (contain commas) — confirm
+  these parse correctly, not split at the comma inside quotes.
+- **Dedup test**: re-import the same file → every row shows "already imported."
+- **Synthetic fixture**: committed file has 1 PENDING + 1 USD row to verify skip reporting works.
+- **Privacy**: the real CSV file is NOT committed — confirmed via git status.
+
+KNOWN GAPS:
+- **parseINGCsv remains stubbed** — Piece 5c, blocked on an ING sample export.
+- **Bank selector**: currently hardcoded to Revolut ("Import (Revolut)" label). When ING lands,
+  a simple which-bank choice will replace this — documented, not urgent.
+
+NEXT: Piece 5c (ING parser), whenever an ING sample arrives. Otherwise **Finance V1 is COMPLETE.**
+
+FOR THE CHECKER: nothing — src-only, no schema.
+
+---
+
 ### 2026-07-11 — Finance Piece 8 COMPLETE (8a-8d: calc layer + all analysis views)
 
 WHAT CHANGED (four sub-pieces, closing the full analysis scope):
