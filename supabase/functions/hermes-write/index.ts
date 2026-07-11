@@ -1,7 +1,8 @@
 // LifeOS — hermes-write: a secret-authed write function for the external Hermes agent.
 //
 // Accepts a typed payload { kind, data, confirmed? } and logs it undoably into LifeOS.
-// Domains: task, event, food, weight/body, sleep, focus, undo. GYM IS EXCLUDED.
+// Domains: task, event (inline), food/weight/sleep/focus (health.ts), people (people.ts).
+// GYM IS EXCLUDED.
 //
 // SAFETY RULES (non-negotiable):
 //   1. No raw/arbitrary writes — the function fully controls every insert per kind.
@@ -20,8 +21,9 @@
 //   OWNER_USER_ID, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — auto-injected / Vault.
 
 import { addDaysYMD, localToUtc, todayYMD } from "../_shared/datetime.ts";
-import { configured, del, insert, OWNER_USER_ID, patch, select, upsert } from "./sb.ts";
+import { configured, del, insert, OWNER_USER_ID, patch, select } from "./sb.ts";
 import { handlePerson, handleNote, handleCatchup, handleConnect } from "./people.ts";
+import { handleFood, handleWeight, handleSleep, handleFocus } from "./health.ts";
 
 const SECRET = Deno.env.get("HERMES_WRITE_SECRET");
 
@@ -46,33 +48,21 @@ function fail(error: string, status = 400) {
 }
 
 const isStr = (v: unknown): v is string => typeof v === "string" && v.trim().length > 0;
-const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
-const isInt = (v: unknown): v is number => isNum(v) && Number.isInteger(v);
-const isBool = (v: unknown): v is boolean => typeof v === "boolean";
+const isInt = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && Number.isInteger(v);
 const isDate = (v: unknown) => isStr(v) && /^\d{4}-\d{2}-\d{2}$/.test(v.trim());
 const isTime = (v: unknown) => isStr(v) && /^\d{2}:\d{2}$/.test(v.trim());
-const isIso = (v: unknown) => isStr(v) && !isNaN(new Date(v).getTime());
 const isUuid = (v: unknown) => isStr(v) && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.trim());
-const nn = (v: unknown) => (isNum(v) && v >= 0 ? v : null); // non-negative number or null
-const optInt = (v: unknown, lo: number, hi: number) => (isInt(v) && v >= lo && v <= hi ? v : null);
 
 // ── Undo log ─────────────────────────────────────────────────────────────────
 
-async function logCreate(
-  table: string,
-  id: string,
-  label: string,
-): Promise<string | null> {
+async function logCreate(table: string, id: string, label: string): Promise<string | null> {
   const row = await insert("marty_actions", {
-    user_id: OWNER_USER_ID,
-    kind: "create",
-    label,
-    items: [{ table, id, title: label }],
+    user_id: OWNER_USER_ID, kind: "create", label, items: [{ table, id, title: label }],
   });
   return row ? String(row.id) : null;
 }
 
-// ── Dedup: check-before-insert within a 2-minute window ──────────────────────
+// ── Dedup ────────────────────────────────────────────────────────────────────
 
 const DEDUP_WINDOW_ISO = () => new Date(Date.now() - 2 * 60_000).toISOString();
 
@@ -81,7 +71,7 @@ async function isDupe(query: string): Promise<boolean> {
   return rows !== null && rows.length > 0;
 }
 
-// ── Kind handlers ────────────────────────────────────────────────────────────
+// ── Kind handlers (inline: task + event) ─────────────────────────────────────
 
 type D = Record<string, unknown>;
 type Result = Response;
@@ -99,7 +89,6 @@ async function handleTask(data: D): Promise<Result> {
   }
   const categoryId = isUuid(data.category_id) ? (data.category_id as string).trim() : null;
 
-  // Dedup
   const esc = encodeURIComponent(title);
   if (await isDupe(
     `tasks?user_id=eq.${OWNER_USER_ID}&title=eq.${esc}&status=eq.open&created_at=gte.${DEDUP_WINDOW_ISO()}&select=id&limit=1`,
@@ -131,7 +120,6 @@ async function handleEvent(data: D): Promise<Result> {
   const endAt = new Date(startAt.getTime() + durMin * 60_000);
   const startIso = startAt.toISOString();
 
-  // Dedup
   const esc = encodeURIComponent(title);
   if (await isDupe(
     `events?user_id=eq.${OWNER_USER_ID}&title=eq.${esc}&start_at=eq.${startIso}&created_at=gte.${DEDUP_WINDOW_ISO()}&select=id&limit=1`,
@@ -148,132 +136,7 @@ async function handleEvent(data: D): Promise<Result> {
   return json({ ok: true, id, undo_id: undoId });
 }
 
-async function handleFood(data: D, confirmed: boolean): Promise<Result> {
-  if (!isDate(data.entry_date)) return fail("food requires entry_date (YYYY-MM-DD)");
-  const MEALS = ["breakfast", "lunch", "dinner", "snacks"];
-  if (!isStr(data.meal_slot) || !MEALS.includes(data.meal_slot as string))
-    return fail(`food requires meal_slot: ${MEALS.join(", ")}`);
-  if (!isNum(data.kcal) || (data.kcal as number) < 0) return fail("food requires kcal >= 0");
-  if (!isNum(data.protein) || (data.protein as number) < 0) return fail("food requires protein >= 0");
-  if (!isNum(data.carbs) || (data.carbs as number) < 0) return fail("food requires carbs >= 0");
-  if (!isNum(data.fat) || (data.fat as number) < 0) return fail("food requires fat >= 0");
-  const label = isStr(data.entry_label) ? data.entry_label.trim().slice(0, 200) : "";
-  if (!label) return fail("food requires a non-empty entry_label");
-
-  const isEstimated = isBool(data.is_estimated) ? data.is_estimated : false;
-  if (isEstimated && !confirmed) return fail("food with is_estimated=true requires confirmed=true", 422);
-
-  const entryDate = (data.entry_date as string).trim();
-  const mealSlot = (data.meal_slot as string).trim();
-
-  // Dedup
-  const escLabel = encodeURIComponent(label);
-  if (await isDupe(
-    `food_log_entries?user_id=eq.${OWNER_USER_ID}&entry_date=eq.${entryDate}&meal_slot=eq.${mealSlot}&entry_label=eq.${escLabel}&created_at=gte.${DEDUP_WINDOW_ISO()}&select=id&limit=1`,
-  )) return json({ ok: true, skipped: true, reason: "duplicate_detected" });
-
-  const saved = await insert("food_log_entries", {
-    user_id: OWNER_USER_ID, entry_date: entryDate, meal_slot: mealSlot,
-    entry_source: "hermes", entry_label: label, is_estimated: isEstimated,
-    food_item_id: null, recipe_id: null,
-    amount: isNum(data.amount) && (data.amount as number) > 0 ? data.amount : 1,
-    unit: isStr(data.unit) ? (data.unit as string).trim().slice(0, 50) : "serving",
-    kcal: data.kcal, protein: data.protein, carbs: data.carbs, fat: data.fat,
-    fibre: nn(data.fibre), sugar: nn(data.sugar), sodium: nn(data.sodium),
-    is_alcohol: isBool(data.is_alcohol) ? data.is_alcohol : false,
-    alcohol_units: nn(data.alcohol_units),
-  });
-  if (!saved) return fail("insert failed", 500);
-  const id = String(saved.id);
-  const undoLabel = `${mealSlot} — ${label}`;
-  const undoId = await logCreate("food_log_entries", id, undoLabel);
-  if (!undoId) { await del(`food_log_entries?id=eq.${id}&user_id=eq.${OWNER_USER_ID}`); return fail("undo log failed — write rolled back", 500); }
-  return json({ ok: true, id, undo_id: undoId });
-}
-
-async function handleWeight(data: D): Promise<Result> {
-  if (!isNum(data.value) || (data.value as number) <= 0 || (data.value as number) >= 500)
-    return fail("weight requires value > 0 and < 500");
-  const TYPES = ["weight", "body_fat", "lean_mass", "bmi"];
-  const metricType = isStr(data.metric_type) && TYPES.includes(data.metric_type as string)
-    ? (data.metric_type as string) : "weight";
-  const unit = isStr(data.unit) ? (data.unit as string).trim().slice(0, 10) : "kg";
-  const readingAt = isIso(data.reading_at) ? new Date(data.reading_at as string).toISOString() : new Date().toISOString();
-  const metricDate = todayYMD(); // Amsterdam day
-
-  // Upsert on natural key — no manual dedup needed.
-  const saved = await upsert("body_metrics", {
-    user_id: OWNER_USER_ID, metric_date: metricDate, metric_type: metricType,
-    value: data.value, unit, reading_at: readingAt, source: "hermes",
-  }, "user_id,metric_type,reading_at,source");
-  if (!saved) return fail("upsert failed", 500);
-  const id = String(saved.id);
-  const label = `${metricType}: ${data.value} ${unit}`;
-  const undoId = await logCreate("body_metrics", id, label);
-  if (!undoId) { await del(`body_metrics?id=eq.${id}&user_id=eq.${OWNER_USER_ID}`); return fail("undo log failed — write rolled back", 500); }
-  return json({ ok: true, id, undo_id: undoId });
-}
-
-async function handleSleep(data: D): Promise<Result> {
-  if (!isDate(data.night_date)) return fail("sleep requires night_date (YYYY-MM-DD)");
-  if (!isInt(data.asleep_minutes) || (data.asleep_minutes as number) < 0 || (data.asleep_minutes as number) > 1440)
-    return fail("sleep requires asleep_minutes (0–1440)");
-
-  const nightDate = (data.night_date as string).trim();
-
-  const saved = await upsert("sleep_nights", {
-    user_id: OWNER_USER_ID, night_date: nightDate,
-    asleep_minutes: data.asleep_minutes, source: "hermes",
-    in_bed_at: isIso(data.in_bed_at) ? new Date(data.in_bed_at as string).toISOString() : null,
-    woke_at: isIso(data.woke_at) ? new Date(data.woke_at as string).toISOString() : null,
-    rem_minutes: optInt(data.rem_minutes, 0, 1440),
-    core_minutes: optInt(data.core_minutes, 0, 1440),
-    deep_minutes: optInt(data.deep_minutes, 0, 1440),
-    awake_minutes: optInt(data.awake_minutes, 0, 1440),
-    awakenings: optInt(data.awakenings, 0, 100),
-    updated_at: new Date().toISOString(),
-  }, "user_id,night_date");
-  if (!saved) return fail("upsert failed", 500);
-  const id = String(saved.id);
-  const label = `Sleep — ${nightDate}`;
-  const undoId = await logCreate("sleep_nights", id, label);
-  if (!undoId) { await del(`sleep_nights?id=eq.${id}&user_id=eq.${OWNER_USER_ID}`); return fail("undo log failed — write rolled back", 500); }
-  return json({ ok: true, id, undo_id: undoId });
-}
-
-async function handleFocus(data: D): Promise<Result> {
-  if (!isIso(data.started_at)) return fail("focus requires started_at (ISO 8601)");
-  if (!isIso(data.ended_at)) return fail("focus requires ended_at (ISO 8601)");
-  const startedAt = new Date(data.started_at as string);
-  const endedAt = new Date(data.ended_at as string);
-  if (endedAt.getTime() <= startedAt.getTime()) return fail("ended_at must be after started_at");
-
-  const MODES = ["count_up", "count_down", "intervals"];
-  const mode = isStr(data.mode) && MODES.includes(data.mode as string) ? (data.mode as string) : "count_up";
-  const taskSnap = isStr(data.task_title_snapshot) ? (data.task_title_snapshot as string).trim().slice(0, 500) : null;
-  const rating = optInt(data.rating, 1, 5);
-  const note = isStr(data.note) ? (data.note as string).trim().slice(0, 1000) : null;
-
-  const startIso = startedAt.toISOString();
-
-  // Dedup
-  if (await isDupe(
-    `focus_sessions?user_id=eq.${OWNER_USER_ID}&started_at=eq.${startIso}&archived_at=is.null&created_at=gte.${DEDUP_WINDOW_ISO()}&select=id&limit=1`,
-  )) return json({ ok: true, skipped: true, reason: "duplicate_detected" });
-
-  const saved = await insert("focus_sessions", {
-    user_id: OWNER_USER_ID, started_at: startIso, ended_at: endedAt.toISOString(),
-    mode, source: "hermes", task_title_snapshot: taskSnap,
-    rating, note, segments: [],
-  });
-  if (!saved) return fail("insert failed", 500);
-  const id = String(saved.id);
-  const durMin = Math.round((endedAt.getTime() - startedAt.getTime()) / 60_000);
-  const label = taskSnap ? `Focus — ${taskSnap}` : `Focus — ${durMin}m`;
-  const undoId = await logCreate("focus_sessions", id, label);
-  if (!undoId) { await del(`focus_sessions?id=eq.${id}&user_id=eq.${OWNER_USER_ID}`); return fail("undo log failed — write rolled back", 500); }
-  return json({ ok: true, id, undo_id: undoId });
-}
+// ── Undo (generic, works for any domain) ─────────────────────────────────────
 
 async function handleUndo(): Promise<Result> {
   const rows = await select(
