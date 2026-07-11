@@ -1,9 +1,9 @@
 // LifeOS — hermes-read: a READ-ONLY edge function for the external Hermes analysis agent.
 //
 // Returns a JSON snapshot of the owner's LifeOS data (tasks, events, categories, food log,
-// sleep, body metrics, activity, focus sessions, gym workouts, health goals) for an
-// external agent running on the owner's VPS. The agent uses this for analysis — summarise
-// the day, spot patterns, track habits.
+// sleep, body metrics, activity, focus sessions, gym workouts, health goals, people,
+// finance) for an external agent running on the owner's VPS. The agent uses this for
+// analysis — summarise the day, spot patterns, track habits, answer money questions.
 //
 // READ-ONLY BY CONSTRUCTION. This function contains NO insert, update, delete, upsert, or
 // PATCH code of any kind — not for any table, not behind any flag. It only SELECTs.
@@ -30,6 +30,9 @@
 //   focus:        200 (within window, newest first)
 //   gym_workouts: 100 (within window, newest first)
 //   health_goals:  50 (active only)
+//   finance:      accounts (active, with pre-computed current_balance) + 500 recent
+//                 transactions (all recent history, NOT the small window — money
+//                 questions need months) + recent investment snapshots + live budgets.
 //
 // Secrets (read at run time, never in this file / the repo / a response / a log):
 //   HERMES_READ_SECRET  — must match the X-Hermes-Secret request header.
@@ -39,6 +42,7 @@
 import { addDaysYMD, localToUtc, todayYMD } from "../_shared/datetime.ts";
 import { configured, ownerActive, ownerPlain, select, selectAll } from "./sb.ts";
 import { buildPeopleSection } from "./people.ts";
+import { buildFinanceSection } from "./finance.ts";
 
 const SECRET = Deno.env.get("HERMES_READ_SECRET");
 
@@ -138,6 +142,7 @@ Deno.serve(async (req) => {
     gymWorkouts,
     healthGoals,
     peopleSection,
+    financeSection,
   ] = await Promise.all([
     // Categories — all (bounded by design, no archive column).
     select(
@@ -185,6 +190,9 @@ Deno.serve(async (req) => {
     ),
     // People — all non-archived with circle, birthday, connections, last contact.
     buildPeopleSection(),
+    // Finance — active accounts (with current_balance), recent transactions,
+    // investment snapshots, and live budgets. Balance/comparison math is the agent's.
+    buildFinanceSection(),
   ]);
 
   // Merge open + recently completed tasks (deduplicated by id, open tasks first).
@@ -216,5 +224,6 @@ Deno.serve(async (req) => {
     gym_workouts: gymWorkouts,
     health_goals: healthGoals,
     people: peopleSection,
+    finance: financeSection,
   });
 });
