@@ -24,6 +24,7 @@ import { addDaysYMD, localToUtc, todayYMD } from "../_shared/datetime.ts";
 import { configured, del, insert, OWNER_USER_ID, patch, select } from "./sb.ts";
 import { handlePerson, handleNote, handleCatchup, handleConnect } from "./people.ts";
 import { handleFood, handleWeight, handleSleep, handleFocus } from "./health.ts";
+import { handleTransaction } from "./finance.ts";
 
 const SECRET = Deno.env.get("HERMES_WRITE_SECRET");
 
@@ -215,7 +216,8 @@ Deno.serve(async (req) => {
     case "note": return await handleNote(data);
     case "catchup": return await handleCatchup(data);
     case "connect": return await handleConnect(data);
+    case "transaction": return await handleTransaction(data);
     case "undo": return await handleUndo();
-    default: return fail(`unknown kind "${kind}" — use task, event, food, weight, sleep, focus, person, note, catchup, connect, or undo`);
+    default: return fail(`unknown kind "${kind}" — use task, event, food, weight, sleep, focus, person, note, catchup, connect, transaction, or undo`);
   }
 });
