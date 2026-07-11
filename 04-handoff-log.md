@@ -33,6 +33,57 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — Finance Piece 8 COMPLETE (8a-8d: calc layer + all analysis views)
+
+WHAT CHANGED (four sub-pieces, closing the full analysis scope):
+- **(8a)** financeCalc.js (pure compute-on-read), financeTrendsData.js (raw queries),
+  NetWorthChart.jsx (SVG line, hover tooltip), TrendsScreen.jsx, financeTrends.css. Net worth
+  leading-zero-trim fix applied after initial verify.
+- **(8b)** SpendByCategoryChart.jsx (stacked CSS bars per month), IncomeExpenseChart.jsx (paired
+  bars), TopCategories.jsx (ranked list), financeTrendsCharts.css. financeCalc.js extended with
+  spendByCategoryByMonth, incomeVsExpenseByMonth, topCategories.
+- **(8c)** DeltaList.jsx (month-over-month with ↑↓ arrows), financeCalcSpend.js (extracted from
+  financeCalc.js to stay under 250). BudgetsScreen.jsx cross-piece: trailing-6-month average
+  baseline ("typically €X/month") beneath each budget bar.
+- **(8d)** GainLoss.jsx (investment snapshot diff, "since last check"), SpendHeatmap.jsx
+  (month-grid calendar, opacity = daily expense), financeTrends8d.css. financeCalc.js extended
+  with investmentGainLoss + dailySpendTotals. All-zero heatmap handled (neutral grid, no crash).
+
+FILES TOUCHED (across all four sub-pieces):
+- src/desktop/finance/{financeCalc.js, financeCalcSpend.js, financeTrendsData.js, TrendsScreen.jsx,
+  NetWorthChart.jsx, SpendByCategoryChart.jsx, IncomeExpenseChart.jsx, TopCategories.jsx,
+  DeltaList.jsx, GainLoss.jsx, SpendHeatmap.jsx, BudgetsScreen.jsx, financeTrends.css,
+  financeTrendsCharts.css, financeTrends8d.css, FinancePage.jsx, Ledger.jsx}
+
+HOW TO VERIFY (with actual numbers from the live database):
+- **Net worth**: Revolut starting_balance = €268.92, minus €24.72 expenses = €244.20 today.
+  The chart should show a line from the account's creation (Jul 10) to today at this level.
+- **DeltaList cross-check**: July expenses = €24.72 (€23.70 Pitcher of Beer + €1.02 McDonalds).
+  June = €0. The delta list should show "Uncategorised: €24,72 — new this month."
+- **Investment gain/loss**: 0 snapshots currently → all investment accounts should show "Log a
+  second value to see change." To test a real diff: log 2 snapshots on an investment account
+  (e.g. €5000 on Jul 10, €5200 on Jul 11) → should show "+€200,00 since 10 Jul."
+- **Heatmap**: July 11 = €24.72 (the only expense day) should be the darkest cell. All other
+  days should be faint/barely-visible. Hover July 11 → "11 Jul 2026: €24,72."
+- **Heatmap all-zero**: switch to a range where no spend exists (most of the 6-month window) →
+  neutral empty grid, no crash.
+- Range switcher drives all charts together. Reload recomputes correctly. All other Finance
+  screens and all other pillars unaffected.
+
+KNOWN GAPS:
+- **Finance V1 scope is now COMPLETE** except Piece 5b (CSV import), still parked on ING/Revolut
+  sample data from the owner.
+- **Numeric cross-checks were run against a thin dataset** (~2 transactions, 1 account, 0
+  snapshots). Worth a fuller stress-test when real historical data accumulates naturally.
+- **The net worth chart had a leading-zero-trim bug** (fixed in a dedicated commit between 8a
+  and 8b) — documented in the handoff log and resolved.
+
+NEXT: Piece 5b — whenever sample CSV data arrives. Otherwise Finance V1 is DONE.
+
+FOR THE CHECKER: nothing — src-only across all of Piece 8, no schema.
+
+---
+
 ### 2026-07-11 — Finance Piece 8c: month-over-month deltas + average-spend baseline
 
 WHAT CHANGED:

@@ -8,6 +8,14 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-11 — Finance Piece 8 COMPLETE ✅ (8a-8d: all analysis views)
+Net worth trend (line chart, combined/per-account/split, hover tooltip, leading-zero-trim fix),
+spending-by-category (stacked bars), income-vs-expense (paired bars), top-5 categories, month-over-
+month deltas (↑↓ arrows), average-spend baseline on Budgets, investment gain/loss (snapshot diff),
+spending heatmap (month-grid, opacity = daily spend). All hand-rolled SVG/CSS, no chart dependency.
+Pure calc layer (financeCalc.js + financeCalcSpend.js), single-fetch/multi-view architecture.
+**Finance V1 is COMPLETE except Piece 5b (CSV import, parked on sample data).**
+
 ## Session note — 2026-07-11 — Finance Piece 8c: deltas + baseline ✅
 DeltaList on TrendsScreen (month-over-month with ↑↓ arrows, "new this month" for one-month-only).
 Average-spend baseline on Budgets screen (cross-piece from Piece 7, trailing 6 months, italic).
