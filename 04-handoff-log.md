@@ -33,6 +33,50 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-11 — Finance Piece 8a: net worth trend chart + calc layer
+
+WHAT CHANGED:
+- **financeCalc.js** (NEW — 128 lines): pure compute-on-read functions. `netWorthByDay` builds a
+  running-balance array from transactions (cash) + step-function from snapshots (investment), one
+  pass, O(n). `netWorthByDayForAccount` for the per-account variant. `netWorthSplitCashVsInvestment`
+  for two parallel series. Respects ruling 1: accounts excluded before their created_at; investment
+  accounts excluded before their first snapshot (they read as absent, not as zero).
+- **financeTrendsData.js** (NEW — 42 lines): raw Supabase queries for all transactions and
+  snapshots in a date range, plus snapshots before the range start for the step-function carry.
+- **NetWorthChart.jsx** (NEW — 111 lines): hand-rolled SVG line chart mirroring BodyChart's
+  structure. Hairline grid, hover tooltip (exact value + date), combined and cash-vs-investment
+  split modes (cash = solid line, investment = dashed ink-muted line).
+- **TrendsScreen.jsx** (NEW — 94 lines): the 'trends' sub-view in FinancePage. 6m/1y/2y range
+  switcher (via kit/RangeSwitcher). A selector for Combined / Cash-vs-investment / a specific
+  account. Structured for later sub-pieces (8b-8d) to add chart sections below.
+- **financeTrends.css** (NEW — 103 lines): chart styles, ink/hairline only (no terracotta).
+- **FinancePage.jsx** + **Ledger.jsx**: wired the 'trends' sub-view and "Trends" masthead link.
+
+FILES TOUCHED: src/desktop/finance/{financeCalc.js, financeTrendsData.js, NetWorthChart.jsx,
+TrendsScreen.jsx, financeTrends.css, FinancePage.jsx, Ledger.jsx}
+
+HOW TO VERIFY:
+1. Open Finance → Ledger → "Trends" → net worth chart renders with real data, rolling 6 months.
+2. Hover the line → exact value + date shown.
+3. Switch to a specific account → line reflects just that account's contribution; dates before
+   its created_at are excluded (line starts from when the account first existed).
+4. Switch to "Cash vs. investment" → two distinguishable lines (solid vs dashed).
+5. Switch range (6m → 1y → 2y) → chart updates with a wider window.
+6. View a brand new account with no data → quiet empty-state message, no broken chart.
+7. Reload → chart recomputes correctly from fresh data.
+8. Ledger, Accounts, Recurring, Budgets all unaffected.
+
+KNOWN GAPS:
+- Only the net worth chart is built — the other 6 analysis views are Pieces 8b/8c/8d.
+- The combined/per-account/split selector is a simple `<select>` dropdown — clean enough for V1.
+
+NEXT: Piece 8b — spending-by-category stacked bar, income-vs-expense two-series bar, top-5-
+categories list.
+
+FOR THE CHECKER: nothing — src-only, no schema.
+
+---
+
 ### 2026-07-11 — Finance Piece 7 COMPLETE: Budgets (7a limits + 7b spend bars)
 
 WHAT CHANGED (two commits):

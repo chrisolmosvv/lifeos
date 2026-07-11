@@ -8,6 +8,12 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-11 — Finance Piece 8a: net worth trend chart ✅
+Pure calc layer (financeCalc.js) + hand-rolled SVG line chart (NetWorthChart.jsx) + TrendsScreen.
+Combined/per-account/cash-vs-investment views. 6m/1y/2y range switcher. One-pass running balance
+for cash, step-function for investment. Account existence boundaries respected.
+**NEXT: Piece 8b — spending-by-category, income-vs-expense, top 5 categories.**
+
 ## Session note — 2026-07-11 — Finance Piece 7 COMPLETE ✅ (Budgets: 7a+7b)
 Per-category monthly limits (append-only), spend-vs-actual bars (brick only when strictly over,
 exactly 100% is NOT brick), "everything else" aggregate. Month boundary via shared Amsterdam-day
