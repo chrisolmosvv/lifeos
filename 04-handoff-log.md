@@ -33,6 +33,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Sleep redesign PIECE 4: the clock chart, generalised. SRC-ONLY. 1 COMMIT (6f78ce0).
+
+WHAT CHANGED: the seven-night clock chart (bottom-right of Last night) can now do everything
+Week/Month/90-day will need — but it is still only used in ONE place, exactly as before. Nothing on
+Week/Month/90-day was rewired; that is Piece 5/6.
+- RANGE: was hardcoded to "7 nights back from today". Now takes any range, so 30 days (or 13 weekly
+  columns for the 90-day view) drop in later without a rewrite.
+- AXIS FLIPPED: the chart used to run 18:00 → 12:00. It now runs 22:00 → 12:00, so each night's
+  block is bigger and the dead evening hours are cropped away.
+- THE VANISHING NIGHT (the recon's warning — real, and now fixed): with a 22:00 top, any night you
+  went to bed BEFORE 22:00 would have silently disappeared from the chart entirely. It now pins to
+  the top edge and FADES OUT there, so it reads as "this night started earlier than the chart shows"
+  rather than not existing.
+- GOAL MET: a night that hit your sleep goal now carries a thin terracotta rule down its left edge.
+- Two capabilities added but NOT switched on here (Piece 5 turns them on): clicking a column
+  (onDrill) and the average bed/wake marks.
+- STAGE COLOURS warmed and widened (your call): deep/core/REM/awake go from
+  #423b32/#5c564c/#8a8275/#c9c1b2 to #3a2e24/#6b5b48/#9e8e77/#d2c4ac.
+
+FILES: src/desktop/kit/SleepClockColumns.jsx (122) · NEW src/desktop/kit/sleepClockChart.js (94 —
+the pure maths, so the component stays small) · sleepClockChart.css (238) · sleepPage.css (the
+shared stage ramp) · SleepNight.jsx (the one call site — a prop rename, no behaviour change)
+
+HOW TO VERIFY:
+- Health → Sleep → Last night. The clock chart (bottom right) should show the same 7 nights, now
+  labelled 22:00 / 00:00 / 06:00 / 12:00 down the right edge. Two of the last 7 nights hit your 8h
+  goal (10 Jul and 14 Jul) — those two, and only those two, should carry the terracotta edge mark.
+  Confirmed live against the database.
+- THE CROP CASE IS **NOT** PROVEN ON YOUR REAL DATA, and I want to be straight about that: none of
+  your last 7 nights has a bedtime before 22:00 (your earliest is 23:14), so there is nothing real
+  to crop. I proved it two other ways — by running the real function directly (a 21:30 bedtime now
+  renders pinned to the top with the crop flag, instead of being dropped), and by temporarily
+  feeding the chart a synthetic 21:14 night in the browser, which rendered and faded at the top edge
+  exactly as intended. That scaffolding was removed before commit. The first time you genuinely go
+  to bed before 22:00, that column is the one to look at.
+- The new stage colours appear EVERYWHERE stages appear — the clock chart, the stage timeline, the
+  hypnogram and the Week/Month/90-day bars. That is intended (one vocabulary), and is the reason
+  this piece touches views the scope guard called out; you approved it. Layout and logic on those
+  views are untouched — colour only.
+
+KNOWN GAPS / RISKS:
+- The goal mark could NOT be an inset shadow (the first thing I tried): the stage fills are child
+  elements and paint straight over an inset shadow, so the mark was invisible on screen while being
+  "correct" in the code. It is an overlay now. A reminder that a passing class check is not a
+  passing eye check.
+- Terracotta now does TWO jobs in this one chart: hover (an outline around the whole block) and
+  goal-met (a rule down the left edge). They are visually distinct, but if you ever find them
+  confusable, the hover treatment is the one to change — the goal mark is the meaningful one.
+- The average bed/wake marks and onDrill are built and prop-tested but are NOT passed by the
+  Last-night call site, so you will not see them yet. That keeps Last night looking exactly as you
+  verified it. Piece 5 turns them on.
+
+NEXT: Piece 5 — wiring Week/Month to this generalised component, plus unifying the hover-readout as
+its third consumer.
+
+---
+
 ### 2026-07-14 — TWEAK to Piece 3: Last-night left column is now an explicit 60/40. SRC-ONLY. 1 COMMIT (96c7734).
 
 WHAT CHANGED: the left column of "Last night" used to let the journey (in bed → duration → woke)
