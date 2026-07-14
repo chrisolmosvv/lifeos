@@ -33,6 +33,62 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Sleep redesign PIECE 3: the Last-night footer rebuilt. SRC-ONLY. 1 COMMIT (2f9b346).
+
+WHAT CHANGED: the left column's footer is now THREE rows that spread down the rest of the column,
+so the height Piece 1 freed up is actually USED instead of sitting empty:
+  row 1  target · goal              (unchanged)
+  row 2  VS 7-NIGHT AVG · STREAK    (new)
+  row 3  RESTORATIVE (DEEP + REM)   (new, full width)
+Labels are now small uppercase; values are Inter with lined-up figures. Every number is worked out
+on the spot from data already on the page — no new database call, no new column, nothing stored.
+
+FILES: src/desktop/health/SleepNight.jsx · SleepPage.jsx · src/desktop/kit/sleepNight.css ·
+src/spine/logic/healthStats.js (one new constant — see terracotta below)
+
+HOW TO VERIFY (the three numbers, checked against Frankfurt — not just "it renders"):
+- VS 7-NIGHT AVG shows "+1h 29m". Your real 7-night average is 415.57 min (6h 55m); last night was
+  505 min. 505 − 415.57 = +89.4 min = +1h 29m. ✓
+- STREAK shows "1 night". Your goal is 8h (480 min): last night 505 hit it, the night before (294)
+  missed. So the streak is exactly 1. ✓
+- RESTORATIVE shows "166 min · 33%". Deep 26 + REM 140 = 166, and 5% + 28% = 33% — it AGREES with
+  the stage readout in the middle column, which is the point (same data, two places, one truth). ✓
+- HEIGHT: the footer reaches the bottom of its column with no gap, and holds at six different
+  window heights (560–1040px). Sleep's other three views, Body and Gym are untouched — all still
+  zero dead strip, no scroll.
+
+THE TERRACOTTA CALL (owner decided):
+The spec said mirror the Body hub card's rule — off-average = terracotta, flat = ink — and reuse its
+threshold rather than invent one. I did, and then tested it: the card's 10-minute dead-band judges
+one WEEKLY AVERAGE against another (averages are smooth, 10 min is a real move). Against a SINGLE
+night it fired on 10 out of 10 real nights — the "rare" accent would have been permanently on, which
+breaks the design law. Owner chose a 45-minute band for the single-night question. It now fires on
+5/10 nights, and only the genuinely unusual ones (±59 to ±119 min); ordinary nights (+12, +17, +25,
++35 min) stay calm ink. Lives as NIGHT_DEADBAND in healthStats.js, right beside DEADBAND, so the
+tuning knobs stay in one place.
+
+KNOWN GAPS / RISKS:
+- TWO LAYOUT BUGS WERE FOUND WHILE VERIFYING AND FIXED BEFORE COMMIT (worth knowing, because both
+  looked fine at the first window size I tried):
+  1. The footer could shrink BELOW its own content on a short screen — it squashed to 17px and the
+     rows spilled out of it. It is now floored at its content height: it may grow into spare space,
+     never collapse.
+  2. At narrow widths the footer printed ON TOP of the clock dials. The left column was allowed to
+     shrink under its own content, so the row didn't make space for it. Fixed in the reflow rules.
+  Both are exactly why "it renders" is not "it works" — check more than one window size.
+- `sleepNight.css` is now 256 lines, a hair over the ~250 house limit. Not split yet: Piece 4 works
+  in sleepClockChart.css, not this file. If Piece 5 adds to Night, split it FIRST.
+- The 7-night average INCLUDES last night (that is how the existing rolling getter works). So the
+  night is being compared to an average it is part of, which slightly damps the delta — excluding it
+  would have read +1h 41m instead of +1h 29m. Reused the existing getter rather than invent a
+  second one; flagging in case the owner wants the stricter comparison later.
+- Row 2 is hidden on a past-night drill-in (a rolling average and a live streak are anchored to
+  TODAY — showing them against an old night would be a lie). Row 3 shows on every night.
+
+NEXT: Piece 4 — generalising the clock chart (sleepClockChart.css + SleepClockColumns).
+
+---
+
 ### 2026-07-14 — Sleep redesign PIECE 2: awakenings + respiratory cut everywhere. SRC-ONLY. 1 COMMIT (313fc2d).
 
 WHAT CHANGED: two numbers are gone from Sleep, on every surface including the phone.
