@@ -33,6 +33,57 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Sleep redesign PIECE 1: CSS split + the Health-wide dead-space fix. SRC-ONLY. 2 COMMITS.
+
+WHAT CHANGED (two commits, owner verified between them):
+- COMMIT 1 (2068b8b) — `sleepPage.css` was 846 lines, way over the ~250 house limit. Split into five
+  files along the seams the components already had. A PURE MOVE: 759 style lines in, 759 out, same
+  rules. Nothing looks different.
+- COMMIT 2 (7ef19da) — the dead strip is gone. Every Health page was sized `100vh - 220px`, where the
+  220px was a guess at the masthead. The masthead actually measures **123px**, so all three Health
+  pages came up ~97px short and left a dead band along the bottom. They now simply fill the space the
+  app shell already hands them. The never-set `--health-vh` variable was proved dead (no CSS
+  declaration, no JS `setProperty` anywhere) and removed.
+
+FILES:
+- `src/desktop/kit/sleepPage.css` (now the 178-line shell: page root, shared atoms, the `.hyp-*`
+  stage colour ramp that BOTH Night and the aggregates read)
+- `src/desktop/kit/sleepNight.css` (209) · `sleepClockChart.css` (170, the dials + the seven-night
+  clock columns — the file the clock-chart piece will work in) · `sleepStageTimeline.css` (90) ·
+  `sleepAggregate.css` (223)
+- `src/desktop/health/SleepPage.jsx` (imports the five)
+- `src/desktop/health/healthChrome.css` (the shared `.health-fit` rule — Commit 2)
+
+HOW TO VERIFY (all three Health pages — `.health-fit` is SHARED, so the blast radius is all of them):
+- Sleep: Last night / Week / Month / 90 days. Body: Latest / Week / Month / 90 days. Gym: the 2×2.
+- Each should fill the screen down to the bottom edge with NO empty band under the content, and NO
+  page scrollbar. Verified live on all nine: dead strip 0px, gap below the fold 0px, no scroll.
+- Commit 1 was checked by comparing every element's computed style against the old build across all
+  four Sleep views (210/119/169/96 elements) — byte-identical once web fonts settle.
+
+KNOWN GAPS / RISKS:
+- THE SPEC'S FIX WOULD NOT HAVE WORKED, and this is worth remembering. It said `flex: 1 1 auto`, but
+  the parent `.cal-wrap` is `flex:1; min-height:0` with NO `display:flex` — it's a block box. Flex
+  properties only apply to flex ITEMS, so that rule would have been silently ignored, the height would
+  have collapsed to the content, and zero-scroll would have broken on Sleep, Body AND Gym. Used
+  `height: 100%` instead (same intent, same one shared file). Owner approved the swap before it shipped.
+- Import ORDER in SleepPage.jsx is LOAD-BEARING: the chart primitives must load BEFORE
+  `sleepNight.css`, because Night's reflow media query overrides `.stl-lanes` at equal specificity —
+  source order alone decides the winner. Reorder those imports and the timeline silently shrinks on
+  narrow screens. Noted at the import site too.
+- Masthead measured at **123.2px** (the recon estimated ~130px — close enough, no surprise).
+- At a NARROW window (~1011px, the 2-up reflow) the Night view's content still overflows its box by
+  ~77px and gets clipped. This PREDATES this piece (it was ~126px before — the fix strictly improved
+  it) and does not affect the 13" target, which runs the 3-up layout. Piece 2 (cutting awakenings +
+  respiratory) removes content from exactly this column and should close it.
+- Vite's hot-reload re-injects a changed stylesheet at the END, which scrambles CSS load order in dev
+  and gave one false "regression" reading mid-session. Any future cascade check must be done on a HARD
+  RELOAD, not a hot update.
+
+NEXT: Piece 2 — cut awakenings + respiratory from the Sleep metrics, all views + mobile.
+
+---
+
 ### 2026-07-14 — Gym: Hevy sync now runs 4×/day, DST-proof. DB-ONLY. APPLIED LIVE.
 
 WHAT CHANGED:
