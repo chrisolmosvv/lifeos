@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import { parseSegments, proportionBand } from '../spine/logic/hypnogram'
 import { hm, clockTime } from '../spine/logic/healthFormat'
-import { fmtFull } from '../spine/logic/bodyFormat'
 import { weekdayNarrow } from '../spine/logic/gymDates'
 
 const AMS = { timeZone: 'Europe/Amsterdam', hour: 'numeric', hour12: false }
@@ -52,7 +51,6 @@ export default function MobileHealthSleep({ data, onBack }) {
   // Footer
   const vsGoal = data.sleep.durationVsGoal
   const tally = data.sleepGoalTally
-  const respRate = data.respiratoryRate
 
   return (
     <div className="mh-face" onTouchStart={onTS} onTouchEnd={onTE}>
@@ -113,7 +111,7 @@ export default function MobileHealthSleep({ data, onBack }) {
 
       <hr className="m-rule" style={{ margin: '0 20px' }} />
 
-      {/* Footer 2×2 */}
+      {/* Footer — target + nights hit (respiratory + awakenings cut in Piece 2) */}
       <div className="mh-footer">
         <div className="mh-footer-cell">
           <span className="mh-footer-val">{vsGoal ? hm(vsGoal.target) : '—'}</span>
@@ -122,14 +120,6 @@ export default function MobileHealthSleep({ data, onBack }) {
         <div className="mh-footer-cell">
           <span className="mh-footer-val">{tally ? `${tally.hit}/${tally.total}` : '—'}</span>
           <span className="mh-footer-label">{tally ? 'nights hit' : 'no goal set'}</span>
-        </div>
-        <div className="mh-footer-cell">
-          <span className="mh-footer-val">{respRate != null ? fmtFull('respiratory_rate', respRate) : '—'}</span>
-          <span className="mh-footer-label">respiratory</span>
-        </div>
-        <div className="mh-footer-cell">
-          <span className="mh-footer-val">{last.awakenings ?? '—'}</span>
-          <span className="mh-footer-label">awakenings</span>
         </div>
       </div>
 

@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { amsTodayYMD, shiftYMD, humanDayLong, humanDayShort } from "../../spine/logic/gymDates";
-import { fetchSleep, fetchBody, fetchGoals } from "../../spine/data/healthLoad";
+import { fetchSleep, fetchGoals } from "../../spine/data/healthLoad";
 import { resolveGoals } from "../../spine/logic/healthGoals";
 import { sleepView, nightOn } from "../../spine/logic/healthSleep";
 import { rangeBedWakeAverages } from "../../spine/logic/healthRhythm";
-import { dailyValueOn } from "../../spine/logic/healthBody";
 import { useGoalWrites } from "./useGoalWrites";
 import SleepNight from "./SleepNight";
 import SleepRange from "./SleepRange";
@@ -54,14 +53,13 @@ export default function SleepPage({ onBack }) {
     const now = Date.now();
     const today = amsTodayYMD(now);
     (async () => {
-      const [goals, sleep, resp] = await Promise.all([
+      const [goals, sleep] = await Promise.all([
         fetchGoals(),
         fetchSleep(START, today),
-        fetchBody("respiratory_rate", START, today),
       ]);
       if (alive) {
         setGoalMap(resolveGoals(goals));
-        setState({ loading: false, now, today, sleep, resp });
+        setState({ loading: false, now, today, sleep });
       }
     })().catch((e) => alive && setState({ loading: false, error: e.message || String(e) }));
     return () => {
@@ -77,7 +75,7 @@ export default function SleepPage({ onBack }) {
   );
 
   function renderNight(breadcrumb, switcher) {
-    const { sleep, resp, today } = state;
+    const { sleep, today } = state;
     const isLN = sv.lastNight && sv.lastNight.nightDate === today;
     const detail = isLN ? sv.lastNight : null;
     const nightRow = detail ? sleep.find((r) => r.night_date === detail.nightDate) : null;
@@ -96,7 +94,6 @@ export default function SleepPage({ onBack }) {
         today={today}
         breadcrumb={breadcrumb}
         switcher={switcher}
-        respValue={detail ? dailyValueOn(resp, detail.nightDate) : null}
         onEditSleepGoal={(el) => gw.openSleepEditor(el)}
         onNudgeToWeek={() => setView("week")}
       />
@@ -126,7 +123,7 @@ export default function SleepPage({ onBack }) {
   }
 
   function renderDrilledNight() {
-    const { sleep, resp, today } = state;
+    const { sleep, today } = state;
     const nightRow = (sleep || []).find((r) => r.night_date === drilledNight) || null;
     return (
       <SleepNight
@@ -141,7 +138,6 @@ export default function SleepPage({ onBack }) {
         showConsistency={false}
         weekRows={sleep}
         today={today}
-        respValue={dailyValueOn(resp, drilledNight)}
         onEditSleepGoal={null}
         onNudgeToWeek={null}
       />

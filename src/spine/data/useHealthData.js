@@ -9,7 +9,7 @@ import { loadGymData } from './gymLoad.js'
 import { amsTodayYMD } from '../logic/gymDates.js'
 import { resolveGoals } from '../logic/healthGoals.js'
 import { sleepView, nightsHitGoal } from '../logic/healthSleep.js'
-import { metricView as bodyMV, dailyValueOn } from '../logic/healthBody.js'
+import { metricView as bodyMV } from '../logic/healthBody.js'
 import { metricView as activityMV } from '../logic/healthActivity.js'
 import { buildWorkouts, boxScore } from '../logic/gymCalc.js'
 
@@ -53,7 +53,6 @@ export function useHealthData() {
       const today = amsTodayYMD(now)
       const durGoal = goalMap.get('sleep_duration') ?? null
       const sleepGoalTally = nightsHitGoal(sleepRows, durGoal, today, 7)
-      const respRate = sv.lastNight ? dailyValueOn(bodyRows.respiratory_rate, sv.lastNight.nightDate) : null
 
       // Gym
       const built = buildWorkouts(gym.workouts, gym.exercises, gym.sets, gym.templatesById)
@@ -70,7 +69,7 @@ export function useHealthData() {
 
       if (alive) setState({
         loading: false,
-        sleep: sv, sleepRows, sleepGoalTally, respiratoryRate: respRate,
+        sleep: sv, sleepRows, sleepGoalTally,
         body: { weight: bodyAll.weight, body_fat: bodyAll.body_fat },
         bodyAll, bodyRows, activity, goalMap,
         gym: box, gymWorkouts: built, gymHasData: built.length > 0, asOfTs,

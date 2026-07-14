@@ -11,7 +11,9 @@ import SleepAggLedger from "./SleepAggLedger";
 // bars hero (flex-filling to the fold) beside a right goal/rhythm ledger. One component,
 // varying by `days`. 90-day collapses to ~13 WEEKLY bars (each = that week's average
 // night) and hides the baseline (no window wider than 90). Consumes existing getters
-// only — awake-minutes avg + awakenings are inline reduces (presentation, no new getter).
+// only — the awake-minutes avg is an inline reduce (presentation, no new getter). The
+// awakenings ledger row was cut in Piece 2; "awake avg" (minutes awake) is a DIFFERENT
+// metric and stays.
 //
 // `end` is the window anchor (today by default; a past week-end when drilled into a week
 // from the 90-day view). Nightly bar → onDrill(ymd); weekly bar → onWeekDrill(weekStart).
@@ -43,8 +45,6 @@ export default function SleepRange({ days, rows, goal, end, rolling, breadcrumb,
   const streak = goalStreak(rows, goal, end);
   const consistency = bedtimeConsistency(rows, end); // 7-night metric → WEEK only
   const awakeAvg = mean(inWindow.map((r) => r.awake_minutes).filter(Number.isFinite));
-  const awakeningsTotal = inWindow.reduce((a, r) => a + (Number.isFinite(r.awakenings) ? r.awakenings : 0), 0);
-  const awakeningsPerNight = dataNights ? awakeningsTotal / dataNights : null;
 
   const baseAvg = rolling?.[90]?.avg;
   const baseHasData = (rolling?.[90]?.values?.length || 0) >= 3;
@@ -130,7 +130,6 @@ export default function SleepRange({ days, rows, goal, end, rolling, breadcrumb,
     !isWeekly && days <= 7 && Number.isFinite(consistency?.stdDevMin)
       ? { label: "consistency", big: `±${Math.round(consistency.stdDevMin)}m`, sub: "bedtime spread this week" }
       : null,
-    { label: "awakenings", big: `${awakeningsTotal}`, sub: Number.isFinite(awakeningsPerNight) ? `${awakeningsPerNight.toFixed(1)} per night` : "" },
   ];
 
   return (

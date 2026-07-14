@@ -8,8 +8,9 @@ import { hm, clockTime, clockFromMin } from "../../spine/logic/healthFormat";
 // SleepNight — the "Last night" view (V2 "Stage timeline" layout) + the Week/Month bar
 // drill-in. Three FULL-HEIGHT broadsheet columns, full-height hairline rules, chrome
 // distributed into the columns (breadcrumb tops LEFT, switcher tops RIGHT, centre clean):
-//   LEAD  — a fixed-length JOURNEY spine (in bed ● → duration → woke ○) + a 2×2 footer
-//           of paired facts (target / goal / respiratory / awakenings).
+//   LEAD  — a fixed-length JOURNEY spine (in bed ● → duration → woke ○) + a footer of
+//           paired facts (target / goal). Respiratory + awakenings were cut in Piece 2 —
+//           respiratory still lives on Body, where it belongs.
 //   SHEET — the lane-per-stage timeline (fills the height; proportion-band fallback if
 //           no segments) + a bottom-pinned 2×2 stage readout (Deep/Core/REM/Awake min+%).
 //   RHYTHM— two 12-hour clock DIALS (bed + wake: spread band + avg + median) + the
@@ -51,7 +52,6 @@ export default function SleepNight({
   rhythm,
   showConsistency = true,
   weekRows,
-  respValue,
   today,
   breadcrumb,
   switcher,
@@ -125,17 +125,6 @@ export default function SleepNight({
             <b>{targetText}</b>
           </div>
           <GoalCell goalMinutes={goalMinutes} bedtimeGoalMin={bedtimeGoalMin} onEdit={onEditSleepGoal} />
-          <div className="snv-pair">
-            <span className="sleep-label">respiratory</span>
-            <b>{Number.isFinite(respValue) ? `${respValue.toFixed(1)} /min` : "—"}</b>
-          </div>
-          <div className="snv-pair">
-            <span className="sleep-label">awakenings</span>
-            <b>
-              {Number.isFinite(detail.awakenings) ? detail.awakenings : "—"}
-              {Number.isFinite(detail.stages.awake.min) ? ` · ${detail.stages.awake.min}m awake` : ""}
-            </b>
-          </div>
         </div>
       </section>
 
