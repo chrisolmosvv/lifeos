@@ -33,6 +33,49 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Piece 5: one shared side frame (56px → 24px). SRC-ONLY. VERIFIED LIVE.
+
+One commit, no schema, nothing for the Checker. Widest blast radius of the bundle — the masthead sits
+on EVERY screen — so I eyeballed all nine in the browser, not just the three that were the target.
+
+WHAT CHANGED:
+- The side margin was the same number typed out by hand in FIVE files: the masthead, Today, the
+  Calendar toolbar, the Calendar month grid, and Planning. It's now ONE value — `--frame` — living in
+  theme.css, the file that already exists so the whole app's look can be tuned from one place.
+- Tightened it from 56px to 24px. The ~1.5cm gap down the sides is gone.
+- Because the masthead and the page content now share the number, they tighten TOGETHER — the
+  dateline and the content below it hang off the same margin. That alignment is the real payoff.
+
+WHAT I CHECKED (all nine screens, live):
+- Tightened as intended: Today, Calendar (toolbar + week + month), Planning.
+- Unchanged bodies, masthead reads correctly: Focus, Food, Finance, Health, Rolodex, Settings. These
+  set their own container widths and are NOT governed by the token — as expected.
+- No console errors.
+
+ONE THING WORTH KNOWING (pre-existing — NOT caused by this piece): Settings never lined up with the
+masthead. Its top blocks are centred in their own narrow column, while its "Categories" section runs
+flush to the very left edge. That was already true before I touched anything (I checked first,
+deliberately). It's left alone — it's Settings' own business, and a separate decision if you want it
+fixed.
+
+HOW TO VERIFY (13" MacBook): open Today, Calendar (both Week and Month) and Planning — the wide side
+gap is gone and the masthead lines up with the content beneath it. Then click through Focus, Food,
+Finance, Health, Rolodex and Settings and confirm nothing there looks broken.
+
+IF 24px IS TOO TIGHT OR TOO LOOSE: it's now ONE number in one file (`--frame` in theme.css). Say the
+number and it's a one-line change that re-frames the whole edition at once. That was the point.
+
+KNOWN GAPS / RISKS:
+- ⚠️ The auto-commit tool from Piece 0 is STILL running. Still worth pausing.
+- `useTodayFocus.js` is still orphaned (from Piece 1), still parked for a prove-dead sweep.
+
+NEXT: Piece 6 — the row-convergence decision (Today's row vs Planning's three-button row). Still
+undecided; that's the Planner's call, and it's the riskiest of the bundle.
+
+FOR THE CHECKER: nothing — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-14 — Piece 4: Planning — full width, centred toggle, no title. SRC-ONLY. VERIFIED LIVE.
 
 Two commits, no schema, nothing for the Checker. Driven in a real browser.
