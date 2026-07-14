@@ -5,7 +5,8 @@ import { resolveColor } from '../../spine/logic/colorModel'
 import { colorHex } from '../../spine/logic/palette'
 import { useFocusTotals } from '../focus/focusTotalsContext'
 import { formatDurationShort } from '../focus/focusFormat'
-import './todayKit.css'
+import './taskRowShared.css'
+import './todayRow.css'
 
 // TodayRow — the converged task line for BOTH Today modules (Tasks Today + the
 // next 7 days), so the two read as one identical row. Today-ONLY: the Planning

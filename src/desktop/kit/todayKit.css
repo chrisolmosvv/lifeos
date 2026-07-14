@@ -1,7 +1,12 @@
 /* Sealed kit blocks for the Today rebuild (Phase 7, T4 / R1): the module header,
-   the read-only task row, the tinted calendar block, and the day grid. Every
-   class is prefixed `tk-` and used ONLY by these kit components, so a tweak here
-   can't leak to any other screen. Colour/type come from the theme (theme.css). */
+   the tinted calendar block, and the day grid. Every class is prefixed `tk-` and
+   used ONLY by these kit components, so a tweak here can't leak to any other
+   screen. Colour/type come from the theme (theme.css).
+
+   Piece 0 split: the two task rows and their status controls moved OUT of this
+   file, verbatim, into taskRowShared.css (the parts both rows share), todayRow.css
+   (TodayRow + StatusCycle, Today) and taskRowPill.css (TodayTaskRow + StatusPill,
+   Planning + the task form). What remains here is the grid + its furniture. */
 
 /* --- kit-scroll: the SHARED grid scrollbar theme (Phase 7, C1.1) ------------
    A quiet paper/ink-toned scrollbar so the grid's scroll bar sits in the design
@@ -38,149 +43,6 @@
   border: none;
   border-top: 1px solid var(--ink);
   margin: 0.35rem 0 0;
-}
-
-/* --- TodayTaskRow: one task line — an optional status pill, then a clickable
-   title region that opens the existing editor. ------------------------------ */
-.tk-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.3rem 0.25rem;
-  border-bottom: 1px solid var(--rule-faint);
-  flex-wrap: wrap;
-}
-.tk-row.is-sub {
-  padding-left: 1.4rem; /* indent subtask rows under their parent */
-}
-.tk-row-caret {
-  flex: none;
-  width: 1.1rem;
-  font-size: 0.75rem;
-  color: var(--ink-muted);
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: center;
-}
-.tk-row-tick {
-  cursor: default;
-}
-.tk-row-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.15rem 0;
-  text-align: left;
-  font: inherit;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.tk-prog {
-  font-size: 0.72rem;
-  color: var(--ink-muted);
-}
-.tk-sub-under {
-  font-size: 0.66rem;
-  color: var(--ink-muted);
-  font-style: italic;
-}
-.tk-row-main:hover .tk-row-title {
-  color: var(--ink);
-  text-decoration: underline;
-  text-decoration-color: var(--rule);
-}
-.tk-row-title {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.95rem;
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tk-row.is-high .tk-row-title {
-  font-weight: 500;
-}
-.tk-row.is-muted .tk-row-title {
-  color: var(--ink-muted);
-}
-.tk-row.is-done .tk-row-title {
-  color: var(--ink-muted);
-  text-decoration: line-through;
-}
-.tk-row-meta {
-  flex: none;
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  white-space: nowrap;
-}
-.tk-pri {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--ink-muted);
-}
-.tk-pri.is-high {
-  color: var(--ink);
-}
-.tk-when {
-  font-size: 0.72rem;
-  color: var(--ink-muted);
-}
-.tk-when.is-overdue {
-  color: var(--overdue);
-}
-.tk-tag {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--ink-muted);
-}
-
-/* --- StatusPill: connected three-segment control (To do · In progress · Done).
-   Calm: a hairline-bordered group; the active segment fills with ink (not the
-   reserved accent). The Done segment greys with the row. --------------------- */
-.tk-pill {
-  flex: none;
-  display: inline-flex;
-  border: 1px solid var(--rule);
-  border-radius: 5px;
-  overflow: hidden;
-}
-.tk-pseg {
-  font: inherit;
-  font-size: 0.66rem;
-  line-height: 1;
-  padding: 0.28rem 0.5rem;
-  color: var(--ink-muted);
-  background: none;
-  border: none;
-  border-left: 1px solid var(--rule);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.tk-pseg:first-child {
-  border-left: none;
-}
-.tk-pseg:hover:not(.is-on) {
-  color: var(--ink);
-}
-.tk-pseg.is-on {
-  color: var(--paper);
-  background: var(--ink);
-}
-/* Done, when active, reads as quiet/greyed (it matches the greyed row). */
-.tk-pseg.is-on.is-done {
-  background: var(--ink-muted);
-}
-.tk-pseg:disabled {
-  cursor: default;
-  opacity: 0.6;
 }
 
 /* --- DayGrid: the 7am–midnight day sheet, scrolling inside its column ------ */
@@ -286,20 +148,8 @@
   z-index: 2;
   pointer-events: none;
 }
-/* The grip on a task row used to drag it onto the day. */
-.tk-row-grip {
-  flex: none;
-  cursor: grab;
-  color: var(--ink-muted);
-  font-size: 0.85rem;
-  line-height: 1;
-  padding: 0 0.2rem;
-  touch-action: none;
-}
-.tk-row-grip:hover {
-  color: var(--ink);
-}
-/* The chip that follows the pointer while dragging a task onto the grid. */
+/* The chip that follows the pointer while dragging a task onto the grid. Stays
+   here (not in the row files): Calendar's WeekView renders it too. */
 .tk-tray-ghost {
   position: fixed;
   z-index: 40;
@@ -345,139 +195,4 @@
 .tk-quickadd:disabled {
   opacity: 0.6;
   cursor: progress;
-}
-
-/* Focus module (P4): the per-task all-time focus tag on a task row. */
-.tk-focus-tag { color: var(--ink-muted); font-size: 12px; white-space: nowrap; }
-
-/* --- TodayRow (converged, Today-only): one identical row for both Today modules.
-   Fixed columns so every row lines up: grip · caret · flexing main (title over the
-   category/focus meta line) · ▶ · status · due (far right). Priority is
-   intentionally absent here. Reuses .tk-row-grip / .tk-row-caret / .tk-prog /
-   .tk-sub-under / .tk-when / .tk-focus-tag above. Theme tokens only. ----------- */
-.tk2-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.25rem;
-  border-bottom: 1px solid var(--rule-faint);
-}
-.tk2-row.is-sub {
-  padding-left: 0.7rem; /* a gentle indent for a standalone subtask row */
-}
-.tk2-grip-col {
-  flex: none;
-  width: 1rem;
-  display: flex;
-  justify-content: center;
-}
-.tk2-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.1rem 0;
-  text-align: left;
-  font: inherit;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.tk2-title {
-  font-family: var(--font-serif);
-  font-size: 0.98rem;
-  line-height: 1.2;
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tk2-main:hover .tk2-title {
-  text-decoration: underline;
-  text-decoration-color: var(--rule);
-}
-.tk2-meta {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.tk2-row.is-muted .tk2-title {
-  color: var(--ink-muted);
-}
-.tk2-row.is-done .tk2-title {
-  color: var(--ink-muted);
-  text-decoration: line-through;
-}
-/* ▶ — a quiet ink/muted glyph. NOT the accent: terracotta stays rare. */
-.tk2-play {
-  flex: none;
-  width: 1.5rem;
-  font-size: 0.7rem;
-  line-height: 1;
-  color: var(--ink-muted);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.2rem;
-  text-align: center;
-}
-.tk2-play:hover {
-  color: var(--ink);
-}
-/* Fixed status + due columns so the rows line up across both modules. */
-.tk2-status {
-  flex: none;
-  width: 6.5rem;
-}
-.tk2-due {
-  flex: none;
-  width: 5rem;
-  text-align: right;
-}
-
-/* --- StatusCycle: the row-only single status control (To do → In progress →
-   Done → To do). A hairline-and-type mark — a state glyph + word — ink/muted,
-   NEVER a status colour. State reads by TYPE: To do muted, In progress full ink,
-   Done struck + greyed. No box, fill, pill or rounded corners. ---------------- */
-.tk-stat {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font: inherit;
-  font-size: 0.7rem;
-  line-height: 1;
-  background: none;
-  border: none;
-  padding: 0.2rem 0;
-  cursor: pointer;
-  white-space: nowrap;
-  color: var(--ink-muted);
-}
-.tk-stat-mark {
-  flex: none;
-  width: 0.72rem;
-  height: 0.72rem;
-}
-.tk-stat.is-open {
-  color: var(--ink-muted);
-}
-.tk-stat.is-in_progress {
-  color: var(--ink); /* full ink — the one active middle state */
-}
-.tk-stat.is-done {
-  color: var(--ink-muted);
-}
-.tk-stat.is-done .tk-stat-label {
-  text-decoration: line-through;
-}
-.tk-stat:hover:not(:disabled) {
-  color: var(--ink);
-}
-.tk-stat:disabled {
-  cursor: default;
-  opacity: 0.6;
 }

@@ -1,0 +1,115 @@
+/* TodayTaskRow + StatusPill — the older task row, now used only by Planning
+   (Time lanes, the Inbox rail, and Category groups). Piece 0 split: moved verbatim
+   out of todayKit.css; no rule changed.
+
+   One task line — an optional three-segment status pill, then a clickable title
+   region that opens the existing editor. Shows a priority kicker (High/Med), which
+   the Today row deliberately does not. Reuses .tk-row-caret / .tk-prog /
+   .tk-sub-under / .tk-when / .tk-row-grip from taskRowShared.css. */
+
+.tk-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.25rem;
+  border-bottom: 1px solid var(--rule-faint);
+  flex-wrap: wrap;
+}
+.tk-row.is-sub {
+  padding-left: 1.4rem; /* indent subtask rows under their parent */
+}
+.tk-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.15rem 0;
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.tk-row-main:hover .tk-row-title {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+}
+.tk-row-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tk-row.is-high .tk-row-title {
+  font-weight: 500;
+}
+.tk-row.is-muted .tk-row-title {
+  color: var(--ink-muted);
+}
+.tk-row.is-done .tk-row-title {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+.tk-row-meta {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+.tk-pri {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+}
+.tk-pri.is-high {
+  color: var(--ink);
+}
+
+/* --- StatusPill: connected three-segment control (To do · In progress · Done).
+   Calm: a hairline-bordered group; the active segment fills with ink (not the
+   reserved accent). The Done segment greys with the row. Also used by the task
+   form + subtask rows on BOTH Today and Planning. ---------------------------- */
+.tk-pill {
+  flex: none;
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.tk-pseg {
+  font: inherit;
+  font-size: 0.66rem;
+  line-height: 1;
+  padding: 0.28rem 0.5rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  border-left: 1px solid var(--rule);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tk-pseg:first-child {
+  border-left: none;
+}
+.tk-pseg:hover:not(.is-on) {
+  color: var(--ink);
+}
+.tk-pseg.is-on {
+  color: var(--paper);
+  background: var(--ink);
+}
+/* Done, when active, reads as quiet/greyed (it matches the greyed row). */
+.tk-pseg.is-on.is-done {
+  background: var(--ink-muted);
+}
+.tk-pseg:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

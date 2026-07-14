@@ -1,4 +1,4 @@
-import './todayKit.css'
+import './todayRow.css'
 
 // StatusCycle — the Today row's single status control. One tap target that
 // CYCLES the status forward: To do → In progress → Done → (tap) → back to To do.

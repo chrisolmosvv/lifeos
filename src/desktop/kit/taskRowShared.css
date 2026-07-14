@@ -1,0 +1,63 @@
+/* Shared task-row parts — the bits BOTH row components use (Piece 0 split, moved
+   verbatim out of todayKit.css; no rule changed).
+
+   Two rows exist by design:
+     • TodayRow    (Today)    — todayRow.css
+     • TodayTaskRow (Planning) — taskRowPill.css
+   These are the pieces they have in common: the caret / "↳" tick, the x/N progress
+   count, the "under <parent>" marker, the due/when text, the category tag, the
+   all-time focus tag, and the drag grip. Imported by both rows.
+   (.tk-tray-ghost stays in todayKit.css — Calendar's WeekView uses it too.) */
+
+.tk-row-caret {
+  flex: none;
+  width: 1.1rem;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+.tk-row-tick {
+  cursor: default;
+}
+.tk-prog {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.tk-sub-under {
+  font-size: 0.66rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+.tk-when {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+.tk-when.is-overdue {
+  color: var(--overdue);
+}
+.tk-tag {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-muted);
+}
+
+/* Focus module (P4): the per-task all-time focus tag on a task row. */
+.tk-focus-tag { color: var(--ink-muted); font-size: 12px; white-space: nowrap; }
+
+/* The grip on a task row used to drag it onto the day. */
+.tk-row-grip {
+  flex: none;
+  cursor: grab;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0 0.2rem;
+  touch-action: none;
+}
+.tk-row-grip:hover {
+  color: var(--ink);
+}

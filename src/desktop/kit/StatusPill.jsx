@@ -1,4 +1,4 @@
-import './todayKit.css'
+import './taskRowPill.css'
 
 // StatusPill — a connected three-segment control on a task row: To do · In
 // progress · Done. Tap a segment to set that state directly (no opening the

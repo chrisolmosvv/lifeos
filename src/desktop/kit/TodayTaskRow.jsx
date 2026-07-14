@@ -5,7 +5,8 @@ import { resolveColor } from '../../spine/logic/colorModel'
 import { colorHex } from '../../spine/logic/palette'
 import { useFocusTotals } from '../focus/focusTotalsContext'
 import { formatDurationShort } from '../focus/focusFormat'
-import './todayKit.css'
+import './taskRowShared.css'
+import './taskRowPill.css'
 
 // TodayTaskRow — one task line for the Today modules: an optional status pill on
 // the left (when onSetStatus is given — the "tasks today" module), then the
