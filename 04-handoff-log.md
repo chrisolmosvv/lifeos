@@ -33,6 +33,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Gym: Hevy sync now runs 4×/day, DST-proof. DB-ONLY. APPLIED LIVE.
+
+WHAT CHANGED:
+- The gym auto-sync cron went from twice a day (06:00 / 20:00 Amsterdam) to FOUR times a day:
+  **09:00, 10:00, 00:00 and 18:00 Amsterdam** — and it now holds those local times all year.
+- Same job, edited in place (`cron.alter_job`, pg_cron 1.6.4): same jobid (4), same name, same
+  `gym` function, same `{"mode":"sync"}` body, same Vault secret `brief_service_role_key`. Nothing
+  else about the job changed, and the other two cron jobs (brief, nudge) were not touched.
+
+THE DST CALL (owner chose this — it was a real fork, not an assumption):
+pg_cron only understands UTC (`cron.timezone = GMT`, and Supabase won't let us change it), so any
+fixed UTC schedule silently slides an hour when the clocks change. Instead of a twice-yearly manual
+nudge, the job now wakes on all seven UTC hours that could ever be one of the four local times
+(`0 7,8,9,16,17,22,23 * * *`) and only actually syncs when the Amsterdam clock reads 00, 09, 10 or 18.
+The three non-matching wake-ups cost nothing — the `where` short-circuits before the HTTP call, so no
+Hevy hit, no network, no spend. Correct in summer and winter with nothing to remember.
+
+FILE: db/46_gym_sync_reschedule.sql (own commit, no src/ rode along)
+
+HOW TO VERIFY:
+- Already confirmed live: reading `cron.job` back shows job 4 with schedule `0 7,8,9,16,17,22,23 * * *`
+  and the local-hour guard in its command. The old cursor `gym_sync_state.last_synced_at` sat at
+  2026-07-14 04:00:03 UTC (the last run of the OLD schedule), so the pipe was healthy going in.
+- THE REAL PROOF NEEDS A WAIT — a cron only proves itself by firing. The first run on the new
+  timetable is **18:00 Amsterdam today (14 Jul)**. After that, open the gym page: `last_synced_at`
+  should have moved to ~16:00 UTC / 18:00 Amsterdam. If it still reads 04:00 UTC the next morning,
+  the job is not firing — say so and I'll dig into `cron.job_run_details`.
+- A good result over a full day: the timestamp lands near 00:00, 09:00, 10:00 and 18:00 Amsterdam.
+
+KNOWN GAPS / RISKS:
+- The job is still NAMED `gym-twice-daily-sync` even though it now runs four times. Renaming it would
+  break the handle that db/22 and the gym doc refer to, for zero behavioural gain. The schedule is the
+  truth; the name is a fossil. Flagging it so nobody is confused later.
+- Minute 0 of UTC 07–09 and 16–17 now coincides with the hourly `marty-daytime-nudge`. Harmless —
+  different functions, and pg_net fires asynchronously — but noted in case timing ever looks odd.
+- 09:00 and 10:00 are an hour apart, so the 10:00 run will usually find little or nothing new. That's
+  what the owner asked for and it's free (the sync is idempotent), but it is redundancy by design.
+
+NEXT: nothing queued on the gym track. Owner should glance at `last_synced_at` after 18:00 today.
+
+---
+
 ### 2026-07-14 — Piece 6: row convergence — ONE task row everywhere. SRC-ONLY. VERIFIED LIVE.
 
 Four commits, no schema, nothing for the Checker. The last and riskiest piece of the bundle. There is
