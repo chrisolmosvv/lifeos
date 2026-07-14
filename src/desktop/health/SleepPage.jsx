@@ -22,6 +22,7 @@ import "../kit/sleepPage.css";
 import "../kit/sleepClockChart.css";
 import "../kit/sleepStageTimeline.css";
 import "../kit/sleepNight.css";
+import "../kit/sleepNightFooter.css"; // after sleepNight.css: it owns the 40% half of the ratio
 import "../kit/sleepAggregate.css";
 
 // SleepPage — the full Sleep front page (V2 broadsheet). Reached from the Health Hub's

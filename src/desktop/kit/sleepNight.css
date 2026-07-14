@@ -53,11 +53,21 @@
   padding-right: 0;
   border-left: 1px solid var(--rule);
 }
-/* LEFT COLUMN — the JOURNEY spine (fixed structural length) + a 2×2 paired-fact footer. */
+/* LEFT COLUMN — an explicit 60/40 split (owner's call, Piece 3 follow-up): the JOURNEY takes
+   60% of the column, the FOOTER 40%, with the hairline rule as the dividing line.
+
+   PERCENTAGE bases, not `flex: 6 1 0`. A zero basis looks equivalent but is not: with
+   box-sizing:border-box a flex item's base size cannot fall below its own padding + border, so
+   the footer's 17px (padding + hairline) was reserved FIRST and only the remainder split 6:4 —
+   giving 58.6/41.4, not 60/40. Percentage bases include the padding, and because both may
+   shrink (weighted by basis) the breadcrumb's height comes off both proportionally, so the
+   RATIO between them stays exactly 60:40 at any height. Verified, not assumed. */
 .journey {
+  flex: 1 1 60%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  margin-top: 18px;
+  justify-content: center; /* centre the spine in its share — do NOT stretch it */
 }
 .journey-node {
   display: flex;
@@ -86,9 +96,13 @@
   font-size: 24px;
   color: var(--ink);
 }
-/* The vertical spine line between the two nodes (~2× taller now); duration rides it. */
+/* The vertical spine line between the two nodes (~2× taller now); duration rides it.
+   flex:none — the journey is a flex column now, so without this the spine SHRANK from its
+   180px down to ~111px to fit. The 60/40 share centres the spine at its true length; it
+   does not stretch or squash it. */
 .journey-spine {
   position: relative;
+  flex: none;
   height: 180px;
   margin: 6px 0 6px 6px;
   border-left: 1px solid var(--rule);
@@ -102,70 +116,9 @@
   font-size: 26px;
   color: var(--accent); /* the column's single accent */
 }
-/* FOOTER (Piece 3) — three rows of facts that FILL the rest of the left column and
-   distribute themselves down it (space-between), so the column reaches the fold with no
-   gap at the bottom. This is what turns Piece 1's dead-space fix into something visible:
-   the extra height now gets USED instead of sitting empty. flex:1 + min-height:0 is the
-   pair that lets it grow into the slack and still shrink on a short viewport. */
-.snv-footer {
-  flex: 1 1 auto;
-  /* min-content, NOT 0: the footer may GROW into the column's slack, but it must never
-     shrink below its own three rows. With min-height:0 a short viewport squashed it to
-     ~17px and the rows spilled out of it. This floors it at exactly its content. */
-  min-height: min-content;
-  margin-top: 22px;
-  padding-top: 16px;
-  border-top: 1px solid var(--rule);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
-}
-.snv-footer-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 18px;
-}
-.snv-footer-row--full {
-  grid-template-columns: 1fr; /* restorative runs the full column width */
-}
-
-/* ONE fact = an uppercase hairline label over a tabular-figure value. Inter throughout
-   (Fraunces is for the headline numbers — the lead duration, the stage readout — not for
-   these small paired facts). */
-.snv-fact {
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 0;
-}
-.snv-fact-label {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-  margin-bottom: 5px;
-}
-.snv-fact-val {
-  display: block;
-  font-family: var(--font-sans);
-  font-weight: 400;
-  font-size: 16px;
-  color: var(--ink);
-}
-/* The column's ONE terracotta: only when last night is meaningfully off the 7-night
-   average (the Body-card dead-band). A flat night stays ink — terracotta stays rare. */
-.snv-fact-val--move {
-  color: var(--accent);
-}
-.snv-fact--btn {
-  cursor: pointer;
-}
-.snv-fact--btn:hover .snv-fact-val {
-  color: var(--accent);
-}
+/* (The three-row FOOTER + the .snv-fact primitive moved to sleepNightFooter.css when this
+   file passed ~250 lines — a pure move, nothing changed. The .journey 60% above and the
+   .snv-footer 40% there are two halves of one ratio; edit them together.) */
 
 
 /* Center column: a FIXED, compact timeline with the stats DIRECTLY beneath it (top-

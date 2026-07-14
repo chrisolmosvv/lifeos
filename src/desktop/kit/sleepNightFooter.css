@@ -1,0 +1,77 @@
+/* LifeOS — Sleep NIGHT FOOTER: the three fact rows in the lower 40% of the Last-night left
+   column (target · goal / vs 7-night avg · streak / restorative), and the one .snv-fact
+   label+value primitive they are built from. Split VERBATIM out of sleepNight.css when Piece 3
+   pushed it past the ~250-line house limit — no rule changed.
+
+   ORDER NOTE: nothing in sleepNight.css's reflow media query touches these selectors, so this
+   sheet has no source-order dependency on it (checked). The 60%/40% flex bases that pair with
+   .journey live here on .snv-footer — see .journey in sleepNight.css for why they are
+   percentages and not 0. */
+
+/* FOOTER (Piece 3) — three rows of facts holding the lower 40% of the column and
+   distributing themselves down it (space-between). This is what turns Piece 1's dead-space
+   fix into something visible: the extra height gets USED instead of sitting empty. */
+.snv-footer {
+  flex: 1 1 40%; /* the 40% — see .journey for why a PERCENTAGE basis, not 0 */
+  /* min-content, NOT 0: the footer takes its 40% share, but it must never shrink below its
+     own three rows. With min-height:0 a short viewport squashed it to ~17px and the rows
+     spilled out of it. This floors it at exactly its content. */
+  min-height: min-content;
+  /* NO margin-top: a margin sits OUTSIDE the flex boxes, so it stole ~5% of the column and
+     the split came out 55/39 instead of 60/40. With the margins gone the two blocks tile the
+     column exactly, and the hairline rule IS the 60/40 line.
+     border-box: without it the padding + hairline sit OUTSIDE the 40% share (content-box is
+     the default), which pushed the split to 58.6/41.4. This makes the 40% mean 40%. */
+  box-sizing: border-box;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+.snv-footer-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+}
+.snv-footer-row--full {
+  grid-template-columns: 1fr; /* restorative runs the full column width */
+}
+
+/* ONE fact = an uppercase hairline label over a tabular-figure value. Inter throughout
+   (Fraunces is for the headline numbers — the lead duration, the stage readout — not for
+   these small paired facts). */
+.snv-fact {
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.snv-fact-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
+}
+.snv-fact-val {
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--ink);
+}
+/* The column's ONE terracotta: only when last night is meaningfully off the 7-night
+   average (the Body-card dead-band). A flat night stays ink — terracotta stays rare. */
+.snv-fact-val--move {
+  color: var(--accent);
+}
+.snv-fact--btn {
+  cursor: pointer;
+}
+.snv-fact--btn:hover .snv-fact-val {
+  color: var(--accent);
+}
