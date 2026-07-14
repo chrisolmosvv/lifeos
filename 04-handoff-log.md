@@ -33,6 +33,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Piece 2: Today keyboard day-nav + the day-change slide. SRC-ONLY. VERIFIED LIVE.
+
+One commit, no schema, nothing for the Checker. This one I DID drive in a real browser (the Chrome
+extension connected this time) — see the verification list below.
+
+WHAT CHANGED:
+- ONE day step. The step was written inline three times (both ‹ › buttons and the swipe). Everything
+  now calls a single `stepDay(direction)`. The three copies were NOT identical: the buttons worked
+  off the day captured in that render, the swipe worked off the previous day. I unified on the
+  swipe's form, and that turned out to matter — a HELD arrow key fires faster than the screen
+  re-draws, and the other version would have re-counted from a stale day and silently SKIPPED days.
+- ← / → now step the day. They go quiet while you're typing, while the edit panel is open, and when
+  you hold a modifier key (so ⌘← etc. still belong to the browser).
+- The day-change slide: the day's content shifts a touch in the direction you're travelling and
+  settles (320ms, eased, no bounce). The hour labels stay put. It's the same move the Calendar's week
+  arrows make, so the two screens feel like one app.
+- FIXED A REGRESSION FROM PIECE 1: the narrower day column made the day bar wrap mid-phrase — "15 /
+  JULY" and "Back to / today" broke across lines. The bar's parts no longer break; only the day name
+  gives way if it must. No type sizes were changed.
+
+★ FOR PIECE 3 (Calendar keys) — THE SHARED TYPING GUARD LIVES AT: `src/desktop/kit/keyNav.js`.
+  It exports `isTypingTarget(event)` — the ONE definition of "the user is typing" — and
+  `useArrowKeys({ onPrev, onNext, enabled })`, which owns the window listener and all the guards.
+  Calendar should IMPORT these, not re-implement them: pass `onPrev/onNext` as the existing
+  `isMonth ? monthPrev : weekPrev` dispatch, and `enabled: false` while its event form is open.
+
+FILES TOUCHED: kit/keyNav.js (new), Today.jsx, useDaySwipe.js (now only detects the gesture and
+reports a direction — it owns no step logic), kit/DayGrid.jsx (+ one optional `navIntent` prop),
+kit/todayKit.css, today.css.
+
+HOW TO VERIFY (13" MacBook) — I already ran all of this live and it passed:
+1. Press → and ← on Today. The day steps forward/back, with the content sliding the way you're going.
+2. Press → twice quickly — you move TWO days. (No dropped days.)
+3. Click into the "Add to inbox" box, type, and press ←. The TEXT CURSOR moves. The day must NOT.
+   Same with a task open in the edit panel: arrows must not move the day behind it.
+4. The ‹ › buttons and the two-finger trackpad swipe still work exactly as before — they now call the
+   same one function the keys do.
+5. Step away, then click "Back to today" — you land on today, the red now-line returns, and the
+   button disappears.
+
+KNOWN GAPS / RISKS:
+- The slide plays on the day sheet only, not the task list — deliberate (calm; and it matches the
+  Calendar, where only the columns layer moves). Say if you want the task list to move too.
+- ⚠️ The auto-commit tool from Piece 0 is STILL running. Still worth pausing.
+- `useTodayFocus.js` is still orphaned (from Piece 1). Still parked for a prove-dead sweep.
+
+NEXT: Piece 3 — Calendar keyboard nav (week + month), importing the guard named above.
+
+FOR THE CHECKER: nothing — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-14 — Piece 1: Today header dedupe + the hero ratio. SRC-ONLY. (Awaiting owner QA.)
 
 The first real change of the Today/Planning bundle. One commit, no schema, nothing for the Checker.
