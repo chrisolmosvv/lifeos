@@ -33,6 +33,59 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Piece 4: Planning — full width, centred toggle, no title. SRC-ONLY. VERIFIED LIVE.
+
+Two commits, no schema, nothing for the Checker. Driven in a real browser.
+
+COMMIT 1 — split planning.css (388 lines, over the ceiling) BEFORE adding to it. Pure move, no rule
+changed: 388 → 101 (the shell), with each mode owning its own file (planningTime / planningBoard /
+planningCategory / planningTriage), plus planningColumn.css for the parts Time and Board SHARE —
+both render the same column component, so filing those under either mode would have been wrong.
+Proof: identical selector set (58 before, 58 after, none lost or duplicated); all three modes
+eyeballed unchanged.
+
+COMMIT 2 — the layout:
+- The "Planning" heading is GONE. The nav already tells you where you are, and it was reading as a
+  second title. The hairline rule it carried has moved onto the header row, so the rule stays.
+- ONE header row now: "‹ Back to Today" on the left, TIME / BOARD / CATEGORY dead centre. It's a
+  real three-zone layout — an empty zone of equal weight sits on the right, which is what makes the
+  centre a TRUE centre. (A plain "centre it" would have left the toggle sitting off to one side by
+  half the width of the back link.)
+- FULL WIDTH. Planning was a narrow 1040px column floating in the middle of the window; it now uses
+  the whole width, like Today. It deliberately uses the SAME side-frame number Today, the masthead
+  and the Calendar use — so Piece 5 has ONE number to consolidate, not a fifth one hiding here.
+- Mode-switch motion: the little marker under the active mode now SLIDES across to the word you
+  picked (measured off the real words, so it's exactly as wide as the one above it), and the content
+  below fades in rather than snapping. Quiet, eased, no bounce; both respect reduced-motion.
+
+FILES TOUCHED: Planning.jsx, kit/PlanningModes.jsx, kit/planning.css (+ the five new CSS files from
+commit 1, and the seven Planning components now importing the CSS they actually use).
+
+HOW TO VERIFY (13" MacBook) — all of this passed live:
+1. Open Planning. No "Planning" heading. TIME/BOARD/CATEGORY sits centred on the row with "‹ Back to
+   Today". The page fills the window — no more dead space either side.
+2. Click between the three modes: the marker slides to the word you chose, and the content fades in.
+3. Time: the Inbox rail and the lanes still work — drag a rail card onto a lane and it re-dates.
+4. Board: cards, columns and the two filters still work; drag a card between columns.
+5. Category: the groups still expand and collapse; "+ add a task" still works.
+
+NOTE ON MY DRAG CHECK: I exercised Time's drag path with a SAME-LANE drag, which the code resolves
+to a no-op — so the drag machinery was proven without writing to your real tasks. A drag that
+actually MOVES a task between lanes changes a due date, so I left that one for you (step 3 above).
+
+KNOWN GAPS / RISKS:
+- ⚠️ The auto-commit tool from Piece 0 is STILL running. Still worth pausing.
+- `useTodayFocus.js` is still orphaned (from Piece 1), still parked for a prove-dead sweep.
+- Planning's rows still show the three-button status control — that's the Piece 6 row-convergence
+  question, deliberately untouched and still undecided.
+
+NEXT: Piece 5 — the 56px frame consolidation (Today / masthead / Calendar toolbar / Month grid /
+Planning now all use the same 3.5rem literal — it wants to become ONE shared value).
+
+FOR THE CHECKER: nothing — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-14 — Piece 3: Calendar keyboard nav (week + month). SRC-ONLY. VERIFIED LIVE.
 
 One commit, no schema, nothing for the Checker. Driven in a real browser — every check below was run,
