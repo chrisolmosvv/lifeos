@@ -8,6 +8,7 @@ import { useTodayData, startOfDay, addDays, localDateStr } from '../spine/data/u
 import { ensureGeneratedThrough } from './recur/topup'
 import { seriesFormHandlers } from './recur/seriesForm'
 import { useDaySwipe } from './useDaySwipe'
+import { useArrowKeys } from './kit/keyNav'
 import { deriveToday } from './todayDerive'
 import { todayActions } from './todayActions'
 import { useTodayGrid } from './useTodayGrid'
@@ -52,11 +53,37 @@ export default function Today({ onOpenPlanning }) {
   const todayModRef = useRef(null)
   const weekModRef = useRef(null)
 
-  // A two-finger trackpad swipe over the day grid steps one day — the exact same
-  // step the ‹ › arrows take (useDaySwipe).
-  useDaySwipe(scrollRef, (dir) => {
+  // ONE day step, used by everything that moves the day: the ‹ › buttons, the
+  // trackpad swipe, and the ← → keys. dir is +1 (next) or -1 (previous).
+  //
+  // It sets the day from the PREVIOUS day (v => …) rather than from the `viewed`
+  // value captured in this render. That matters for a held arrow key: the keydowns
+  // repeat faster than React re-renders, and reading the captured value would make
+  // the later steps re-compute from a stale day and silently drop days.
+  //
+  // `nav` carries the direction of travel down to the grid so it can play the slide.
+  const [nav, setNav] = useState({ token: 0, intent: null })
+  const stepDay = (dir) => {
     setDayNavigated(true)
     setViewed((v) => addDays(v, dir))
+    setNav((n) => ({ token: n.token + 1, intent: dir > 0 ? 'next' : 'prev' }))
+  }
+  // "Back to today" is a jump, not a step — but it still travels in a direction, so
+  // it slides the same way (forwards if today is ahead of the day you're on).
+  const backToToday = () => {
+    const target = startOfDay(new Date())
+    setDayNavigated(true)
+    setViewed(target)
+    setNav((n) => ({ token: n.token + 1, intent: target > viewed ? 'next' : 'prev' }))
+  }
+
+  useDaySwipe(scrollRef, stepDay)
+  // ← / → step the day. Silent while you're typing (the quick-add box, any field) and
+  // while the task/event panel is open — see kit/keyNav.js.
+  useArrowKeys({
+    onPrev: () => stepDay(-1),
+    onNext: () => stepDay(1),
+    enabled: !form,
   })
 
   // The bucket a date belongs to: only the real today is the "Today" bucket.
@@ -156,9 +183,9 @@ export default function Today({ onOpenPlanning }) {
         <TodayDayBar
           viewed={viewed}
           isToday={isToday}
-          onPrev={() => { setDayNavigated(true); setViewed(addDays(viewed, -1)) }}
-          onNext={() => { setDayNavigated(true); setViewed(addDays(viewed, 1)) }}
-          onBack={() => { setDayNavigated(true); setViewed(startOfDay(new Date())) }}
+          onPrev={() => stepDay(-1)}
+          onNext={() => stepDay(1)}
+          onBack={backToToday}
         />
         <TodayAllDay events={allDayEvents} cats={cats} onOpen={openEvent} />
         <DayGrid
@@ -177,6 +204,7 @@ export default function Today({ onOpenPlanning }) {
           blockPreview={grid.blockPreview}
           createDraft={grid.createDraft}
           staggerLoad={!dayNavigated}
+          navIntent={nav.intent}
         />
       </section>
 

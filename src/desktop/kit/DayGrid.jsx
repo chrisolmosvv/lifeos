@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { HOUR_HEIGHT, formatHour, timeRange } from '../../spine/logic/dateUtils'
 import { buildDayItems, layoutEvents } from '../../spine/logic/eventLayout'
 import { colorHex, INBOX_COLOR } from '../../spine/logic/palette'
@@ -35,6 +35,7 @@ export default function DayGrid({
   blockPreview,
   createDraft,
   staggerLoad = false,
+  navIntent = null,
 }) {
   const [now, setNow] = useState(() => new Date())
 
@@ -52,6 +53,22 @@ export default function DayGrid({
 
   const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
   const catById = new Map(cats.map((c) => [c.id, c]))
+
+  // The day-change slide (mirrors WeekGrid's week slide, so the two screens move the
+  // same way): the LANE — the day's content — shifts a few px in the direction of
+  // travel and settles. The hour gutter stays put. Keyed off the viewed day itself,
+  // so it fires on every step (even between two empty days) and never on an
+  // edit-reload, which doesn't change the day. `navIntent` carries the direction.
+  const [slideDir, setSlideDir] = useState(null)
+  const mounted = useRef(false)
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return } // never on first open
+    if (!navIntent) return
+    setSlideDir(navIntent)
+    const t = setTimeout(() => setSlideDir(null), 380)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dayStart])
 
   // Feed the live drag position into the layout so overlaps re-split as a block
   // moves (the block follows the pointer; its neighbours re-flow around it).
@@ -88,7 +105,11 @@ export default function DayGrid({
             ))}
           </div>
 
-          <div className="tk-grid-lane kit-create-cursor" ref={laneRef} {...backgroundBind}>
+          <div
+            className={'tk-grid-lane kit-create-cursor' + (slideDir ? ' is-slide-' + slideDir : '')}
+            ref={laneRef}
+            {...backgroundBind}
+          >
             {HOURS.map((h) => (
               <div className="tk-grid-hour" key={h} />
             ))}

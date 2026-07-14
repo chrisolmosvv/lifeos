@@ -20,19 +20,28 @@
   flex: none;
   display: flex;
   align-items: baseline;
-  gap: 1.1rem;
+  gap: 0.7rem;
   margin: 0 0 0.75rem;
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--ink);
 }
+/* The day column is narrow now (the tasks list is the hero), so the bar's three
+   parts must never break mid-phrase — "15 JULY" and "Back to today" stay whole, and
+   the day name is the only thing allowed to give way. */
 .today-day-title {
   font-family: var(--font-serif);
   font-weight: 600;
   font-size: 1.85rem;
   line-height: 1;
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .today-viewdate {
+  flex: none;
+  white-space: nowrap;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -69,6 +78,8 @@
 .today-back {
   margin-left: auto;
   align-self: center;
+  flex: none;
+  white-space: nowrap;
   font: inherit;
   font-size: 0.78rem;
   color: var(--accent);

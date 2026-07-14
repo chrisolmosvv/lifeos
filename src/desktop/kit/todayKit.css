@@ -90,6 +90,43 @@
   flex: 1;
   border-left: 1px solid var(--rule);
 }
+/* The day-change slide: the lane (the day's content) shifts in the direction of
+   travel and settles. The hour gutter beside it stays put — same move as the
+   Calendar's week slide, so the two screens read as one app. Quiet and eased, no
+   bounce. pointer-events are off for the duration: the lane's on-screen box is what
+   the drag maths measures, and a transform moves it — so nothing can be dragged
+   against a shifted box mid-slide. */
+.tk-grid-lane.is-slide-next,
+.tk-grid-lane.is-slide-prev {
+  pointer-events: none;
+}
+.tk-grid-lane.is-slide-next {
+  animation: tk-lane-next 320ms ease both;
+}
+.tk-grid-lane.is-slide-prev {
+  animation: tk-lane-prev 320ms ease both;
+}
+/* next = the new day arrives from the right, settling leftward into place. */
+@keyframes tk-lane-next {
+  from { opacity: 0; transform: translateX(2.5%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes tk-lane-prev {
+  from { opacity: 0; transform: translateX(-2.5%); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Quiet crossfade — no slide. */
+  .tk-grid-lane.is-slide-next,
+  .tk-grid-lane.is-slide-prev {
+    animation: tk-lane-fade 200ms ease both;
+  }
+}
+@keyframes tk-lane-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .tk-grid-hour {
   /* border-box so the 1px hour-line sits INSIDE the 48px, not added on top —
      otherwise each row is 49px and the lines drift 1px/hour below the gutter
