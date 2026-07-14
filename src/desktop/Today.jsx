@@ -17,7 +17,6 @@ import TodayTasksPanel from './TodayTasksPanel'
 import DayGrid from './kit/DayGrid'
 import ItemForm from './kit/ItemForm'
 import Toast from './kit/Toast'
-import { useTodayFocus } from './focus/useTodayFocus'
 import { useFocusSessionCtx } from './focus/focusSessionContext'
 import './today.css'
 
@@ -35,7 +34,6 @@ export default function Today({ onOpenPlanning }) {
   const realToday = new Date()
   const [viewed, setViewed] = useState(() => startOfDay(new Date()))
   const isToday = isSameDay(viewed, realToday)
-  const focusToday = useTodayFocus() // seconds focused today (Focus module, P6)
   const fs = useFocusSessionCtx() // the running-session engine, for the ▶ block-nudge
   const focusRunning = fs && (fs.status === 'running' || fs.status === 'paused')
 
@@ -185,7 +183,6 @@ export default function Today({ onOpenPlanning }) {
       <TodayTasksPanel
         isToday={isToday}
         viewed={viewed}
-        focusToday={focusToday}
         tasks={tasks}
         todayItems={todayItems}
         next7={next7}

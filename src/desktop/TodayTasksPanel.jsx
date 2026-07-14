@@ -5,12 +5,10 @@ import { activeTotal } from './allTasksModel'
 import ModuleHeader from './kit/ModuleHeader'
 import QuickAddInput from './kit/QuickAddInput'
 import TodayRow from './kit/TodayRow'
-import { formatDuration } from './focus/focusFormat'
 
-// TodayTasksPanel — Today's right-hand column: the quiet "focused today" glance line,
-// the quick-add box, the two task modules ("tasks today" + "the next 7 days"), and the
-// Planning box at the foot. Both modules render the SAME row (TodayRow), so they read
-// as one list. (Piece 0 split: moved verbatim out of Today.jsx; no behaviour changed.)
+// TodayTasksPanel — Today's right-hand column: the quick-add box, the two task modules
+// ("tasks today" + "the next 7 days"), and the Planning box at the foot. Both modules
+// render the SAME row (TodayRow), so they read as one list.
 //
 // The two module <section>s carry the refs Today's drag hook uses as its off-grid
 // drop-zones — dragging a block off the sheet and onto a module re-dates the task.
@@ -18,7 +16,6 @@ import { formatDuration } from './focus/focusFormat'
 export default function TodayTasksPanel({
   isToday,
   viewed,
-  focusToday,
   tasks,
   todayItems,
   next7,
@@ -48,9 +45,6 @@ export default function TodayTasksPanel({
 }) {
   return (
     <div className="today-right">
-      {isToday && focusToday > 0 && (
-        <div className="today-focus-line">focused today · {formatDuration(focusToday)}</div>
-      )}
       <QuickAddInput onAdd={onQuickAdd} busy={busy} />
       {tasks === null ? (
         <p className="today-loading">Loading…</p>

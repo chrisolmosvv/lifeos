@@ -92,6 +92,14 @@ export function formatMastheadDate(d) {
   return `${WD_FULL[d.getDay()]}, ${MO_FULL[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
 }
 
+// Day + month only: "14 July". For Today's day bar, where the big heading already
+// says the weekday — so the small line beside it must NOT repeat it (and carries no
+// year). Built here rather than trimmed out of formatMastheadDate, which bakes the
+// weekday and year in.
+export function formatDayMonth(d) {
+  return `${d.getDate()} ${MO_FULL[d.getMonth()]}`
+}
+
 // The live clock, zero-padded 24-hour: "09:07:32".
 export function formatClock(d) {
   const p = (n) => String(n).padStart(2, '0')
