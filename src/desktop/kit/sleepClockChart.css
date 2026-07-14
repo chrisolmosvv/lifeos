@@ -159,6 +159,74 @@
   display: block;
   width: 100%;
 }
+
+/* GOAL MET (Piece 4) — terracotta's ONE sanctioned use in this chart's data (stages stay
+   neutral). A marginal rule down the block's left edge: the broadsheet's way of marking a
+   line worth noticing. It is deliberately NOT the hover treatment (hover is a terracotta
+   OUTLINE around the whole block) — a marked night and a hovered night must not read alike.
+   An ::after overlay, NOT an inset box-shadow: the stage fills are child elements, and an
+   inset shadow paints UNDER them, so the mark was invisible. This paints over them, and
+   costs no width (the block is absolutely positioned left:0/right:0). */
+.scc-block--goal::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+}
+
+/* CROPPED (Piece 4) — the night ran past the window's edge (a bedtime before 22:00, or a
+   wake after 12:00). It used to VANISH silently; now it is pinned to the edge and fades
+   out at it, so the block reads as "continues beyond this line" rather than "ended here".
+   Square that corner too — a straight cut, not a finished end. */
+.scc-block--crop-top {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 10px);
+}
+.scc-block--crop-bottom {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 10px);
+  mask-image: linear-gradient(to top, transparent 0, #000 10px);
+}
+.scc-block--crop-top.scc-block--crop-bottom {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%);
+}
+
+/* AVERAGE BED / WAKE marks (Piece 4) — hairlines ACROSS the columns, over the grid but
+   under the blocks. Ink, never terracotta: terracotta is spoken for by the goal mark. */
+.scc-marks {
+  position: absolute;
+  left: 0;
+  right: 44px;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.scc-mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--ink-muted);
+  opacity: 0.75;
+}
+.scc-mark em {
+  position: absolute;
+  right: -44px;
+  top: -6px;
+  width: 42px;
+  padding-left: 6px;
+  font-style: normal;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  color: var(--ink-muted);
+}
 .scc-axis {
   display: flex;
   justify-content: space-between;

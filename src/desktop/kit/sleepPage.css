@@ -139,14 +139,25 @@
   color: var(--ink-muted);
 }
 
-/* Stage shades: ink across the board, terracotta reserved for Deep. */
-.hyp-deep { background: #423b32; } /* darkest neutral — extends the stage gray ramp (terracotta off stages) */
-.hyp-core { background: #5c564c; }
-.hyp-rem { background: #8a8275; }
-.hyp-awake { background: #c9c1b2; }
-.hyp-inbed { background: #e0d9c9; }
-.hyp-asleep { background: #756e62; }
-.hyp-other { background: #b8b0a0; }
+/* ── STAGE RAMP — the ONE stage vocabulary (Piece 4, owner-approved) ───────────
+   Deep / Core / REM / Awake mean the same colour EVERYWHERE they appear, so this one
+   block paints the clock columns, the stage timeline, the hypnogram AND the Week/Month/
+   90-day bars. Changing a value here repaints all four — that is the point, not a bug.
+
+   Piece 4 warmed and widened it (was #423b32 → #c9c1b2, a cool-neutral grey ramp):
+   the hue is warm (~30°) so it sits with the paper instead of against it, and the
+   dark→light spread is wider so four steps separate at a glance. Saturation stays LOW on
+   purpose: terracotta (--accent, #C8643D) now marks goal-met nights inside this very
+   chart, and no stage may compete with it. Terracotta is NEVER a stage. */
+.hyp-deep { background: #3a2e24; } /* warm espresso — darkest */
+.hyp-core { background: #6b5b48; } /* walnut */
+.hyp-rem { background: #9e8e77; } /*  taupe */
+.hyp-awake { background: #d2c4ac; } /* warm sand — lightest */
+/* Secondary tones (the hypnogram's in-bed/asleep/other bands) — warmed to match, so they
+   sit on the same ramp rather than reading as a second, cooler palette. */
+.hyp-inbed { background: #e6dccb; }
+.hyp-asleep { background: #7d6d58; }
+.hyp-other { background: #c0b29a; }
 
 /* (V1 .bw-band/.bw-dot/.bw-legend bed-wake band removed with the BedWakeBand
    component — superseded by the rhythm clock dials. V2 P1 deletion.) */

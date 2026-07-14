@@ -223,7 +223,12 @@ export default function SleepNight({
           <div className="snv-dial-key">
             <span className="dk-avg">|</span> avg&nbsp;&nbsp;<span className="dk-med">○</span> median&nbsp;&nbsp;· band = spread
           </div>
-          {today && <SleepClockColumns rows={weekRows} today={today} />}
+          {/* Piece 4: same 7 nights, new prop shape. `averages` and `onDrill` exist on the
+              component but are deliberately NOT passed here — Last-night's look stays as the
+              owner verified it, and Piece 5 is what turns them on. */}
+          {today && (
+            <SleepClockColumns rows={weekRows} end={today} days={7} goalMinutes={goalMinutes} />
+          )}
         </aside>
       )}
     </div>
