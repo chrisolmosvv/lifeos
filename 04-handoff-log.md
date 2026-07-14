@@ -33,6 +33,55 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Piece 3: Calendar keyboard nav (week + month). SRC-ONLY. VERIFIED LIVE.
+
+One commit, no schema, nothing for the Checker. Driven in a real browser — every check below was run,
+not inferred.
+
+WHAT CHANGED:
+- ← / → now step whatever is on screen: weeks in Week mode, months in Month mode. They call the exact
+  same functions the ‹ › buttons already call, so the keys are not a second way of doing it.
+- The keys go quiet while the event panel is open, while the tray drawer is open, and while you're
+  typing. NO second typing-guard was written — it reuses `kit/keyNav.js` from Piece 2, as instructed.
+- Month now slides in the direction you're travelling instead of just fading in place. Week already
+  slid (the keys go through the same step the buttons do, which already armed it) — so nothing new
+  was built there, and there's now ONE month step serving the buttons, the swipe and the keys alike.
+  A JUMP ("Back to this month", or arriving from Week) keeps its plain settle-fade — only a STEP
+  travels in a direction.
+
+TWO THINGS FOUND ALONG THE WAY (both handled):
+1. The brief assumed CalendarWeek could see the event panel. It can't — the panel lives inside
+   WeekView, privately. WeekView now reports open/closed up to its parent (one additive prop), which
+   is what lets the keys stand down while you're in the form.
+2. A PRE-EXISTING race in Calendar's week slide, same class as the one found on Today: the sliding
+   layer is the one the drag maths measures, and the slide MOVES it — so a drag begun mid-slide could
+   have dropped a block at the wrong time. Now guarded. This was already there before this piece;
+   it's fixed now.
+
+FILES TOUCHED: CalendarWeek.jsx, WeekView.jsx (one added prop + one effect), kit/MonthView.jsx (one
+optional prop), kit/monthView.css, kit/weekGrid.css. kit/keyNav.js imported, NOT modified.
+
+HOW TO VERIFY (13" MacBook) — all of this passed live:
+1. Calendar → Week. Press → and ←: whole weeks step, content sliding the way you're going.
+2. Switch to Month. Press → twice: you advance TWO months (July → September; none dropped). ← comes
+   back. The month slides in the direction of travel.
+3. In Week, open the Tray. Press → a few times: the week must NOT move. Close the tray → arrows work
+   again.
+4. Click "+ Add event". Press → a few times: the week must NOT move behind the panel. Cancel → arrows
+   work again.
+5. No console errors.
+
+KNOWN GAPS / RISKS:
+- ⚠️ The auto-commit tool from Piece 0 is STILL running. Still worth pausing.
+- `useTodayFocus.js` is still orphaned (from Piece 1), still parked for a prove-dead sweep.
+
+NEXT: Piece 4 — Planning layout (full width, centred TIME/BOARD/CATEGORY toggles, drop the "Planning"
+title).
+
+FOR THE CHECKER: nothing — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-14 — TUNING: Today hero split 33/67 → 40/60. SRC-ONLY. VERIFIED LIVE.
 
 One line in today.css (`grid-template-columns: 2fr 3fr`) — the owner tested the 33% day sheet live
