@@ -15,6 +15,14 @@
   --overdue:    #A85C44; /* brick — overdue/late marks; darker than the accent on
                             purpose so a deadline never reads as "urgent now" */
 
+  /* The side frame — the white space between the paper's edge and its content.
+     ONE number, used by the masthead (which sits on EVERY screen), Today, the
+     Calendar's toolbar + month grid, and Planning, so they all hang off the same
+     margin. Change it here and the whole edition re-frames together.
+     (Screens with their own centred column — Settings, Focus, Food, Finance,
+     Health, Rolodex — set their own width and are not governed by this.) */
+  --frame: 1.5rem; /* was 3.5rem / 56px — hand-copied into 5 files before Piece 5 */
+
   /* Type — two weights only: regular (400) + medium (500) */
   --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

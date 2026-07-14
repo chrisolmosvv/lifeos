@@ -10,13 +10,12 @@
    and Board share. */
 
 /* Full-width, like Today — no centred 1040px column, so the lanes and the board get
-   the whole window. The 3.5rem side frame is deliberately the SAME literal Today /
-   the masthead / the Calendar use; Piece 5 consolidates that one number across all of
-   them, so this must not invent a different value. */
+   the whole window. The side frame is the shared --frame token (theme.css), the same
+   one the masthead, Today and the Calendar hang off. */
 .pl {
   height: 100%;
   box-sizing: border-box;
-  padding: 1.5rem 3.5rem 1rem;
+  padding: 1.5rem var(--frame) 1rem;
   display: flex;
   flex-direction: column;
   min-height: 0;
