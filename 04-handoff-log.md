@@ -33,6 +33,65 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Piece 0: housekeeping before the Today/Planning bundle. SRC-ONLY. (Awaiting owner QA.)
+
+Clearing the ground before the Today/Planning changes. Two commits, no schema, nothing for the
+Checker. NOTHING from the recon's items 1–6 was touched — no header, hero ratio, keyboard nav,
+Planning layout, row convergence or 56px frame. This piece only removes dead code and splits two
+files that were too big to safely add to.
+
+WHAT CHANGED:
+
+1. Deleted a closed island of DEAD code (678 lines): SomedayDrawer.jsx, TaskBlock.jsx, TaskRow.jsx,
+   tasks.css. SomedayDrawer was the island's only way in, and nothing imported it — so none of it
+   had been reaching the screen. Proved before deleting: no import, no JSX use, no CSS reference
+   from anywhere outside the island; and the production build came back BYTE-IDENTICAL (same 466
+   modules, same content-hash on the bundle) — proof it was never shipped.
+
+2. Split the two over-ceiling files. PURE MOVE — no logic, markup or styling changed.
+   Today.jsx      509 → 247   todayKit.css   483 → 198
+   New files: TodayDayBar.jsx (the day bar) · TodayTasksPanel.jsx (the right-hand column) ·
+   todayDerive.js (the day's derived lists) · todayActions.js (the writes) · useTodayGrid.js (drag
+   wiring) · useDaySwipe.js (the trackpad day-swipe) · taskRowShared.css (parts both rows use) ·
+   todayRow.css (TodayRow + StatusCycle — Today) · taskRowPill.css (TodayTaskRow + StatusPill —
+   Planning + the task form). Every file is now under the ~250 line ceiling.
+   .tk-tray-ghost deliberately STAYED in todayKit.css — Calendar's WeekView renders it too.
+
+FILES TOUCHED: deleted 4; added 9; edited Today.jsx, todayKit.css, TodayRow.jsx, TodayTaskRow.jsx,
+StatusPill.jsx, StatusCycle.jsx (the last four: import lines only).
+
+HOW TO VERIFY (13" MacBook, logged in) — the expected result is TOTAL SILENCE. Nothing should look
+or behave one pixel different. That IS the pass condition.
+1. Open Today. Same as before: the day sheet left, the two task modules right, same rows, same
+   columns, same spacing.
+2. Step days with ‹ ›, and two-finger swipe across the day sheet — still one day per step. "Back to
+   today" still appears only when you're away.
+3. Tap a row's status control → still cycles To do → In progress → Done → To do, and still SAVES
+   (reload the page; it holds).
+4. Drag a task from a module onto the day sheet, and drag a block off the sheet onto a module —
+   both still work, and the little chip still follows the pointer.
+5. Click ▶ on a row → Focus Setup opens prefilled. Open a task → the form, subtasks, and archive+undo
+   all still work.
+6. Open Planning (Time + Category) and Calendar → completely unchanged (Planning's rows still show
+   the three-button status control; that convergence question is still undecided and untouched).
+
+KNOWN GAPS / RISKS:
+- Not driven in a browser by me — the Chrome extension wasn't connected, so owner QA is the gate.
+  What I did prove mechanically: the CSS selector set is identical (75 before, 75 after — no rule
+  lost or duplicated), the CSS bundle is byte-identical (207.52 kB), the moved markup has an
+  identical element/prop/className census, the derivation maths diffs clean, and the build passes.
+- ⚠️ SOMETHING AUTO-COMMITS AND PUSHES THIS REPO. My first commit was swept up by a tool that
+  committed + pushed it to main as "Update LifeOS" (99b901e) — the 6th such commit in the history.
+  Content was correct, but it replaced my commit message, and it could commit a HALF-FINISHED state
+  during future work. Worth finding and pausing that tool before the next piece.
+
+NEXT: Piece 1 — the Today header (kill the doubled day name) + the hero ratio (left column to ~33%).
+Both land in Today.jsx + today.css, which are now small enough to work in safely.
+
+FOR THE CHECKER: nothing — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-12 — H-fin-b: hermes-read Finance section (deployed + live-verified)
 
 WHAT CHANGED:
