@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { formatRange } from '../spine/logic/dateUtils'
 import { navDays, navNext, navPrev, navToDay, isHome, HOME } from './weekNav'
+import { useArrowKeys } from './kit/keyNav'
 import WeekView from './WeekView'
 import MonthView from './kit/MonthView'
 import './calendarWeek.css'
@@ -70,17 +71,36 @@ export default function CalendarWeek() {
   // V2-5: a swipe is EXACTLY the arrow step — one Mon–Sun week, forward/back — so
   // swipe and arrows are a single path (no free/any-day windows). dir 0 → no-op.
   const swipeWeek = (dir) => { if (dir) (dir > 0 ? weekNext : weekPrev)() }
-  // Month nav — whole-month steps.
-  const monthPrev = () => setMonthAnchor(addMonths(monthAnchor, -1))
-  const monthNext = () => setMonthAnchor(addMonths(monthAnchor, 1))
-  const backMonth = () => setMonthAnchor(firstOfMonth(today))
-  // V2-5 (free-triggered Month): a swipe steps `shift` whole months on release,
-  // reusing the month step + the existing mv-in fade. shift = 0 → no-op.
-  const swipeMonth = (shift) => { if (shift) setMonthAnchor((m) => addMonths(m, shift)) }
+
+  // Month nav — ONE whole-month step, used by the ‹ › buttons, the swipe and the
+  // ← → keys alike (the same "one step, one function" shape Today's day step has).
+  // `monthIntent` carries the direction of travel down to MonthView so it can slide
+  // the way you're going instead of just fading.
+  const [monthIntent, setMonthIntent] = useState(null)
+  const stepMonth = (dir) => {
+    setMonthIntent(dir > 0 ? 'next' : 'prev')
+    setMonthAnchor((m) => addMonths(m, dir))
+  }
+  const monthPrev = () => stepMonth(-1)
+  const monthNext = () => stepMonth(1)
+  // "Back to this month" is a jump, not a step — it keeps the plain settle-fade.
+  const backMonth = () => { setMonthIntent(null); setMonthAnchor(firstOfMonth(today)) }
+  const swipeMonth = (dir) => { if (dir) stepMonth(dir) }
+  // ← / → step whatever is on screen: months in Month, weeks in Week — the SAME
+  // dispatch the ‹ › buttons use, so the keys are not a second code path. Held back
+  // while you're typing, while the event panel is open (WeekView reports it), and
+  // while the tray drawer is open. The guard itself lives in kit/keyNav.js.
+  const [formOpen, setFormOpen] = useState(false)
+  useArrowKeys({
+    onPrev: () => (isMonth ? monthPrev() : weekPrev()),
+    onNext: () => (isMonth ? monthNext() : weekNext()),
+    enabled: !formOpen && !trayOpen,
+  })
+
   // View switches + the Month → Week jumps. setViewZoom(true) arms the V2-4
   // centered scale-zoom for this (and every later) toggle — never the first open.
   const toWeek = () => { setViewZoom(true); setFocus(null); setView('week') }
-  const toMonth = () => { setViewZoom(true); setMonthAnchor(firstOfMonth(days[0])); setView('month') }
+  const toMonth = () => { setViewZoom(true); setMonthIntent(null); setMonthAnchor(firstOfMonth(days[0])); setView('month') }
   const jumpToDay = (day) => { setViewZoom(true); setNavigated(true); setFocus({ day, itemId: null, ms: null }); setNav(navToDay(day, today)); setView('week') }
   const jumpToItem = (day, item) => { setViewZoom(true); setNavigated(true); setFocus({ day, itemId: item.id, ms: item.ms }); setNav(navToDay(day, today)); setView('week') }
 
@@ -139,6 +159,7 @@ export default function CalendarWeek() {
           <MonthView
             key={monthAnchor.toISOString()}
             monthAnchor={monthAnchor}
+            navIntent={monthIntent}
             today={today}
             focusDay={focus?.day}
             onJumpDay={jumpToDay}
@@ -157,6 +178,7 @@ export default function CalendarWeek() {
             navIntent={navIntent}
             onSwipe={swipeWeek}
             showActual={showActual}
+            onFormOpenChange={setFormOpen}
           />
         )}
       </div>

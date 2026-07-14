@@ -16,6 +16,25 @@
   from { opacity: 0; transform: scale(0.992); }
   to { opacity: 1; transform: none; }
 }
+/* Stepping a month travels in a DIRECTION, so it slides that way rather than just
+   fading in place — the same move Today's day step and the Calendar's week step
+   make. (A jump — "Back to this month", or arriving from Week — keeps the plain
+   mv-in settle above.) The month is remounted per month, so the animation replays
+   on its own. */
+.mv.is-slide-next {
+  animation: mv-next 320ms ease both;
+}
+.mv.is-slide-prev {
+  animation: mv-prev 320ms ease both;
+}
+@keyframes mv-next {
+  from { opacity: 0; transform: translateX(2%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mv-prev {
+  from { opacity: 0; transform: translateX(-2%); }
+  to { opacity: 1; transform: none; }
+}
 
 /* Weekday header row, aligned to the 7 columns. */
 .mv-head {
@@ -170,7 +189,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mv {
+  .mv,
+  .mv.is-slide-next,
+  .mv.is-slide-prev {
     animation: none;
   }
 }

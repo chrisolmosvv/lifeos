@@ -15,7 +15,7 @@ import './monthView.css'
 const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const STRIP_H = 18 // px per strip lane — keep in sync with .mv-strip height in CSS
 
-export default function MonthView({ monthAnchor, today, focusDay, onJumpDay, onJumpItem, onSwipe }) {
+export default function MonthView({ monthAnchor, today, focusDay, onJumpDay, onJumpItem, onSwipe, navIntent = null }) {
   const { events, tasks, cats, loading } = useMonthData(monthAnchor)
   const byId = new Map(cats.map((c) => [c.id, c]))
   const { days, itemsByDay, strips, laneCountByRow } = monthLayout(monthAnchor, events, tasks)
@@ -35,7 +35,10 @@ export default function MonthView({ monthAnchor, today, focusDay, onJumpDay, onJ
   })
 
   return (
-    <div className={'mv' + (loading ? ' is-loading' : '')} ref={mvRef}>
+    <div
+      className={'mv' + (loading ? ' is-loading' : '') + (navIntent ? ' is-slide-' + navIntent : '')}
+      ref={mvRef}
+    >
       <div className="mv-head">
         {WD.map((d) => (
           <div key={d} className="mv-head-cell">{d}</div>

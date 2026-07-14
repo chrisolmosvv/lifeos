@@ -85,6 +85,15 @@
   min-width: 0;
   display: flex;
 }
+/* pointer-events are off while the columns slide: this layer's on-screen box is what
+   the drag maths measures, and a transform moves it — so a drag started mid-slide
+   would be measured against a shifted box and could drop a block at the wrong time.
+   (Same guard as Today's day-step slide.) */
+.wk-cols.is-slide-next,
+.wk-cols.is-slide-prev,
+.wk-cols.is-slide-settle {
+  pointer-events: none;
+}
 .wk-cols.is-slide-next {
   animation: wk-cols-next 360ms ease both;
 }

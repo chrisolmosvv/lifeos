@@ -22,7 +22,7 @@ import Toast from './kit/Toast'
 // stably mounted (the per-week remount is gone — useWeekData reloads on the week
 // key); so we explicitly clear the open form + toast on a week change, which the
 // remount used to do. No schema; writes via existing paths.
-export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad, navToken, navIntent, onSwipe, showActual }) {
+export default function WeekView({ days, today, requestAdd, trayOpen, focus, staggerLoad, navToken, navIntent, onSwipe, showActual, onFormOpenChange }) {
   const { events, scheduled, tray, cats, busy, reload, onSaveEvent, onSaveTask, onScheduleTask, onUpdateTask, onAddLooseTask } =
     useWeekData(days)
   const [form, setForm] = useState(null) // {kind,item,create}
@@ -38,6 +38,13 @@ export default function WeekView({ days, today, requestAdd, trayOpen, focus, sta
     setForm(null)
     setToast(null)
   }, [weekKey])
+
+  // The form lives here, but the ← / → week keys live in the parent — so tell the
+  // parent when it's open, and the parent holds the keys while you're in the form.
+  useEffect(() => {
+    onFormOpenChange?.(!!form)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!form])
 
   // Focus actual-layer (P7): fetch this week's focus ONLY when the toggle is on, and
   // refetch on a week change. Off → empty spans (WeekGrid gets undefined → the grid is
