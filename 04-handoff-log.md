@@ -33,6 +33,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — TWEAK to Piece 3: Last-night left column is now an explicit 60/40. SRC-ONLY. 1 COMMIT (96c7734).
+
+WHAT CHANGED: the left column of "Last night" used to let the journey (in bed → duration → woke)
+take whatever height it needed and the footer stretch to fill the rest — which read as stretched.
+Now the journey holds the top 60% of the column and the three fact rows hold the bottom 40%, with
+the hairline rule as the dividing line. The journey's content is CENTRED in its 60% rather than
+stretched or stuck to the top. The footer's internal spacing is exactly as Piece 3 built it.
+
+FILES: src/desktop/kit/sleepNight.css (209) · NEW src/desktop/kit/sleepNightFooter.css (77) ·
+SleepPage.jsx (one import)
+
+HOW TO VERIFY:
+- Health → Sleep → Last night on the 13". The hairline under the journey should sit 60% of the way
+  down the column, with the three fact rows spread below it. The "8h 25m" and the two dots should
+  sit centred in the upper 60%, not stretched.
+- Confirmed by measurement in the desktop 3-up layout: exactly 60.0 / 40.0 at FIVE fold heights
+  (640, 720, 800, 900, 1040px) — the ratio holds at any window height, not just one.
+- Sleep's other three views, Body and Gym are unaffected — all still zero dead strip, no scroll.
+
+KNOWN GAPS / RISKS:
+- THREE TRAPS, none visible by eye, all caught by measuring. Worth knowing because the "obvious"
+  CSS was wrong all three times:
+  1. The spine SILENTLY SHRANK from 180px to 111px the moment the journey became a flex column
+     (flex items shrink by default). Pinned it; the 60% share now centres it at its true length.
+  2. The two blocks' top margins sit OUTSIDE the flex boxes, so they stole ~5% of the column and
+     the split came out 55/39. Margins removed — the blocks now tile the column exactly.
+  3. Even then `flex: 6 / flex: 4` gave 58.6/41.4, NOT 60/40: a flex item's base size cannot fall
+     below its own padding + hairline (17px here), so that got reserved first and only what was
+     left split 6:4. Percentage bases (60%/40%) include the padding and shrink proportionally, so
+     the ratio is exact. This is why "it looks about right" is not verification.
+- HOUSE LIMIT ENFORCED: the change pushed sleepNight.css to 273 lines (over the ~250 guard), so the
+  footer moved into its own sheet — a pure move, no rule changed, no class collisions. Both files
+  are now comfortably under: 209 + 77. NOTE the two halves of the ratio now live in DIFFERENT files
+  (.journey 60% in sleepNight.css, .snv-footer 40% in sleepNightFooter.css) — edit them together;
+  both files say so.
+
+NEXT: Piece 4 — generalising the clock chart (sleepClockChart.css + SleepClockColumns).
+
+---
+
 ### 2026-07-14 — TWEAK to Piece 3: terracotta band 45 → 60 min. SRC-ONLY. 1 COMMIT (ce8642b).
 
 WHAT CHANGED: one number. The "vs 7-night avg" stat turns terracotta when last night is far enough
