@@ -130,6 +130,18 @@ Everything stays movable (see below). Nothing dragged onto the calendar is stuck
 > **Mobile Today is a separate later spec** (the old "agenda-first single day"
 > direction still stands as a placeholder until then — not described here).
 
+> **AMENDED 2026-07-14 (Today/Planning desktop bundle).** Four changes to what is
+> described below — everything else stands:
+> 1. **The heading is always the real weekday** ("Tuesday"), today included. The old
+>    "The Day" string is gone. Beside it: **day + month only** ("14 July") — no
+>    weekday repeat, no year.
+> 2. **The hero ratio is 40/60** — the day sheet is the NARROWER column now, the task
+>    list the wider one. (It used to be the other way round.)
+> 3. **The "focused today · Xh" glance line is removed** (it lives on Focus).
+> 4. **← / → step the day** — see "Keyboard navigation" below.
+> 5. **The task row** is the one described in §4 "The one task row", which is now
+>    shared with Planning.
+
 ### Frame
 - Paper is the cooler near-white **`#F6F5F1`**. The header is the classic
   broadsheet **masthead**: blackletter **"LifeOS"** wordmark, a topline, and a
@@ -344,6 +356,42 @@ delete; deletes confirm only when not trivially undone.
 
 **Snapping:** creating, dragging, and resizing all snap to **15-minute**
 increments so the calendar never looks subtly misaligned.
+
+### The one task row (2026-07-14 — supersedes the row details above and in §3)
+
+There is now **ONE task row in the app**. Today and **all three Planning surfaces**
+(the Time lanes, the Inbox rail, the Category groups) render the same row, so the two
+screens read as one product.
+
+- **Shape, left → right:** drag grip · expand caret · **title** (with the category
+  dot+tag and any logged focus time on a quiet line beneath) · **▶** · **status** ·
+  **due date**, right-aligned.
+- **Status is ONE control that cycles**, not three buttons: To do → In progress →
+  Done → back to To do (the wrap is the undo). *This supersedes the "three-segment
+  pill" and the "in-progress is optional, never forced" note above — in-progress is now
+  a step you pass through.* The three-segment pill **still lives in the task form and on
+  subtask rows**; it was only retired from the ROW.
+- **▶ starts a focus session** on that task (opens Focus Setup prefilled). It refuses
+  to switch while a session is already running — a gentle nudge, never a silent swap.
+- **Priority does NOT show on a row.** It is still in the data, still editable in the
+  form, and still drives ordering. Display-only change.
+- **Completing draws the line** through the title and blots the tick **terracotta**
+  before it settles to grey — a finished task is one of the few places the accent is
+  earned. **Hovering warms the row's hairline.** No box, no fill.
+- **Narrow hosts (`compact`):** Planning's Inbox rail is too narrow for the fixed
+  status + due columns, and a rail card has neither by definition (it's an undated dump
+  awaiting triage). There, both columns are dropped and **tapping the row opens the
+  triage popover** rather than cycling status.
+
+### Keyboard navigation (2026-07-14)
+
+- **← / →** step whatever is on screen: **days** on Today, **weeks or months** on the
+  Calendar (whichever mode you're in). They do exactly what the ‹ › buttons do.
+- They **go quiet while you are typing** (any text field), while an **edit panel** is
+  open, while the Calendar's **tray drawer** is open, and when a **modifier key** is
+  held (so ⌘← still belongs to the browser).
+- A **step** slides the content in the direction you're travelling and settles. A
+  **jump** ("Back to today", "Back to this month") does not slide — it settles in place.
 
 ---
 

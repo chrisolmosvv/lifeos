@@ -39,6 +39,23 @@
 
 ## 2. Time navigation
 
+> **AMENDED 2026-07-14 (Today/Planning desktop bundle).** Added — everything below
+> still stands:
+> - **← / → step the screen from the keyboard**: whole weeks in Week mode, whole
+>   months in Month mode. They call the SAME step the ‹ › buttons call, so there is
+>   only ever one way the calendar moves.
+> - The keys **stand down** while you are typing, while the **event panel** is open,
+>   while the **tray drawer** is open, and when a modifier key is held. The single
+>   definition of "the user is typing" lives in `kit/keyNav.js` and is shared with
+>   Today — do not write a second one.
+> - **A step travels in a direction:** the month grid now slides the way you're going
+>   (the week grid already did). A **jump** — "Back to this month", or arriving from
+>   Week — keeps its plain settle-fade. Eased, no bounce; reduced-motion respected.
+> - **The side frame is the shared `--frame` token** (theme.css, 24px), the same one
+>   the masthead, Today and Planning hang off — so the toolbar, the month grid and the
+>   masthead all line up. It is ONE number: change it there and the whole edition
+>   re-frames.
+
 - **Arrows only** — a fixed prev/next stepper (the same paired cluster as Today,
   so the arrows never shift) plus a quiet **"Back to this week"** that appears
   whenever you've navigated away. **No date picker.**

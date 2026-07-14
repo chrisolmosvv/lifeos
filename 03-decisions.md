@@ -9,6 +9,106 @@
 
 ---
 
+## Today/Planning desktop bundle — Pieces 0-6 (2026-07-14)
+
+The desktop pass over Today, Planning and the Calendar. Src-only throughout; no schema, no Checker.
+Everything below was driven in a real browser, not inferred from the code.
+
+### Today
+- **[The day name is said ONCE.]** The heading is always the real weekday ("Tuesday"), today
+  included. It used to be the literal string "The Day", which read as a second title beside a
+  dateline that already spelled the weekday out. The line beside it now carries **day + month only**
+  ("14 July") — no weekday repeat, no year — via a new `formatDayMonth` helper. **Why:** one name,
+  said once. **Trade-off:** none; "The Day" was charming but redundant.
+- **[The tasks column is the hero: 40/60.]** The day sheet was the wider column (57/43). It is now
+  the narrower one — 40% sheet / 60% tasks. **Why:** the owner reads Today as a task list first, a
+  calendar second. **Trade-off:** event blocks are narrower and truncate sooner. (Tried 33/67 first;
+  the owner tuned it back to 40/60 live.)
+- **[The "focused today · Xh" line is gone.]** **Why:** calm — remove before you add. **Trade-off:**
+  that glance now lives only on the Focus pillar.
+
+### Navigation (Today + Calendar)
+- **[← / → step the screen: days on Today, weeks/months on the Calendar.]** They call the SAME
+  functions the ‹ › buttons call — the keys are not a second code path. The one guard that decides
+  "the user is typing" lives in **`kit/keyNav.js`** and is shared by both screens; it also stands
+  down while an edit panel or the tray drawer is open, and when a modifier is held.
+  **Why:** one definition of "typing", or the two screens drift. **Trade-off:** none.
+- **[One step per screen, not three copies.]** Today's day-step was written inline three times (both
+  arrows + the swipe); the Calendar's month-step twice (buttons + swipe). Each is now ONE function
+  that the buttons, the gesture and the keys all call.
+- **[Stepping travels in a direction.]** A day/week/month STEP slides the content the way you're
+  going and settles (eased, no bounce, reduced-motion respected). A JUMP ("Back to today", "Back to
+  this month") keeps its plain settle-fade. **Why:** a step has a direction; a jump does not.
+
+### The frame
+- **[ONE `--frame` token, in theme.css — 56px → 24px.]** The side margin was the same number
+  hand-copied into FIVE files (the masthead, Today, the Calendar toolbar, the month grid, Planning).
+  It is now one value in the file that already exists so the whole app can be tuned from one place.
+  **Why:** the masthead and the content beneath it now hang off the SAME margin, so they tighten
+  together — impossible while the number was copy-pasted. **Trade-off:** it moves the masthead on
+  every screen, so it was eyeballed on all nine.
+- **[Settings' misalignment is PRE-EXISTING and left alone.]** Settings never lined up with the
+  masthead: its top blocks are centred in a narrow column while its Categories section runs flush to
+  0px. Checked BEFORE touching the frame, precisely so it could not be blamed on this change.
+  **Why:** it's Settings' own business, and its own decision. **Trade-off:** the inconsistency stays
+  for now, logged rather than silently fixed.
+
+### Planning — layout
+- **[The "Planning" title is gone; the toggle is centred; the page is full width.]** One header row:
+  "‹ Back to Today" left, TIME/BOARD/CATEGORY dead centre (a real three-zone grid — a plain centring
+  would have left the toggle off-centre by half the back-link's width). The hairline the title
+  carried moved onto the header row, so the rule survives. Planning was a narrow 1040px column
+  floating in the window; it now uses the full width, off the shared `--frame`.
+  **Why:** the nav already says where you are, and the dead space was the owner's complaint.
+- **[The mode marker slides; the body cross-fades.]** The marker is measured off the real words, so
+  it is exactly as wide as the word above it (TIME and CATEGORY are very different lengths).
+
+### ★ Planning — row convergence (the big one)
+- **[There is now ONE task row in the app.]** All three Planning surfaces — the Time lanes, the Inbox
+  rail, and the Category groups (including nested subtasks) — render **`TodayRow`**, the same row
+  Today uses. Planning loses the three-button status control on rows (it keeps the single cycling
+  one) and gains the ▶. **Why:** the owner ruled that the two screens must read as one app.
+  **Trade-off:** see the three behaviour changes below — none are cosmetic.
+- **[Priority is display-only, in the form.]** A Planning row no longer shows the High/Med kicker.
+  Priority is still in the data, still editable in the task form, and still drives sorting.
+- **[Planning GAINED a focus-start path — a NEW shared trigger both screens call.]** Planning never
+  had one, so the ▶ that comes with the row would have been a dead button. Rather than copy Today's
+  logic onto a second screen, it now lives once in `focus/startFocusAction.js`, and Today calls it
+  too. **Why:** reuse before add; two copies would have drifted.
+- **[AMENDMENT — `compact` mode on TodayRow, found LIVE, not in the recon.]** The row reserves
+  fixed-width status + due columns (~242px of furniture) so rows line up across Today's two modules.
+  **The Inbox rail is only 230px wide** — the straight swap squeezed the title to nothing and the
+  rail rendered as four blank lines. `compact` drops those two columns. This is not a patch: a rail
+  card is an **undated dump awaiting triage**, so it has no status and no due date to show anyway.
+  Today never passes `compact`, so Today is untouched. **Why:** the recon could not have caught this
+  by reading — only by running it. Category mode was then checked for the same trap BEFORE swapping
+  (its 760px container leaves ~330px of title even five levels deep — the full row fits).
+- **[The completion mark + row hover land EVERYWHERE from one edit.]** Completing a task DRAWS the
+  line through its title and blots the tick with terracotta before it settles to grey; hovering warms
+  the row's hairline (no box, no fill). This is the **direct payoff of one canonical row** — before
+  the convergence it would have been two implementations that drift.
+  - The strike is a drawn rule, not text-decoration (which cannot be animated), and it is a
+    TRANSITION so it plays on the status flip and **not on mount** — a page of done rows renders
+    struck with nothing replaying.
+  - The blot is armed in **JS**, because a CSS animation on `.is-done` would re-blot every done row
+    on every page load.
+  - A finished task is exactly the "key mark" the terracotta is reserved for.
+- **[SIDE EFFECT — Planning rows now show logged focus time ("· 1h").]** It comes free with the
+  shared row. **FLAGGED FOR OWNER CONFIRMATION** — keep it or suppress it on Planning.
+- **[Board mode still uses its own `PlanningCard`.]** Unchanged, by the original P3 design.
+
+### Two bugs found and fixed along the way
+- **[Today's day-step dropped days on a HELD arrow key.]** The ‹ › handlers computed the new day from
+  the day captured in that render; the swipe used the previous-value form. Keydowns repeat faster
+  than React re-renders, so the captured-value version would re-count from a stale day and silently
+  SKIP days. Unified on the correct form — which quietly made the buttons more correct too.
+- **[Calendar's week slide could drop an event at the wrong time — PRE-EXISTING.]** The layer that
+  slides is the same layer the drag maths measures, and sliding MOVES it. A drag begun mid-slide was
+  measured against a shifted box. Now guarded (pointer-events off for the duration), on Today's new
+  slide as well.
+
+---
+
 ## Step 7 Piece 5 — editor remap + confirm surface (2026-07-08)
 
 - **[FIX] Editor remap fixes the live corruption bug.** On load, position-based depends_on and
@@ -329,6 +429,12 @@ Today's focus line were left untouched. No schema, no Checker.
 
 ## Today task rows converged (small fix, src-only) — 2026-07-02
 
+> ⚠️ **SUPERSEDED 2026-07-14** (Today/Planning bundle, Piece 6): Planning no longer uses
+> `TodayTaskRow`. All three Planning surfaces now render `TodayRow` — the same row Today uses.
+> `TodayTaskRow` is ORPHANED (kept, pending a prove-dead sweep). `StatusPill` is NOT orphaned: it
+> still serves the task form + subtask list on both screens. See the 2026-07-14 entry on top.
+
+
 Both Today modules (Tasks Today + The Next 7 Days) now render ONE identical row via a
 new Today-only row piece. Today-only — Planning's Time + Category rows and the form's
 StatusPill left untouched. New Today-only kit pieces: TodayRow + StatusCycle. The old
@@ -568,7 +674,7 @@ and the form/subtasks respectively. Src-only, 3 commits, no schema, no Checker.
   P6 can't retire All Tasks if a capability is lost; both reuse paths Planning already had, so including
   them now is cleaner than a coverage gap. **Trade-off:** "+ add" is a create (slightly beyond
   "render-forward"), accepted because it reuses the existing form/insert path — no new writer.
-- **[Rows reuse `TodayTaskRow`; the one allowed write is the existing status-pill / tap-to-edit path.]**
+- **[SUPERSEDED 2026-07-14 — Planning now renders `TodayRow`.]** ~~[Rows reuse `TodayTaskRow`; the one allowed write is the existing status-pill / tap-to-edit path.]~~
   Same as time mode. Show-done off by default; counts always exclude done. No drill-in, no
   recategorise-drag (that's P5), no time/board/rail change. **All Tasks stays FULLY INTACT** (untouched).
 - **[The verified time-mode body was extracted to `kit/PlanningTime.jsx` as a PURE VERBATIM MOVE.]**
@@ -657,7 +763,9 @@ and the form/subtasks respectively. Src-only, 3 commits, no schema, no Checker.
 
 - **[The Planning view is a NEW surface, built fresh on the existing kit — additive, never a fork.]**
   Nothing existing changes behaviour; it reuses the existing task read path and the
-  `TodayTaskRow`/`StatusPill`/`ItemForm`/`Toast` blocks as-is. **Why:** the backlog needs a real
+  `TodayTaskRow`/`StatusPill`/`ItemForm`/`Toast` blocks as-is. *(The row half is SUPERSEDED
+  2026-07-14 — it is `TodayRow` now; ItemForm/Toast/StatusPill-in-the-form still stand.)*
+  **Why:** the backlog needs a real
   planning home (time / board / category), and building on the kit keeps the two engines one.
   **Trade-off:** a second screen that reads tasks — accepted; it's the future home All Tasks folds
   into (P6).
@@ -686,7 +794,8 @@ and the form/subtasks respectively. Src-only, 3 commits, no schema, no Checker.
   deliberate: it's the undated backlog that **board / category mode (P4)** surfaces. Flagged so it's
   not mistaken for a bug.
 - **[P1 is render-only; the one allowed write is the reused row's existing path.]** No drag, no new
-  write path, no triage gestures (those are P2/P5). Reusing `TodayTaskRow` pulls in the status pill
+  write path, no triage gestures (those are P2/P5). *(SUPERSEDED 2026-07-14: it is `TodayRow` +
+  the cycling control now, not the pill.)* Reusing `TodayTaskRow` pulls in the status pill
   and tap-to-edit, which write via the EXISTING task paths — the single sanctioned write this piece.
   **Why:** reuse-before-add beats cloning a read-only row. **Trade-off:** Planning *can* change a
   status / edit a task in P1 — owner expects it (verify step f).

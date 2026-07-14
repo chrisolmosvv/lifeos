@@ -8,6 +8,42 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-14 — Today/Planning desktop bundle, Pieces 0-6 ✅ (all live-verified in-browser)
+The desktop pass over Today, Planning and the Calendar. Src-only; no schema, no Checker. Full detail in
+03-decisions.md (2026-07-14) and the 04-handoff-log entries.
+
+- **P0** Deleted 678 lines of proven-dead task-row code (build came back byte-identical → it was never
+  shipped). Split Today.jsx 509→247 and todayKit.css 483→198; every file now under the ~250 ceiling.
+- **P1** Today: one day name, not two ("Tuesday" + "14 July"); focused-today line removed; hero ratio
+  flipped so the task list leads (tuned live to 40/60).
+- **P2** Today: ONE day-step (was three inline copies); ← / → day nav with a shared typing guard
+  (`kit/keyNav.js`); day-change slide. **Fixed a real bug:** a HELD arrow key silently SKIPPED days.
+- **P3** Calendar: ← / → week/month nav reusing that same guard; directional month slide.
+  **Fixed a pre-existing bug:** a drag begun mid-slide could drop an event at the wrong time.
+- **P4** Planning: title removed, TIME/BOARD/CATEGORY centred, full width, sliding mode marker.
+  planning.css split 388→101 first.
+- **P5** The side frame is now ONE `--frame` token in theme.css (24px), replacing the same number
+  hand-copied into 5 files. Masthead + content now hang off the same margin. Checked on all 9 screens.
+- **P6** ★ **Row convergence — there is now ONE task row in the app.** All three Planning surfaces
+  render Today's row. Planning gained the ▶ (via a new shared focus-start trigger both screens call);
+  priority became display-only-in-the-form. The completion mark + row hover then landed on all four
+  surfaces from a single edit — the direct payoff of converging.
+
+### ⬜ DEBT / OPEN, carried out of this bundle
+- ⬜ **PROVE-DEAD SWEEP (its own commit, not done here).** Now orphaned: `kit/TodayTaskRow.jsx` (imported
+  by nothing) and `focus/useTodayFocus.js`. **CAREFUL — `taskRowPill.css` is NOT fully orphaned:**
+  `StatusPill` still imports it, and StatusPill still serves the task form + subtask list on BOTH
+  screens. Delete TodayTaskRow.jsx and only the dead `.tk-row*` half of that stylesheet — not the whole
+  file, and NOT StatusPill.
+- ⬜ **OWNER CONFIRMATION NEEDED: Planning rows now show logged focus time ("· 1h").** It came free with
+  the shared row. Keep it, or suppress it on Planning?
+- ⚠️ **UNIDENTIFIED AUTO-COMMIT/PUSH TOOL.** Something commits the working tree and PUSHES it to `main`
+  under the message **"Update LifeOS"**. It fired during this bundle (99b901e swept up P0's deletion) and
+  there are 6 such commits in the history. There is **no git hook** — it is an external tool the owner
+  runs (a sync app, e.g. GitHub Desktop auto-sync). **Risk:** a deletion caught half-done is still just a
+  deletion, but a REFACTOR caught half-done is a broken app pushed to main. Find it and pause it before
+  the next multi-commit piece.
+
 ## Session note — 2026-07-11 — H-0: hermes-write split-first refactor ✅ (deployed + live-verified)
 Extracted food/weight/sleep/focus handlers to health.ts (170 lines). index.ts 358→221 lines.
 Logic byte-for-byte identical. Deployed to Frankfurt, live-verified via two real Telegram messages
