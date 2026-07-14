@@ -33,6 +33,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Sleep redesign PIECE 2: awakenings + respiratory cut everywhere. SRC-ONLY. 1 COMMIT (313fc2d).
+
+WHAT CHANGED: two numbers are gone from Sleep, on every surface including the phone.
+- Desktop "Last night": the footer's respiratory + awakenings cells are gone — it now reads target · goal.
+- Desktop Week / Month / 90-day: the awakenings row is gone from the right-hand ledger.
+- Mobile Sleep: the same two cells are gone; the 2×2 footer is now one row of two.
+- Respiratory is UNTOUCHED on Body — that is where it lives now.
+- NO schema change. The rows keep flowing from Hevy/Apple exactly as before; this is presentation only.
+  Nothing was deleted from the database and nothing stopped being recorded.
+
+Also removed the plumbing that existed ONLY to feed those two cells (each proved dead by grep first):
+SleepPage's entire `fetchBody("respiratory_rate")` call and its prop chain, useHealthData's derived
+`respiratoryRate` field + its now-unused import, and MobileHealthSleep's `fmtFull` import. That means
+the Sleep page now makes one FEWER network call than it did. `BODY_KEYS` still fetches
+respiratory_rate — Body needs it.
+
+FILES: src/desktop/health/SleepNight.jsx · SleepRange.jsx · SleepPage.jsx ·
+src/mobile/MobileHealthSleep.jsx · src/spine/data/useHealthData.js
+
+HOW TO VERIFY:
+- Health → Sleep → click all four ranges. The words "respiratory" and "awakenings" should appear
+  NOWHERE. Confirmed live on all four.
+- Health → Body: "Respiratory" is still there, in Vitals. Confirmed.
+- Gym untouched; all three pages still hold zero dead strip / no scroll (Piece 1 still good).
+
+KNOWN GAPS / RISKS:
+- A JUDGMENT CALL THE OWNER SHOULD CONFIRM: the aggregate stats row still shows "awake avg" (e.g.
+  "9m"). That is awake MINUTES — a different metric from the awakenings COUNT the brief asked to cut.
+  I cut exactly what was named and left this. Say the word if it should go too.
+- THE NARROW-WIDTH CLIP DID NOT CLOSE (it was ~77px, it is now ~80px — unchanged). My earlier guess
+  that this piece would fix it was WRONG, and here is why: at ≤1040px the layout reflows to 2-up and
+  the RHYTHM column (dials + clock columns) drops to a full-width row underneath. That stacked row is
+  what overflows. The two cells I cut were in the LEFT column, which was never the tallest — so
+  removing them could not have helped. All three columns still end above the fold (882px of 900px), so
+  nothing important is actually cut off. This does not affect the 13" target, which runs 3-up.
+  If the narrow width ever matters, the fix belongs in the reflow media query, not in the metrics.
+
+NEXT: Piece 3 — the Last-night footer rebuild. The footer is now down to two cells (target, goal),
+which is exactly the blank canvas that piece wants.
+
+---
+
 ### 2026-07-14 — Sleep redesign PIECE 1: CSS split + the Health-wide dead-space fix. SRC-ONLY. 2 COMMITS.
 
 WHAT CHANGED (two commits, owner verified between them):
