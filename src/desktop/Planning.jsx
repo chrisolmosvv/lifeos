@@ -184,6 +184,7 @@ export default function Planning({ onBack }) {
             busy={busy}
             onUpdate={updateTask}
             onOpenTask={openTask}
+            onStartFocus={startFocus}
             onAdd={openAdd}
           />
         ) : (

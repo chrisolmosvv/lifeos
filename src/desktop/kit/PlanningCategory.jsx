@@ -14,7 +14,7 @@ import './planningCategory.css'
 //
 // Props: tasks, cats, catsById, dispCat, inboxColor, byParent, busy, onUpdate(id, fields),
 //        onOpenTask(task), onAdd(catId).
-export default function PlanningCategory({ tasks, cats, catsById, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onAdd }) {
+export default function PlanningCategory({ tasks, cats, catsById, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onStartFocus, onAdd }) {
   const [showDone, setShowDone] = useState(false)
   const [open, setOpen] = useState(new Set()) // open group + expanded-parent ids (uuids; '__inbox__')
   const toggle = (key) =>
@@ -38,6 +38,7 @@ export default function PlanningCategory({ tasks, cats, catsById, dispCat, inbox
     onToggle: toggle,
     onOpenTask,
     onSetStatus: (id, status) => onUpdate(id, { status }),
+    onStartFocus,
     onAdd,
     depth: 0,
   }

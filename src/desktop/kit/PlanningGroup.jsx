@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { colorHex } from '../../spine/logic/palette'
 import { progressOf } from '../../spine/logic/subtasks'
 import { subtreeCount, inboxCount, ownTasks, orderTasks, childrenOf } from '../allTasksModel'
-import TodayTaskRow from './TodayTaskRow'
+import TodayRow from './TodayRow'
 import './planningCategory.css'
 
 // PlanningGroup — one collapsible category group in category mode (P4), recursive
@@ -30,6 +30,7 @@ export default function PlanningGroup({
   onToggle,
   onOpenTask,
   onSetStatus,
+  onStartFocus,
   onAdd,
   depth,
 }) {
@@ -61,7 +62,7 @@ export default function PlanningGroup({
             const prog = progressOf(t.id, byParent)
             return (
               <Fragment key={t.id}>
-                <TodayTaskRow
+                <TodayRow
                   task={t}
                   cat={dispCat(t)}
                   catsById={catsById}
@@ -72,11 +73,12 @@ export default function PlanningGroup({
                   expanded={open.has(t.id)}
                   onToggleExpand={prog ? () => onToggle(t.id) : undefined}
                   onSetStatus={(status) => onSetStatus(t.id, status)}
+                  onPlay={onStartFocus ? () => onStartFocus(t, dispCat(t)) : undefined}
                   onOpen={() => onOpenTask(t)}
                 />
                 {open.has(t.id) &&
                   subs.map((s) => (
-                    <TodayTaskRow
+                    <TodayRow
                       key={s.id}
                       task={s}
                       cat={dispCat(s)}
@@ -86,6 +88,7 @@ export default function PlanningGroup({
                       subLabel={t.title}
                       busy={busy}
                       onSetStatus={(status) => onSetStatus(s.id, status)}
+                      onPlay={onStartFocus ? () => onStartFocus(s, dispCat(s)) : undefined}
                       onOpen={() => onOpenTask(s)}
                     />
                   ))}
@@ -109,6 +112,7 @@ export default function PlanningGroup({
               onToggle={onToggle}
               onOpenTask={onOpenTask}
               onSetStatus={onSetStatus}
+              onStartFocus={onStartFocus}
               onAdd={onAdd}
               depth={depth + 1}
             />
