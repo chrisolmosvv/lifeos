@@ -33,6 +33,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Piece 1: Today header dedupe + the hero ratio. SRC-ONLY. (Awaiting owner QA.)
+
+The first real change of the Today/Planning bundle. One commit, no schema, nothing for the Checker.
+Nothing else from the recon was touched — keyboard nav, Planning layout, the 56px frame and the row
+convergence are all still untouched and undecided.
+
+WHAT CHANGED:
+- The day name is said ONCE. The big heading is now always the real weekday ("Tuesday"), today
+  included. Today used to be special-cased to the literal "The Day", which read as a second title
+  sitting next to a dateline that already spelled the weekday out. Stepping to another day still
+  shows that day's own name — that behaviour is unchanged.
+- The small line beside it now reads day + month only — "14 July". No repeated weekday, no year.
+  It's built by a new `formatDayMonth` helper rather than trimmed out of `formatMastheadDate`
+  (which bakes the weekday and the year in, so slicing it would have been fragile).
+- The "focused today · Xh" line is gone, along with its one CSS rule.
+- The hero ratio: the day sheet was the wider column (57/43). It's now the narrower one (~33/67), so
+  the task list reads as the main event and the day sheet as a sidebar. One value in today.css.
+
+FILES TOUCHED: TodayDayBar.jsx, TodayTasksPanel.jsx, Today.jsx, today.css, spine/logic/dateUtils.js
+(one new helper, additive — nothing else uses it).
+
+HOW TO VERIFY (13" MacBook, logged in):
+1. Open Today. The heading reads just the weekday, large — no "The Day". Beside it: "14 JULY" and
+   nothing else (no weekday repeat, no year).
+2. The day grid is visibly narrower; the task column is now the wide one and reads as the hero.
+3. Press ‹ to step back a day → the heading shows THAT day's real name, and "Back to today" appears.
+   Press it → back to today, heading shows today's weekday.
+4. The "focused today" line no longer appears anywhere on Today.
+5. No console errors. Focus itself is unaffected — open the Focus pillar and confirm its ledger and
+   totals still read normally.
+
+KNOWN GAPS / RISKS:
+- Not driven in a browser by me (the Chrome extension isn't connected) — owner QA is the gate. Build
+  is clean and no trace of the removed line survives anywhere in src/desktop.
+- The dateline renders UPPERCASE ("14 JULY") because the existing `.today-viewdate` rule uppercases
+  it — that's the established broadsheet kicker treatment, so I left the styling alone and only
+  changed what the line SAYS. If you want it sentence-case ("14 July"), that's a one-line CSS call —
+  say the word.
+- The hour gutter (52px) now sits in a narrower column but still has comfortable room; it needed no
+  tweak. If it crowds on your screen, flag it.
+- `useTodayFocus.js` is now ORPHANED — nothing imports it since the focus line went. Left in place
+  deliberately: prove-dead deletions get their own commit. Worth sweeping up later.
+- ⚠️ The auto-commit tool flagged in Piece 0 is still running. Still worth pausing.
+
+NEXT: Piece 2 — keyboard day nav on Today. (Today's ‹ › step is currently written inline three
+times — the arrows and the swipe — so that wants pulling into one stepper before a key listener
+can call it.)
+
+FOR THE CHECKER: nothing — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-14 — Piece 0: housekeeping before the Today/Planning bundle. SRC-ONLY. (Awaiting owner QA.)
 
 Clearing the ground before the Today/Planning changes. Two commits, no schema, nothing for the
