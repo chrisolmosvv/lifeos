@@ -33,6 +33,34 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — TWEAK to Piece 3: terracotta band 45 → 60 min. SRC-ONLY. 1 COMMIT (ce8642b).
+
+WHAT CHANGED: one number. The "vs 7-night avg" stat turns terracotta when last night is far enough
+off your rolling average; that bar was 45 minutes, the owner reviewed it and locked it at 60. It is
+a single named constant (NIGHT_DEADBAND in healthStats.js) with one consumer — no magic numbers were
+hunted, nothing else about Piece 3 moved.
+
+FILE: src/spine/logic/healthStats.js (+ the comment in SleepNight.jsx that quoted the old number)
+
+THE REAL-DATA BREAKDOWN (same 10 nights as the Piece 3 report):
+  at 45 min → 5 of 10 nights terracotta (50%)
+  at 60 min → 3 of 10 nights terracotta (30%)
+Two nights flip from terracotta back to ink — both the near-miss hours:
+  10 Jul  +59m  → ink
+  11 Jul  −59m  → ink
+Still terracotta (the genuinely unusual nights): 8 Jul (−1h 48m), 13 Jul (−1h 59m), and last night,
+14 Jul (+1h 29m). Confirmed live: last night's "+1h 29m" still reads terracotta; every other fact in
+the footer is ink.
+
+NEXT: Piece 4 — generalising the clock chart (sleepClockChart.css + SleepClockColumns).
+
+⚠️ BUT FIRST — THE OWNER HAS NOT YET DONE HIS VISUAL VERIFY OF PIECE 3. The footer rebuild
+(2f9b346) is committed and machine-verified (numbers checked against Frankfurt, layout held at six
+fold heights), but he has not yet looked at it on his 13" and said "yes". Piece 4 should NOT start
+until he has. If he finds something off in the footer, this tweak rides on top of it.
+
+---
+
 ### 2026-07-14 — Sleep redesign PIECE 3: the Last-night footer rebuilt. SRC-ONLY. 1 COMMIT (2f9b346).
 
 WHAT CHANGED: the left column's footer is now THREE rows that spread down the rest of the column,
