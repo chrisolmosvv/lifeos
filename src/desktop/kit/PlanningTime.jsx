@@ -4,6 +4,7 @@ import { progressOf } from '../../spine/logic/subtasks'
 import TodayTaskRow from './TodayTaskRow'
 import PlanningColumn from './PlanningColumn'
 import TriagePopover from './TriagePopover'
+import './planningTime.css'
 
 // PlanningTime — time mode of the Planning view (P1 render + P2 drag; P5 makes the
 // Inbox rail interactive). An Inbox side rail + four date-derived lanes; dragging a

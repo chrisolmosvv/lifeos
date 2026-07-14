@@ -1,0 +1,93 @@
+/* Board mode (P3) — a status kanban, plus the PlanningCard that sits in its columns.
+   (Piece 4 split: moved verbatim out of planning.css; no rule changed.)
+   The column label, the card drag and the drop wash are shared with Time — they live
+   in planningColumn.css. */
+
+.pl-board {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.pl-filters {
+  flex: none;
+  display: flex;
+  gap: 0.6rem;
+}
+.pl-filter {
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+}
+.pl-board-cols {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 1rem;
+}
+.pl-bcol {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 0.4rem;
+  border-left: 1px solid var(--rule-faint);
+}
+.pl-bcol:first-child {
+  border-left: none;
+}
+/* Keep each column's small-caps heading visible while its cards scroll. */
+.pl-bcol .pl-col-label {
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  padding-top: 0.1rem;
+  margin-bottom: 0.4rem;
+  z-index: 1;
+}
+
+/* --- PlanningCard ------------------------------------------------------- */
+.pl-card-face {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  font: inherit;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+.pl-card-face:hover {
+  border-color: var(--ink);
+}
+.pl-card-face.is-done {
+  opacity: 0.55;
+}
+.pl-card-face.is-done .pl-card-title {
+  text-decoration: line-through;
+}
+.pl-card-title {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.pl-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+.pl-card-due.is-overdue {
+  color: var(--accent);
+}

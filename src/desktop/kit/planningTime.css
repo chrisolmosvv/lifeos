@@ -1,0 +1,29 @@
+/* Time mode — the Inbox rail beside the stack of date lanes (Overdue / Today / This
+   week / Later). (Piece 4 split: moved verbatim out of planning.css; no rule changed.)
+   The column label, the card drag and the drop wash are shared with Board — they live
+   in planningColumn.css. */
+
+.pl-rail {
+  flex: none;
+  width: 230px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 1.2rem;
+  border-right: 1px solid var(--rule-faint);
+}
+.pl-lanes {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.pl-lane {
+  display: block;
+}
+
+/* The Overdue lane label leans on the accent, calmly. */
+.pl-lane-overdue .pl-col-label {
+  color: var(--accent);
+}

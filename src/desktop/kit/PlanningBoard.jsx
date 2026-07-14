@@ -3,6 +3,7 @@ import { isInbox, descendantIds } from '../../spine/logic/categoryTree'
 import { buildBoard } from '../planningModel'
 import PlanningColumn from './PlanningColumn'
 import PlanningCard from './PlanningCard'
+import './planningBoard.css'
 
 // PlanningBoard — board mode (P3): a kanban by STATUS. Three columns — To do
 // ('open') / In progress ('in_progress') / Done ('done') — of top-level task cards.

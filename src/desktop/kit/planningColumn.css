@@ -1,0 +1,41 @@
+/* PlanningColumn — the parts SHARED by Time's lanes and Board's columns, since both
+   modes render through the same column component. (Piece 4 split: moved verbatim out
+   of planning.css; no rule changed.)
+   The small-caps column label + count, the empty line, and the drag affordances: a
+   card is a drag SOURCE in both modes, and a lane / board column is a drop TARGET. */
+
+/* A column's small-caps label + its count. */
+.pl-col-label {
+  display: block;
+  margin: 0 0 0.3rem;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+.pl-col-n {
+  color: var(--ink);
+}
+.pl-col-empty {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  padding: 0.2rem 0.25rem 0.5rem;
+  margin: 0;
+}
+
+/* --- P2 drag: cards are drag sources, lanes (not Overdue) are drop targets. --- */
+.pl-card {
+  cursor: grab;
+}
+.pl-card.is-dragging {
+  opacity: 0.45;
+}
+/* A calm "drop here" wash + accent rule on the hovered lane / board column. */
+.pl-lane.is-drop-over,
+.pl-bcol.is-drop-over {
+  background: rgba(200, 100, 61, 0.05); /* terracotta, very faint */
+  box-shadow: inset 0 0 0 1px var(--accent);
+  border-radius: 4px;
+}

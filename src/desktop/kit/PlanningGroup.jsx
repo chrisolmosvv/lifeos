@@ -3,6 +3,7 @@ import { colorHex } from '../../spine/logic/palette'
 import { progressOf } from '../../spine/logic/subtasks'
 import { subtreeCount, inboxCount, ownTasks, orderTasks, childrenOf } from '../allTasksModel'
 import TodayTaskRow from './TodayTaskRow'
+import './planningCategory.css'
 
 // PlanningGroup — one collapsible category group in category mode (P4), recursive
 // for nested sub-categories. Header = caret + colour dot + name + whole-sub-tree

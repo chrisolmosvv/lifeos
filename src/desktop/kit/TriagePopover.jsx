@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Popover from './Popover'
 import CategoryPicker from './CategoryPicker'
+import './planningTriage.css'
 
 // TriagePopover — the quick-triage chips for an Inbox rail card (P5). Tap a rail
 // card → this opens on the existing Popover primitive: a one-tap DATE row (Today /

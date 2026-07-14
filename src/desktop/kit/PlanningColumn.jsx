@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './planningColumn.css'
 
 // PlanningColumn — one labelled column of task rows for the Planning view: the
 // Inbox side rail (variant="rail") and each of the four time lanes (a <section>).

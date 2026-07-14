@@ -1,5 +1,6 @@
 import CategoryTag from '../CategoryTag'
 import { dueStatus, formatDue } from '../../spine/logic/dueDate'
+import './planningBoard.css'
 
 // PlanningCard — one task card for board mode (P3). Face = title + category dot/tag
 // + due date (overdue-tinted) + subtask count (x/N). NO priority, NO status pill

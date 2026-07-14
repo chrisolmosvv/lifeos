@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { isInbox } from '../../spine/logic/categoryTree'
 import { childrenOf } from '../allTasksModel'
 import PlanningGroup from './PlanningGroup'
+import './planningCategory.css'
 
 // PlanningCategory — category mode of the Planning view (P4): the backlog grouped by
 // category as COLLAPSIBLE GROUPS (not All Tasks' drill-in). Inbox first, then each
