@@ -9,24 +9,39 @@
    planningCategory.css, planningTriage.css, and planningColumn.css for the parts Time
    and Board share. */
 
+/* Full-width, like Today — no centred 1040px column, so the lanes and the board get
+   the whole window. The 3.5rem side frame is deliberately the SAME literal Today /
+   the masthead / the Calendar use; Piece 5 consolidates that one number across all of
+   them, so this must not invent a different value. */
 .pl {
   height: 100%;
   box-sizing: border-box;
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 1.5rem 1.5rem 1rem;
+  padding: 1.5rem 3.5rem 1rem;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-/* Header: back-to-Today and the mode toggle. */
+/* Header: ONE row, three zones — back-to-Today left, the mode toggle dead centre, and
+   an empty zone of equal weight on the right. The 1fr/auto/1fr grid is what makes the
+   centre a TRUE centre: with a plain flex row the toggle would drift off-centre by
+   half the back-link's width. The row carries the hairline the "Planning" title used
+   to (the title is gone; the rule stays). */
 .pl-top {
   flex: none;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: baseline;
   gap: 0.8rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--ink);
+}
+.pl-top-left {
+  justify-self: start;
+}
+.pl-top-right {
+  justify-self: end;
 }
 .pl-back {
   font: inherit;
@@ -38,9 +53,30 @@
   cursor: pointer;
 }
 .pl-modes {
-  margin-left: auto;
+  position: relative; /* the sliding marker is positioned against this row */
   display: inline-flex;
   gap: 0.15rem;
+  padding-bottom: 0.3rem; /* room for the marker to sit under the words */
+}
+/* The active-mode marker: a hairline that SLIDES to the chosen word instead of
+   blinking across. Width + offset are measured from the real buttons, so it's exactly
+   as wide as the word above it. Eased and quiet — no bounce. */
+.pl-mode-mark {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0;
+  transition: transform 260ms ease, width 260ms ease, opacity 160ms ease;
+}
+.pl-mode-mark.is-ready {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pl-mode-mark {
+    transition: none;
+  }
 }
 .pl-mode {
   position: relative;
@@ -70,22 +106,23 @@
   opacity: 0.7;
 }
 
-.pl-title {
-  flex: none;
-  font-family: var(--font-serif);
-  font-weight: 500;
-  font-size: 1.6rem;
-  margin: 0 0 0.6rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid var(--ink);
-}
-
-/* Body: the container each mode fills. */
+/* Body: the container each mode fills. Keyed on the mode in Planning.jsx, so switching
+   modes cross-fades the new body in rather than hard-cutting to it. */
 .pl-body {
   flex: 1;
   min-height: 0;
   display: flex;
   gap: 1.4rem;
+  animation: pl-body-in 240ms ease both;
+}
+@keyframes pl-body-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pl-body {
+    animation: none;
+  }
 }
 
 .pl-empty {

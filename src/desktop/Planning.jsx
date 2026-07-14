@@ -134,14 +134,23 @@ export default function Planning({ onBack }) {
 
   return (
     <div className="pl">
+      {/* One header row, three zones: "Back to Today" left, the mode toggle dead
+          centre, and an empty matching zone right so the centre is TRUE centre and
+          doesn't drift with the back link's width. The "Planning" title is gone —
+          the nav already says where you are; the row keeps its hairline. */}
       <div className="pl-top">
-        <button className="pl-back" onClick={onBack}>‹ Back to Today</button>
+        <div className="pl-top-left">
+          <button className="pl-back" onClick={onBack}>‹ Back to Today</button>
+        </div>
         <PlanningModes mode={mode} onSelect={setMode} liveModes={['time', 'board', 'category']} />
+        <div className="pl-top-right" />
       </div>
 
-      <h2 className="pl-title">Planning</h2>
-
-      <div className={'pl-body' + (mode === 'board' ? ' is-board' : '') + (mode === 'category' ? ' is-cat' : '')}>
+      {/* keyed on the mode, so the new mode's body fades in instead of hard-cutting */}
+      <div
+        key={mode}
+        className={'pl-body' + (mode === 'board' ? ' is-board' : '') + (mode === 'category' ? ' is-cat' : '')}
+      >
         {tasks === null ? (
           <p className="pl-empty">Loading…</p>
         ) : mode === 'board' ? (
