@@ -33,6 +33,65 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — Piece 6: row convergence — ONE task row everywhere. SRC-ONLY. VERIFIED LIVE.
+
+Four commits, no schema, nothing for the Checker. The last and riskiest piece of the bundle. There is
+now ONE task row in the app: Today's row, used by Today AND all three Planning surfaces.
+
+WHAT CHANGED:
+- Planning's Time lanes, its Inbox rail, and its Category groups (including nested subtasks) all now
+  render Today's row. Planning loses the old three-button status control on rows and gains the single
+  cycling one, the ▶, and the drawn completion mark. Priority no longer shows on a Planning row — it
+  is still in the data and still editable in the task form. Nothing about the writes changed.
+- Planning GAINED a focus-start path. It never had one, so the ▶ would have been a dead button. Rather
+  than copy Today's logic to a second screen, it now lives in one place both screens call.
+- Planning rows now also show logged focus time ("· 1h") — that comes free with the shared row.
+- NEW EVERYWHERE, from one edit: completing a task DRAWS the line through its title and blots the tick
+  with terracotta before it settles to grey; hovering a row warms its hairline. Because there is one
+  row, these landed on all four surfaces at once — that is the dividend of converging.
+
+TWO THINGS THE BRIEF DID NOT ANTICIPATE (both found by RUNNING it, not reading it):
+1. The brief's first commit — "extend TodayRow" — was unnecessary as written: the row already
+   suppressed its status control (just don't pass a status handler) and already did subtask
+   indentation. But it DID need extending, for a reason nobody predicted: the row reserves
+   fixed-width status + due columns (~242px of furniture) so rows line up across Today's modules, and
+   the Inbox RAIL IS ONLY 230px WIDE. The straight swap squeezed the title to nothing and the rail
+   rendered as four blank lines. Fixed with a `compact` mode that drops those two columns — a rail
+   card is an undated dump awaiting triage, so it has no status and no due date to show anyway.
+   Today never passes `compact`, so Today is untouched.
+2. Category mode was checked for the same trap BEFORE swapping: its container is 760px, so even five
+   levels deep a title still has ~330px. No problem there; the full row fits.
+
+FILES TOUCHED: kit/TodayRow.jsx (+`compact`), kit/StatusCycle.jsx (the blot), kit/todayRow.css,
+kit/PlanningTime.jsx, kit/PlanningGroup.jsx, kit/PlanningCategory.jsx, Planning.jsx,
+todayActions.js, focus/startFocusAction.js (new, shared). StatusPill NOT touched.
+
+HOW TO VERIFY (13" MacBook):
+1. Planning → Time, Board, Category. Every row (and the Inbox rail) reads exactly like a Today row.
+   The rail has no status control; tapping a rail card still opens the triage popover.
+2. Complete a task — on Today, and in a Planning lane, and in a Category group. The line draws through
+   the title and the tick blots terracotta. It looks the same in all of them, because it IS the same.
+3. Reload the page. Already-done rows are struck through but NOTHING replays. (This is the bit that
+   needed real care — a naive version re-animates every done row on every load.)
+4. Hover any row: its hairline warms. No box, no fill.
+5. Board mode is unchanged (it uses its own card, by design).
+
+KNOWN GAPS / RISKS / DEBT:
+- ⚠️ ORPHANED, DO NOT FORGET: `kit/TodayTaskRow.jsx` is now imported by NOTHING. Left in place on
+  purpose — a prove-dead deletion gets its own commit. NOTE THE NUANCE: `taskRowPill.css` is NOT
+  orphaned; StatusPill still imports it, and StatusPill is still used by the task form + subtask list
+  on both screens. So a future cleanup deletes TodayTaskRow.jsx and the `.tk-row*` half of
+  taskRowPill.css — NOT the whole file, and NOT StatusPill.
+- `useTodayFocus.js` is still orphaned (from Piece 1). Same sweep.
+- ⚠️ The auto-commit tool from Piece 0 is STILL running. Still worth pausing.
+
+NEXT: the prove-dead cleanup sweep (TodayTaskRow.jsx + useTodayFocus.js + the dead half of
+taskRowPill.css), whenever the owner wants it. The Today/Planning bundle itself is COMPLETE.
+
+FOR THE CHECKER: nothing — src-only, no schema, no database, no edge function.
+
+---
+
 ### 2026-07-14 — Piece 5: one shared side frame (56px → 24px). SRC-ONLY. VERIFIED LIVE.
 
 One commit, no schema, nothing for the Checker. Widest blast radius of the bundle — the masthead sits
