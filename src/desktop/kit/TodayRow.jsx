@@ -42,6 +42,7 @@ export default function TodayRow({
   isSub, // a subtask row (indented, marked "↳ under …")
   subLabel, // the parent's title, for the "↳ under" marker
   catsById, // id → category row, for resolving the shaded branch colour
+  compact, // narrow host (Planning's Inbox rail): drop the status + due columns
 }) {
   const done = task.status === 'done'
   // Per-task all-time focus, from the shared totals context. No focus → nothing.
@@ -60,7 +61,8 @@ export default function TodayRow({
         'tk2-row' +
         (muted && !done ? ' is-muted' : '') +
         (done ? ' is-done' : '') +
-        (isSub ? ' is-sub' : '')
+        (isSub ? ' is-sub' : '') +
+        (compact ? ' is-compact' : '')
       }
     >
       <span className="tk2-grip-col">

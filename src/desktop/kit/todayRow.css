@@ -91,6 +91,17 @@
   text-align: right;
 }
 
+/* Compact — for a NARROW host (Planning's Inbox rail, ~230px). The status and due
+   columns are fixed-width (6.5rem + 5rem) so that rows line up across Today's two
+   modules; in a rail that furniture is wider than the rail itself and squeezes the
+   title to nothing. A rail card is an undated dump awaiting triage — it has no status
+   and no due date to show — so compact drops both columns and gives the title the room.
+   Today never passes `compact`, so its rows are untouched. */
+.tk2-row.is-compact .tk2-status,
+.tk2-row.is-compact .tk2-due {
+  display: none;
+}
+
 /* --- StatusCycle: the row-only single status control (To do → In progress →
    Done → To do). A hairline-and-type mark — a state glyph + word — ink/muted,
    NEVER a status colour. State reads by TYPE: To do muted, In progress full ink,

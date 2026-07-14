@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { buildPlanning, planDrop } from '../planningModel'
 import { progressOf } from '../../spine/logic/subtasks'
-import TodayTaskRow from './TodayTaskRow'
 import TodayRow from './TodayRow'
 import PlanningColumn from './PlanningColumn'
 import TriagePopover from './TriagePopover'
@@ -55,14 +54,19 @@ export default function PlanningTime({ tasks, cats, catsById, dispCat, inboxColo
     triageAnchor.current = el
     setTriage(t)
   }
+  // An Inbox-rail line — Today's row, with NO status control: a rail card is an
+  // undated dump waiting to be triaged, and tapping it must open TriagePopover, not
+  // advance its status. TodayRow suppresses the control simply by not being given an
+  // onSetStatus handler; the fixed-width status column stays, so the rows still line up.
   const renderRailRow = (t) => (
     <div key={t.id} onClickCapture={(e) => (triageAnchor.current = e.currentTarget)}>
-      <TodayTaskRow
+      <TodayRow
         task={t}
         cat={dispCat(t)}
         catsById={catsById}
         inboxColor={inboxColor}
         busy={busy}
+        compact
         progress={progressOf(t.id, byParent)}
         onOpen={() => openTriage(t, triageAnchor.current)}
       />
