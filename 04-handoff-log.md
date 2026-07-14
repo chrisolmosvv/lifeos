@@ -33,6 +33,15 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-14 — TUNING: Today hero split 33/67 → 40/60. SRC-ONLY. VERIFIED LIVE.
+
+One line in today.css (`grid-template-columns: 2fr 3fr`) — the owner tested the 33% day sheet live
+and wanted it a touch wider. Checked in the browser at the new width, including on a non-today day:
+the day bar still sits on one line, so the Piece 1 wrap fix holds (40% gives it MORE room than the
+33% it was tuned at, not less). No console errors. Nothing else touched.
+
+---
+
 ### 2026-07-14 — Piece 2: Today keyboard day-nav + the day-change slide. SRC-ONLY. VERIFIED LIVE.
 
 One commit, no schema, nothing for the Checker. This one I DID drive in a real browser (the Chrome
