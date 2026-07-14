@@ -1,0 +1,170 @@
+/* LifeOS — Sleep CLOCK CHARTS. Two primitives that both read as a clock:
+   .dial-* (SleepClockDial — the bed/wake rhythm dials) and .scc-* (SleepClockColumns —
+   the seven-night noon→noon columns), plus the .bw-readout hover line they share.
+   Split VERBATIM out of sleepPage.css (Sleep redesign, Piece 1) — no rule changed. */
+
+/* RHYTHM — two clock dials + key. */
+.snv-dials {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 14px 0 6px;
+}
+.dial {
+  text-align: center;
+}
+.dial-face {
+  width: 100%;
+  max-width: 116px;
+  height: auto;
+}
+.dial-ring {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.dial-tick {
+  stroke: var(--ink-muted);
+  stroke-width: 1;
+}
+.dial-band {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.34;
+}
+.dial-avg {
+  stroke: var(--ink); /* ink — the band is the dial's one terracotta accent, not the avg tick */
+  stroke-width: 2;
+}
+.dial-median {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.2;
+}
+.dial-avg-time {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--ink);
+  margin-top: 6px;
+}
+.dial-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-top: 1px;
+}
+.snv-dial-key {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+  text-align: center;
+}
+.snv-dial-key .dk-avg {
+  color: var(--accent);
+  font-weight: 700;
+}
+/* The hover-readout line, shared by the seven-night clock (the rest of the V2 bed/wake
+   band — .bw / .bw-band / markers — was removed with the BedWakeBand component). */
+.bw-readout {
+  margin-top: 8px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink);
+  min-height: 16px;
+}
+
+/* ── SEVEN-NIGHT CLOCK COLUMNS (noon→noon, true clock position) ──────────────── */
+.scc {
+  margin-top: 18px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.scc-hint {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+.scc-chart {
+  position: relative;
+  flex: 1;
+  min-height: 150px;
+  margin-top: 0;
+  padding-right: 44px; /* gutter for the clock labels, on the right divider */
+  border-right: 1px solid var(--rule); /* the divider the labels sit on */
+}
+.scc-grid {
+  position: absolute;
+  left: 0;
+  right: 44px;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.scc-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid var(--rule-faint);
+}
+.scc-gridline em {
+  position: absolute;
+  right: -44px;
+  top: -6px;
+  width: 40px;
+  padding-left: 6px;
+  font-style: normal;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  color: var(--ink-muted);
+}
+.scc-cols {
+  position: relative;
+  height: 100%;
+  display: flex;
+  gap: 5px;
+}
+.scc-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.scc-col:disabled {
+  cursor: default;
+}
+.scc-block {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.scc-col.is-active .scc-block {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.scc-block i {
+  display: block;
+  width: 100%;
+}
+.scc-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 4px;
+  padding-right: 44px;
+}

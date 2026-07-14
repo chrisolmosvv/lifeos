@@ -1,0 +1,209 @@
+/* LifeOS — Sleep NIGHT layout (Last-night view): the three-column grid, the journey
+   spine, the footer pairs. Split VERBATIM out of sleepPage.css (Sleep redesign, Piece 1)
+   — no rule changed. The chart primitives it hosts live in sleepClockChart.css and
+   sleepStageTimeline.css; the page shell + shared stage colours stay in sleepPage.css. */
+
+/* ════════════════════════════════════════════════════════════════════════════
+   V2 — broadsheet chrome, skeleton/error, Night "Stage timeline" layout, motion.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── CHROME: breadcrumb (left) + range switcher (right) ─────────────────────── */
+/* (.sleep-chrome → the shared .health-chrome in healthChrome.css. P3 step 2.) */
+/* (Breadcrumb .crumb*, RangeSwitcher .range-*, Skeleton .skeleton/.sk-*, and
+   InlineError .inline-error* moved to the shared healthChrome.css. .sleep-chrome — the
+   chrome ROW container — stays here for now; P3 may share it.) */
+
+/* ── MOTION: page fade-up + cross-fade on range switch ──────────────────────── */
+/* (.sleep-fade + sleep-fade-up → the shared .health-fade in healthChrome.css. P3 step 3.) */
+
+/* ── NIGHT V2: three FULL-HEIGHT columns, full-height hairline rules ──────────
+   Zero-scroll target = MacBook Pro 13" built-in. The grid fills the viewport below
+   the nav; each column is a flex column that distributes its content top→bottom, with
+   capped gaps so a larger external display breathes rather than sprawls. The page
+   itself does not scroll on the 13".  (--health-vh tunes the fitted height.) */
+.sleep-night-v2 {
+  display: grid;
+  grid-template-columns: 184px 1fr 400px; /* left −30% → right (switcher at standard width); centre 1fr unchanged */
+  gap: 0;
+  align-items: stretch;
+  height: 100%; /* fill the --fit page (which is pinned to the fold); never scroll */
+  min-height: 0;
+}
+.sleep-night-v2--drill {
+  grid-template-columns: 184px 1fr;
+}
+.sleep-night-v2--empty {
+  display: block;
+  min-height: 0;
+}
+/* Each column = a full-height flex stack; the rules run the FULL column height. */
+.snv-lead,
+.snv-sheet,
+.snv-rhythm {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 26px;
+}
+.snv-lead {
+  padding-left: 0;
+  border-right: 1px solid var(--rule);
+}
+.snv-rhythm {
+  padding-right: 0;
+  border-left: 1px solid var(--rule);
+}
+/* LEFT COLUMN — the JOURNEY spine (fixed structural length) + a 2×2 paired-fact footer. */
+.journey {
+  display: flex;
+  flex-direction: column;
+  margin-top: 18px;
+}
+.journey-node {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.journey-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  flex: none;
+}
+.journey-dot--filled {
+  background: var(--ink);
+}
+.journey-dot--hollow {
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+}
+.journey-node-txt .sleep-label {
+  margin-bottom: 1px;
+}
+.journey-node-txt b {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 24px;
+  color: var(--ink);
+}
+/* The vertical spine line between the two nodes (~2× taller now); duration rides it. */
+.journey-spine {
+  position: relative;
+  height: 180px;
+  margin: 6px 0 6px 6px;
+  border-left: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+}
+.journey-dur {
+  margin-left: 18px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--accent); /* the column's single accent */
+}
+/* 2×2 footer of paired facts, DIRECTLY beneath the rail (not bottom-pinned — the left
+   column is top-aligned, so any slack falls at the column bottom). Hairline-separated. */
+.snv-footer {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+.snv-pair {
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.snv-pair b {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 17px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.snv-pair--btn {
+  cursor: pointer;
+}
+.snv-pair--btn:hover b {
+  color: var(--accent);
+}
+
+
+/* Center column: a FIXED, compact timeline with the stats DIRECTLY beneath it (top-
+   aligned; any slack falls at the column bottom). The lanes no longer flex-grow — that
+   stretching was both the tall band and the mid-gap that forced the page to scroll. */
+.snv-sheet .stl {
+  flex: 1 1 auto; /* GROW to absorb the column's leftover height */
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.snv-stagemini {
+  flex: 0 0 auto; /* natural height, sits right under the lanes */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  margin-top: 12px;
+  border-top: 1px solid var(--rule-faint);
+  padding-top: 12px;
+}
+.snv-mini b {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.snv-mini-pct {
+  font-style: normal;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* Rhythm column: the switcher rides the top-right; dials then the clock columns. */
+.snv-rhythm-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+/* ── REFLOW: 3-up → 2-up → 1-up (free CSS safety net; desktop is the target) ── */
+@media (max-width: 1040px) {
+  .skeleton,
+  .sleep-night-v2,
+  .sleep-night-v2--drill {
+    grid-template-columns: 1fr 1fr;
+    min-height: 0;
+  }
+  .snv-lead,
+  .snv-sheet,
+  .snv-rhythm {
+    padding: 0 18px;
+  }
+  .snv-rhythm {
+    border-left: none;
+    padding: 16px 0 0;
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--rule);
+  }
+  .stl-lanes { min-height: 200px; }
+}
+@media (max-width: 680px) {
+  .skeleton,
+  .sleep-night-v2,
+  .sleep-night-v2--drill {
+    grid-template-columns: 1fr;
+  }
+  .snv-lead {
+    border-right: none;
+    padding: 0;
+  }
+  .snv-sheet { padding: 0; }
+}

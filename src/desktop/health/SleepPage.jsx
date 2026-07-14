@@ -16,7 +16,14 @@ import InlineError from "../kit/InlineError";
 import Popover from "../kit/Popover";
 import Toast from "../kit/Toast";
 import "./healthChrome.css";
+// Sleep's stylesheet split into five (Piece 1). ORDER IS LOAD-BEARING: the chart primitives
+// must load BEFORE sleepNight.css, because Night's reflow media query overrides .stl-lanes
+// at the same specificity — source order is what decides the winner, as in the single file.
 import "../kit/sleepPage.css";
+import "../kit/sleepClockChart.css";
+import "../kit/sleepStageTimeline.css";
+import "../kit/sleepNight.css";
+import "../kit/sleepAggregate.css";
 
 // SleepPage — the full Sleep front page (V2 broadsheet). Reached from the Health Hub's
 // Sleep card. Chrome: a breadcrumb (Health / Sleep) top-left + a shared RangeSwitcher
