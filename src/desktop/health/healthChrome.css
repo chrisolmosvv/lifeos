@@ -1,12 +1,25 @@
 /* LifeOS — Health shared CHROME + FIT kit (V2 P2.0). Extracted VERBATIM from
    sleepPage.css so every Health surface (Sleep, Body, Activity) uses one source for the
-   RangeSwitcher, Breadcrumb, Skeleton, InlineError and the zero-scroll fit model. The
-   ONLY change from the original was renaming the fit class .sleep-page--fit → .health-fit
-   (var --sleep-vh → --health-vh). Sleep-specific layout stays in sleepPage.css. */
+   RangeSwitcher, Breadcrumb, Skeleton, InlineError and the zero-scroll fit model.
+   Sleep-specific layout stays in sleepPage.css + its four split sheets. */
 
-/* ── FIT MODEL: pin a surface to the fold so its flex-grow child fills with NO scroll. */
+/* ── FIT MODEL: fill the space the app shell already gives us, so the flex-grow child
+   reaches the fold with NO scroll and NO dead strip.
+
+   WAS: height: var(--health-vh, calc(100vh - 220px)) — a guess. The 220px was meant to be
+   the masthead, but the masthead measures 123px, so every Health page came up ~97px short
+   and left a dead strip along the bottom. (--health-vh was never set anywhere — proved by
+   grep, no CSS declaration and no JS setProperty — so the 220px fallback was always what
+   ran.) The arithmetic is gone: nothing here needs to know the masthead's height.
+
+   WHY height:100% and not flex:1 1 auto — the parent .cal-wrap is `flex:1; min-height:0`
+   but has NO display:flex, so it is a BLOCK box. Flex properties only apply to flex ITEMS,
+   so flex:1 1 auto here would be silently ignored and the height would collapse to the
+   content — breaking zero-scroll on all three Health pages. .cal-wrap's own height IS
+   definite (it's a flex item of .app, which is 100vh), so a percentage resolves against it
+   exactly. Confirmed live before changing it. */
 .health-fit {
-  height: var(--health-vh, calc(100vh - 220px));
+  height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
