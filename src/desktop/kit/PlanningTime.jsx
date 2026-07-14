@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { buildPlanning, planDrop } from '../planningModel'
 import { progressOf } from '../../spine/logic/subtasks'
 import TodayTaskRow from './TodayTaskRow'
+import TodayRow from './TodayRow'
 import PlanningColumn from './PlanningColumn'
 import TriagePopover from './TriagePopover'
 import './planningTime.css'
@@ -25,7 +26,7 @@ const LANES = [
   { id: 'later', label: 'Later' },
 ]
 
-export default function PlanningTime({ tasks, cats, catsById, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onError }) {
+export default function PlanningTime({ tasks, cats, catsById, dispCat, inboxColor, byParent, busy, onUpdate, onOpenTask, onStartFocus, onError }) {
   const [draggingId, setDraggingId] = useState(null)
   const [triage, setTriage] = useState(null) // the tapped rail task | null
   const triageAnchor = useRef(null) // the rail card element the popover points at
@@ -82,9 +83,10 @@ export default function PlanningTime({ tasks, cats, catsById, dispCat, inboxColo
     if (msg) onError(msg)
   }
 
-  // One time-lane line — reuses Today's row (status pill + tap-to-edit, existing paths).
+  // One time-lane line — Today's row, verbatim (Piece 6): the cycling status control,
+  // the ▶, and no priority kicker. Same writes as before; only the row changed.
   const renderRow = (t) => (
-    <TodayTaskRow
+    <TodayRow
       key={t.id}
       task={t}
       cat={dispCat(t)}
@@ -93,6 +95,7 @@ export default function PlanningTime({ tasks, cats, catsById, dispCat, inboxColo
       busy={busy}
       progress={progressOf(t.id, byParent)}
       onSetStatus={(status) => onUpdate(t.id, { status })}
+      onPlay={onStartFocus ? () => onStartFocus(t, dispCat(t)) : undefined}
       onOpen={() => onOpenTask(t)}
     />
   )

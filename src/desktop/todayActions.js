@@ -1,7 +1,7 @@
 import { supabase } from '../spine/data/supabaseClient'
 import { friendly } from '../spine/data/useTodayData'
 import { archiveTask, archiveEvent, unarchiveBatch } from './archive'
-import { requestFocus } from './focus/focusNav'
+import { makeStartFocus } from './focus/startFocusAction'
 
 // todayActions — Today's writes, in one place. (Piece 0 split: moved verbatim out of
 // Today.jsx; no behaviour changed.) Every one goes through the caller's existing
@@ -98,25 +98,9 @@ export function todayActions({
     },
   })
 
-  // ▶ on a row → the Focus SETUP screen, prefilled with this task + its category
-  // snapshot. Reuses the EXACT trigger the task form uses (requestFocus). Blocked
-  // with the existing gentle nudge while a session runs — no silent switching.
-  const startFocus = (task, cat) => {
-    if (focusRunning) {
-      setToast({ text: "A session's already running — stop it first" })
-      return
-    }
-    requestFocus({
-      mode: 'setup',
-      taskId: task.id,
-      prefill: {
-        task_id: task.id,
-        task_title_snapshot: task.title,
-        category_id: cat ? cat.id : task.category_id ?? null,
-        category_snapshot: cat ? { id: cat.id, name: cat.name, color: cat.color ?? null } : null,
-      },
-    })
-  }
+  // ▶ on a row → the Focus SETUP screen, prefilled with this task. Shared with
+  // Planning (startFocusAction), so both screens start a session the same way.
+  const startFocus = makeStartFocus({ focusRunning, setToast })
 
   return { handleSave, handleDelete, quickAdd, subtaskHandlers, startFocus }
 }

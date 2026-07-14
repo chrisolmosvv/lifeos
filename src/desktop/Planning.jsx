@@ -5,6 +5,8 @@ import { INBOX_COLOR } from '../spine/logic/palette'
 import { indexTasks, progressOf, displayCatId, parentTitle } from '../spine/logic/subtasks'
 import { archiveTask, unarchiveBatch, activeOnly } from './archive'
 import { seriesFormHandlers } from './recur/seriesForm'
+import { useFocusSessionCtx } from './focus/focusSessionContext'
+import { makeStartFocus } from './focus/startFocusAction'
 import PlanningModes from './kit/PlanningModes'
 import PlanningTime from './kit/PlanningTime'
 import PlanningBoard from './kit/PlanningBoard'
@@ -26,6 +28,12 @@ export default function Planning({ onBack }) {
   const [mode, setMode] = useState('time')
   const [form, setForm] = useState(null)
   const [toast, setToast] = useState(null)
+  // Piece 6: Planning's rows are now Today's row, which carries the ▶. It starts a
+  // session exactly the way Today does — the same shared action, the same refusal to
+  // switch tasks mid-session.
+  const fs = useFocusSessionCtx()
+  const focusRunning = fs && (fs.status === 'running' || fs.status === 'paused')
+  const startFocus = makeStartFocus({ focusRunning, setToast })
 
   async function load() {
     const [taskRes, catRes] = await Promise.all([
@@ -189,6 +197,7 @@ export default function Planning({ onBack }) {
             busy={busy}
             onUpdate={updateTask}
             onOpenTask={openTask}
+            onStartFocus={startFocus}
             onError={setError}
           />
         )}
