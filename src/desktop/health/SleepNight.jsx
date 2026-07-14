@@ -28,7 +28,7 @@ const signedHm = (min) => `${min >= 0 ? "+" : "−"}${hm(Math.abs(Math.round(min
 // Same PATTERN as the Body hub card's trend marks — inside the band reads flat and stays
 // ink; outside it earns the column's one terracotta. The Body card's own 10-minute number
 // judges weekly AVERAGES, and on a single night it fired every night (see NIGHT_DEADBAND),
-// so the single-night band lives beside it in healthStats: 45 min.
+// so the single-night band lives beside it in healthStats: 60 min.
 const DUR_BAND = NIGHT_DEADBAND.sleep_duration.abs;
 
 // One fact: an uppercase hairline label over a tabular-figure value.

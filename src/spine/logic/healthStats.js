@@ -45,11 +45,12 @@ export const DEADBAND = {
 // DEADBAND judges one WEEKLY AVERAGE against another, where averages are smooth and 10
 // minutes is a real move. Judging ONE NIGHT against an average is far noisier — nights
 // swing by an hour routinely — so the same 10-minute band fired on 100% of real nights
-// and the "rare" terracotta accent would never have been off. 45 minutes is the band for
+// and the "rare" terracotta accent would never have been off. 60 minutes is the band for
 // a single night: it colours a genuinely unusual night and leaves an ordinary one calm.
-// Owner's call (Sleep redesign, Piece 3). Same PATTERN as DEADBAND, different question.
+// Owner's call — set at 45 during the Piece 3 build, then LOCKED at 60 after he saw what
+// it actually controls. Same PATTERN as DEADBAND, different question.
 export const NIGHT_DEADBAND = {
-  sleep_duration: { abs: 45 }, // minutes — one night vs its rolling average
+  sleep_duration: { abs: 60 }, // minutes — one night vs its rolling average
 };
 
 // The named rolling-window presets, all built on the arbitrary-range engine.
