@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import './todayRow.css'
 
 // StatusCycle — the Today row's single status control. One tap target that
@@ -40,10 +41,26 @@ function Mark({ status }) {
 
 export default function StatusCycle({ status, onSet, busy }) {
   const cur = NEXT[status] ? status : 'open'
+
+  // The completion mark: the tick blots in with terracotta when a task is FINISHED —
+  // one of the few places the accent is earned. It has to be armed in JS rather than
+  // by a CSS animation on `.is-done`, because an animation would replay on every done
+  // row on every page load. This fires only on the actual flip into done.
+  const prev = useRef(cur)
+  const [blotting, setBlotting] = useState(false)
+  useEffect(() => {
+    const wasDone = prev.current === 'done'
+    prev.current = cur
+    if (wasDone || cur !== 'done') return
+    setBlotting(true)
+    const t = setTimeout(() => setBlotting(false), 420)
+    return () => clearTimeout(t)
+  }, [cur])
+
   return (
     <button
       type="button"
-      className={'tk-stat is-' + cur}
+      className={'tk-stat is-' + cur + (blotting ? ' is-blotting' : '')}
       aria-label={'Status: ' + LABEL[cur] + '. Tap to advance.'}
       disabled={busy}
       onClick={(e) => {

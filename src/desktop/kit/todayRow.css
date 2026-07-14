@@ -17,6 +17,14 @@
 .tk2-row.is-sub {
   padding-left: 0.7rem; /* a gentle indent for a standalone subtask row */
 }
+/* Hover: the row's own hairline WARMS toward the terracotta. No box, no fill, no
+   shadow — the rule is the only thing that moves, which is the whole house style. */
+.tk2-row {
+  transition: border-bottom-color 160ms ease;
+}
+.tk2-row:hover {
+  border-bottom-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+}
 .tk2-grip-col {
   flex: none;
   width: 1rem;
@@ -36,7 +44,13 @@
   border: none;
   cursor: pointer;
 }
+/* The title box shrinks to its text (align-self) so the completion rule can be drawn
+   across the WORDS, not across the whole column. Long titles still ellipsis at the
+   column edge, exactly as before. */
 .tk2-title {
+  position: relative;
+  align-self: flex-start;
+  max-width: 100%;
   font-family: var(--font-serif);
   font-size: 0.98rem;
   line-height: 1.2;
@@ -49,6 +63,25 @@
   text-decoration: underline;
   text-decoration-color: var(--rule);
 }
+/* Completing a task DRAWS the line through the title, left to right, rather than
+   snapping it on. It's a transition, not an animation, so it only plays when the
+   status actually flips — a page full of already-done rows renders them struck, with
+   nothing replaying on load. */
+.tk2-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 55%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 300ms ease;
+}
+.tk2-row.is-done .tk2-title::after {
+  transform: scaleX(1);
+}
 .tk2-meta {
   display: flex;
   align-items: baseline;
@@ -60,9 +93,10 @@
 .tk2-row.is-muted .tk2-title {
   color: var(--ink-muted);
 }
+/* Done greys the title; the strike itself is the drawn rule above (::after), not
+   text-decoration — text-decoration cannot be animated. */
 .tk2-row.is-done .tk2-title {
   color: var(--ink-muted);
-  text-decoration: line-through;
 }
 /* ▶ — a quiet ink/muted glyph. NOT the accent: terracotta stays rare. */
 .tk2-play {
@@ -143,4 +177,31 @@
 .tk-stat:disabled {
   cursor: default;
   opacity: 0.6;
+}
+
+/* The completion blot — the tick fills with terracotta as the task lands, then settles
+   to the quiet done-grey. One of the few moments the accent is earned (a key mark), and
+   it fires ONLY on the flip into done: StatusCycle arms `is-blotting` in JS, so a page
+   full of already-done rows never replays it on load. */
+.tk-stat.is-blotting .tk-stat-mark {
+  animation: tk-blot 420ms ease both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes tk-blot {
+  0% { transform: scale(0.35); color: var(--accent); }
+  55% { transform: scale(1.18); color: var(--accent); }
+  100% { transform: scale(1); color: var(--ink-muted); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The states still READ the same — struck through, greyed, filled — they just
+     arrive instead of moving. */
+  .tk2-row,
+  .tk2-title::after {
+    transition: none;
+  }
+  .tk-stat.is-blotting .tk-stat-mark {
+    animation: none;
+  }
 }
