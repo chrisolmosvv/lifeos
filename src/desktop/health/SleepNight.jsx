@@ -4,13 +4,16 @@ import SleepClockColumns from "../kit/SleepClockColumns";
 import SleepClockDial from "../kit/SleepClockDial";
 import { parseSegments, proportionBand } from "../../spine/logic/hypnogram";
 import { hm, clockTime, clockFromMin } from "../../spine/logic/healthFormat";
+import { NIGHT_DEADBAND } from "../../spine/logic/healthStats";
 
 // SleepNight — the "Last night" view (V2 "Stage timeline" layout) + the Week/Month bar
 // drill-in. Three FULL-HEIGHT broadsheet columns, full-height hairline rules, chrome
 // distributed into the columns (breadcrumb tops LEFT, switcher tops RIGHT, centre clean):
-//   LEAD  — a fixed-length JOURNEY spine (in bed ● → duration → woke ○) + a footer of
-//           paired facts (target / goal). Respiratory + awakenings were cut in Piece 2 —
-//           respiratory still lives on Body, where it belongs.
+//   LEAD  — a fixed-length JOURNEY spine (in bed ● → duration → woke ○) + a 3-row footer
+//           that SPACE-BETWEENs down the rest of the column (Piece 3):
+//             row 1  target · goal        row 2  vs 7-night avg · streak
+//             row 3  restorative (deep + REM)
+//           Respiratory + awakenings were cut in Piece 2 — respiratory lives on Body now.
 //   SHEET — the lane-per-stage timeline (fills the height; proportion-band fallback if
 //           no segments) + a bottom-pinned 2×2 stage readout (Deep/Core/REM/Awake min+%).
 //   RHYTHM— two 12-hour clock DIALS (bed + wake: spread band + avg + median) + the
@@ -18,6 +21,25 @@ import { hm, clockTime, clockFromMin } from "../../spine/logic/healthFormat";
 // Raw facts only; snapshot numbers byte-identical to V1 — only the layout/language moved.
 
 const hoursLabel = (min) => `${+(min / 60).toFixed(2)}h`;
+
+// A signed duration: +1h 29m / −12m. hm() already renders the magnitude.
+const signedHm = (min) => `${min >= 0 ? "+" : "−"}${hm(Math.abs(Math.round(min)))}`;
+
+// Same PATTERN as the Body hub card's trend marks — inside the band reads flat and stays
+// ink; outside it earns the column's one terracotta. The Body card's own 10-minute number
+// judges weekly AVERAGES, and on a single night it fired every night (see NIGHT_DEADBAND),
+// so the single-night band lives beside it in healthStats: 45 min.
+const DUR_BAND = NIGHT_DEADBAND.sleep_duration.abs;
+
+// One fact: an uppercase hairline label over a tabular-figure value.
+function Fact({ label, value, accent = false, className = "" }) {
+  return (
+    <div className={`snv-fact ${className}`}>
+      <span className="snv-fact-label">{label}</span>
+      <b className={`snv-fact-val tnum ${accent ? "snv-fact-val--move" : ""}`}>{value}</b>
+    </div>
+  );
+}
 
 function GoalCell({ goalMinutes, bedtimeGoalMin, onEdit }) {
   const hasGoal = goalMinutes != null || bedtimeGoalMin != null;
@@ -28,16 +50,16 @@ function GoalCell({ goalMinutes, bedtimeGoalMin, onEdit }) {
     : "Set a sleep goal";
   const body = (
     <>
-      <span className="sleep-label">goal</span>
-      <b>{text}</b>
+      <span className="snv-fact-label">goal</span>
+      <b className="snv-fact-val tnum">{text}</b>
     </>
   );
   return onEdit ? (
-    <button type="button" className="snv-pair snv-pair--btn" onClick={(e) => onEdit(e.currentTarget)}>
+    <button type="button" className="snv-fact snv-fact--btn" onClick={(e) => onEdit(e.currentTarget)}>
       {body}
     </button>
   ) : (
-    <div className="snv-pair">{body}</div>
+    <div className="snv-fact">{body}</div>
   );
 }
 
@@ -52,6 +74,8 @@ export default function SleepNight({
   rhythm,
   showConsistency = true,
   weekRows,
+  rolling7Avg, // sv.rolling[7].avg — last-night view only (it is anchored to today)
+  streak, // sv.streak  — ditto
   today,
   breadcrumb,
   switcher,
@@ -94,6 +118,30 @@ export default function SleepNight({
     ? `${clockFromMin(bedtimeVsGoal.target)} · ${bedtimeVsGoal.met ? "on time" : `${Math.round(Math.abs(bedtimeVsGoal.delta))} min late`}`
     : "—";
 
+  // ── Footer facts, all COMPUTE-ON-READ from data already on the page (no new fetch).
+  // vs 7-night avg: last night's duration minus the rolling 7-night average.
+  const durDelta =
+    Number.isFinite(detail.asleepMinutes) && Number.isFinite(rolling7Avg)
+      ? detail.asleepMinutes - rolling7Avg
+      : null;
+  const durMoving = durDelta != null && Math.abs(durDelta) > DUR_BAND;
+
+  // Restorative = deep + REM. No getter combines them (checked), and none is needed: both
+  // minutes are already on `detail`, so this is a two-field sum — derived, never stored.
+  // % is of time ASLEEP, matching how the stage readout below computes every other %.
+  const deepMin = detail.stages.deep.min;
+  const remMin = detail.stages.rem.min;
+  const restMin = Number.isFinite(deepMin) && Number.isFinite(remMin) ? deepMin + remMin : null;
+  const restPct =
+    restMin != null && Number.isFinite(detail.asleepMinutes) && detail.asleepMinutes > 0
+      ? Math.round((restMin / detail.asleepMinutes) * 100)
+      : null;
+  const restText = restMin != null ? `${restMin} min${restPct != null ? ` · ${restPct}%` : ""}` : "—";
+
+  const streakText = Number.isFinite(streak?.streak)
+    ? `${streak.streak} night${streak.streak === 1 ? "" : "s"}`
+    : "—";
+
   return (
     <div className={showConsistency ? "sleep-night-v2" : "sleep-night-v2 sleep-night-v2--drill"}>
       <section className="snv-lead">
@@ -119,12 +167,29 @@ export default function SleepNight({
           </div>
         </div>
 
+        {/* Three rows, space-between down whatever height the column has left. */}
         <div className="snv-footer">
-          <div className="snv-pair">
-            <span className="sleep-label">target</span>
-            <b>{targetText}</b>
+          <div className="snv-footer-row">
+            <Fact label="target" value={targetText} />
+            <GoalCell goalMinutes={goalMinutes} bedtimeGoalMin={bedtimeGoalMin} onEdit={onEditSleepGoal} />
           </div>
-          <GoalCell goalMinutes={goalMinutes} bedtimeGoalMin={bedtimeGoalMin} onEdit={onEditSleepGoal} />
+
+          {/* Row 2 is anchored to TODAY (a rolling average and a live streak), so it is
+              shown for last night only — on a past-night drill-in it would be a lie. */}
+          {isLastNight && (
+            <div className="snv-footer-row">
+              <Fact
+                label="vs 7-night avg"
+                value={durDelta != null ? signedHm(durDelta) : "—"}
+                accent={durMoving}
+              />
+              <Fact label="streak" value={streakText} />
+            </div>
+          )}
+
+          <div className="snv-footer-row snv-footer-row--full">
+            <Fact label="restorative (deep + REM)" value={restText} />
+          </div>
         </div>
       </section>
 

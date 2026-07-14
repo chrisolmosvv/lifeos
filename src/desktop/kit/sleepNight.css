@@ -102,34 +102,68 @@
   font-size: 26px;
   color: var(--accent); /* the column's single accent */
 }
-/* 2×2 footer of paired facts, DIRECTLY beneath the rail (not bottom-pinned — the left
-   column is top-aligned, so any slack falls at the column bottom). Hairline-separated. */
+/* FOOTER (Piece 3) — three rows of facts that FILL the rest of the left column and
+   distribute themselves down it (space-between), so the column reaches the fold with no
+   gap at the bottom. This is what turns Piece 1's dead-space fix into something visible:
+   the extra height now gets USED instead of sitting empty. flex:1 + min-height:0 is the
+   pair that lets it grow into the slack and still shrink on a short viewport. */
 .snv-footer {
+  flex: 1 1 auto;
+  /* min-content, NOT 0: the footer may GROW into the column's slack, but it must never
+     shrink below its own three rows. With min-height:0 a short viewport squashed it to
+     ~17px and the rows spilled out of it. This floors it at exactly its content. */
+  min-height: min-content;
   margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+.snv-footer-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--rule);
 }
-.snv-pair {
+.snv-footer-row--full {
+  grid-template-columns: 1fr; /* restorative runs the full column width */
+}
+
+/* ONE fact = an uppercase hairline label over a tabular-figure value. Inter throughout
+   (Fraunces is for the headline numbers — the lead duration, the stage readout — not for
+   these small paired facts). */
+.snv-fact {
   text-align: left;
   background: none;
   border: none;
   padding: 0;
 }
-.snv-pair b {
+.snv-fact-label {
   display: block;
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 17px;
-  color: var(--ink);
-  margin-top: 2px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 5px;
 }
-.snv-pair--btn {
+.snv-fact-val {
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--ink);
+}
+/* The column's ONE terracotta: only when last night is meaningfully off the 7-night
+   average (the Body-card dead-band). A flat night stays ink — terracotta stays rare. */
+.snv-fact-val--move {
+  color: var(--accent);
+}
+.snv-fact--btn {
   cursor: pointer;
 }
-.snv-pair--btn:hover b {
+.snv-fact--btn:hover .snv-fact-val {
   color: var(--accent);
 }
 
@@ -181,6 +215,19 @@
   .sleep-night-v2--drill {
     grid-template-columns: 1fr 1fr;
     min-height: 0;
+  }
+  /* At 2-up the rhythm column drops to a full-width row BELOW and the top row is sized by
+     the SHEET column. .snv-lead carries min-height:0 (it must shrink at 3-up), but here
+     that let the lead shrink below its own content and the footer printed on top of the
+     dials. min-height:auto restores the grid's automatic minimum size, so the row grows to
+     hold the lead instead. Content-height grid; the fit box still clips at the fold (the
+     pre-existing narrow-width clip). Desktop 3-up is the real target. */
+  .sleep-night-v2,
+  .sleep-night-v2--drill {
+    height: auto;
+  }
+  .snv-lead {
+    min-height: auto;
   }
   .snv-lead,
   .snv-sheet,

@@ -91,6 +91,8 @@ export default function SleepPage({ onBack }) {
         consistency={sv.bedtime}
         rhythm={rhythm}
         weekRows={sleep}
+        rolling7Avg={sv.rolling?.[7]?.avg ?? null}
+        streak={sv.streak}
         today={today}
         breadcrumb={breadcrumb}
         switcher={switcher}
