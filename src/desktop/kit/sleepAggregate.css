@@ -65,6 +65,12 @@
   display: flex;
   flex-direction: column;
 }
+/* Week/Month host the clock columns (Piece 5). .scc carries a margin-top:18px from its
+   Last-night home (where it sat under the dials); here it is the whole hero, so drop that
+   and let it fill the column top-to-bottom. */
+.agg-chart--clock > .scc {
+  margin-top: 0;
+}
 .agg-legend {
   flex: 0 0 auto;
   display: flex;
@@ -137,20 +143,9 @@
   font-size: 10px;
   color: var(--accent);
 }
-/* Per-bar duration labels (Week only). */
-.agg-labels {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 4px;
-  margin-top: 4px;
-}
-.agg-col-label {
-  flex: 1;
-  text-align: center;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  color: var(--ink-muted);
-}
+/* (.agg-labels / .agg-col-label — the Week-only per-bar duration labels — were removed in
+   Piece 5 when Week/Month moved to the clock columns. Prove-dead: no JSX rendered them once
+   the nightly bars were gone; 90-day never used them.) */
 .agg-axis {
   flex: 0 0 auto;
   display: flex;
