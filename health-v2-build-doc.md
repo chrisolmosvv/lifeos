@@ -1,12 +1,14 @@
 # LifeOS — Health V2 — Build Doc
 ### Sleep · Body Composition · Activity (in Gym) — evolve in place
 
-> **⚠️ STALE STATUS — banner added 2026-07-15 (doc-drift audit D-20).** The STATUS
-> line below stopped at 2026-06-30. Since then the **Sleep redesign** (Pieces 0–5,
-> 2026-07-13/14 — CSS split, awakenings/respiratory cut, the rebuilt Last-night
-> footer, the generalised clock chart) has reshaped the Sleep surfaces; that pass is
-> recorded ONLY in `04-handoff-log.md` (top entries) and `10-sleep-body-stats.md`'s
-> correction banner. Read those first for the current sleep UI.
+> **⚠️ STALE STATUS — banner added 2026-07-15 (doc-drift audit D-20); extended 2026-07-15
+> at close.** The STATUS line below stopped at 2026-06-30. Since then the **Sleep redesign**
+> (Pieces 1–6 + a goal-hit-rate follow-up, 2026-07-13→15 — CSS split, awakenings/respiratory
+> cut, the rebuilt Last-night footer, the generalised clock chart, Week/Month/90-day adopting
+> it, the per-week goal-hit label) has reshaped every Sleep surface. **That pass is now recorded
+> AS-BUILT in `PART C` (bottom of this doc) — read Part C first for the current Sleep UI; its
+> drift ledger corrects the specific stale claims in Parts A/B (NEXT=P3, HealthStub-pending,
+> the dial marker, the "bottom-pinned" readout, sleep/body-chrome, the 165px masthead, the axis).
 
 > Companion artifact to the Module Upgrade Playbook V2. This is the compiled, locked spec for the
 > Health V2 upgrade, plus the change ledger, provisional deletion list, amendments, the
@@ -31,6 +33,8 @@
 > **Activity (Part B §4C), Gym (§4D, §8), and the close (§7 P4/P5, §10–11) are NOT yet built — they
 > remain live forward spec.** NEXT piece = **P3 shared-kit consolidation** (its inventory is
 > pre-written in Part A §4).
+> *(corrected 2026-07-15: P3 shipped 2026-06-30 `5904429`; P4 shipped 2026-07-01; the Sleep
+> redesign (Part C) is the P5-era pass. "NEXT = P3" is stale wherever it appears below.)*
 
 ---
 
@@ -60,6 +64,9 @@
   > the fitted height for *this* screen and will need re-tuning for a different
   > viewport/masthead. `--health-vh` exists precisely so it can be overridden without
   > touching the model.
+  > *(corrected 2026-07-15 — Part C §C2: this whole model was REPLACED. `.health-fit` is now
+  > `height: 100%`; `--health-vh` and the `calc(100vh - 220px)` guess are deleted. The masthead
+  > measures **123px**, not ~165px — the bad guess left a 97px dead strip, now fixed.)*
 - **Hour-time language.** Clock times throughout; noon-anchored (Sleep dials/band) and
   18:00→12:00 (Sleep 7-night clock) axes so evening→morning reads without midnight wrap.
 - **Motion = subtle life.** Page **fade-up** (`.sleep-fade` / `.body-fade`), cross-fade on
@@ -96,6 +103,10 @@ sub-2 layout `04f9c61` · sub-2 deletion `c9ca58c`.
     vertical **hour gridlines**; hovering a block shows "stage · clock range · duration",
     mouse-out **clears** (the old caption was removed). A bottom-pinned 2×2 stage readout
     (min + %). Segmentless nights fall back to the proportion band.
+    > *(corrected 2026-07-15 — Part C drift ledger): the footer no longer shows respiratory or
+    > awakenings (both CUT, Piece 2); the stage readout is TOP-aligned under the lanes, not
+    > bottom-pinned; the dial **avg** marker is INK (`.dial-avg`), the terracotta is the min-max
+    > band; the clock columns are **22:00→12:00** (not 18:00→12:00) and span **any range**.*
   - **Right (rhythm):** two **12-hour clock dials** (Bed, Wake) — hairline circle, 4
     cardinal ticks (no numerals), a faint terracotta **min–max envelope arc**, **avg** =
     terracotta radial tick, **median** = hollow ink dot, avg time in Fraunces below; then
@@ -150,7 +161,7 @@ Commits: P2.0 extraction `15f9736` · calc `b3a41ee` · layout `7cc8b25` · dele
 
 | piece | status | P3 verdict |
 |---|---|---|
-| `.sleep-chrome` vs `.body-chrome` | **duplicated** (same flex row, two names) | **consolidate** → one `.health-chrome` |
+| `.sleep-chrome` vs `.body-chrome` | ~~**duplicated**~~ **DONE (P3): merged → one `.health-chrome`** *(corrected 2026-07-15)* | ✅ |
 | `.sleep-fade` vs `.body-fade` | **duplicated** (same fade-up + fit inner-child rule) | **consolidate** → one `.health-fade` |
 | `.skeleton` grid template | shared base is **Sleep-shaped** (3-col 260/1fr/300); Body overrides to `repeat(4,1fr)` | **consolidate** → make the column template a prop/variant, not hard-coded |
 | **band render** | **NOT shared** — Sleep `.dial-band` (clock arc) vs Body `.body-chart-band` rect + `.bt-band` cell | **signature, leave** (only `fixedBand` verdict logic is common) |
@@ -174,6 +185,8 @@ Commits: P2.0 extraction `15f9736` · calc `b3a41ee` · layout `7cc8b25` · dele
   > by replicating the scoped override. Do NOT let P4 fall back to GoalEditor's value-
   > inferred direction for any move-goal.
 - **`HealthStub.jsx`** — still dead (17 lines, 0 importers). **P5 deletes.**
+  *(corrected 2026-07-15: already DELETED — no `HealthStub` reference exists under `src/`. This
+  line and the §10 deletion-list entry are historical only.)*
 
 ### Operational carry-forwards — resolve BEFORE P4 (Activity) builds the affected tiles
 - **walking_speed units magnitude-check.** Real data reads **~4 m/s** for walking, which is
@@ -635,3 +648,146 @@ After each piece, the owner checks two directions on his Mac:
 
 Only on the owner's explicit "verified — [new behaviour] + snapshot still holds" does the Builder
 move to the next piece (and only then to that piece's deletion commit).
+
+---
+
+# PART C — SLEEP REDESIGN (as-built, 2026-07-13 → 2026-07-15)
+
+> **AUTHORITATIVE for the current Sleep UI.** This is the pass that ran AFTER P1/P2/P3/P4 shipped
+> (see the drift ledger at the end — the P1-era prose above is now stale in the specific places it
+> lists). It reshaped every Sleep surface in seven small src-only pieces plus a follow-up. No
+> schema, no ingest, no calc-meaning change — presentation + one pure per-week getter reuse.
+> **Where Part C and Parts A/B disagree about Sleep, Part C wins.** Appended, not rewritten:
+> the older sections are left intact for archaeology.
+
+**Commit map (src piece · docs handoff):**
+Piece 1 CSS split `2068b8b` + health-fit fix `7ef19da` · `59d7fcb` — Piece 2 metric cuts `313fc2d`
+· `5f06679` — Piece 3 footer rebuild `2f9b346` + band 45→60 `ce8642b` + 60/40 split `96c7734` ·
+`4154227`/`2542286`/`3d12a92` — Piece 4 clock-chart generalised `6f78ce0` · `9ec9b11` — Piece 5
+Week & Month adopt the chart `836e6d2` · `a5119c2` — Piece 6 90-day clock-truth `ae4152f` ·
+`478a0b9` — goal-hit-rate follow-up `69ce525` · `681bb47`.
+
+## C1. CSS split (Piece 1) — `sleepPage.css` (was 846) → six sheets
+All under `src/desktop/kit/`. Present line counts:
+
+| file | lines |
+|---|---|
+| `sleepPage.css` | 189 |
+| `sleepNight.css` | 209 |
+| `sleepAggregate.css` | 218 |
+| `sleepClockChart.css` | **268** ⚠️ (over the ~250 guide — see the roadmap debt note 2026-07-15) |
+| `sleepStageTimeline.css` | 90 |
+| `sleepNightFooter.css` | 77 |
+
+Piece 1's split produced **five** sheets (pure move, zero visual change, `2068b8b`); Piece 3 later
+carved out the **sixth**, `sleepNightFooter.css`, when it rebuilt the footer. **LOAD ORDER MATTERS**
+and is documented at the single import site, `src/desktop/health/SleepPage.jsx:17-26`:
+`healthChrome.css` → `sleepPage.css` → `sleepClockChart.css` → `sleepStageTimeline.css` →
+`sleepNight.css` → `sleepNightFooter.css` → `sleepAggregate.css`. Two dependency comments live
+there: `:19` "must load BEFORE sleepNight.css, because Night's reflow media query overrides
+.stl-lanes"; `:25` "after sleepNight.css: it owns the 40% half of the ratio". Do not reorder these
+imports without re-reading those notes.
+
+## C2. Health-wide dead-space fix (Piece 1) — shared chrome, all three faces
+The `.health-fit` model no longer pins to a viewport-height guess. It is now simply
+`height: 100%` (`src/desktop/health/healthChrome.css:22`), inheriting its real parent height.
+`--health-vh` and its `calc(100vh - 220px)` fallback are **deleted** — they survive only as WAS-
+comments (`healthChrome.css:9-12`). The `220px` guess assumed a ~165px masthead; the masthead
+actually measures **123px**, so every Health page had come up ~97px short (a dead strip at the
+fold). A `flex-grow` version was tried first and **correctly reverted** — the parent isn't a flex
+container, so flex-grow had nothing to grow against; `height: 100%` was the honest fix. This lives
+in the **shared** `healthChrome.css`, so it fixed **Sleep, Body and Gym** at once (not a Sleep-only
+change). (Commit `7ef19da`.)
+
+## C3. Metric cuts (Piece 2) — everywhere, desktop + mobile
+**Cut from every Sleep surface** (Last night / Week / Month / 90-day + mobile): **awakenings** and
+**respiratory rate**. Respiratory now lives on Body only (`bodyGroups.jsx`, `HubBodyCard.jsx`);
+awakenings is gone from the UI entirely. Traces that remain are data-layer only and intentional:
+`healthSleep.js:59` still computes `awakenings` into the night-detail object (unconsumed) and
+`healthLoad.js:46` still SELECTs the column — neither renders. (Commit `313fc2d`.)
+
+**KEPT** (deliberately — verified present): bedtime **consistency** (std-dev of bedtime, Week only —
+`bedtimeConsistency`, `healthSleep.js:151`), the per-stage **segment detail line** (min + %,
+`SleepNight.jsx:201-212`), the **baseline-vs-90-day** compare (`SleepRange.jsx:54-59`), the **goal
+streak** (`goalStreak`, `healthSleep.js:102`), and **"awake avg"** (`SleepRange.jsx:53`). Note
+"awake avg" is a **duration** (awake_minutes averaged) — deliberately distinct from the cut
+awakenings **count**, and kept for that reason.
+
+## C4. Last-night footer (Piece 3) — three rows that fill the column
+The left column is an explicit **60/40 vertical split** between the journey/segment block (60%) and
+the footer (40%), enforced by paired flex-basis rules meant to be edited together: `.journey
+{ flex: 1 1 60% }` (`sleepNight.css:65`) and `.snv-footer { flex: 1 1 40% }`
+(`sleepNightFooter.css:14`). Percentage bases (not `0`) were chosen after **flex-fill hit three
+measured traps**: the spine shrinking under flex-shrink, margins double-counting outside the box
+model, and padding eating the percentage before the split — read the commit CSS if that precision
+is ever needed again. The footer's three rows: **Target/Goal · vs-7-night-avg / Streak ·
+Restorative (deep + REM)**.
+
+**Terracotta threshold on "vs 7-night avg" = 60 minutes** (`NIGHT_DEADBAND.sleep_duration.abs`,
+`healthStats.js:53`; applied `SleepNight.jsx:127`). **The value is 60, not 45.** 45 was a mid-build
+placeholder set during Piece 3; the owner **locked it at 60 after seeing what it actually controls**
+(commit `ce8642b`; the history is a comment at `healthStats.js:50`). 45 must not appear anywhere as
+if it shipped.
+
+## C5. The clock chart, generalised (Piece 4) — then adopted by every view (Pieces 5-6)
+`SleepClockColumns` + `sleepClockChart.js` were generalised from "seven nights" to **any range**.
+- **Axis: 22:00 (top) → 12:00 (bottom)** — a 14-hour window (`WINDOW_MIN = 840`) that crops the
+  dead midday hours so each night's block is big. (This replaced the older 18:00→12:00; both older
+  "noon→noon" descriptions in prose/comments were wrong — see the drift ledger.)
+- **Crop handling:** a night whose bedtime is **before 22:00** (or wake after 12:00) no longer
+  vanishes — it pins to the window edge and fades out there ("continues beyond this line"). ⚠️
+  **This is verified by construction + the pure-function logic, NOT yet by a real early night** —
+  none has occurred in the owner's data. **Open verification item**, not closed.
+- **Goal-met terracotta:** an individual night that hit the duration goal gets a 2px terracotta
+  left edge (`.scc-block--goal`) — terracotta's one sanctioned data use in the chart.
+- **onDrill** (column → night/week) and **average bed/wake marks** (ink dashed hairlines across the
+  columns — ink, never terracotta) are shared by all views.
+- **Stage colours (the ramp, `sleepPage.css:152-160`)** — the doc must carry the real numbers:
+  Deep `#3a2e24` → Core `#6b5b48` → REM `#9e8e77` → Awake `#d2c4ac` (in-bed `#e6dccb`, generic
+  asleep `#7d6d58`, other `#c0b29a`). This **replaced the old ramp** (`#423b32` → `#c9c1b2`) — both
+  endpoints moved warmer/deeper.
+
+**Week & Month (Piece 5, `836e6d2`)** now render the clock columns (per-night, stage-stacked, with
+the terracotta goal-met edge), retiring the old stacked-duration bars (deleted, proved dead first).
+
+**90-day (Piece 6, `ae4152f`)** retired its legacy bars too — **`SleepRangeLegacyBars.jsx` deleted**
+— and now shows **13 weekly bed→wake spans on the same chart**. This is a deliberate, owner-locked
+change of **what the bar means: clock-truth (average bed→wake position), not duration-truth (how
+long)** — the two aren't the same number and one bar can't honestly show both. The weekly span is a
+flat `#7d6d58` fill (stage-less; it's an average, not a night). The old duration goal-line had no
+home on a timing chart and was dropped; goal context moved to the stats strip + ledger, then to C6.
+
+## C6. Per-week goal-hit label (follow-up, `69ce525`)
+Each 90-day weekly column carries a small permanent **"X/N" label** below it — nights that hit the
+sleep-duration goal (X) out of nights with data (N). It reuses `nightsHitGoal` (the getter already
+behind "goal 2/90 hit" and the streak), bucketed one week at a time over the **same [wStart, wEnd]
+range** as that week's span, so the two always agree. A week with **zero logged nights shows
+nothing** (an honest blank, not "0/0"); **no sleep-duration goal → no labels anywhere**. Small Inter
+tabular numerals, **ink**. Verified in-app: two populated weeks read "1/5" (week of 2 Jul) and "1/6"
+(week of 9 Jul), cross-checked against Frankfurt's `sleep_nights` (the two hits sum to "2/90").
+**Terracotta on an all-hit week (X==N) was considered and explicitly declined by the owner** —
+terracotta stays reserved to per-night marks; extending it to an aggregate is a new meaning, not a
+free extension (see 03-decisions.md 2026-07-15).
+
+## C7. DRIFT LEDGER — Parts A/B claims corrected 2026-07-15
+The pieces above outran the P1-era prose. These claims are now **STALE** (verified against code);
+the correction stands here as the authoritative record:
+1. **"NEXT = P3"** (STATUS block, §7 P5 note) — STALE. **P3 shipped 2026-06-30 (`5904429`)** and
+   **P4 shipped 2026-07-01**; the true remaining line was P5 (this Sleep pass + the sweep).
+2. **"HealthStub.jsx still dead, P5 deletes it"** (§5, §7, §10) — STALE. **Already deleted** — no
+   `HealthStub` reference exists under `src/`. It survives only in these docs.
+3. **Dial average marker "terracotta"** (§2 key-legend) — STALE. The avg marker is **ink**
+   (`.dial-avg { stroke: var(--ink) }`, `sleepClockChart.css:37`); the dial's one terracotta accent
+   is the **min-max envelope arc** (`.dial-band`, `:30`). (A stale in-code comment at
+   `SleepClockDial.jsx:6-7` still says "terracotta radial tick" — flagged for the next src touch.)
+4. **Stage readout "bottom-pinned"** (§2) — STALE. It is **top-aligned, flowing directly under the
+   lanes** (`.stl-caption { flex: 0 0 auto }`, `sleepStageTimeline.css:19`), not pinned to the
+   container bottom.
+5. **".sleep-chrome vs .body-chrome, separate, to consolidate"** (§1, §4) — STALE. **Merged into one
+   `.health-chrome`** in P3 (`healthChrome.css:47`); no `.sleep-chrome`/`.body-chrome` selector
+   remains.
+6. **Masthead "~165px"** (§1 note) — STALE. It measures **123px** (`healthChrome.css:9`); this is
+   the 97px dead-strip fixed in C2.
+7. **Axis "noon→noon" / "18:00→12:00"** (§1 prose) — STALE. The chart is **22:00→12:00** (C5). Two
+   in-code CSS comments (`sleepClockChart.css:3`, `:81`) still say "noon→noon" — flagged for the
+   next src touch (not fixed here: docs-only commit).

@@ -42,6 +42,28 @@ If a fix fails, then the next fix breaks something else: STOP. Do not keep
 digging. Roll back to the last save point and restart that piece with a clearer
 plan. Tell the owner you're doing this and why.
 
+## When the spec turns out wrong: FLAG, don't quietly decide (added 2026-07-15)
+Read this at the start of every build session — it is the lesson the Sleep redesign paid for.
+
+Three separate times in ONE build, a Builder hit a pre-specified thing that didn't actually fit —
+a reused threshold (45 min), a style that "should already exist", a duration-axis goal line with
+nowhere to live on a timing chart — made a NEW call to fix it, and then reported it back **as if the
+owner had already approved or decided it.** In each case the actual instruction was *"this is a real
+fork — stop and flag it, don't decide alone."*
+
+- **The instinct was RIGHT.** Finding that the spec didn't fit reality was good Builder work every
+  time. Keep doing that. A spec is a plan, not the territory; noticing the mismatch is the job.
+- **The reporting-back is where it broke.** "Propose but don't treat as pre-approved" and "flag
+  this, don't decide" mean the **STOP has to happen BEFORE the owner sees a finished result** — not
+  a finished result described as already-agreed. A decision the owner never actually made must never
+  be written up (in chat, a handoff, or the decisions doc) as though they made it.
+- **The rule:** when a build prompt says a choice is a fork to flag, or says "propose, don't
+  assume", surface it as an OPEN question and wait for the owner's actual answer. If you've already
+  built the fix to keep moving, that's fine — but present it as *"I did X to stay unblocked; this is
+  reversible; here's the real choice, your call"*, not as a closed decision. When in doubt, the
+  colour/threshold/meaning decisions are the owner's, and "I assumed you'd want…" is exactly the
+  phrase to catch yourself on.
+
 ## Architecture guardrails
 - Free-by-default (amended 2026-07-15; was "free tiers only"). Three paid
   exceptions stand, each an explicit owner decision: the Hetzner box + the

@@ -9,6 +9,37 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-15 — Sleep redesign close (Health V2 Pieces 1–6 + goal-hit-rate follow-up) ✅
+Every Sleep surface now speaks one visual language (the 22:00→12:00 clock chart), across Last-night /
+Week / Month / 90-day. Src-only throughout; no schema, no Checker. As-built detail in
+`health-v2-build-doc.md` PART C; decisions banked in 03-decisions.md (2026-07-15); per-piece steps in
+04-handoff-log.md. Headline: CSS split (846-line `sleepPage.css` → six sheets), the Health-wide
+dead-strip fix (`.health-fit` → `height:100%`, masthead is 123px not 165px — fixed Sleep+Body+Gym),
+awakenings + respiratory cut everywhere, the rebuilt 60/40 Last-night footer (terracotta deviation
+threshold LOCKED at 60 min), the generalised clock chart, and 90-day's per-week ink "X/N nights hit
+goal" label.
+
+**DEBT / FOLLOW-UPS (Sleep-redesign pile):**
+- ⬜ **Pre-existing Health V2 P5 debt still open (none touched by this build)** — these live in
+  `health-v2-build-doc.md` §5 (recorded there, not previously in this roadmap; noting them here so
+  they're not lost): the **dead `GoalBar`/`GoalWaiting` path** imported by `BodyComposition` but
+  never rendered; the **orphaned heatmap / `currentStreakDays` getters** (built, unconsumed); and
+  the **`walking_speed` km/h-vs-m/s mislabel** (reads ~4 m/s ≈ 14 km/h — a units bug at the
+  Shortcut/source, verify magnitude before any walking_speed tile renders).
+- ⬜ **Clock-chart crop-case (pre-22:00 bedtime) — OPEN verification item, not closed.** A night
+  that begins before 22:00 (or wakes after 12:00) is handled by pinning the block to the window edge
+  with a fade. This is **verified by construction + the pure-function unit logic only — NOT yet by a
+  real early night**, because none has occurred in the owner's data. Confirm on a real early night
+  when one lands. *(Reconstructed from a truncated instruction — owner to confirm this was the
+  intended item.)*
+- ⬜ **`sleepClockChart.css` is 268 lines — over the ~250 guide.** The goal-hit-label follow-up
+  (`69ce525`) pushed it past the ceiling (~247 → 268). Split when it next grows. (See the audit's
+  Q-04: whether the ~250 ceiling binds CSS at all is the owner's open call.)
+- ⬜ **Two stale in-code comments to correct on the next Sleep src touch** (deliberately NOT fixed
+  here — this was a docs-only, single-commit close): `sleepClockChart.css:3` and `:81` still say the
+  columns are "noon→noon" (they're 22:00→12:00); `SleepClockDial.jsx:6-7` still says the dial avg
+  marker is a "terracotta radial tick" (it's painted ink — the band is the terracotta).
+
 ## Session note — 2026-07-14 — Today/Planning desktop bundle, Pieces 0-6 ✅ (all live-verified in-browser)
 The desktop pass over Today, Planning and the Calendar. Src-only; no schema, no Checker. Full detail in
 03-decisions.md (2026-07-14) and the 04-handoff-log entries.

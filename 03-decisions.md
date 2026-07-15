@@ -3437,3 +3437,30 @@ HONEST STATUSES (recorded truthfully, not fake-greened):
   calendar events. The undo toast also re-materialises on unarchive.
 - **[LOCKED] Info-dump soul** — recall-first, not a reconnection engine. Contact frequency is a
   quiet "last contact" stat; no proactive "you haven't spoken to X" nudges.
+
+### 2026-07-15 — Sleep redesign (Health V2 Pieces 1–6 + goal-hit-rate follow-up) — decisions banked
+Full as-built record in `health-v2-build-doc.md` PART C. These are the choices worth keeping.
+- **[LOCKED] Sleep metric cuts — awakenings + respiratory, everywhere (incl. mobile).** Both
+  dropped from every Sleep surface. **Why:** they added clutter without earning it; respiratory is
+  a Body vital and now lives there, awakenings duplicated what the stage timeline already shows.
+  (The awake **duration** stat — "awake avg" — is KEPT; it's a different, useful number.)
+- **[LOCKED] Last-night footer = combined content-plus-context, 60/40 split.** The left column is
+  an explicit 60% journey/segment block over a 40% three-row footer (Target/Goal · vs-7-night-avg /
+  Streak · Restorative). **Why:** the column has to fill to the fold with no dead space; explicit
+  percentage shares do that honestly where flex-fill kept mis-measuring (three separate traps).
+- **[LOCKED] Terracotta threshold for a night's deviation vs its 7-night average = 60 minutes.**
+  **Why:** 45 (a mid-build placeholder) lit up too often to mean anything; the owner locked 60
+  after seeing what it actually flags. *(Recorded specifically so 45 never resurfaces as if it
+  shipped — see the retro note in AGENTS.md/CLAUDE.md about why placeholders got locked without a
+  stop.)*
+- **[LOCKED] 90-day bar meaning = clock-truth, not duration-truth.** A 90-day column is that week's
+  average bed→wake **span at its true clock position**, on the same chart as every other Sleep view
+  — not a bar of how long you slept. **Why:** the two numbers aren't the same, and one bar can't
+  honestly show both; a single visual language across Last-night/Week/Month/90-day beats a private
+  duration axis on one view.
+- **[AMENDMENT] 90-day goal representation = per-week "X/N" hit-rate label, ink, NOT terracotta.**
+  The retired duration goal-line had no home on a timing chart, so goal context per week became a
+  small ink "nights-hit / nights-with-data" label under each column (blank when a week has zero
+  logged nights). **Why:** honest per-week goal context without a duration axis. **Terracotta on an
+  all-hit week was considered and explicitly declined** — terracotta stays reserved to per-night
+  marks; extending it to an aggregate meaning is a new use, not a free one.
