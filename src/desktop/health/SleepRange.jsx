@@ -5,19 +5,19 @@ import { hm, clockFromMin } from "../../spine/logic/healthFormat";
 import SleepAggStats from "./SleepAggStats";
 import SleepAggLedger from "./SleepAggLedger";
 import SleepClockColumns from "../kit/SleepClockColumns";
-import SleepRangeLegacyBars from "./SleepRangeLegacyBars";
+import { weeklyColumns } from "../kit/sleepClockChart";
 
 // SleepRange — the Week (7) / Month (30) / 90-day aggregate, V2 mockup-1 broadsheet:
 // a thin breadcrumb+switcher chrome row, a full-width stats row, then the chart hero
 // (flex-filling to the fold) beside a right goal/rhythm ledger.
 //
-// THE CHART (Piece 5): Week and Month now render the CLOCK COLUMNS (SleepClockColumns) —
-// the same chart as Last night, with the average bed/wake marks and click-to-drill turned
-// on. 90-day still renders the legacy stacked WEEKLY-AVERAGE bars (SleepRangeLegacyBars),
-// untouched, until Piece 6. The stats strip and the ledger are shared and unchanged.
+// THE CHART: ALL three ranges now render the CLOCK COLUMNS (SleepClockColumns) — the same
+// chart as Last night. Week/Month feed per-NIGHT rows (Piece 5); 90-day feeds ~13 pre-built
+// WEEKLY-average columns (Piece 6, retiring the old stacked bars). The stats strip and the
+// ledger are shared and unchanged — 90-day's goal context lives there, not on the chart.
 //
 // `end` is the window anchor (today by default; a past week-end when drilled into a week
-// from the 90-day view). Clock column → onDrill(ymd); weekly bar → onWeekDrill(weekStart).
+// from the 90-day view). Night column → onDrill(ymd); weekly column → onWeekDrill(weekStart).
 
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 
@@ -83,13 +83,20 @@ export default function SleepRange({ days, rows, goal, end, rolling, breadcrumb,
       {showSummary ? <SleepAggStats cells={statsCells} /> : <p className="sleep-muted sr-sparse">Not enough nights yet for an average.</p>}
 
       <div className="agg-main">
-        {isWeekly ? (
-          <SleepRangeLegacyBars days={days} rows={rows} end={end} goalTarget={goalTarget} onWeekDrill={onWeekDrill} />
-        ) : (
-          // Week & Month: the clock columns (Piece 5). goalMinutes drives the terracotta
-          // goal-met mark; averages (already computed for the ledger's rhythm row) drive the
-          // avg bed/wake marks — same source, so the marks agree with the ledger numbers.
-          <div className="agg-chart agg-chart--clock">
+        <div className="agg-chart agg-chart--clock">
+          {isWeekly ? (
+            // 90-day (Piece 6): ~13 WEEKLY-average bed→wake columns. No goal mark on the chart
+            // (owner's call) — goal context is in the stats strip + ledger. Click a week →
+            // onWeekDrill jumps to that week (exactly the old bar behaviour).
+            <SleepClockColumns
+              columns={weeklyColumns(rows, end, Math.ceil(days / 7))}
+              averages={bedwake}
+              onDrill={onWeekDrill}
+            />
+          ) : (
+            // Week & Month: per-night columns (Piece 5). goalMinutes drives the terracotta
+            // goal-met mark; averages (already computed for the ledger's rhythm row) drive the
+            // avg bed/wake marks — same source, so the marks agree with the ledger numbers.
             <SleepClockColumns
               rows={rows}
               end={end}
@@ -98,8 +105,8 @@ export default function SleepRange({ days, rows, goal, end, rolling, breadcrumb,
               averages={bedwake}
               onDrill={onDrill}
             />
-          </div>
-        )}
+          )}
+        </div>
 
         <SleepAggLedger rows={ledgerRows} />
       </div>

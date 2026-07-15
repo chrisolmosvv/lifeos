@@ -160,6 +160,15 @@
   width: 100%;
 }
 
+/* FLAT block (Piece 6) — the 90-day weekly columns are AVERAGE bed→wake spans with no stage
+   breakdown, so there are no stage fills to colour them. Give the block one solid tone. Reuses
+   the ramp's generic "asleep" tone (#7d6d58, from sleepPage.css's .hyp-asleep) so it belongs to
+   the same warm palette and reads as "asleep, unbroken", not a grey placeholder. NOT terracotta —
+   90-day carries no goal cue (owner's call: goal context lives in the stats strip + ledger). */
+.scc-block--flat {
+  background: #7d6d58;
+}
+
 /* GOAL MET (Piece 4) — terracotta's ONE sanctioned use in this chart's data (stages stay
    neutral). A marginal rule down the block's left edge: the broadsheet's way of marking a
    line worth noticing. It is deliberately NOT the hover treatment (hover is a terracotta

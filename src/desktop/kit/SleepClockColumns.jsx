@@ -4,17 +4,35 @@ import { clockFromMin, hm } from "../../spine/logic/healthFormat";
 import { GRID, WINDOW_MIN, buildSlots, blockFor, topOf } from "./sleepClockChart";
 
 // LifeOS — Sleep rhythm: the CLOCK COLUMNS. A 22:00 (top) → 12:00 (bottom) vertical window,
-// cropping the dead midday hours so each night's block is big and readable. One column per
-// night, each block at its TRUE clock position (later bedtime → lower, earlier wake →
-// higher); stages stack within it. Hover a column → that night's bed · wake · total asleep.
+// cropping the dead midday hours so each block is big and readable. Each block sits at its
+// TRUE clock position (later bed → lower, earlier wake → higher). Hover a column → its
+// bed · wake readout.
 //
-// GENERALISED in Piece 4 (it was hardcoded to "7 nights back from today"):
-//   days + end   — any range, not just 7. Piece 5 (Week/Month) and Piece 6 (90-day, which
-//                  collapses to ~13 weekly columns) plug in here; see buildSlots.
-//   goalMinutes  — a night that hit its sleep goal gets the terracotta goal mark.
-//   averages     — { bedAvgMin, wakeAvgMin } from rangeBedWakeAverages → two hairline marks.
-//   onDrill(ymd) — click a column. Piece 5 wires it; nothing calls it yet.
-// The maths (window, crop rules, slot building) lives in sleepClockChart.js.
+// TWO WAYS IN (a column is a column; the source differs):
+//   rows + end + days + goalMinutes — the per-NIGHT view (Last night / Week / Month). Each
+//     column is one night with its stage stack and terracotta goal-met mark.
+//   columns — PRE-BUILT columns (90-day, Piece 6): one per WEEK, a flat stage-less average
+//     bed→wake span. Bypasses the night machinery entirely; see weeklyColumns().
+// Either way it renders ONE normalised `cols` array, so hover/drill/axis are shared code.
+//   averages     — { bedAvgMin, wakeAvgMin } → two hairline marks across the columns.
+//   onDrill(key) — click a column → fires with that column's drill key (a night ymd, or a
+//                  week-start ymd for the weekly view).
+// The maths (window, crop rules, slot + weekly building) lives in sleepClockChart.js.
+
+// One night slot → the normalised column the render consumes.
+function nightColumn(s, goalMinutes) {
+  const b = blockFor(s.row, goalMinutes);
+  const bed = s.row ? clockFromMin(amsClockMinutes(s.row.in_bed_at)) : null;
+  const wake = s.row ? clockFromMin(amsClockMinutes(s.row.woke_at)) : null;
+  return {
+    key: s.ymd,
+    drillKey: s.ymd,
+    disabled: !s.row,
+    block: b,
+    label: s.row ? `${humanDayShort(s.ymd)} ${bed} to ${wake}${b?.metGoal ? " — goal met" : ""}` : `${humanDayShort(s.ymd)} no data`,
+    readout: s.row ? `${humanDayShort(s.ymd)} · bed ${bed} · wake ${wake} · ${hm(s.row.asleep_minutes)} asleep` : null,
+  };
+}
 
 export default function SleepClockColumns({
   rows,
@@ -23,10 +41,11 @@ export default function SleepClockColumns({
   goalMinutes = null,
   averages = null,
   onDrill = null,
+  columns = null,
 }) {
   const [active, setActive] = useState(null);
-  const slots = buildSlots(rows, end, days);
-  const act = active ? slots.find((s) => s.ymd === active)?.row : null;
+  const cols = columns ?? buildSlots(rows, end, days).map((s) => nightColumn(s, goalMinutes));
+  const act = active ? cols.find((c) => c.key === active) : null;
 
   // Average bed/wake marks — no new calc: rangeBedWakeAverages already returns these, and
   // topOf() already turns a clock-minute into a Y position.
@@ -40,13 +59,12 @@ export default function SleepClockColumns({
   return (
     <div className="scc">
       <div className="bw-readout scc-hint">
-        {act ? (
-          <span>
-            {humanDayShort(active)} · bed {clockFromMin(amsClockMinutes(act.in_bed_at))} · wake{" "}
-            {clockFromMin(amsClockMinutes(act.woke_at))} · {hm(act.asleep_minutes)} asleep
-          </span>
+        {act?.readout ? (
+          <span>{act.readout}</span>
         ) : (
-          <span className="sleep-muted">hover a night for bed · wake · asleep</span>
+          <span className="sleep-muted">
+            {columns ? "hover a week for its average bed · wake" : "hover a night for bed · wake · asleep"}
+          </span>
         )}
       </div>
 
@@ -70,52 +88,45 @@ export default function SleepClockColumns({
         </div>
 
         <div className="scc-cols">
-          {slots.map((s) => {
-            const b = blockFor(s.row, goalMinutes);
-            const label = s.row
-              ? `${humanDayShort(s.ymd)} ${clockFromMin(amsClockMinutes(s.row.in_bed_at))} to ${clockFromMin(
-                  amsClockMinutes(s.row.woke_at),
-                )}${b?.metGoal ? " — goal met" : ""}`
-              : `${humanDayShort(s.ymd)} no data`;
-            return (
-              <button
-                type="button"
-                className={`scc-col ${active === s.ymd ? "is-active" : ""}`}
-                key={s.ymd}
-                disabled={!s.row}
-                onMouseEnter={() => setActive(s.ymd)}
-                onMouseLeave={() => setActive(null)}
-                onFocus={() => setActive(s.ymd)}
-                onBlur={() => setActive(null)}
-                onClick={() => s.row && onDrill?.(s.ymd)}
-                aria-label={label}
-              >
-                {b && (
-                  <span
-                    className={[
-                      "scc-block",
-                      b.metGoal ? "scc-block--goal" : "",
-                      b.cropTop ? "scc-block--crop-top" : "",
-                      b.cropBottom ? "scc-block--crop-bottom" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    style={{ top: `${b.topPct}%`, height: `${b.heightPct}%` }}
-                  >
-                    {b.stages.map((p) => (
-                      <i key={p.key} className={`hyp-${p.key}`} style={{ height: `${p.pct}%` }} />
-                    ))}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+          {cols.map((c) => (
+            <button
+              type="button"
+              className={`scc-col ${active === c.key ? "is-active" : ""}`}
+              key={c.key}
+              disabled={c.disabled}
+              onMouseEnter={() => setActive(c.key)}
+              onMouseLeave={() => setActive(null)}
+              onFocus={() => setActive(c.key)}
+              onBlur={() => setActive(null)}
+              onClick={() => !c.disabled && onDrill?.(c.drillKey)}
+              aria-label={c.label}
+            >
+              {c.block && (
+                <span
+                  className={[
+                    "scc-block",
+                    c.block.flat ? "scc-block--flat" : "",
+                    c.block.metGoal ? "scc-block--goal" : "",
+                    c.block.cropTop ? "scc-block--crop-top" : "",
+                    c.block.cropBottom ? "scc-block--crop-bottom" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  style={{ top: `${c.block.topPct}%`, height: `${c.block.heightPct}%` }}
+                >
+                  {(c.block.stages || []).map((p) => (
+                    <i key={p.key} className={`hyp-${p.key}`} style={{ height: `${p.pct}%` }} />
+                  ))}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
       <div className="scc-axis">
-        <span>{humanDayShort(slots[0].ymd)}</span>
-        <span>{humanDayShort(slots[slots.length - 1].ymd)}</span>
+        <span>{humanDayShort(cols[0].key)}</span>
+        <span>{humanDayShort(cols[cols.length - 1].key)}</span>
       </div>
     </div>
   );
