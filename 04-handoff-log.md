@@ -33,6 +33,52 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-15 — Sleep redesign PIECE 6 FOLLOW-UP: 90-day per-week goal-hit label. SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED: each of the 90-day chart's weekly columns now carries a small permanent label —
+"X/N" — reading how many of THAT week's logged nights hit the sleep-duration goal (X) out of how
+many nights have data (N). It settles the fork Piece 6 left open: the retired duration goal-line
+had no home on a timing chart, so goal context per week now lives as this honest per-column tally
+instead. A week with zero logged nights shows NOTHING (not "0/0"); no sleep-duration goal at all →
+no labels anywhere. No new calc — it reuses `nightsHitGoal` (the same getter behind the stats
+strip's "goal 2/90 hit" and the streak), bucketed one week at a time over the SAME [wStart, wEnd]
+range as that week's span, so the two always agree.
+- The label is its own row BELOW the chart (not over the columns), so it never crowds the bed/wake
+  span or crosses the avg-bed/avg-wake dashed hairlines. Small Inter tabular numerals, ink.
+- Week / Month / Last-night are untouched: the rate row renders only when a column carries a rate,
+  which only the weekly path produces. Verified in-app — Week still shows per-night stage columns
+  with the terracotta goal-met edge and NO rate row.
+
+THE TERRACOTTA QUESTION (was flagged for the owner; owner DECIDED this session): should an all-hit
+week (X==N, N>0) get terracotta on its label, extending the per-night goal-met convention? Owner's
+call: NO — ink stays, terracotta remains reserved to per-night marks. Built ink; no code change
+needed. RESOLVED, not left open.
+
+FILES TOUCHED: src/desktop/kit/sleepClockChart.js (weeklyColumns gains a `goal` arg + per-week
+`goalRate`) · src/desktop/kit/SleepClockColumns.jsx (renders the rate row) ·
+src/desktop/kit/sleepClockChart.css (.scc-rates / .scc-rate) · src/desktop/health/SleepRange.jsx
+(passes `goal` into weeklyColumns). All four files well under 250 lines.
+
+HOW TO VERIFY (done, on the 13"): Health → Sleep → 90 days. Two populated columns read "1/5" (week
+of 2 Jul) and "1/6" (week of 9 Jul); every empty week is blank. Cross-checked against Frankfurt's
+sleep_nights: week of 2 Jul had 5 logged nights, one ≥ 8h (490m) → 1/5; week of 9 Jul had 6 logged,
+one ≥ 8h (501m) → 1/6. The two hits sum to the stats strip's "2/90 hit". Labels sit clear of the
+avg-wake hairline and the spans (zoom-confirmed). Build passes; pure math also unit-checked in Node
+(full week → 5/7, partial → 2/4, empty → no label, no-goal → no labels).
+
+KNOWN GAPS / RISKS: still only ~2 weeks of real data, so 11 of 13 columns are blank (correct, just
+sparse). Goal target read as 8h (480m) from the ledger; if the sleep_duration goal changes, the
+labels follow it automatically (same getter).
+
+NEXT: Piece 7 — the docs close (roadmap status, decisions, this log's summary). The Sleep redesign
+build (Pieces 1–6 + this follow-up) is complete.
+
+FOR THE CHECKER: src-only, no schema. Confirm no db/ or supabase/ file changed; confirm Week/Month
+render identically to post-Piece-6 (no rate row there); confirm the "1/5" and "1/6" counts against
+the sleep_nights rows above.
+
+---
+
 ### 2026-07-15 — Doc-drift audit, Stages 1+2 — DOCS ONLY. 1 COMMIT.
 
 WHAT CHANGED: a full-system consistency audit compared every brain doc against the real
