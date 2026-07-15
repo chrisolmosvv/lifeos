@@ -94,6 +94,63 @@ to, never edited.
 
 ---
 
+### 2026-07-15 — Sleep redesign PIECE 6: 90-day joins the clock chart; legacy bars retired. SRC-ONLY. 1 COMMIT (ae4152f).
+
+WHAT CHANGED: the 90-day view's 13 weekly bars used to show average DURATION (how long you slept
+each week). They now show average TIMING — each week's average bed → average wake, as a column at its
+true clock position, the SAME language as every other Sleep view. So all four dated Sleep views now
+speak one visual language. No new calc: it's rangeBedWakeAverages(rows, weekStart, weekEnd) — the
+getter we already had — called once per week.
+
+- The old bar file (SleepRangeLegacyBars.jsx from Piece 5) is DELETED. Prove-dead confirmed: nothing
+  referenced it.
+- The stats strip and the right ledger are unchanged.
+
+THE GOAL-CONTEXT DECISION (owner's call, surfaced not assumed): the old 90-day chart had a dashed
+"goal 8h" line. That was a DURATION mark, and the new chart has no duration axis — it plots WHEN you
+sleep, not HOW LONG — so the line has no meaning here. The owner chose to carry NO goal mark on the
+90-day chart; goal context stays in the stats strip ("2/90 hit") and the ledger ("goal 2/90"), both
+unchanged. 90-day is now a pure rhythm-over-time view.
+
+FILES: src/desktop/kit/SleepClockColumns.jsx (133) · sleepClockChart.js (132) ·
+sleepClockChart.css (the flat-block fill) · src/desktop/health/SleepRange.jsx (115) ·
+DELETED SleepRangeLegacyBars.jsx.
+
+THE ARCHITECTURE NOTE (the tricky part, for future me): the clock component was built for per-NIGHT
+rows — real timestamps and real stage minutes. A weekly average has neither (two minute-values, no
+stages), and a stage-less block would have rendered INVISIBLE (the block has no colour of its own —
+all the colour is in the stage fills). So: a shared spanBlock() primitive now sits under both the
+night blocks and the weekly spans (blockFor's output is unchanged — refactor only); the component
+gained an optional `columns` prop for pre-built columns, with BOTH paths normalised into one render
+loop; and a flat fill (#7d6d58, the palette's "asleep" tone) makes the stage-less weekly bar visible.
+The three night consumers render byte-identical — verified, not assumed.
+
+HOW TO VERIFY (on the 13"):
+- Health → Sleep → 90 days. Expect ~13 columns on the 22:00 → 12:00 axis, each a solid warm bar at
+  that week's average sleep position (most are empty — there's only ~2 weeks of real data so far).
+- Spot-check (done, against Frankfurt): the "week of 9 Jul" column reads avg bed 00:28 → avg wake
+  07:42 — exactly what the getter returns from that week's 6 real rows. The avg bed/wake dashed
+  marks (00:36 / 07:52) match the ledger's "rhythm" line.
+- Click a week's column → it jumps to the Week view anchored on that week (verified: "week of 9 Jul"
+  → Week, breadcrumb "week of 9 Jul"). Exactly the old drill.
+- There should be NO terracotta goal line on the chart (by design). Goal numbers are still in the
+  stats strip + ledger.
+- Week and Month should look EXACTLY as they did after Piece 5 (the component refactor kept them
+  byte-identical). Body + Gym untouched. Every view: zero dead strip, no scroll.
+
+KNOWN GAPS / RISKS:
+- Only ~2 weeks of real sleep data exist, so 11 of the 13 columns are empty. The chart is correct but
+  visually sparse until more weeks accrue — not a bug, just early days.
+- The flat weekly bar's colour (#7d6d58) is a look choice I made (the ramp's "asleep" tone) — flagging
+  it for the owner's eye like every other colour in this build. Change it in one line if it reads wrong.
+- BROWSER FLAKE persists (not code): the automation window kept collapsing to 0×0 / mobile mid-verify;
+  a fresh tab at 1440×900 fixes it each time. The app itself is fine.
+
+NEXT: Piece 7 — the docs close (roadmap status, decisions, this log's summary). The Sleep redesign
+build (Pieces 1–6) is complete; all four views now share the clock-truth chart.
+
+---
+
 ### 2026-07-15 — Sleep redesign PIECE 5: Week & Month adopt the clock chart. SRC-ONLY. 1 COMMIT (836e6d2).
 
 WHAT CHANGED: the Week and Month views used to draw stacked duration BARS. They now draw the
