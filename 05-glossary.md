@@ -8,7 +8,9 @@
 - **Commit** — a save point. Each commit is a snapshot you can return to.
 - **GitHub** — the website that stores your commits safely (the vault).
 - **PWA (progressive web app)** — a website that installs to your phone and
-  desktop and behaves like a real app.
+  desktop and behaves like a real app. *(LifeOS is NOT one today — corrected
+  2026-07-15. It runs in the browser on phone + desktop; a real PWA install is a
+  possible later piece.)*
 - **Supabase** — the service that stores your data, handles your login, and
   runs the agent's code. "The brain."
 - **Database** — the organized store of your tasks, events, and categories.
@@ -24,6 +26,15 @@
 - **Vault** — a locked drawer inside the database for secrets (passwords/keys). The
   7am alarm keeps its master key (the service-role key) in the Vault and reads it only
   at run time, so the key is never written into the schedule or saved to GitHub.
+> **⚠️ SUPERSEDED 2026-07-08 — the "old bot" terms below.** The entries from here
+> down that describe how Marty *behaves* (the brief, the triggers, capture, voice
+> notes, questions, edits, undo grammar, category learning, the interactive brief,
+> the daytime nudge) describe the **old serverless bot**, which is **parked** — Marty
+> now runs on **Hermes** (see the Hermes entries at the bottom + `00-hermes-track.md`).
+> The daytime nudge in particular **never fired from its schedule** (a broken cron —
+> see the architecture doc's runtime section). Kept for the record and because the
+> old bot is the rollback.
+
 - **The brief / morning brief** — the 7am text from Marty: a short, warm recap of
   your day (events, today's tasks, anything due or overdue), plus at most one gentle
   "you've been meaning to…" nudge and at most one "you've got a free window for X"
@@ -37,14 +48,17 @@
   Vault/secret store, never in the app or GitHub.
 - **API** — a way for two programs to talk to each other (e.g. our app asking
   Gemini to write text, or pulling data from the Hevy gym app later).
-- **Gemini** — Google's AI. It does all of Marty's language work on the free tier: reading
-  your messages (deciding capture vs question vs edit), parsing a message into tasks/events,
-  **transcribing voice notes**, **guessing a category**, and **writing the morning brief**. All
-  of it goes through one shared config (so switching to a paid key later is a one-place change).
+- **Gemini** — Google's AI, on the free tier (`gemini-3.1-flash-lite`). *(Corrected
+  2026-07-15: it is no longer Marty's brain — Hermes is, see below.)* Gemini's real
+  current jobs: **recipe import** (paste/URL → house format), **meal estimates**
+  (typed meal → calories/macros), **food-search ranking**, and the language work of
+  the **parked** old bot. All through one shared config seam.
 - **Telegram bot** — the chat account you text (or send voice notes to) to add things, ask
   questions, change things, and get your brief/nudges.
-- **Marty** — the name of your Telegram bot (@lifeos_marty_bot). Now a full conversational +
-  proactive assistant (see the Marty terms below).
+- **Marty** — the name of your assistant on Telegram (@lifeos_marty_bot). *(Corrected
+  2026-07-15:)* Marty's brain is now **Hermes** on your own server (see the Hermes
+  entries at the bottom); the old serverless bot the surrounding entries describe is
+  parked as a rollback.
 - **Webhook** — a "ping me when something happens" link: Telegram calls your
   cloud function at this address every time you text the bot.
 - **Secret token** — a private password Telegram sends in a hidden header on
@@ -197,3 +211,32 @@
 - **Parked** — a step that's running unattended (simmer, bake, rest) with a live
   countdown. It lives in the rail while you work on the hero. When its timer hits
   zero, a dismiss-required alarm fires.
+
+*(Added 2026-07-15 — the vocabularies the glossary was missing.)*
+
+- **Hermes** — the open-source agent "harness" that is Marty's new brain. It runs on
+  **the box** (below), thinks with your ChatGPT subscription, and talks to LifeOS
+  only through two locked doors: **hermes-read** (a read-only snapshot of your data)
+  and **hermes-write** (a checked, undoable write door — weight, sleep, and estimated
+  food are refused unless you've confirmed them). Full story: `00-hermes-track.md`.
+- **The box** — your own small rented server (Hetzner, ~€6.64/mo) where Hermes lives.
+  Hardened (key-only login, firewall). LifeOS keeps working if the box dies.
+- **Focus session** — one start-to-stop stretch of tracked work (three timer modes:
+  count-up, count-down, intervals), saved with an optional task link, a 1–5 star
+  rating and a note. The **dial** is Focus's front page (today as a 24-hour ring);
+  the **split-flap** is the big in-session timer.
+- **Planning** — the backlog home (reached from Today). Three modes: **Time** (four
+  date lanes — Overdue / Today / This week / Later — drag to set a due date),
+  **Board** (a to-do / in-progress / done board — drag to set status), **Category**
+  (the whole backlog as collapsible groups). The **Inbox rail** beside Time mode is
+  where uncategorised, undated dumps wait; tap one for the **triage popover**
+  (one-tap date + category). Planning replaced the old All Tasks screen.
+- **Status cycle** — the one-tap control on every task row: To do → In progress →
+  Done → back round (the wrap is the undo). The older 3-segment pill lives on only
+  in the task form + subtask rows.
+- **Account (Finance)** — one place money lives (a bank account or an investment).
+  **Ledger** — the list of transactions. **Transfer** — money moving between your own
+  accounts, stored as a linked pair so it never counts as spending. **Snapshot** — a
+  dated "my investment is worth X" entry. **Recurring bill** — a repeating
+  transaction on the same repeat engine the calendar uses. **Budget** — a monthly
+  per-category limit with a calm spend bar.

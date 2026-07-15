@@ -1,6 +1,8 @@
 # People / Rolodex Module — Recon #2 (Build-Grounding + Schema Proposal)
 
 > Recon date: 2026-07-09. Read-only investigation. NO CHANGES MADE.
+> *(2026-07-15: the module has since SHIPPED as `db/43` + the desktop UI. Current
+> truth: `14-rolodex.md`.)*
 > This grounds the Planner's locked spec against the live code and proposes the exact schema.
 > The Planner reviews this report. The Checker gates the schema on "checker approved."
 

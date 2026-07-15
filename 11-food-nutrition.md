@@ -19,6 +19,16 @@
 > recipe import matching fixed (stage-handoff + naming, not engine); display_name
 > added (db/40). See "Food Rebuild" sections below and `03-decisions.md`.
 > **NEXT: F10 (alcohol-lite).** Live per-piece status in `02-roadmap.md`.
+> **⚠️ CORRECTED 2026-07-15 (doc-drift audit D-10) — the "one AI touch" claim below is
+> out of date. Food's REAL AI inventory is now FOUR touches:** (1) **recipe import**
+> (the original one — free Gemini, recipe text isn't sensitive); (2) the
+> **food-search reranker** (Gemini picks the best DB match when the name isn't
+> clear-cut); (3) **meal-estimate** (a typed description of what you ATE → free
+> Gemini → kcal/P/C/F, staged for your confirm); (4) **Hermes food logging** (your
+> ChatGPT-brained Marty, confirm-gated for estimates, `entry_source='hermes'`).
+> **OPEN QUESTION (audit Q-02, owner to rule):** meal-estimate sends your intake to
+> the FREE training-capable Gemini key — inside or outside the boundary this doc
+> promised? Until ruled: no NEW intake feature on the free key.
 
 ## What this is (one paragraph)
 A NEW **top-level pillar** called **Food**, with **two faces joined by a bridge** —

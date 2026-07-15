@@ -43,14 +43,28 @@ digging. Roll back to the last save point and restart that piece with a clearer
 plan. Tell the owner you're doing this and why.
 
 ## Architecture guardrails
-- Free tiers only. If something would require paid hosting/DB/API, stop and flag
-  it before proceeding.
+- Free-by-default (amended 2026-07-15; was "free tiers only"). Three paid
+  exceptions stand, each an explicit owner decision: the Hetzner box + the
+  ChatGPT subscription (Marty's Hermes brain) and Hevy Pro. Anything NEW that
+  would cost money: stop and flag it before proceeding.
 - Keep row-level security (RLS) ON. The database must refuse non-owner data.
 - Single user — no multi-user features, ever.
 - New modules ADD tables and write tasks into the core. They must NOT modify the
   core task/event/category tables' meaning. Protect the spine.
 - Match the data shapes in the architecture doc. If a change needs a new shape,
   record it in the decisions doc with the reason.
+
+## Operational gotchas (hard-won — added 2026-07-15)
+- **Schema changes are checker-gated** ("checker approved", exact words); db/
+  and src/ never share a commit.
+- **`SUPABASE_ACCESS_TOKEN` in the shell is the WRONG account** — prefix CLI
+  calls with `env -u SUPABASE_ACCESS_TOKEN`; Frankfurt only.
+- **Deploy edge functions ALONE** with `verify_jwt` pinned in config.toml.
+- **"Deployed" ≠ "done"** — the owner seeing it work is the gate.
+- **Test writes: ZZTEST-tagged, deleted by exact id.** Secrets pasted into a
+  chat get rotated at session close.
+- **⚠️ An unidentified tool auto-commits + pushes as "Update LifeOS"** — keep
+  pieces small and committable until it's found and paused.
 
 ## The brain is the source of truth
 If anything here conflicts with a request, say so and ask. If the brain docs

@@ -109,8 +109,12 @@ stable. **(Cutover/webhook state to be verified — see tidy-up #4.)**
 7. **Capped API-key fallback brain** — so a bridge break degrades instead of going dark
    (deterministic-fallback rule applied to the brain). *(Confirm it's configured.)*
 8. **`config.toml` pins `verify_jwt = false`** for every header-authed function
-   (`hermes-read`, `hermes-write`) — else a plain redeploy silently re-enables JWT and
-   breaks them.
+   (`hermes-read`, `hermes-write`, `health-ingest`) — else a plain redeploy silently
+   re-enables JWT and breaks them. *(Corrected 2026-07-15: the enumeration was
+   incomplete, and one KNOWN GAP stands — the old `telegram` webhook, our documented
+   30-second rollback, is header-authed and NOT pinned; a redeploy would break it
+   exactly when it's needed. The one-line config fix is code, carried on the Part B
+   list — audit D-03.)*
 9. **Secure token/credential handling** (a condition of the OpenAI permission) — tokens/
    secrets on the box at `600`, never in a repo, never logged. ✅ box now hardened.
 10. **Single-user only.** Never expose Hermes/its endpoints publicly. Telegram bot is
@@ -128,7 +132,10 @@ stable. **(Cutover/webhook state to be verified — see tidy-up #4.)**
 (`X-Hermes-Write-Secret`, separate from the read secret so it's independently revocable),
 takes a typed payload `{ kind, data, confirmed }`, validates per kind, writes undoably.
 
-- **Domains:** task, event, food, weight/body, sleep, focus. **GYM EXCLUDED** —
+- **Domains:** task, event, food, weight/body, sleep, focus — **plus, added since
+  this doc's 2026-07-08 close (corrected 2026-07-15): people** (person / note /
+  catchup / connect, D14b — person + connect confirm-gated) **and finance
+  transactions** (H-fin-a). **GYM EXCLUDED** —
   `gym_workouts` is a Hevy cache keyed on `hevy_id`; writing it by hand corrupts the sync.
   Conversational workout logging, if ever wanted, is a separate table/design (parked).
 - **Undo — free, no new machinery.** `marty_actions` logs by a plain `table` string and
@@ -279,11 +286,15 @@ conditions are guardrails 9–11.
 - **Supabase:** Frankfurt `cntlptuacsujbdtwvbis` ONLY. Never Ireland `qupudazcutkbnxseciwn`.
 - **Read door:** `hermes-read`, header `X-Hermes-Secret`.
 - **Write door:** `hermes-write`, header `X-Hermes-Write-Secret`. Domains: task/event/food/
-  body/sleep/focus. Gym excluded.
+  body/sleep/focus + people + finance transactions (corrected 2026-07-15). Gym excluded.
+  Code now split: health handlers in `health.ts` (H-0), people in `people.ts`, finance in
+  `finance.ts`.
 - **Undo:** `marty_actions` (generic; reverses any Hermes write).
 - **Schema added this session:** `db/42_hermes_source_tags.sql` ('hermes' allowed on
   `food_log_entries.entry_source` + `focus_sessions.source`).
 - **Telegram:** bot `@lifeos_marty_bot`, owner-locked to chat ID `8864259574`.
 - **Box paths:** skills `/root/.hermes/skills/lifeos/{read-lifeos,write-lifeos}/SKILL.md`;
   secrets `/root/.hermes/.env`.
-- **Recon docs in repo:** `hermes-recon.md` (read), `hermes-write-recon.md` (write).
+- **Recon docs in repo:** `hermes-recon.md` (read), `hermes-write-recon.md` (write) —
+  both frozen 2026-07-08 snapshots, now carrying staleness banners (they predate the
+  H-0 split + the people/finance domains).

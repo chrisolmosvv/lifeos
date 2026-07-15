@@ -1,5 +1,12 @@
 # Hermes Write-Path Recon
 
+> **⚠️ STALE SNAPSHOT — banner added 2026-07-15 (doc-drift audit D-19).** True as of
+> 2026-07-08, before `hermes-write` was built. The function has since shipped, been
+> **split** (health handlers → `health.ts` in the H-0 refactor; people → `people.ts`;
+> finance → `finance.ts`) and grown **people + finance-transaction** domains. Current
+> truth: `00-hermes-track.md` + the architecture doc. This snapshot's value is being
+> the record of that date.
+
 > Recon date: 2026-07-08. Read-only investigation. NO CHANGES MADE.
 
 ---

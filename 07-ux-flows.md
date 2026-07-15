@@ -154,8 +154,9 @@ Everything stays movable (see below). Nothing dragged onto the calendar is stuck
 - **Left:** the **day calendar** (a workspace).
 - **Right-top:** **"tasks today"** (no events).
 - **Right-bottom:** **"next 7 days"**.
-- **Low in the right column:** a quiet **"All tasks · [count] →"** box that opens
-  the future **All Tasks** inventory screen.
+- **Low in the right column:** a quiet box that opens **Planning** ("Planning · N" —
+  corrected 2026-07-15; it originally opened the All Tasks screen, which Planning has
+  since replaced — see the superseded section below).
 
 ### Left — calendar (a workspace)
 - Window **7am–midnight**, scrolls internally. Shows **events + scheduled
@@ -230,7 +231,13 @@ Everything stays movable (see below). Nothing dragged onto the calendar is stuck
 and the calendar's now-line; the brief's gap-fill still uses the same logic so they
 stay consistent.)*
 
-### All Tasks — the inventory screen (LOCKED, Phase 7 T11, desktop-first)
+### All Tasks — the inventory screen
+
+> **⚠️ SUPERSEDED 2026-06-29 (Planning P6) — this screen no longer exists.** All
+> Tasks was retired and deleted; **Planning's Category mode** is the backlog home
+> (parity was proven side-by-side before deletion — it reuses the same model code).
+> Kept below for the record. *(Marker added 2026-07-15, doc-drift audit D-13.)*
+
 The full backlog, browsed **by category**. Opened from Today's quiet **"All tasks · N"**
 box (N = total **active**, i.e. not-done, top-level tasks); a clear **back** returns to
 Today. It is an **inventory** — it never creates/renames/nests/deletes categories (that's
@@ -438,6 +445,15 @@ locked yourself into.
 
 ## 6. The proactive layer — the whole point
 
+> **⚠️ STATUS 2026-07-15 — read before trusting this section.** This describes the
+> OLD serverless bot's proactive layer, which is **parked**: Marty is being rebuilt on
+> **Hermes** (`00-hermes-track.md`), whose proactive behaviours are **not built yet**.
+> Honestly, that means the proactive layer described below is not currently running —
+> the daytime nudge's schedule was in fact broken from day one (missing Vault secret;
+> see the architecture doc), and whether the old 7am brief still fires is unverified
+> (audit checks V-01/Q-03). The INTENT below still stands as the design brief for the
+> Hermes missions.
+
 **This splits into TWO things** (a deliberate revision of the roadmap's earlier
 "one bundled 7am brief" description — recorded here as the new intent; add a line
 to 03-decisions.md so build chats don't follow the old version):
@@ -486,9 +502,11 @@ muted), loosen from real experience.
 
 ## 7. Health — "The Form Guide" (desktop, LOCKED spec; built in the G-track)
 
-A new broadsheet **section: Health** (nav becomes **Today · Calendar · Health ·
-Settings** — Health **third**, view id `health`). For now **Health = Gym**:
-tapping Health opens straight onto the Gym **Form Guide**. It is **read-only** — a
+A new broadsheet **section: Health** (view id `health`). *(Updated 2026-07-15: the
+"Health = Gym" line below was true when written; Health now opens on a **hub** with
+three faces — Gym "Form Guide", Sleep, Body — and the nav has grown to eight items:
+Today · Focus · Calendar · Health · Food · Finance · Rolodex · Settings.)* Originally:
+tapping Health opened straight onto the Gym **Form Guide**. It is **read-only** — a
 cache of your **Hevy** workouts, reported; it never writes to Hevy and uses **no
 AI**. Full plan: `09-gym-form-guide.md`. **Mobile is a deferred later spec** — the
 screens below are **desktop only**.

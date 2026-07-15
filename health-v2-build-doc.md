@@ -1,6 +1,13 @@
 # LifeOS — Health V2 — Build Doc
 ### Sleep · Body Composition · Activity (in Gym) — evolve in place
 
+> **⚠️ STALE STATUS — banner added 2026-07-15 (doc-drift audit D-20).** The STATUS
+> line below stopped at 2026-06-30. Since then the **Sleep redesign** (Pieces 0–5,
+> 2026-07-13/14 — CSS split, awakenings/respiratory cut, the rebuilt Last-night
+> footer, the generalised clock chart) has reshaped the Sleep surfaces; that pass is
+> recorded ONLY in `04-handoff-log.md` (top entries) and `10-sleep-body-stats.md`'s
+> correction banner. Read those first for the current sleep UI.
+
 > Companion artifact to the Module Upgrade Playbook V2. This is the compiled, locked spec for the
 > Health V2 upgrade, plus the change ledger, provisional deletion list, amendments, the
 > schema/ingest verdict, and the risk-ordered build order. It is the source the per-piece Builder

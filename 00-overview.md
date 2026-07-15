@@ -31,17 +31,23 @@ The calendar and tasks are the foundation; the morning brief is the point.
 - A **daytime nudge**: a calm, heavily-guardrailed offer (max twice a day, 9–6, never
   back-to-back) to use a real free hour for an overdue task or a quick win.
 - Everything else (gym, meals, people, etc.) comes later as bolt-on modules.
-- *(Progress since: the conversational + proactive Marty backend ("M-track", M0–M10) and the
-  Phase-7 look-and-feel redesign are complete; the first bolt-on pillars have since shipped —
-  Sleep/Body ("S-track"), Gym ("G-track"), and Food (Cookbook + Nutrition, "F-track", F0–F9 done,
-  F10 next). Live per-piece status is in `02-roadmap.md`.)*
+- *(Progress since — updated 2026-07-15: the V1 above shipped, and the app has grown well past
+  it. Live now: **Gym** (Hevy form guide), **Sleep/Body** (Apple Health), **Food** (logger +
+  cookbook + cook companion), **Focus** (time tracker), **Planning** (the backlog home),
+  **Finance** (accounts, ledger, budgets, analysis — see `13-finance.md`), **Rolodex** (people),
+  and a dedicated **mobile app tree**. The serverless Marty described above was **replaced
+  2026-07-08 by Hermes** — a self-hosted agent on a paid Hetzner box running off the owner's
+  ChatGPT subscription (`00-hermes-track.md`); the old bot is parked as a rollback, and Hermes's
+  proactive behaviours are the next big build. Live per-piece status is in `02-roadmap.md`.)*
 
 ## Who it's for
 One user. Just the owner. No accounts for other people, ever. This lets us
 skip a huge amount of complexity.
 
 ## Guiding principles
-- **Free to run.** Everything sits inside free tiers (see architecture doc).
+- **Free-by-default.** (Amended 2026-07-15 — was "free to run.") Three deliberate
+  paid exceptions exist: the Hetzner box + ChatGPT subscription (Marty's brain)
+  and Hevy Pro. Anything new that costs money gets flagged first (see architecture doc).
 - **Foundations first.** Build the data shapes so future pillars bolt on
   without a rebuild. Never rush V1 in a way that blocks V3.
 - **Plain-English collaboration.** The owner does not read code. Explain

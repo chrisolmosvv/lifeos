@@ -1,6 +1,9 @@
 # People / Rolodex Module — Recon Report
 
 > Recon date: 2026-07-09. Read-only investigation. NO CHANGES MADE.
+> *(2026-07-15: the module has since SHIPPED — schema `db/43`, full desktop UI +
+> Hermes wiring. Current truth: `14-rolodex.md`. This snapshot is the record of the
+> pre-build state.)*
 
 ---
 

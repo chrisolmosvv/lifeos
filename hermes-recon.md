@@ -1,5 +1,12 @@
 # Hermes Read-Path Recon — LifeOS
 
+> **⚠️ STALE SNAPSHOT — banner added 2026-07-15 (doc-drift audit D-19).** True as of
+> 2026-07-08, before `hermes-read`/`hermes-write` were deployed. Since then: NINE edge
+> functions exist (this doc counts seven); hermes-read gained **people + finance**
+> sections; hermes-write shipped, was split (health.ts, people.ts, finance.ts), and
+> serves eight domains. Current truth: `00-hermes-track.md` + the architecture doc's
+> function inventory. This snapshot's value is being the record of that date.
+
 > Recon date: 2026-07-08. Read-only investigation. NO CHANGES MADE.
 
 ---

@@ -9,6 +9,58 @@
 
 ---
 
+## Doc-drift audit — decisions banked, none new (2026-07-15)
+
+> Stage 2 of the doc-drift audit (`doc-drift-audit.md`). Nothing below is new policy —
+> these are decisions **already made and already live** that were never entered here,
+> which is exactly how this doc fails at its one job. Banked now, dated when they were
+> actually decided. *(Housekeeping note, not an edit: one earlier entry — "Rolodex
+> (People module) shipped (D1–D14)", 2026-07-10 — sits at the very BOTTOM of this
+> file, out of the newest-on-top order. Left where it is, per append-only; just know
+> it's there.)*
+
+- **[Marty's brain = Hermes Agent, self-hosted on a paid Hetzner VPS — decided
+  2026-07-08.]** The serverless Gemini bot (M-track) is superseded and parked as the
+  rollback; Marty now thinks with the owner's ChatGPT subscription via the Codex
+  bridge and touches LifeOS only through `hermes-read`/`hermes-write`. Decided
+  against the Planner's recommendation, openly. **Why:** fixed predictable cost, the
+  deep-research ambition, own infrastructure. **Trade-off:** ops burden + a fragile
+  bridge; the box must never be load-bearing (LifeOS survives it dying). Full
+  record + guardrails: `00-hermes-track.md`.
+- **[The free-tier rule is amended: free-by-default, three recorded paid
+  exceptions.]** Supersedes "free tiers only" in CLAUDE.md / AGENTS.md /
+  00-overview / 01-architecture (all reworded 2026-07-15). The exceptions: the
+  Hetzner box + ChatGPT subscription (2026-07-08) and Hevy Pro (the gym source).
+  **Why:** the rule was already dead in practice; a stale guardrail misleads every
+  future session. **Trade-off:** the bright line blurs — so the surviving rule is
+  "anything NEW that costs money stops and flags first."
+- **[The health-data-to-AI boundary was deliberately relaxed for the Hermes brain —
+  decided 2026-07-08.]** Sleep/body/food/focus flow to the owner's own ChatGPT
+  account. **Why:** the Synthesizer IS the point; his account, OpenAI-permitted,
+  eyes open. **Trade-off:** the old bright line survives only for everything else —
+  and one edge is UNRESOLVED (audit Q-02): `meal-estimate` sends typed intake to the
+  FREE Gemini key; owner to rule whether that's inside the boundary.
+- **[Finance V1 decision set — decided across 2026-07-10/11, banked here.]** Four
+  additive tables (`db/44`: accounts, transactions, snapshots, budgets; owner-RLS,
+  category_id a plain value, sign-consistency CHECKed at DB level, account delete
+  RESTRICTed to protect history). Transfers = a linked two-row pair (never counted
+  as spending). Finance opens on the Ledger; Accounts is secondary. Recurring bills
+  ride the EXISTING recurrence engine (`db/45` widened `target_kind` to
+  'transaction') rather than a second scheduler. Budgets are append-only monthly
+  per-category limits (brick only when strictly over). CSV import dedupes via
+  `csv_match_key`; Revolut parser real, ING an honest stub (Piece 5c open). All
+  charts hand-rolled SVG/CSS — no chart dependency. **Why:** one repeat engine, one
+  archive vocabulary, no new libraries. **Trade-off:** repeat-pattern editing is
+  unsupported (same constraint as the calendar). Module spec: `13-finance.md`.
+- **[The mobile front door: one viewport read at boot, two sealed trees — banked.]**
+  `src/main.jsx` reads `max-width: 860px` ONCE and loads exactly one of
+  `src/desktop/` / `src/mobile/` (no resize swapping — "Decision 2: locked at
+  load"); `src/spine/` is the only shared code; a build guard fails the build on any
+  cross-import; mobile CSS is imported statically (Vite 5 dynamic-chunk CSS preload
+  is broken). **Why:** the phone gets a purpose-built app, not a squeezed desktop,
+  and the trees can't tangle. **Trade-off:** rotating/resizing mid-session doesn't
+  switch layouts — reload does.
+
 ## Today/Planning desktop bundle — Pieces 0-6 (2026-07-14)
 
 The desktop pass over Today, Planning and the Calendar. Src-only throughout; no schema, no Checker.

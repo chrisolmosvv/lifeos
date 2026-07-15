@@ -158,6 +158,12 @@ later spec — not planned here.
   a pure `pretty()` → `prettyMuscle()` dedupe into `gym/gymFormat` (identical output).
   Chart motion left static by choice. **MODULE COMPLETE.**
 
+> *(Notes added 2026-07-15: the per-piece 🔨/⬜ markers ABOVE are frozen mid-track
+> history — this banner is the truth. And one system-level amendment: the "no AI ever
+> sees this data" framing in the ground rules was true of this module and still is —
+> the module itself calls no AI — but since 2026-07-08 gym data DOES reach an AI via
+> `hermes-read` (Marty's ChatGPT brain reads your workout snapshot), a deliberate,
+> recorded relaxation — see `00-hermes-track.md`.)*
 > **✅ STATUS: the Gym/Health module is COMPLETE (G0–G16), owner-verified.**
 > **One item DEFERRED TO V2 (owner's call — a chosen deferral, NOT a bug, NOT
 > forgotten):** the Form Guide **front page does not hold desktop zero-scroll** — it

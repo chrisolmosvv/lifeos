@@ -43,14 +43,34 @@ digging. Roll back to the last save point and restart that piece with a clearer
 plan. Tell the owner you're doing this and why.
 
 ## Architecture guardrails
-- Free tiers only. If something would require paid hosting/DB/API, stop and flag
-  it before proceeding.
+- Free-by-default (amended 2026-07-15; was "free tiers only"). Three paid
+  exceptions stand, each an explicit owner decision: the Hetzner box + the
+  ChatGPT subscription (Marty's Hermes brain) and Hevy Pro. Anything NEW that
+  would cost money: stop and flag it before proceeding.
 - Keep row-level security (RLS) ON. The database must refuse non-owner data.
 - Single user — no multi-user features, ever.
 - New modules ADD tables and write tasks into the core. They must NOT modify the
   core task/event/category tables' meaning. Protect the spine.
 - Match the data shapes in the architecture doc. If a change needs a new shape,
   record it in the decisions doc with the reason.
+
+## Operational gotchas (hard-won — added 2026-07-15, from the handoff log's lessons)
+- **Schema changes are checker-gated** — nothing runs without the exact words
+  "checker approved". Database commits and src/ commits NEVER share a commit.
+- **The shell's `SUPABASE_ACCESS_TOKEN` points at the WRONG account.** Prefix
+  every Supabase CLI call with `env -u SUPABASE_ACCESS_TOKEN` and confirm the
+  project ref is Frankfurt (`cntlptuacsujbdtwvbis`) before trusting anything.
+- **Deploy edge functions ALONE**, with their `verify_jwt` pinned in
+  `config.toml` — a bare deploy silently re-enables JWT and kills header-authed
+  functions.
+- **"Deployed" ≠ "done."** A cron or pipe only proves itself by firing; the
+  owner seeing it work is the gate.
+- **Test writes are ZZTEST-tagged and deleted by exact id** after verifying —
+  never "the most recent N rows."
+- **Any secret pasted into a chat gets rotated** at session close.
+- **⚠️ An unidentified tool sometimes auto-commits AND pushes as "Update
+  LifeOS."** Until it's found and paused, keep pieces small and committable —
+  a refactor caught half-done is a broken app pushed to main.
 
 ## The brain is the source of truth
 If anything here conflicts with a request, say so and ask. If the brain docs

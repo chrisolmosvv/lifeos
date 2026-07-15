@@ -33,6 +33,67 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-15 — Doc-drift audit, Stages 1+2 — DOCS ONLY. 1 COMMIT.
+
+WHAT CHANGED: a full-system consistency audit compared every brain doc against the real
+code/migrations/config (Stage 1, report: `doc-drift-audit.md` at the repo root), and — on the
+owner's approval of all findings — the docs were corrected to match reality (Stage 2). NOT ONE
+LINE of src/, db/ or supabase/ was touched; history docs were only APPENDED to; snapshots only
+got banners. The headlines:
+- **01-architecture.md rewritten** — no more "PWA" / "two edge functions" / Gemini-Marty-as-
+  current; now: the real 9-function inventory (with verify_jwt pin states), the Hermes runtime,
+  the desktop/mobile/spine front-end shape, ALL module tables (gym/sleep/focus/finance were
+  missing), activity_log marked NOT BUILT, the amended cost + AI-boundary constraints.
+- **The "free tiers only" rule amended everywhere** (CLAUDE.md, AGENTS.md, overview,
+  architecture): free-by-default, three recorded paid exceptions (Hetzner box, ChatGPT sub,
+  Hevy Pro); new paid anything still flags first.
+- **NEW `13-finance.md`** — the Finance module finally has a brain doc; its decision set (plus
+  the Hermes pivot, the AI-boundary relaxation, and the mobile front door) is **banked in
+  03-decisions.md** (2026-07-15 entry — they were never recorded there).
+- **Superseded things now say so:** 08-marty-upgrade (banner: replaced by Hermes, parked as
+  rollback), the glossary's old-bot terms, ux-flows' All Tasks section (deleted screen) + §6
+  proactive layer (old bot; the daytime nudge NEVER fired from its schedule — broken Vault
+  secret, confirmed in this log 2026-06-24, now finally propagated to the docs).
+- **Stale markers flipped in the roadmap** (M-track header, G-track note, Phase-7 backlog note,
+  "Later — pillars" section, the false "every file under 250" claim); staleness banners on
+  hermes-recon / hermes-write-recon / health-v2-build-doc / the people recons; path + currency
+  fixes in 06-design; correction banners on 10-sleep + 11-food (the "one AI touch" claim was
+  false — meal-estimate + the food-search reranker also call Gemini); hermes-track domains now
+  include people + finance; SOUL.md tool lines match.
+- **Hard-won operational rules promoted** from this log's buried lessons list (~L5177) into
+  CLAUDE.md/AGENTS.md ("Operational gotchas") + the architecture doc's new invariants section.
+
+FILES TOUCHED: doc-drift-audit.md (new, Stage 1) · 13-finance.md (new) · 01-architecture.md
+(rewrite) · CLAUDE.md · AGENTS.md · 00-overview.md · 05-glossary.md · 06-design.md ·
+07-ux-flows.md · 08-marty-upgrade.md · 02-roadmap.md · 09-gym-form-guide.md ·
+10-sleep-body-stats.md · 11-food-nutrition.md · 00-hermes-track.md · SOUL.md · 03-decisions.md
+(append) · hermes-recon.md · hermes-write-recon.md · health-v2-build-doc.md · people-recon.md ·
+people-recon-2.md · this entry. Docs only.
+
+HOW TO VERIFY: open `doc-drift-audit.md` §10 — every edit traces to a finding ID there. Spot-
+check the worst three: 01-architecture's stack table no longer says PWA and its runtime section
+lists nine functions; CLAUDE.md's guardrails say "free-by-default" with the three exceptions;
+08-marty-upgrade.md opens with the SUPERSEDED banner. Then RE-UPLOAD the changed living docs to
+project knowledge (only you can) — the list is in the audit reply.
+
+KNOWN GAPS / RISKS: the owner has NOT yet run the audit's §5 verification checks (V-01…V-08) —
+so the docs deliberately still say "unverified" about: the old 7am-brief cron, the Telegram
+webhook state, the fallback brain, the read-secret rotation, and Vercel currency (the repo was
+13 commits ahead of origin at audit time). Q-01–Q-04 (fallback brain; meal-estimate on the free
+key; the old brief; whether the 250 ceiling binds CSS) remain the owner's open calls and are
+flagged as OPEN in the docs, not resolved by guess.
+
+NEXT: Part B — the code/ops list in audit §8 (pin `telegram` in config.toml; rotate the read
+secret; unschedule the dead nudge cron; decide the old brief's fate; configure-or-strike the
+fallback brain; the Hermes retro-Checker pass; push the 13 commits + find the "Update LifeOS"
+auto-pusher).
+
+FOR THE CHECKER: nothing to gate — docs only, no schema, no src. If checking anyway: confirm no
+file outside *.md changed in the commit, and that 03-decisions.md / this log were only appended
+to, never edited.
+
+---
+
 ### 2026-07-14 — Sleep redesign PIECE 4: the clock chart, generalised. SRC-ONLY. 1 COMMIT (6f78ce0).
 
 WHAT CHANGED: the seven-night clock chart (bottom-right of Last night) can now do everything

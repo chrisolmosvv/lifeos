@@ -1,5 +1,12 @@
 # LifeOS — The Marty Upgrade (backend track M0–M9)
 
+> **⚠️ SUPERSEDED 2026-07-08 — this is no longer how Marty works.** The serverless
+> bot this doc describes was replaced by **Hermes** (a self-hosted agent — see
+> `00-hermes-track.md`, the source of truth for Marty's brain). The M-track backend
+> is kept **parked, not deleted**, as the 30-second rollback, so this doc stays as
+> the record of what it is and how it worked. Do not build new Marty behaviour here.
+> *(Banner added 2026-07-15, doc-drift audit D-09.)*
+
 > I am the plan for making Marty (the Telegram bot) **conversational**.
 > Plain English. This track is **backend only** — it touches ONLY
 > `supabase/functions/`. It must not disturb the Phase 7 front-end redesign,

@@ -265,10 +265,15 @@ should read like a short, warm recap of the day ahead.
   **functional-but-not-yet-polished**: the **Settings category manager** and the
   **Archive** screen (polish lands with the Settings re-skin); the **login screen**
   got its broadsheet design (blackletter masthead, email+password). **Still on the OLD
-  look** (re-skin pending): the rest of **Settings**, and **mobile** layouts. Owner
-  has **verified & approved** Today + All Tasks; Calendar's per-piece verification is
-  in progress (a couple of visual gates — the tray squeeze, the all-day band — were
-  flagged for an eyes-on check on real data).
+  look** (re-skin pending): the rest of **Settings**. *(Corrected 2026-07-15: "and
+  mobile layouts" used to be in that list — since then a dedicated **mobile tree**
+  shipped (`src/mobile/`) with its own broadsheet screens: Today, capture, Food, the
+  Cook companion, Health faces. And the app has long outgrown the three-item nav this
+  bullet's era assumed — the nav is now Today · Focus · Calendar · Health · Food ·
+  Finance · Rolodex · Settings, with the newer pillars — Focus, Food day/week/month,
+  Finance, Rolodex, the Sleep redesign — all built to the broadsheet identity from
+  day one.)* Owner has **verified & approved** Today + All Tasks; Calendar's
+  per-piece verification completed with the Calendar rebuild.
 
 - **Type direction (Phase 2, Piece 1) — in use:** the masthead + headlines are set
   in **Fraunces** (a warm high-contrast serif), and all body, UI and numbers in
@@ -320,8 +325,11 @@ should read like a short, warm recap of the day ahead.
   These are the *built, working* layouts — calm and functional, but **not** the
   finished design. The full per-screen polish (type/colour/motion, the per-page
   feeling) is still **Phase 7 — the redesign**, where the owner art-directs.
-- **Theme variables:** all colours/fonts live in `src/theme.css` (see decisions
-  doc for the exact hexes).
+- **Theme variables:** all colours/fonts live in **`src/spine/theme/theme.css`**
+  (path corrected 2026-07-15 — the old `src/theme.css` moved when the front-end split
+  into spine/desktop/mobile trees; the palette is `src/spine/logic/palette.js`, the
+  kit is `src/desktop/kit/`). The token VALUES in this doc were audited against the
+  file 2026-07-15 and match exactly.
 
 ## Open questions — decide these *with* the owner
 

@@ -1,5 +1,20 @@
 # LifeOS — Health → Sleep & Body Stats (build plan)
 
+> **⚠️ CORRECTED 2026-07-15 (doc-drift audit D-16) — four things have moved on:**
+> 1. **The screens described here have been rebuilt twice** — the Health V2 pass
+>    (see `health-v2-build-doc.md`) and then the Sleep redesign (Pieces 0–5,
+>    2026-07-13/14, recorded in `04-handoff-log.md`). The DATA layer below is still
+>    the truth; for the current UI, trust the handoff log over this doc.
+> 2. **Awakenings + respiratory rate were CUT from every Sleep surface**
+>    (2026-07-13, owner's call — the columns still exist in `sleep_nights`, they're
+>    just not shown).
+> 3. **"Nudges via Marty" below meant the OLD bot, now parked** — sleep coaching as
+>    a proactive behaviour belongs to the future Hermes missions
+>    (`00-hermes-track.md`).
+> 4. The **"no health data ever touches an AI" framing was deliberately relaxed**
+>    2026-07-08 for the Hermes brain (sleep/body flow to the owner's own ChatGPT
+>    account, eyes-open). This module itself still uses no AI.
+
 > The plan for the **second** Health-pillar module (Gym was the first). Plain
 > English only — the owner does not read code.
 > Numbered **S0–S…** (its own track, like Gym's `G` and Marty's `M`) so it never

@@ -2,6 +2,7 @@
 
 > I am "where we are." LIVING doc — update me at the end of every session.
 > Status keys:  ✅ done   🔨 in progress   ⬜ not started
+> (Track S also used 🟦 = built + server-verified, closing on the owner's device check.)
 
 There are no dates. We work when there's time and will. We finish one phase
 fully before starting the next. Each phase ends on a visible win.
@@ -13,7 +14,11 @@ The desktop pass over Today, Planning and the Calendar. Src-only; no schema, no 
 03-decisions.md (2026-07-14) and the 04-handoff-log entries.
 
 - **P0** Deleted 678 lines of proven-dead task-row code (build came back byte-identical → it was never
-  shipped). Split Today.jsx 509→247 and todayKit.css 483→198; every file now under the ~250 ceiling.
+  shipped). Split Today.jsx 509→247 and todayKit.css 483→198. *(Corrected 2026-07-15: "every file
+  now under the ~250 ceiling" was true only of the files this piece split — a repo census found 11
+  CSS files still over (worst: foodLog.css 706, cookbook.css 690, todayForm.css 509) and Today.jsx
+  back at 272 after the later pieces. See the audit's Q-04: whether the ceiling binds CSS is the
+  owner's open call.)*
 - **P1** Today: one day name, not two ("Tuesday" + "14 July"); focused-today line removed; hero ratio
   flipped so the task list leads (tuned live to 40/60).
 - **P2** Today: ONE day-step (was three inline copies); ← / → day nav with a shared typing guard
@@ -929,6 +934,12 @@ note.) Still OPEN/future (not part of this approval): colour-branch model, paren
 flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
 
 ### Phase 7 — remaining backlog (after Today + All Tasks; order is a guide, owner sets it)
+> *(Note added 2026-07-15: several ⬜ below were long since done and never flipped —
+> the deploy happened (see DEPLOY+VERIFY above), the **Calendar was rebuilt** (C1–C7,
+> the section above), **mobile shipped as its own tree** (`src/mobile/` — Today,
+> capture, Food, Cook, Health), and **All Tasks was later retired entirely** in favour
+> of Planning (P6). Genuinely still open from this list: the **Settings re-skin** and
+> **T12 conservative trims**.)*
 - ⬜ **Deploy Phase 7** — push `main` so Today + All Tasks reach the live site / phone, then
   the owner verifies on Mac **and** phone (the first real phone check of the rebuild).
 - ⬜ **Calendar screen** — its own **re-skin-vs-rebuild** decision (pending, owner's call); on
@@ -1002,7 +1013,12 @@ flip, subtasks in the new UI, and the rest of the Phase-7 backlog below.
     touches active rows or other batches), tables-then-batch, partial-failure surfaced not hidden.
     Additive routing only; no A2/A3/shared-hook/schema change. Save point `781c908`.
 
-## 🔨 Marty track (M0–M9) — make the Telegram bot conversational   ← IN PROGRESS (backend)
+## ✅ Marty track (M0–M10) — make the Telegram bot conversational — COMPLETE, then SUPERSEDED
+> *(Header corrected 2026-07-15 — it still read "🔨 IN PROGRESS" long after the track's own
+> closing line declared it complete.)* The whole M-track shipped (M0–M10, 2026-06-24) and was
+> then **superseded by Hermes** (2026-07-08, `00-hermes-track.md`) — the serverless bot below is
+> **parked as the rollback**, and its daytime-nudge cron was later found broken (missing Vault
+> secret; see the architecture doc). The per-piece record below stands as history.
 A separate, **backend-only** track (`supabase/functions/` only — never `src/`) that
 grows Marty from capture/undo/brief into a real assistant you can talk to: questions,
 edit/delete by chat, multi-turn capture, category learning, voice notes, an
@@ -1097,6 +1113,8 @@ its own small, owner-verified piece.
   the conversational + proactive Marty is complete; only the M10 hardening pass remains.
 
 ## ✅ Health → Gym "The Form Guide" — the G-track   ← MODULE COMPLETE (G1–G16)
+> *(Note added 2026-07-15: the per-piece 🔨/⬜ markers BELOW this banner are frozen
+> mid-track history that was never flipped — THIS BANNER is the truth.)*
 > **🎉 The Gym/Health module is COMPLETE (G0–G16), owner-verified.** Shipped end to end: the read-only Hevy
 > pipe (G1 connect · G2 tables · G3 backfill · G4 incremental sync · G5 twice-daily cron + Settings status ·
 > G6 exercise-templates dictionary), the on-read calc layer (G7), the Form Guide front page + 5 zones +
@@ -1397,9 +1415,12 @@ Turn on the activity log; smooth rough edges; make it nice to look at.
 
 ---
 
-## ⬜ Later — Health pillar, then Life pillar
-Each is its own cluster of phases that ADDS tables and screens and writes
-tasks into the core. We do not touch the spine.
+## ✅ Later — Health pillar, then Life pillar — LARGELY ARRIVED
+*(Corrected 2026-07-15 — this "later" came true and the marker was never flipped.)*
+Health shipped as Gym + Sleep/Body + (adjacent) Food; Life shipped as Rolodex +
+Finance. Each did exactly what this section promised: added its own tables and
+screens, never touched the spine. Still genuinely later: the Mind module, mobile
+passes for the newer pillars, and the Hermes proactive missions.
 
 ---
 
