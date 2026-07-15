@@ -124,6 +124,21 @@ export default function SleepClockColumns({
         </div>
       </div>
 
+      {/* Per-week goal-hit rate (90-day only): "X/N nights hit goal" under each column, a
+          dedicated row BELOW the chart so it never crowds the bed/wake span or crosses the
+          avg-mark hairlines. Ink tabular numerals; a week with no logged nights shows nothing.
+          Rendered only when a column carries a rate (weekly view + a sleep-duration goal). The
+          numbers are already in each column's aria-label, so this row is aria-hidden. */}
+      {cols.some((c) => c.goalRate) && (
+        <div className="scc-rates" aria-hidden="true">
+          {cols.map((c) => (
+            <span className="scc-rate" key={c.key}>
+              {c.goalRate ? `${c.goalRate.hit}/${c.goalRate.withData}` : ""}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="scc-axis">
         <span>{humanDayShort(cols[0].key)}</span>
         <span>{humanDayShort(cols[cols.length - 1].key)}</span>

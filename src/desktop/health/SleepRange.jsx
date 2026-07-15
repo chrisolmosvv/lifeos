@@ -89,7 +89,7 @@ export default function SleepRange({ days, rows, goal, end, rolling, breadcrumb,
             // (owner's call) — goal context is in the stats strip + ledger. Click a week →
             // onWeekDrill jumps to that week (exactly the old bar behaviour).
             <SleepClockColumns
-              columns={weeklyColumns(rows, end, Math.ceil(days / 7))}
+              columns={weeklyColumns(rows, end, Math.ceil(days / 7), goal)}
               averages={bedwake}
               onDrill={onWeekDrill}
             />

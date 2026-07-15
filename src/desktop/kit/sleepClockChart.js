@@ -8,6 +8,7 @@
 
 import { shiftYMD, amsClockMinutes, humanDayShort } from "../../spine/logic/gymDates.js";
 import { rangeBedWakeAverages } from "../../spine/logic/healthRhythm.js";
+import { nightsHitGoal } from "../../spine/logic/healthSleep.js";
 import { clockFromMin } from "../../spine/logic/healthFormat.js";
 
 export const WINDOW_START_MIN = 22 * 60; // 1320 — the top of the chart
@@ -107,7 +108,14 @@ export function blockFor(row, goalMinutes = null) {
 // is that call once per 7-day bucket — no new calc. Newest week LAST, matching buildSlots.
 // Each column is pre-normalised to what SleepClockColumns renders via its `columns` prop:
 // a flat (stage-less) span, its own hover readout, and a drill key = that week's start ymd.
-export function weeklyColumns(rows, end, weeks) {
+//
+// Piece 6 follow-up: each week also carries a goalRate = { hit, withData } — how many of that
+// week's LOGGED nights hit the sleep-duration goal, out of how many nights have data (the
+// "5/7" label under the column). Same getter the stats strip's "goal X/90" leans on
+// (nightsHitGoal), just bucketed one week at a time over the SAME [wStart, wEnd] range as the
+// span above it, so the two always agree. A week with zero logged nights carries no rate (an
+// honest blank, not "0/0"); no sleep-duration goal at all → no rates anywhere.
+export function weeklyColumns(rows, end, weeks, goal = null) {
   const out = [];
   for (let w = weeks - 1; w >= 0; w--) {
     const wEnd = shiftYMD(end, -7 * w);
@@ -115,16 +123,19 @@ export function weeklyColumns(rows, end, weeks) {
     const avg = rangeBedWakeAverages(rows, wStart, wEnd);
     const n = avg.nights;
     const span = n ? spanBlock(avg.bedAvgMin, avg.wakeAvgMin) : null;
+    const nh = goal ? nightsHitGoal(rows, goal, wEnd, 7) : null;
+    const goalRate = nh && nh.withData > 0 ? { hit: nh.hit, withData: nh.withData } : null;
     out.push({
       key: wStart,
       drillKey: wStart,
       disabled: !n,
       block: span ? { ...span, flat: true, stages: [] } : null,
+      goalRate,
       label: n
-        ? `week of ${humanDayShort(wStart)} · avg ${clockFromMin(avg.bedAvgMin)} to ${clockFromMin(avg.wakeAvgMin)}`
+        ? `week of ${humanDayShort(wStart)} · avg ${clockFromMin(avg.bedAvgMin)} to ${clockFromMin(avg.wakeAvgMin)}${goalRate ? ` · ${goalRate.hit}/${goalRate.withData} nights hit goal` : ""}`
         : `week of ${humanDayShort(wStart)} · no data`,
       readout: n
-        ? `week of ${humanDayShort(wStart)} · avg bed ${clockFromMin(avg.bedAvgMin)} · avg wake ${clockFromMin(avg.wakeAvgMin)} · ${n} ${n === 1 ? "night" : "nights"}`
+        ? `week of ${humanDayShort(wStart)} · avg bed ${clockFromMin(avg.bedAvgMin)} · avg wake ${clockFromMin(avg.wakeAvgMin)} · ${n} ${n === 1 ? "night" : "nights"}${goalRate ? ` · ${goalRate.hit}/${goalRate.withData} hit goal` : ""}`
         : null,
     });
   }

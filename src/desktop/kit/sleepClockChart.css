@@ -245,3 +245,24 @@
   margin-top: 4px;
   padding-right: 44px;
 }
+
+/* PER-WEEK GOAL-HIT RATE (Piece 6 follow-up) — "X/N nights hit goal" under each 90-day
+   column. Its own row below the chart (never over the span or the avg-mark hairlines). The
+   flex layout MIRRORS .scc-cols (flex:1 cells, 5px gap, the 44px right gutter) so each label
+   sits centred under its column. Ink, small Inter tabular numerals — deliberately NOT
+   terracotta (an all-hit week's terracotta treatment is an OPEN owner call, not assumed). */
+.scc-rates {
+  display: flex;
+  gap: 5px;
+  padding-right: 44px;
+  margin-top: 6px;
+}
+.scc-rate {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--ink);
+}
