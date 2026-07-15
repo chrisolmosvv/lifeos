@@ -94,6 +94,55 @@ to, never edited.
 
 ---
 
+### 2026-07-15 — Sleep redesign PIECE 5: Week & Month adopt the clock chart. SRC-ONLY. 1 COMMIT (836e6d2).
+
+WHAT CHANGED: the Week and Month views used to draw stacked duration BARS. They now draw the
+CLOCK COLUMNS — the same chart as Last night — so every dated Sleep view except 90-day speaks the
+same visual language. Two capabilities Piece 4 built but left off are now ON here: the average
+bed/wake marks (two dashed hairlines across the chart) and click-a-column-to-open-that-night.
+- 90-DAY IS UNTOUCHED — it still draws its old weekly-average bars. I moved that legacy chart into
+  its own file (SleepRangeLegacyBars.jsx) so "untouched" is a fact of structure, not a promise, and
+  so Piece 6 can rework it in isolation. Its output is byte-identical (proven by source diff — the
+  one code change was removing a dead branch that never ran for 90-day).
+- The stats strip across the top and the right-hand ledger are unchanged on all three views.
+
+FILES: src/desktop/health/SleepRange.jsx (206 → 108) · NEW SleepRangeLegacyBars.jsx (101) ·
+sleepAggregate.css (dropped the now-dead Week-only per-bar labels) · no change to SleepClockColumns
+(Piece 4 already made it general).
+
+HOW TO VERIFY (on the 13"):
+- Health → Sleep → Week. It should look like Last night's clock chart: columns on a 22:00 → 12:00
+  axis, one per night, with two dashed lines labelled "avg bed" / "avg wake". Those two lines should
+  sit at the SAME clock times the ledger prints as "rhythm" on the right (today: 00:28 / 07:42) —
+  same number, two places.
+- The goal-met terracotta edge: today only 10 Jul qualifies (it is the only night ≥ 8h in the
+  window), and only that column is marked. NOTE this differs from Piece 4's report, which said 10 +
+  14 Jul — 14 Jul's data re-synced overnight from 505 min to 455 min, so it correctly dropped off.
+  Checked against the database, not just the screen.
+- Click any column → it opens that night (the same drill the old bars did). Confirmed: clicking
+  10 Jul opened "Friday, 10 July 2026".
+- Month = 30 columns, ~24px wide each — thin but hoverable (the recon worried about ~20px; we're
+  above it). 90-day = the old bars, unchanged.
+
+KNOWN GAPS / RISKS:
+- COULD NOT cross-check Week against Last-night directly as the brief wanted: the date rolled to
+  15 Jul and there is no 15 Jul sleep row yet, so Last night renders its empty state. I cross-checked
+  Week against the DATABASE instead (the real source of truth) — same principle, better reference.
+- The "per-night goal-met flag" the brief expected as a stored field does NOT exist and did not need
+  to: the chart derives goal-met from goalMinutes + the row's asleep_minutes, exactly as Last night
+  does. Capability identical; nothing stored.
+- Hover uses the SAME .bw-readout as Last night because it is literally the same component — verified
+  with a real mouse hover ("10 Jul · bed 00:00 · wake 08:29 · 8h 21m asleep"), not assumed. (Synthetic
+  JS events did NOT trigger React's handlers — a reminder to hover with the real cursor when checking.)
+- BROWSER FLAKE (not a code issue): mid-verify the automation window collapsed to 0×0 and the app fell
+  to its MOBILE layout; a fresh tab at 1440×900 fixed it. If a future session sees a blank/mobile
+  Health page, check the window size first.
+
+NEXT: Piece 6 — 90-day onto the generalised chart (its ~13 weekly columns), retiring
+SleepRangeLegacyBars, plus unifying the hover-readout as the third consumer.
+
+---
+
 ### 2026-07-14 — Sleep redesign PIECE 4: the clock chart, generalised. SRC-ONLY. 1 COMMIT (6f78ce0).
 
 WHAT CHANGED: the seven-night clock chart (bottom-right of Last night) can now do everything
