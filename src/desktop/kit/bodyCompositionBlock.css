@@ -36,6 +36,16 @@
   color: var(--ink);
 }
 
+/* the explicit distance-to-goal line — a quiet dateline under the heroes, NOT a bar.
+   Sits calmly below the big Fraunces numbers; the chart's goal zone is the visual. */
+.bcb-goal {
+  margin: -4px 0 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* fat / lean split beneath the chart */
 .bcb-split {
   display: flex;

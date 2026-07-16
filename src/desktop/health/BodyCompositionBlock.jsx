@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { humanDayLong } from "../../spine/logic/gymDates";
 import { smoothedSeries } from "../../spine/logic/bodyComposition";
-import { fmtFull } from "../../spine/logic/bodyFormat";
+import { goalProgress } from "../../spine/logic/healthBodyRange";
+import { fmtFull, fmtDelta } from "../../spine/logic/bodyFormat";
 import BodyCompositionChart from "../kit/BodyCompositionChart";
 import BodyComposition from "./BodyComposition";
 import "../kit/bodyCompositionBlock.css";
@@ -41,6 +42,16 @@ export default function BodyCompositionBlock({
     return Number.isFinite(avg) ? `7-day avg ${fmtFull(metric, avg)}` : "no data yet";
   };
 
+  // The explicit distance-to-goal line, back by owner request (alongside the chart's goal
+  // zone, not instead of it). SAME getter/phrasing the old weight-to-goal bar used — a
+  // re-surfacing of existing data, not new maths. Static (reads latest weight, not scrub).
+  const goalProg = goalProgress(weightRows, weightGoal, { end: today });
+  const goalText = goalProg
+    ? goalProg.met
+      ? `goal met (${fmtFull("weight", goalProg.target)})`
+      : `${fmtDelta("weight", goalProg.remaining)} to ${fmtFull("weight", goalProg.target)}`
+    : null;
+
   return (
     <div className="bcb">
       <div className="bcb-heroes">
@@ -53,6 +64,8 @@ export default function BodyCompositionBlock({
           <span className="bcb-hero-cap"><b>body fat</b> · {cap("body_fat", fAvg)}</span>
         </div>
       </div>
+
+      {goalText && <p className="bcb-goal">{goalText}</p>}
 
       <BodyCompositionChart
         weightRows={weightRows} bodyFatRows={bodyFatRows}
