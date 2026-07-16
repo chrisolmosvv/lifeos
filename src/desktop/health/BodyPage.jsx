@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { amsTodayYMD } from "../../spine/logic/gymDates";
+import { amsTodayYMD, shiftYMD } from "../../spine/logic/gymDates";
 import { fetchBody, fetchActivity, fetchGoals } from "../../spine/data/healthLoad";
 import { resolveGoals } from "../../spine/logic/healthGoals";
 import { metricView as bodyView, BODY_METRICS } from "../../spine/logic/healthBody";
 import { metricView as activityView } from "../../spine/logic/healthActivity";
+import { composition } from "../../spine/logic/healthBodyRange";
 import { metaFor } from "../../spine/logic/bodyFormat";
 import { useGoalWrites } from "./useGoalWrites";
 import { buildLatestGroups, buildRangeGroups } from "./bodyGroups";
 import BodyTable from "./BodyTable";
-import BodySummary from "./BodySummary";
+import BodyCompositionBlock from "./BodyCompositionBlock";
 import GoalEditor from "./GoalEditor";
 import RangeSwitcher from "../kit/RangeSwitcher";
 import Breadcrumb from "../kit/Breadcrumb";
@@ -87,10 +88,20 @@ export default function BodyPage({ onBack }) {
 
   useEffect(() => load(), [load]);
 
-  // STAGE 1 scaffold: the 3-group table with latest-raw where loaded, "—" placeholders
-  // for the not-yet-wired metrics + treatment columns, and placeholder summary bars.
-  // One table render for ALL ranges — Latest builds with latest-raw cells, Week/Month/90
-  // with range-averaged cells + full charts. The two bottom summary bars sit beneath.
+  // The chart window for the current range. Week/Month/90 are trailing windows ending
+  // today; "Latest" shows the FULL journey (all history from START) — a snapshot number
+  // (the heroes) over the whole trend, and the one window each range that isn't the "90"
+  // tab already covers. (Latest-window semantics were the open recon fork — this is the
+  // default chosen; flagged in the handoff, reversible.)
+  function chartWindow() {
+    const end = state.today;
+    if (range === "latest") return { start: START, end };
+    return { start: shiftYMD(end, -(RANGE_DAYS[range] - 1)), end };
+  }
+
+  // The live page: the Composition BLOCK (heroes + Var-2 chart + fat/lean split) is the
+  // dominant content; Energy + Vitals stay as their existing table rows beneath (their
+  // redesign is Pieces 5/6 — untouched here). Both respond to the one range control.
   function renderBody() {
     const ctx = {
       body: state.body,
@@ -101,17 +112,26 @@ export default function BodyPage({ onBack }) {
       today: state.today,
       openEditor: gw.openEditor,
     };
-    const groups = range === "latest" ? buildLatestGroups(ctx) : buildRangeGroups(ctx, RANGE_DAYS[range]);
+    const allGroups = range === "latest" ? buildLatestGroups(ctx) : buildRangeGroups(ctx, RANGE_DAYS[range]);
+    const restGroups = allGroups.filter((g) => g.name !== "Composition"); // Composition → the block below
+    const splitComp = composition(
+      state.body?.weight?.latestRaw?.value,
+      state.body?.body_fat?.latestRaw?.value,
+      state.body?.lean_mass?.latestRaw?.value,
+    );
+    const win = chartWindow();
     return (
       <div className="health-fade" key={range}>
-        <BodyTable groups={groups} />
-        <BodySummary
-          body={state.body}
-          rowsByMetric={state.rowsByMetric}
-          goalMap={goalMap}
+        <BodyCompositionBlock
+          weightRows={state.rowsByMetric.weight}
+          bodyFatRows={state.rowsByMetric.body_fat}
+          splitComp={splitComp}
+          weightGoal={goalMap.get("weight") ?? null}
           today={state.today}
-          openEditor={gw.openEditor}
+          windowStart={win.start}
+          windowEnd={win.end}
         />
+        <BodyTable groups={restGroups} />
       </div>
     );
   }
