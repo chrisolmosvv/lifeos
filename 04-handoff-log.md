@@ -33,6 +33,71 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-16 — Body V3 PIECE 4 — the composition chart goes LIVE on the Body page. SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED:
+- **The Composition block is now the real Body page** (no more preview URL). Top to bottom: **two hero
+  numbers** — weight and body fat, each showing its raw latest value with its 7-day smoothed average in
+  the caption ("weight · 7-day avg 85.4 kg") — then the **Var-2 trend chart** (Piece 3), then the
+  existing **fat/lean split bar**.
+- **Hover-scrub is wired to the real heroes.** Moving across the chart snaps to the nearest real
+  weigh-in and the two hero numbers become that day's actual weight + body fat, with the date in the
+  caption; leaving the chart reverts them to today + "7-day avg". Same smoothed-series getter the chart
+  uses — no second smoothing was written.
+- **One range control drives everything.** The page's existing Latest/Week/Month/90-day switcher now
+  reframes the chart AND still drives the (unchanged) Energy/Vitals table. Week/Month/90 are trailing
+  windows; **Latest shows the full history** (see the flag).
+- **Energy + Vitals are untouched** — they keep their current table rows (their redesign is Pieces
+  5/6). I just lifted the Composition group out of that table into the new block.
+- **Cleanups (prove-dead first):** removed the `#body-chart-preview` harness + its `LoggedIn` hook
+  entirely, and deleted the now-dead `BodySummary` (only the page used it). The fat/lean split
+  component (`BodyComposition`) is reused as-is.
+
+FILES: NEW `src/desktop/health/BodyCompositionBlock.jsx` + `src/desktop/kit/bodyCompositionBlock.css`;
+edited `src/desktop/health/BodyPage.jsx` (renders the block + the Energy/Vitals-only table) and
+`src/desktop/LoggedIn.jsx` (removed the preview hook); deleted `BodyChartPreview.jsx` + `BodySummary.jsx`.
+
+HOW TO VERIFY (owner, on the 13" — the REAL page now, not a #preview URL):
+1. Health → Body. Confirm the two big hero numbers, the trend chart, and the fat/lean split bar all
+   show, top to bottom, with your real data.
+2. Hover across the chart — both hero numbers change to that day's real weight + body fat and the
+   caption shows the date; move off — they snap back to today + "7-day avg".
+3. Click Latest / Week / Month / 90 days — the chart reframes each time (Latest = your whole journey),
+   and the Energy/Vitals rows below still change as before.
+4. Confirm the OLD Composition table rows (Weight/Body fat/Lean mass as table lines) are GONE — that
+   content is now the block. Confirm adding `#body-chart-preview` to the URL no longer shows anything
+   special (the harness is deleted).
+
+KNOWN GAPS / RISKS:
+- **⚠️ VERTICAL FIT — please eyeball this.** The Health pages are zero-scroll with `overflow: hidden`,
+  so anything past the fold is CLIPPED (not scrollable). The tall chart now sits above the Energy/Vitals
+  table, so on the 13" the bottom (the Vitals rows) **might get cut off**. I could not check on-screen
+  (the app needs login). If anything's clipped, the quick fix is a shorter chart — tell me and I'll
+  bound its height. The real fix is Piece 6, when Vitals moves to a side column and frees the vertical
+  space. **Flagging, not guessing.**
+- **⚠️ LEAN MASS placement — a call I made, confirm it.** The locked design has only TWO heroes
+  (weight, body fat), so lean mass no longer has its own row/number. It now reads from the **split-bar
+  legend** ("Lean 66.2 kg"). It loses its little trend arrow in the move. If you want lean mass shown
+  more prominently (a small third fact, or its trend), say so — this wasn't fully specified.
+- **⚠️ The weight-to-goal "journey" bar is GONE.** The old page had a "5.15 kg to 80.00 kg" progress
+  bar beneath the table (it lived in the deleted BodySummary). The locked Composition design is
+  heroes + chart + split only, and the goal now shows as the chart's shaded **goal zone** — so I
+  dropped the separate journey bar. Reversible if you miss the textual "X kg to go" readout — your call.
+- **Latest = full-history window** on the chart (the open recon fork). Chosen so each tab is a distinct
+  window (Latest = all, Week/Month/90 = trailing). Easy to change if you'd rather Latest match one of them.
+- **Minor debt:** 4 orphaned `.bsum` CSS rules + one stale comment linger in `bodyPage.css` after the
+  BodySummary delete (inert, don't render) — left for a later CSS sweep to avoid touching that
+  already-oversized sheet blind. Also: the page still computes the old Composition table group then
+  discards it (cheap; a later tidy can skip building it).
+
+NEXT: Piece 5 — the Energy section (the move-goal ring + resting/active stacked bars + the period-average
+split), replacing Energy's current table rows and reading the same range control.
+
+FOR THE CHECKER: confirm (a) hover updates BOTH heroes to raw daily values + date, reverting on leave;
+(b) the range control reframes the chart AND the Energy/Vitals table; (c) no `#body-chart-preview` or
+`BodySummary` references remain anywhere; (d) Energy/Vitals rows are visually unchanged from Piece 2;
+(e) whether the page clips at the bottom on the 13" (the fit flag above).
+
 ### 2026-07-16 — Body V3 PIECE 3 FOLLOW-UP — body fat gets its own right Y-axis. SRC-ONLY. 1 COMMIT. Still preview-only.
 
 WHAT CHANGED:
