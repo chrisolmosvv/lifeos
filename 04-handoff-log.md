@@ -33,6 +33,61 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-16 — Body V3 PIECE 2 — cut BMI + blood oxygen from every Body surface. SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED:
+- **BMI and blood oxygen (SpO2) are gone from the whole Body page** — desktop AND mobile, on all
+  four ranges (Latest / Week / Month / 90-day). BMI leaves the Composition group; blood oxygen
+  leaves the Vitals group. Everything else is untouched — this was a subtraction, nothing shifted.
+- Stopped **fetching** the two metrics (they were pulled by name in two loaders — the desktop page
+  and the mobile data hook). Removed the now-dead per-metric band branches that only those two used
+  (the fixed-clinical-band code path in the range views + the mobile band cell) and dropped the
+  now-unused `fixedBand` import from both edited UI files.
+- **Prove-dead check passed on the shared getter:** `fixedBand` / `FIXED_BANDS` (and the `DEADBAND`
+  / format entries for these two metrics) are LEFT IN PLACE — they are still used by the throwaway
+  `HealthDebugV2` diagnostic page (`#health-debug-v2`), so they are NOT dead and were not removed.
+- Quick confirm of the older P5 debt (as the recon said): the dead `GoalBar` / `GoalWaiting` /
+  `GoalPrompt` path and the `currentStreakDays` getter are **confirmed still absent** from `src/`
+  (only teardown comments remain). The `walking_speed` km/h-vs-m/s mislabel lives in Activity/Gym
+  code (the Walking cards + `Health.jsx`), **not Body** — left untouched, out of scope.
+
+FILES TOUCHED: `src/desktop/health/bodyGroups.jsx`, `src/desktop/health/BodyPage.jsx`,
+`src/desktop/health/BodyCells.jsx` (comment only), `src/mobile/MobileHealthBody.jsx`,
+`src/spine/data/useHealthData.js`. (No spine-constant or CSS files changed — see the prove-dead note.)
+
+HOW TO VERIFY (owner, on the 13" + phone):
+1. Open Health → Body. Click through **all four ranges** (Latest, Week, Month, 90-day). Confirm
+   **"BMI" appears nowhere** in Composition and **"Blood oxygen" appears nowhere** in Vitals.
+2. Confirm every OTHER metric still renders exactly as before: Composition = Weight, Body fat, Lean
+   mass; Energy = Active energy, Resting energy (still greyed "waiting for first sync"); Vitals =
+   Resting HR, Respiratory. Their numbers, arrows, bands, journey bars and charts should be identical.
+3. Open the mobile Body view — same check (Composition has no BMI, Vitals has no Blood oxygen).
+4. Open the browser console — confirm **no errors** (no "undefined" from a removed import).
+   (Build already verified clean: `npx vite build` — 486 modules, no import/syntax errors.)
+
+KNOWN GAPS / RISKS:
+- **Layout — flag, not fixed (per the design law):** Composition drops from 4 rows to 3 and Vitals
+  from 3 to 2. The page uses the `.health-fit` flex model, so rows stretch to fill the fold — the
+  remaining rows will look a little taller / more spaced. This is expected and **Piece 4 (the real
+  composition-chart layout) owns the final spacing.** Owner: if the extra space looks wrong before
+  then, say so — I did not adjust layout here on purpose.
+- **`HealthDebugV2` still shows BMI + blood oxygen.** It is a labelled throwaway diagnostic
+  (`⚠️ DELETE after verify` in its header), not a Body surface the owner uses. Left intact
+  deliberately; deleting it (and then the shared `fixedBand`/`FIXED_BANDS`) is a separate cleanup
+  call, not part of this piece.
+- I could not do the in-app visual pass myself (the app requires login, which I don't do). Build +
+  code-level proof are done; the on-screen confirm across all four ranges is the owner's gate.
+
+NEXT: Piece 3 — the composition trend-chart kit component ("Var 2": dot-scatter of daily weigh-ins +
+a 7-day smoothed line + spread band + goal zone + today dot). Recon flagged the one new calc it needs
+(a per-day 7-day-smoothed *series* getter — today's rolling getter returns a single number, not a line)
+and four owner-decision forks (Latest-mode Energy, goal-zone edges, milestone source, mobile scope).
+
+FOR THE CHECKER: confirm (a) grep finds zero `bmi` / `blood_oxygen` in the Body UI files listed above;
+(b) the two loaders no longer fetch them; (c) `fixedBand` is correctly LEFT because `HealthDebugV2`
+still uses it (prove-dead respected — not an oversight); (d) no other surface (Hub cards, mobile
+overview) consumed these two metrics.
+
 ### 2026-07-15 — Sleep redesign PIECE 6 FOLLOW-UP: 90-day per-week goal-hit label. SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED: each of the 90-day chart's weekly columns now carries a small permanent label —
