@@ -27,13 +27,13 @@ import "../kit/bodyPage.css";
 // STAGE 1 (this commit): the chrome + .health-fit shell + the empty 3-group table
 // scaffold (headers, rows, freshness notes, placeholder bottom bars). The Latest cells
 // are placeholders / latest-raw values; the band/movement/trace/goal treatments and the
-// new metrics (bmi, blood_oxygen, active/resting energy) fill in stages 2–4. The range
-// views still render the V1 tiles (restyled in stage 5).
+// energy metrics (active/resting energy) fill in stages 2–4. The range views still render
+// the V1 tiles (restyled in stage 5).
 
 const START = "2026-01-01";
-// The page loads the V1 display metrics + the new generic body point-readings (bmi,
-// blood_oxygen). BODY_METRICS stays the hub card's list — not modified here.
-const LOAD_METRICS = [...BODY_METRICS, "bmi", "blood_oxygen"];
+// The page loads the BODY_METRICS display list. (BMI + blood oxygen were cut from every
+// Body surface in the V3 redesign — no longer fetched or rendered here.)
+const LOAD_METRICS = [...BODY_METRICS];
 const ACTIVITY_LOAD = ["active_energy", "resting_energy"]; // Energy group (activity_hourly)
 const RANGES = [
   { id: "latest", label: "Latest" },

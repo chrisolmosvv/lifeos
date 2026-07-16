@@ -14,7 +14,7 @@ import { metricView as activityMV } from '../logic/healthActivity.js'
 import { buildWorkouts, boxScore } from '../logic/gymCalc.js'
 
 const START = '2026-01-01'
-const BODY_KEYS = ['weight', 'body_fat', 'lean_mass', 'resting_heart_rate', 'respiratory_rate', 'bmi', 'blood_oxygen']
+const BODY_KEYS = ['weight', 'body_fat', 'lean_mass', 'resting_heart_rate', 'respiratory_rate']
 const ACT_KEYS = ['active_energy', 'resting_energy']
 
 export function useHealthData() {

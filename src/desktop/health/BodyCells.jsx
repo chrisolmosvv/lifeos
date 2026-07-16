@@ -6,9 +6,9 @@ import { fmtDelta, fmtFull, fmtNum } from "../../spine/logic/bodyFormat";
 //   Trace     — the 90-day sparkline (reuses BodyChart's spark variant).
 //   JourneyBar— a compact goal-progress bar (weight/body_fat), tappable to edit; or a
 //               "set a goal" prompt when none exists.
-//   Band      — a soft band region + a tick at the current value + a verdict. Fixed-
-//               clinical (BMI/SpO2, terracotta tint) and personal (RHR/resp, neutral) use
-//               the SAME visual; only the bounds' source differs (the locked band rule).
+//   Band      — a soft band region + a tick at the current value + a verdict. Personal
+//               bands (RHR/resp, neutral) use it today; the component still supports a
+//               fixed-clinical variant (different tint) if a fixed-band metric returns.
 
 export function Movement({ metric, trend }) {
   if (!trend || trend.dir == null) return <span className="bt-move-none">—</span>;

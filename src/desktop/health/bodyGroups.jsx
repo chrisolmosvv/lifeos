@@ -3,7 +3,7 @@ import BodyChart from "./BodyChart";
 import { fmtFull } from "../../spine/logic/bodyFormat";
 import { shiftYMD } from "../../spine/logic/gymDates";
 import { DEADBAND } from "../../spine/logic/healthStats";
-import { goalProgress, baselineBand, fixedBand, windowDelta } from "../../spine/logic/healthBodyRange";
+import { goalProgress, baselineBand, windowDelta } from "../../spine/logic/healthBodyRange";
 import { activityDaysHit } from "../../spine/logic/healthActivity";
 
 // LifeOS — Body (V2 P2): builds the Latest view's 3-group table config (Composition /
@@ -69,7 +69,6 @@ export function buildLatestGroups({ body, activity, rowsByMetric, activityRows, 
         { label: "Weight", latest: fmt("weight"), movement: move("weight"), trace: trace("weight"), target: journey("weight", "set a goal weight") },
         { label: "Body fat", latest: fmt("body_fat"), movement: move("body_fat"), trace: trace("body_fat"), target: journey("body_fat", "set a body-fat goal") },
         { label: "Lean mass", latest: fmt("lean_mass"), movement: move("lean_mass"), trace: trace("lean_mass"), target: <span className="bt-target-none">trend only</span> },
-        { label: "BMI", latest: fmt("bmi"), movement: move("bmi"), trace: trace("bmi"), target: <Band metric="bmi" band={fixedBand("bmi", body?.bmi?.latestDaily?.value)} /> },
       ],
     },
     {
@@ -86,7 +85,6 @@ export function buildLatestGroups({ body, activity, rowsByMetric, activityRows, 
       rows: [
         { label: "Resting HR", latest: vAvg("resting_heart_rate"), movement: move("resting_heart_rate"), trace: trace("resting_heart_rate"), target: personalBand("resting_heart_rate") },
         { label: "Respiratory", latest: vAvg("respiratory_rate"), movement: move("respiratory_rate"), trace: trace("respiratory_rate"), target: personalBand("respiratory_rate") },
-        { label: "Blood oxygen", latest: vAvg("blood_oxygen"), movement: move("blood_oxygen"), trace: trace("blood_oxygen"), target: <Band metric="blood_oxygen" band={fixedBand("blood_oxygen", avg7("blood_oxygen"))} /> },
       ],
     },
   ];
@@ -94,8 +92,8 @@ export function buildLatestGroups({ body, activity, rowsByMetric, activityRows, 
 
 // The range (Week/Month/90) groups — SAME 3-group table, but LATEST → the range average,
 // MOVEMENT → windowDelta, and the trace → a full range line chart with the band/goal
-// overlaid (the soft shaded-region band — fixed-clinical for BMI/SpO2, personal p10–p90
-// for RHR/resp; weight keeps its goal line). active_energy → its daily-totals series + the
+// overlaid (the soft shaded-region band — personal p10–p90 for RHR/resp; weight keeps its
+// goal line). active_energy → its daily-totals series + the
 // X/N days-hit over the window. Mirrors buildLatestGroups; consumes existing getters only.
 export function buildRangeGroups({ body, activity, rowsByMetric, activityRows, goalMap, today, openEditor }, days) {
   const end = today;
@@ -104,10 +102,6 @@ export function buildRangeGroups({ body, activity, rowsByMetric, activityRows, g
   const rFmt = (m) => (Number.isFinite(rAvg(m)) ? fmtFull(m, rAvg(m)) : "—");
   const rMove = (m) => <Movement metric={m} trend={windowDelta(rowsByMetric[m], days, { end, deadband: DEADBAND[m] })} />;
   const chartBand = (m) => {
-    if (m === "bmi" || m === "blood_oxygen") {
-      const fb = fixedBand(m, rAvg(m));
-      return fb ? { lo: fb.lo, hi: fb.hi, hasEnoughData: true } : null;
-    }
     if (m === "resting_heart_rate" || m === "respiratory_rate") return baselineBand(rowsByMetric[m], { end });
     return null;
   };
@@ -118,7 +112,6 @@ export function buildRangeGroups({ body, activity, rowsByMetric, activityRows, g
     <JourneyBar metric={m} goalProg={goalProgress(rowsByMetric[m], goalMap.get(m) ?? null, { end })} onEdit={(el) => openEditor(m, el)} promptText={promptText} />
   );
   const bandVerdict = (m) => {
-    if (m === "bmi" || m === "blood_oxygen") return <Band metric={m} band={fixedBand(m, rAvg(m))} />;
     const bb = baselineBand(rowsByMetric[m], { end });
     const a = rAvg(m);
     if (!bb.hasEnoughData || !Number.isFinite(a)) return <span className="bt-target-none">band at 14 · {bb.n}/14</span>;
@@ -158,7 +151,6 @@ export function buildRangeGroups({ body, activity, rowsByMetric, activityRows, g
         { label: "Weight", latest: rFmt("weight"), movement: rMove("weight"), trace: bChart("weight", goalMap.get("weight")?.target_value ?? null), target: journey("weight", "set a goal weight") },
         { label: "Body fat", latest: rFmt("body_fat"), movement: rMove("body_fat"), trace: bChart("body_fat"), target: journey("body_fat", "set a body-fat goal") },
         { label: "Lean mass", latest: rFmt("lean_mass"), movement: rMove("lean_mass"), trace: bChart("lean_mass"), target: <span className="bt-target-none">trend only</span> },
-        { label: "BMI", latest: rFmt("bmi"), movement: rMove("bmi"), trace: bChart("bmi"), target: bandVerdict("bmi") },
       ],
     },
     {
@@ -175,7 +167,6 @@ export function buildRangeGroups({ body, activity, rowsByMetric, activityRows, g
       rows: [
         { label: "Resting HR", latest: rFmt("resting_heart_rate"), movement: rMove("resting_heart_rate"), trace: bChart("resting_heart_rate"), target: bandVerdict("resting_heart_rate") },
         { label: "Respiratory", latest: rFmt("respiratory_rate"), movement: rMove("respiratory_rate"), trace: bChart("respiratory_rate"), target: bandVerdict("respiratory_rate") },
-        { label: "Blood oxygen", latest: rFmt("blood_oxygen"), movement: rMove("blood_oxygen"), trace: bChart("blood_oxygen"), target: bandVerdict("blood_oxygen") },
       ],
     },
   ];

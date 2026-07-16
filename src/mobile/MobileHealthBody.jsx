@@ -1,15 +1,14 @@
 import { useState, useRef } from 'react'
 import { metaFor, fmtFull } from '../spine/logic/bodyFormat'
-import { fixedBand, baselineBand, goalProgress, BAND_MIN_READINGS } from '../spine/logic/healthBodyRange'
+import { baselineBand, goalProgress, BAND_MIN_READINGS } from '../spine/logic/healthBodyRange'
 import { amsTodayYMD } from '../spine/logic/gymDates'
 
 const GROUPS = [
-  { name: 'Composition', keys: ['weight', 'body_fat', 'lean_mass', 'bmi'] },
+  { name: 'Composition', keys: ['weight', 'body_fat', 'lean_mass'] },
   { name: 'Energy', keys: ['active_energy', 'resting_energy'] },
-  { name: 'Vitals', keys: ['resting_heart_rate', 'respiratory_rate', 'blood_oxygen'] },
+  { name: 'Vitals', keys: ['resting_heart_rate', 'respiratory_rate'] },
 ]
 const JOURNEY = new Set(['weight', 'body_fat'])
-const FIXED = new Set(['bmi', 'blood_oxygen'])
 const BASELINE = new Set(['resting_heart_rate', 'respiratory_rate'])
 
 export default function MobileHealthBody({ data, onBack }) {
@@ -41,11 +40,6 @@ export default function MobileHealthBody({ data, onBack }) {
           <span className="mh-journey"><span className="mh-journey-fill" style={{ width: `${Math.round(prog.fraction * 100)}%` }} /></span>
         </span>
       )
-    }
-    if (FIXED.has(m)) {
-      const fb = fixedBand(m, latest(m))
-      if (!fb || fb.verdict == null) return <span className="mh-mr-band mh-muted">—</span>
-      return <span className={`mh-mr-band${fb.verdict !== 'in' ? ' mh-mr-warn' : ''}`}>{fb.verdict === 'in' ? 'in range' : fb.verdict}</span>
     }
     if (BASELINE.has(m)) {
       const bb = baselineBand(data.bodyRows?.[m], { end: today })
