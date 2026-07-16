@@ -28,6 +28,8 @@
   fill: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
+/* body-fat (right) axis labels — terracotta, colour-matched to the body-fat line */
+.bcc-ytick--fat { fill: var(--accent); }
 
 /* ── the two sanctioned soft bands ───────────────────────────────────────────── */
 .bcc-goalzone { fill: var(--accent); opacity: 0.08; }        /* goal zone — faint terracotta */

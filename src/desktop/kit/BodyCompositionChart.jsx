@@ -36,7 +36,8 @@ export default function BodyCompositionChart({
   weight.forEach((p) => wVals.push(p.raw, p.smoothed, p.lo, p.hi));
   if (zone) wVals.push(zone.lo, zone.hi);
   const wy = yScaleFrom(wVals);
-  // Body fat rides its OWN (hidden) scale so its LINE SHAPE reads on the kg axis.
+  // Body fat rides its OWN scale, drawn as the RIGHT axis (terracotta), so its % is
+  // directly readable — not just its shape. Derived from the real data, padded.
   const fy = yScaleFrom(fat.map((p) => p.smoothed));
 
   const hasData = weight.length > 0;
@@ -72,13 +73,25 @@ export default function BodyCompositionChart({
         role="img" aria-label="Weight and body-fat trend over the selected range"
         onMouseMove={onMove} onMouseLeave={onLeave}
       >
-        {/* y grid: top + bottom kg hairlines with labels */}
+        {/* LEFT axis = weight (kg), the PRIMARY axis — it owns the gridlines. Ink/muted,
+            matching the solid ink weight line. Top + bottom kg labels. */}
         <line className="bcc-axis" x1={l} y1={t} x2={l} y2={h - b} />
         {[wy.hi, wy.lo].map((v, i) => (
           <g key={i}>
             <line className="bcc-grid" x1={l} y1={wy.y(v)} x2={w - r} y2={wy.y(v)} />
             <text className="bcc-ytick" x={l - 6} y={wy.y(v) + 3} textAnchor="end">{v.toFixed(1)}</text>
           </g>
+        ))}
+
+        {/* RIGHT axis = body fat (%), the SECONDARY axis. Terracotta tick VALUES only,
+            colour-matched to the dashed body-fat line so you can tell which scale is
+            which — but NO gridlines of its own (a second grid would clutter; the grid
+            belongs to the primary weight axis). */}
+        <line className="bcc-axis" x1={w - r} y1={t} x2={w - r} y2={h - b} />
+        {[fy.hi, fy.lo].map((v, i) => (
+          <text key={i} className="bcc-ytick bcc-ytick--fat" x={w - r + 6} y={fy.y(v) + 3} textAnchor="start">
+            {v.toFixed(1)}%
+          </text>
         ))}
 
         {/* goal zone — faint terracotta band across the width */}

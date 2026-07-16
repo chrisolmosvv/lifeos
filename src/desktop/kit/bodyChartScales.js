@@ -10,7 +10,8 @@
 import { humanDayShort } from "../../spine/logic/gymDates.js";
 
 // viewBox geometry. The SVG scales to its container via preserveAspectRatio.
-export const DIMS = { w: 640, h: 300, l: 44, r: 16, t: 16, b: 28 };
+// l = room for the weight (kg) axis labels; r = room for the body-fat (%) axis labels.
+export const DIMS = { w: 640, h: 300, l: 44, r: 42, t: 16, b: 28 };
 const DAY = 86400000;
 
 export const dayIndex = (ymd, start) => Math.round((Date.parse(ymd) - Date.parse(start)) / DAY);
