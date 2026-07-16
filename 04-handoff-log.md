@@ -33,6 +33,38 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-16 — Body V3 PIECE 4 FOLLOW-UP — the explicit "X kg to goal" text line is back. SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED:
+- Added back a short **distance-to-goal text line** on the Composition block — e.g. "5.15 kg to
+  80.00 kg", or "goal met (80.00 kg)". It sits ALONGSIDE the chart's shaded goal zone (owner asked for
+  both, not one instead of the other), and shows nothing if no weight goal is set.
+- **No new maths** — it re-surfaces the SAME getter and exact phrasing the old weight-to-goal bar used
+  before Piece 4 removed it (`goalProgress` → `fmtDelta remaining` + `fmtFull target`). Confirmed that
+  getter was NOT deleted with the old bar (it's still used by the table's journey cells too). Verified
+  the text against the real getter headlessly: "5.15 kg to 80.00 kg" / "goal met (80.00 kg)" / nothing.
+- It's a **plain text line, not the old bar** — a quiet muted caption, not a progress bar visual.
+- **Static** — it reads your latest weight vs the goal; it does NOT change as you hover-scrub the chart
+  (the hero numbers do that; the goal distance is a "where I am now" fact).
+
+FILE: `src/desktop/health/BodyCompositionBlock.jsx` (+ a small style in `bodyCompositionBlock.css`).
+
+WHERE I PLACED IT (flagged — confirm it's the right spot): directly **under the two hero numbers**, above
+the chart. Reasoning: it's about weight, so it sits with the weight number; it reads like a dateline under
+a headline. If you'd rather it sit down by the fat/lean split bar (or somewhere else), it's a one-line
+move — say so.
+
+HOW TO VERIFY: Health → Body (real page). Confirm a small line like "X kg to 80.00 kg" under the hero
+numbers, reading correctly against your actual weight + goal; confirm it's calm (doesn't fight the big
+numbers or the shaded zone) and is text, not a bar; confirm it does NOT change while you hover the chart.
+
+KNOWN GAPS / RISKS: none new. The Piece-4 flags still stand (the vertical-fit / bottom-clipping check on
+the 13", and lean-mass now living in the split-bar legend) — this line adds one more short row to the
+block, so it very slightly adds to that vertical-fit question.
+
+NEXT: Piece 5 — the Energy section (move-goal ring + resting/active stacked bars + period-average split),
+still pending the Piece-4 clipping check.
+
 ### 2026-07-16 — Body V3 PIECE 4 — the composition chart goes LIVE on the Body page. SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED:
