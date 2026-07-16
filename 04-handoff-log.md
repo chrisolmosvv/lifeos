@@ -33,6 +33,85 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-16 — Body V3 PIECE 3 — the composition trend chart kit (Var 2). SRC-ONLY. 1 COMMIT. NOT wired into live Body yet.
+
+WHAT CHANGED:
+- **A new desktop kit chart** — the "Var 2" composition chart the redesign has been building toward.
+  Body had no real trend chart before (only a tiny sparkline); this is the first one. It draws, back
+  to front: a faint **terracotta goal zone** · a soft **weight spread band** (±1 standard deviation) ·
+  a dashed **terracotta body-fat line** (smoothed) · a solid **ink 7-day smoothed weight line** ·
+  faint **raw weigh-in dots** (weight only) · a **terracotta today dot with an ambient pulse** · and a
+  **hover crosshair** that snaps to the nearest real weigh-in.
+- **Two interactions, both to the locked spec.** (a) An orchestrated load-in: the two lines *draw
+  themselves* left-to-right, then the dots and band fade in, then the today dot starts pulsing — and it
+  all turns OFF under `prefers-reduced-motion` (instant, no motion), reusing the same accessibility
+  pattern Sleep uses. (b) Hover-scrub: moving across the chart snaps a crosshair to the nearest real
+  day and fires that day's real values out via an `onScrub` callback (so Piece 4's hero numbers can
+  follow it). The scrub reports the day's ACTUAL weigh-in, never an interpolated/fake value.
+- **The one new calc** (recon flagged it): a **7-day smoothed *series*** getter (a value per day, not
+  the single rolling number we already had). It's compute-on-read and — important — it smooths over the
+  FULL weigh-in history and only THEN slices to the visible window, so the line at the window's left
+  edge uses real earlier days instead of a truncated stub. Days with no weigh-in stay absent (no faked
+  gaps). Multiple weigh-ins in one day collapse to that day's average first (the locked Body rule).
+- **Body fat rides its own hidden scale.** The visible Y-axis is kg (weight). Body fat % (~18–25) can't
+  be read off a kg axis, so its line shows SHAPE only; its number is spoken by the hero on scrub, not
+  the axis. (Flagged below — a small design consequence of "two lines, one kg axis".)
+- **NOT wired into the live Body page** (that's Piece 4). So you can see it, there's a **throwaway
+  preview**: open the app and add **`#body-chart-preview`** to the URL. It fetches your real weight +
+  body-fat data, has a Week/Month/90/All range switcher, and shows stand-in hero numbers that follow
+  the scrub. Piece 4 deletes this preview when it wires the real chart in.
+
+FILES TOUCHED (all new except the last two):
+- `src/spine/logic/bodyComposition.js` — the smoothed-series + goal-zone calc (pure, compute-on-read).
+- `src/desktop/kit/bodyChartScales.js` — the chart geometry/scales + nearest-point maths (pure).
+- `src/desktop/kit/BodyCompositionChart.jsx` — the chart component (render + scrub state).
+- `src/desktop/kit/bodyCompositionChart.css` — styles + the draw-in/pulse animations + reduced-motion.
+- `src/desktop/health/BodyChartPreview.jsx` — THROWAWAY verify harness (delete in Piece 4).
+- `src/desktop/LoggedIn.jsx` — one throwaway `#body-chart-preview` hash hook (delete in Piece 4).
+
+HOW TO VERIFY:
+1. **The math is already machine-checked** (I don't trust the render alone): a headless test fed known
+   daily weigh-ins and confirmed the 7-day smoothed values by hand — e.g. seven days averaging to
+   84.857, a shrunk 3-day edge window to 84.933, and a two-readings-in-one-day case collapsing to that
+   day's average before smoothing. All passed. (Script: `scratchpad/verify-smooth.mjs`.)
+2. **On the 13" (owner):** open `<app>/#body-chart-preview`. Confirm: the two lines draw in on load;
+   the today dot pulses; hovering moves the crosshair and the two big hero numbers change to that day's
+   real weight + body fat with the date; leaving the chart returns them to today + "7-day avg". Switch
+   Week/Month/90/All — the chart reframes each time.
+3. **Spot-check a value:** hover a day you remember weighing in, and confirm the weight hero matches
+   your actual reading for that day (not a smoothed guess — the hero shows the raw weigh-in).
+4. **Reduced motion:** turn on macOS "Reduce motion" (System Settings → Accessibility → Display),
+   reload the preview — the chart should appear instantly with NO draw-in and NO pulse.
+
+KNOWN GAPS / RISKS:
+- **⚠️ GOAL-ZONE TOLERANCE = ±1.0 kg — a number I invented, flagged for your eyes.** The stored weight
+  goal is a single target (e.g. 80 kg), not a range, so the shaded zone is target ± a tolerance. I set
+  ±1.0 kg as a sensible default, but this is exactly the kind of small invented constant that's your
+  call, not mine. Look at how wide the band reads against your real data and tell me to keep 1.0 or
+  change it (it's one constant, `GOAL_ZONE_TOLERANCE_KG`, in `bodyComposition.js`).
+- **Body-fat line is shape-only** (its own hidden scale, no second axis) — a consequence of the locked
+  "two lines, kg axis" spec. Its value comes from the hero on scrub. If you want a readable body-fat
+  axis instead, that's a design change, not a bug — flag it.
+- **Range/Latest:** the chart takes any [start, end] window, so it already handles Week/Month/90 by
+  construction. What "Latest" should show on a *trend* chart (no time window) is still the open recon
+  question — Piece 4 decides the Latest-mode window when it wires this in.
+- **Spread band = ±1 standard deviation** of each day's trailing 7-day weigh-ins (a build choice for a
+  calm, symmetric band). If you'd rather it show the literal min–max range your weigh-ins covered, say
+  so — it's a one-line swap in `bodyComposition.js`.
+- I could not do the on-screen pass myself (the app needs login, which I don't do). Math + build are
+  verified; the visual/scrub/motion confirm is your gate via the preview route.
+
+NEXT: Piece 4 — the composition heroes (the two big Fraunces numbers with the 7-day-avg caption) + the
+fat/lean split bar + **wiring this chart into the real Body page** (feed it the page's range control and
+real hero numbers, subscribe the heroes to `onScrub`), and **delete the `#body-chart-preview` harness +
+its LoggedIn hook**.
+
+FOR THE CHECKER: confirm (a) the smoothed series smooths over full history then slices (left-edge
+honesty), not per-window; (b) the goal-zone tolerance is surfaced as a single named constant, not
+buried; (c) the reduced-motion media query actually disables every animation (draw, fade, pulse);
+(d) the scrub reports raw daily values, not interpolated ones; (e) nothing in the live Body page changed
+(this piece only ADDS kit files + a throwaway route).
+
 ### 2026-07-16 — Body V3 PIECE 2 — cut BMI + blood oxygen from every Body surface. SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED:
