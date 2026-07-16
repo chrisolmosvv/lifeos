@@ -17,6 +17,7 @@ import FocusPage from './focus/FocusPage'
 import PeoplePage from './people/PeoplePage'
 import FinancePage from './finance/FinancePage'
 import HealthDebugV2 from './health/HealthDebugV2' // THROWAWAY (V2 P0c verify) — delete with the hook below
+import BodyChartPreview from './health/BodyChartPreview' // THROWAWAY (Body V3 Piece 3 verify) — delete with the hook below (Piece 4)
 import './calendar.css'
 
 // Session-surfacing A — the current pillar PERSISTS across reloads (localStorage, like the Cookbook
@@ -53,6 +54,8 @@ export default function LoggedIn({ email }) {
 
   // THROWAWAY (V2 P0c verify): open <app>/#health-debug-v2 to read the calc readout. Delete with the import above.
   if (typeof window !== 'undefined' && window.location.hash === '#health-debug-v2') return <HealthDebugV2 />
+  // THROWAWAY (Body V3 Piece 3 verify): open <app>/#body-chart-preview to see the composition chart. Delete in Piece 4.
+  if (typeof window !== 'undefined' && window.location.hash === '#body-chart-preview') return <BodyChartPreview />
 
   return (
     <CookSessionProvider>

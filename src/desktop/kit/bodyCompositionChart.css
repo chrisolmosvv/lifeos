@@ -1,0 +1,81 @@
+/* LifeOS — Body composition chart (Var 2). Broadsheet-calm: hairlines, ink, terracotta
+   used RARELY (the body-fat line, the goal zone, the today dot). No boxes/shadows/fills
+   beyond the two sanctioned soft bands. All motion is gated by prefers-reduced-motion. */
+
+.bcc {
+  width: 100%;
+}
+.bcc-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+}
+.bcc-empty {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  padding: 24px 4px;
+}
+
+/* ── axis + grid ─────────────────────────────────────────────────────────────── */
+.bcc-axis { stroke: var(--rule); stroke-width: 1; }
+.bcc-grid { stroke: var(--rule-faint); stroke-width: 1; }
+.bcc-ytick,
+.bcc-xtick {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  fill: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── the two sanctioned soft bands ───────────────────────────────────────────── */
+.bcc-goalzone { fill: var(--accent); opacity: 0.08; }        /* goal zone — faint terracotta */
+.bcc-band     { fill: var(--ink); opacity: 0.07; }           /* weight spread (±1 SD) — ink haze */
+
+/* ── lines ───────────────────────────────────────────────────────────────────── */
+.bcc-line { fill: none; }
+.bcc-line--weight { stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.bcc-line--fat {
+  stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 4 3;
+  stroke-linejoin: round; stroke-linecap: round;
+}
+
+/* ── raw weigh-in dots (weight only) ─────────────────────────────────────────── */
+.bcc-dot { fill: var(--ink); opacity: 0.22; }
+
+/* ── hover crosshair ─────────────────────────────────────────────────────────── */
+.bcc-cross line { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 2 2; }
+.bcc-cross-dot { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+
+/* ── today dot — terracotta + ambient pulse halo ─────────────────────────────── */
+.bcc-today-dot { fill: var(--accent); }
+.bcc-today-halo {
+  fill: var(--accent); opacity: 0.28; transform-box: fill-box; transform-origin: center;
+  animation: bcc-pulse 2.4s ease-in-out infinite;
+}
+@keyframes bcc-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.28; }
+  50%      { transform: scale(2.1); opacity: 0; }
+}
+
+/* ── orchestrated load-in: lines DRAW left→right, then dots + band fade in ────── */
+.bcc-draw {
+  stroke-dasharray: 1; stroke-dashoffset: 1;         /* pathLength="1" normalises the length */
+  animation: bcc-draw 900ms ease forwards;
+}
+.bcc-line--fat.bcc-draw { animation-delay: 120ms; }  /* body fat draws a beat after weight */
+@keyframes bcc-draw { to { stroke-dashoffset: 0; } }
+
+.bcc-fade-dots { opacity: 0; animation: bcc-fade 500ms ease 780ms forwards; }
+.bcc-fade-band { opacity: 0; animation: bcc-fade-band 600ms ease 700ms forwards; }
+@keyframes bcc-fade { to { opacity: 1; } }
+@keyframes bcc-fade-band { to { opacity: 0.07; } }   /* settle at the band's resting opacity */
+
+/* ── accessibility: instant, no motion (same escape hatch as .health-fade) ───── */
+@media (prefers-reduced-motion: reduce) {
+  .bcc-draw { stroke-dashoffset: 0; animation: none; }
+  .bcc-fade-dots { opacity: 1; animation: none; }
+  .bcc-fade-band { opacity: 0.07; animation: none; }
+  .bcc-today-halo { animation: none; opacity: 0.18; }
+}
