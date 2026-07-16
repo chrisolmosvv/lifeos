@@ -33,6 +33,52 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-16 — Body V3 PIECE 3 FOLLOW-UP — body fat gets its own right Y-axis. SRC-ONLY. 1 COMMIT. Still preview-only.
+
+WHAT CHANGED:
+- **Body fat now has its own axis** on the composition chart. Before, its dashed line shared the weight
+  (kg) axis and could only show SHAPE — you had to hover to read the actual %. Now there's a **second Y-axis
+  on the RIGHT**, in body-fat %, so both lines are directly readable in their own units without hovering.
+- **The axes are colour-coded so you can tell which is which:** the LEFT axis (weight, kg) stays ink/muted,
+  matching the solid ink weight line; the RIGHT axis (body fat, %) has **terracotta tick labels**, matching
+  the dashed terracotta body-fat line. This colour pairing is functional, not decoration — a dual-axis chart
+  is unreadable without it.
+- **Only the primary (weight) axis draws gridlines.** The body-fat axis gets tick VALUES only, no lines of
+  its own — two full grids on one chart reads as clutter and fails "calm wins". Right margin was widened to
+  make room for the % labels.
+- Under the hood this was small: the body-fat line ALREADY mapped off its own scale (Piece 3 built it that
+  way), so nothing about the line moved — this just makes that hidden scale visible as a labelled axis. The
+  ±1.0 kg goal-zone tolerance is untouched (owner-confirmed).
+
+FILE TOUCHED: `src/desktop/kit/BodyCompositionChart.jsx` (the right-axis render) + `bodyChartScales.js`
+(wider right margin) + `bodyCompositionChart.css` (the terracotta tick colour). No calc change.
+
+HOW TO VERIFY:
+1. **Dual-axis math is machine-checked** (the same sanity check as the weight line in Piece 3): a headless
+   test confirmed the body-fat line's pixel heights correspond to its printed axis values — the top label
+   maps to the plot's top edge, the bottom label to the bottom, a mid value sits mid-plot — and that the
+   axis is padded sensibly beyond the real data (e.g. 17.8–19.3% around 17.9–19.2% data), not clipped tight
+   or so loose the line looks flat. The weight and body-fat scales are independent. All passed.
+   (Script: `scratchpad/verify-axis.mjs`.)
+2. **On the 13" (owner):** reload `<app>/#body-chart-preview`. Confirm: a right-hand axis of body-fat %
+   values in terracotta, a left-hand axis of kg in ink. Spot-check — read where the dashed terracotta line
+   sits against the right axis and confirm it's a plausible body-fat % for you; hover that same spot and
+   confirm the hero number matches. Confirm the chart doesn't feel cluttered with two axes (judge it on the
+   90-day / All range, the busiest data).
+
+KNOWN GAPS / RISKS:
+- **My design ruling — flag, override if it looks wrong on real data:** right-side axis, terracotta labels,
+  no body-fat gridlines. This is the standard dual-axis convention, but it's a call I made — if the two axes
+  fight for attention or the terracotta labels read as loud, say so and I'll retune (e.g. lighter tick weight).
+- The body-fat axis labels show the PADDED extent (10% beyond your real min/max), same as the weight axis —
+  so the top/bottom numbers sit just outside your actual range. Standard for an axis; flagging in case it
+  reads oddly on a very flat body-fat history.
+- Still preview-only — the live Body page is unchanged. On-screen confirm is your gate (I don't log in).
+
+NEXT: Piece 4 — wire this finished chart into the real Body page + the composition heroes (the two big
+Fraunces numbers, following `onScrub`) + the fat/lean split bar, and DELETE the `#body-chart-preview`
+harness + its LoggedIn hook.
+
 ### 2026-07-16 — Body V3 PIECE 3 — the composition trend chart kit (Var 2). SRC-ONLY. 1 COMMIT. NOT wired into live Body yet.
 
 WHAT CHANGED:
