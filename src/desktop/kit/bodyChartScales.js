@@ -7,7 +7,7 @@
 // there is no second labelled axis (its number is spoken by the hero on scrub, not the
 // axis). X is real DATE across the window, so a gap in weigh-ins sits honestly.
 
-import { humanDayShort } from "../../spine/logic/gymDates.js";
+import { humanDayShort, shiftYMD } from "../../spine/logic/gymDates.js";
 
 // viewBox geometry. The SVG scales to its container via preserveAspectRatio.
 // l = room for the weight (kg) axis labels; r = room for the body-fat (%) axis labels.
@@ -70,13 +70,17 @@ export function nearestIndex(series, px, windowStart, windowEnd) {
   return best;
 }
 
-// A few evenly-spaced day labels across the window (for the date axis).
-export function dateTicks(series, count = 4) {
-  const s = series || [];
-  if (s.length <= 1) return s.map((p) => p.ymd);
+// Evenly-spaced day labels across the DATE DOMAIN [windowStart, windowEnd] — spaced by
+// date, not by data index, so they're always evenly spread in x and never bunch/overlap,
+// no matter how the weigh-ins cluster or how wide the range is. Dedupes so a short window
+// (fewer real days than `count`) yields fewer labels, not repeats.
+export function dateTicks(windowStart, windowEnd, count = 4) {
+  const total = dayIndex(windowEnd, windowStart);
+  if (!Number.isFinite(total) || total <= 0) return [windowStart];
+  const steps = Math.min(count, total + 1); // never more labels than there are days
   const out = [];
-  for (let i = 0; i < count; i++) {
-    out.push(s[Math.round((i / (count - 1)) * (s.length - 1))].ymd);
+  for (let i = 0; i < steps; i++) {
+    out.push(shiftYMD(windowStart, Math.round((i / (steps - 1)) * total)));
   }
   return [...new Set(out)];
 }

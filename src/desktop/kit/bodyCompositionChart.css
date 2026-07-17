@@ -4,6 +4,11 @@
 
 .bcc {
   width: 100%;
+  /* Cap the width so the aspect-locked chart can't grow to the full 1340px broadsheet
+     column and tower ~560px tall — which pushed Energy/Vitals past the zero-scroll fold.
+     Capping WIDTH bounds the height proportionally and keeps the dots round + the scrub
+     mapping exact (no letterbox). ~640 = the chart's native viewBox width. */
+  max-width: 640px;
 }
 .bcc-svg {
   display: block;

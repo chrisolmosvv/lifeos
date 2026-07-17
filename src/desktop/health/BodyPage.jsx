@@ -89,13 +89,19 @@ export default function BodyPage({ onBack }) {
   useEffect(() => load(), [load]);
 
   // The chart window for the current range. Week/Month/90 are trailing windows ending
-  // today; "Latest" shows the FULL journey (all history from START) — a snapshot number
-  // (the heroes) over the whole trend, and the one window each range that isn't the "90"
-  // tab already covers. (Latest-window semantics were the open recon fork — this is the
-  // default chosen; flagged in the handoff, reversible.)
+  // today; "Latest" shows the FULL journey — from the EARLIEST real weigh-in to today.
+  // (Bugfix: it used to start at the hardcoded fetch bound START = 2026-01-01, so the
+  // axis spanned months of empty space before the first weigh-in and crushed the data
+  // into the right edge. The domain now clamps to the first real reading.)
   function chartWindow() {
     const end = state.today;
-    if (range === "latest") return { start: START, end };
+    if (range === "latest") {
+      let earliest = null;
+      for (const r of state.rowsByMetric.weight || []) {
+        if (r?.metric_date && (earliest == null || r.metric_date < earliest)) earliest = r.metric_date;
+      }
+      return { start: earliest || end, end };
+    }
     return { start: shiftYMD(end, -(RANGE_DAYS[range] - 1)), end };
   }
 

@@ -64,7 +64,7 @@ export default function BodyCompositionChart({
   }
 
   const hp = weight[hover ?? -1] || null;
-  const ticks = dateTicks(weight, 4);
+  const ticks = dateTicks(windowStart, windowEnd, 4);
 
   return (
     <div className="bcc" key={`${windowStart}_${windowEnd}`}>
