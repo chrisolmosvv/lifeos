@@ -33,6 +33,67 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-17 — Body V3 PIECE 8 — full-width Energy + split, ring rework, Energy reflow. SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED — ten locked layout/positioning changes (existing components; NO new range logic — Piece 9
+replaces the range model):
+1. **The vertical divider** between the chart and the right column now stops where that TOP ROW ends —
+   it no longer runs full-page. (The row is now natural height, so the side column's hairline is scoped
+   to the chart's height.)
+2. **The fat/lean split bar + its "FAT / LEAN SPLIT" label go FULL WIDTH** (moved below the two-column row).
+3. **The Energy section goes FULL WIDTH** too, and its "ENERGY" label matches the split label's eyebrow
+   treatment. (Kept a subtle "14-day" window indicator beside it — flag if you want it dropped for an
+   exact match.)
+4. **No rule between the top row and the split/Energy below** — spacing only (removed Energy's old hairline).
+5. **The ring grew** to fill the 64px bar-height band (its circle was ~58px, now ~64px = the bars).
+6. **The ring's centre** now shows today's REAL active-kcal number with "active today" beneath it INSIDE
+   the ring (replacing the "—" placeholder + the "kcal active today" beside-label, which is retired).
+   No-goal case still shows today's real kcal, just without the % framing.
+7. **The "avg X/day · set a move goal" caption** (or "% of goal · avg X/day" when a goal is set) sits
+   BENEATH the ring — see the flag.
+8. **The resting/active proportion bar** moved to a thin VERTICAL bar sitting between the ring and the
+   day bars — see the flag on orientation.
+9. **Energy's Latest default is now 14 days** (was 7). The bars fill the full width regardless of count,
+   and **date labels** sit beneath them (same treatment as the chart's x-axis). "avg X/day" is recomputed
+   to the 14-day figure (new `avgPerDay` getter — activity's `rolling` only has 7/30/90 presets — which
+   excludes today's partial day). Verified headlessly (14-day avg correct, today excluded, 14 bars).
+10. **The range-control model itself is untouched** (still Latest + Week/Month/90) — Piece 9 replaces it.
+
+FILES: `bodyEnergy.js` (14-day default + `avgPerDay`) · `EnergySection.jsx` (rewritten: ring/split/bars) ·
+`energySection.css` (rewritten: full-width band) · `BodyPage.jsx` (two-column row + full-width split +
+Energy) · `bodyCompositionBlock.css` (trimmed to the split-bar styles) · `bodySide.css` (row is natural
+height so the divider scopes) · DELETED `BodyCompositionBlock.jsx` (chart + split inlined in BodyPage).
+
+HOW TO VERIFY (owner, on the 13"):
+1. **Divider** stops at the bottom of the chart+sidebar row; nothing below it is divided.
+2. **Split bar, its label, and Energy all reach full page width**; no hairline between the row and them,
+   just space.
+3. **Ring:** as tall as the Energy bars; its centre shows the real active-kcal number + "active today";
+   the "% of goal · avg/day" (or "avg/day · set a move goal") reads beneath it.
+4. **Resting/active split** is now the thin vertical bar between the ring and the day bars.
+5. **Bars:** 14 of them on Latest, filling the full width with legible date labels beneath; today's bar
+   terracotta. "avg X/day" reads the 14-day figure (hand-check against ~2 weeks of your data).
+6. **⚠️ RE-CHECK ZERO-SCROLL** on all ranges (see risk).
+
+KNOWN GAPS / RISKS:
+- **⚠️ FLAG #7 — the goal caption placement is my call:** I put "% of goal · avg X/day" / "avg X/day ·
+  set a move goal" directly BENEATH the ring (centered), since it links from the ring specifically. If
+  you'd rather it sit elsewhere (e.g. to the ring's right), say so — one-line move.
+- **⚠️ FLAG #8 — the resting/active bar orientation is my call:** the old bar was horizontal (full-width,
+  below). To sit "between the ring and the bars" in that horizontal band, I made it a thin VERTICAL bar
+  (resting base + active top), height-matched to the day bars, with a small "avg split" label. If you
+  pictured it staying horizontal, tell me and I'll rethink the fit.
+- **Ring size:** I sized it to match the bars' 64px height exactly (per the spec). If you wanted it
+  bigger than the bars, it's one number to bump.
+- **Zero-scroll:** the total page height is roughly unchanged from Piece 7 (the pieces just moved around;
+  Energy is a touch more compact, the bars gained a small date-label row). So the Piece-7 fit still
+  broadly holds — but this is a real restructure, so **please re-confirm no bottom clip on your screen**.
+  The Piece-7 save-point (restore the chart's `max-width: 640px`) still applies if it clips.
+- Resting energy still not flowing (Piece-1 device task) — the vertical split + bars still show
+  active-only until it does, with the standing note.
+
+NEXT: Piece 9 — the time-control overhaul (replaces the Latest/Week/Month/90 range model wholesale).
+
 ### 2026-07-17 — Body V3 PIECE 7 — Composition reflow: chart is the hero, heroes → right column. SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED — a genuine reflow of Pieces 4 + 6 (not a new component):
