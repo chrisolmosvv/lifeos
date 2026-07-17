@@ -7,10 +7,9 @@ import { metricView as activityView } from "../../spine/logic/healthActivity";
 import { composition } from "../../spine/logic/healthBodyRange";
 import { metaFor } from "../../spine/logic/bodyFormat";
 import { useGoalWrites } from "./useGoalWrites";
-import { buildLatestGroups, buildRangeGroups } from "./bodyGroups";
-import BodyTable from "./BodyTable";
 import BodyCompositionBlock from "./BodyCompositionBlock";
 import EnergySection from "./EnergySection";
+import VitalsColumn from "./VitalsColumn";
 import GoalEditor from "./GoalEditor";
 import RangeSwitcher from "../kit/RangeSwitcher";
 import Breadcrumb from "../kit/Breadcrumb";
@@ -20,6 +19,7 @@ import Popover from "../kit/Popover";
 import Toast from "../kit/Toast";
 import "./healthChrome.css";
 import "../kit/bodyPage.css";
+import "../kit/vitalsColumn.css";
 
 // BodyPage — the Body front page (Health Hub → Body), V2 "Scale Ticket". Breadcrumb
 // "Health / Body" + the shared RangeSwitcher chrome; the Latest view is a 3-group metric
@@ -106,22 +106,12 @@ export default function BodyPage({ onBack }) {
     return { start: shiftYMD(end, -(RANGE_DAYS[range] - 1)), end };
   }
 
-  // The live page: the Composition BLOCK (heroes + Var-2 chart + split) is the dominant
-  // content, the Energy SECTION (ring + stacked bars + avg split) is the modest secondary
-  // block, and Vitals stays as its existing table rows beneath (its redesign is Piece 6).
-  // All three respond to the one range control.
+  // The live page is a TWO-COLUMN layout (Piece 6): the MAIN column holds the dominant
+  // Composition block (heroes + Var-2 chart + split) then the modest Energy section (ring +
+  // bars + avg split); the SIDE column holds Vitals alongside them (not stacked below) —
+  // the locked "vitals is side info" call, and what frees the vertical room so the whole
+  // page holds zero-scroll. All three respond to the one range control.
   function renderBody() {
-    const ctx = {
-      body: state.body,
-      activity: state.activity,
-      rowsByMetric: state.rowsByMetric,
-      activityRows: state.activityRows,
-      goalMap,
-      today: state.today,
-      openEditor: gw.openEditor,
-    };
-    const allGroups = range === "latest" ? buildLatestGroups(ctx) : buildRangeGroups(ctx, RANGE_DAYS[range]);
-    const vitalsGroups = allGroups.filter((g) => g.name === "Vitals"); // Composition → block, Energy → section
     const splitComp = composition(
       state.body?.weight?.latestRaw?.value,
       state.body?.body_fat?.latestRaw?.value,
@@ -130,24 +120,28 @@ export default function BodyPage({ onBack }) {
     const win = chartWindow();
     return (
       <div className="health-fade" key={range}>
-        <BodyCompositionBlock
-          weightRows={state.rowsByMetric.weight}
-          bodyFatRows={state.rowsByMetric.body_fat}
-          splitComp={splitComp}
-          weightGoal={goalMap.get("weight") ?? null}
-          today={state.today}
-          windowStart={win.start}
-          windowEnd={win.end}
-        />
-        <EnergySection
-          activity={state.activity}
-          activityRows={state.activityRows}
-          goalMap={goalMap}
-          today={state.today}
-          range={range}
-          onSetGoal={(el) => gw.openEditor("active_energy", el)}
-        />
-        <BodyTable groups={vitalsGroups} />
+        <div className="body-body">
+          <div className="body-main">
+            <BodyCompositionBlock
+              weightRows={state.rowsByMetric.weight}
+              bodyFatRows={state.rowsByMetric.body_fat}
+              splitComp={splitComp}
+              weightGoal={goalMap.get("weight") ?? null}
+              today={state.today}
+              windowStart={win.start}
+              windowEnd={win.end}
+            />
+            <EnergySection
+              activity={state.activity}
+              activityRows={state.activityRows}
+              goalMap={goalMap}
+              today={state.today}
+              range={range}
+              onSetGoal={(el) => gw.openEditor("active_energy", el)}
+            />
+          </div>
+          <VitalsColumn body={state.body} rowsByMetric={state.rowsByMetric} today={state.today} />
+        </div>
       </div>
     );
   }
