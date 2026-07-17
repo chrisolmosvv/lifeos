@@ -10,6 +10,7 @@ import { useGoalWrites } from "./useGoalWrites";
 import { buildLatestGroups, buildRangeGroups } from "./bodyGroups";
 import BodyTable from "./BodyTable";
 import BodyCompositionBlock from "./BodyCompositionBlock";
+import EnergySection from "./EnergySection";
 import GoalEditor from "./GoalEditor";
 import RangeSwitcher from "../kit/RangeSwitcher";
 import Breadcrumb from "../kit/Breadcrumb";
@@ -105,9 +106,10 @@ export default function BodyPage({ onBack }) {
     return { start: shiftYMD(end, -(RANGE_DAYS[range] - 1)), end };
   }
 
-  // The live page: the Composition BLOCK (heroes + Var-2 chart + fat/lean split) is the
-  // dominant content; Energy + Vitals stay as their existing table rows beneath (their
-  // redesign is Pieces 5/6 — untouched here). Both respond to the one range control.
+  // The live page: the Composition BLOCK (heroes + Var-2 chart + split) is the dominant
+  // content, the Energy SECTION (ring + stacked bars + avg split) is the modest secondary
+  // block, and Vitals stays as its existing table rows beneath (its redesign is Piece 6).
+  // All three respond to the one range control.
   function renderBody() {
     const ctx = {
       body: state.body,
@@ -119,7 +121,7 @@ export default function BodyPage({ onBack }) {
       openEditor: gw.openEditor,
     };
     const allGroups = range === "latest" ? buildLatestGroups(ctx) : buildRangeGroups(ctx, RANGE_DAYS[range]);
-    const restGroups = allGroups.filter((g) => g.name !== "Composition"); // Composition → the block below
+    const vitalsGroups = allGroups.filter((g) => g.name === "Vitals"); // Composition → block, Energy → section
     const splitComp = composition(
       state.body?.weight?.latestRaw?.value,
       state.body?.body_fat?.latestRaw?.value,
@@ -137,7 +139,15 @@ export default function BodyPage({ onBack }) {
           windowStart={win.start}
           windowEnd={win.end}
         />
-        <BodyTable groups={restGroups} />
+        <EnergySection
+          activity={state.activity}
+          activityRows={state.activityRows}
+          goalMap={goalMap}
+          today={state.today}
+          range={range}
+          onSetGoal={(el) => gw.openEditor("active_energy", el)}
+        />
+        <BodyTable groups={vitalsGroups} />
       </div>
     );
   }
