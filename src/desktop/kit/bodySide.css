@@ -1,0 +1,87 @@
+/* LifeOS — Body V3 (Piece 7): the main+side two-column layout AND the right column, which
+   now holds THREE stacked sections — Weight hero, Body-fat hero, Vitals — with equal
+   breathing room. The full-width chart lives in the main column. Hairlines only; terracotta
+   stays reserved for the chart (the hero numbers + vitals are ink). */
+
+/* ── the two-column body ─────────────────────────────────────────────────────── */
+.body-body {
+  flex: 1 1 auto;   /* fill the .health-fade column so .health-fit stays zero-scroll */
+  min-height: 0;
+  display: flex;
+  gap: 32px;
+  align-items: stretch;
+}
+.body-main {
+  flex: 1 1 auto;
+  min-width: 0;     /* let the chart size to the column instead of forcing overflow */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── the right column ────────────────────────────────────────────────────────── */
+.bside {
+  flex: 0 0 268px;  /* narrower side column, wide enough for a full-size hero number */
+  display: flex;
+  flex-direction: column;
+  padding-left: 32px;
+  border-left: 1px solid var(--rule); /* one hairline divides main from side */
+}
+/* three sections, equal breathing room, hairline-separated */
+.bside > * { padding: 16px 0; }
+.bside > * + * { border-top: 1px solid var(--rule-faint); }
+.bside > :first-child { padding-top: 2px; }
+
+/* ── Weight + Body-fat heroes ────────────────────────────────────────────────── */
+.bside-hero { display: flex; flex-direction: column; gap: 3px; }
+.bside-hero-num {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.bside-hero-cap { font-family: var(--font-sans); font-size: 12px; color: var(--ink-muted); }
+.bside-hero-cap b { font-weight: 500; color: var(--ink); }
+.bside-goal {
+  margin-top: 3px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Vitals ──────────────────────────────────────────────────────────────────── */
+.bside-vitals { display: flex; flex-direction: column; gap: 8px; }
+.vitals-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.vital-rhr { display: flex; flex-direction: column; gap: 4px; }
+.vital-rhr-top { display: flex; align-items: baseline; justify-content: space-between; }
+.vital-rhr-num {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.vital-rhr-trend { font-size: 12px; }
+.vital-label { font-family: var(--font-sans); font-size: 11px; color: var(--ink-muted); }
+.vital-spark { width: 100%; margin-top: 2px; }
+.vital-range {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+/* Respiratory — deliberately QUIET (a tripwire, not a trend) */
+.vital-resp {
+  margin: 8px 0 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}

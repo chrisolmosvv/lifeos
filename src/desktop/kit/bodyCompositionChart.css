@@ -4,11 +4,11 @@
 
 .bcc {
   width: 100%;
-  /* Cap the width so the aspect-locked chart can't grow to the full 1340px broadsheet
-     column and tower ~560px tall — which pushed Energy/Vitals past the zero-scroll fold.
-     Capping WIDTH bounds the height proportionally and keeps the dots round + the scrub
-     mapping exact (no letterbox). ~640 = the chart's native viewBox width. */
-  max-width: 640px;
+  position: relative; /* positioning context for the hover tooltip */
+  /* Piece 7: the chart is now the full-width hero — the old max-width:640 cap was removed
+     here (the two hero numbers left the main column for the right column). SAVE-POINT: if
+     the taller full-width chart clips the page on a short window, restore `max-width: 640px`
+     to bound its height again (see the Piece-7 handoff for the height numbers). */
 }
 .bcc-svg {
   display: block;
@@ -78,6 +78,26 @@
 .bcc-fade-band { opacity: 0; animation: bcc-fade-band 600ms ease 700ms forwards; }
 @keyframes bcc-fade { to { opacity: 1; } }
 @keyframes bcc-fade-band { to { opacity: 0.07; } }   /* settle at the band's resting opacity */
+
+/* ── self-contained hover tooltip (Piece 7) ──────────────────────────────────── */
+.bcc-tip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px)); /* centred above the snapped point */
+  pointer-events: none;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 5px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  z-index: 2;
+}
+.bcc-tip-date { font-size: 10px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.bcc-tip-row { font-size: 13px; color: var(--ink); }
+.bcc-tip-fat { color: var(--accent); }
 
 /* ── accessibility: instant, no motion (same escape hatch as .health-fade) ───── */
 @media (prefers-reduced-motion: reduce) {

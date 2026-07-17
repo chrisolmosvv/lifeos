@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { smoothedSeries, goalZone, valueOn } from "../../spine/logic/bodyComposition";
+import { humanDayLong } from "../../spine/logic/gymDates";
+import { fmtFull } from "../../spine/logic/bodyFormat";
 import {
-  DIMS, xScale, yScaleFrom, polyPoints, bandPath, nearestIndex, dateTicks, humanDayShort,
+  DIMS, xScale, yScaleFrom, yTicks, polyPoints, bandPath, nearestIndex, dateTicks, humanDayShort,
 } from "./bodyChartScales";
 import "./bodyCompositionChart.css";
 
@@ -10,9 +12,9 @@ import "./bodyCompositionChart.css";
 //   goal zone (faint terracotta band) → weight spread band → body-fat smoothed line
 //   (dashed terracotta, shape-only) → weight smoothed line (solid ink) → faint raw
 //   weigh-in dots (weight only) → the terracotta pulsing TODAY dot → the hover crosshair.
-// The maths lives in bodyComposition.js (the series) + bodyCompositionChart.js (scales);
-// this file only renders and owns the scrub state. onScrub fires the snapped day's real
-// values so the page's hero numbers (Piece 4) can follow the crosshair.
+// The maths lives in bodyComposition.js (the series) + bodyChartScales.js (scales); this
+// file renders + owns the hover state, which drives a SELF-CONTAINED tooltip (Piece 7) —
+// it no longer lifts values to the right-column heroes (those always show today).
 
 // ⚠️ The MINIMUM body-fat-axis span, in percentage points (a build default flagged for
 // the owner). Body fat's real range over a few weeks is often < 1pp; a floor of 4pp keeps
@@ -21,7 +23,7 @@ import "./bodyCompositionChart.css";
 const BODYFAT_AXIS_MIN_SPAN = 4;
 
 export default function BodyCompositionChart({
-  weightRows, bodyFatRows, windowStart, windowEnd, weightGoal, today, onScrub, smooth = 7,
+  weightRows, bodyFatRows, windowStart, windowEnd, weightGoal, today, smooth = 7,
 }) {
   const weight = useMemo(
     () => smoothedSeries(weightRows, { start: windowStart, end: windowEnd, smooth, withBand: true }),
@@ -53,28 +55,24 @@ export default function BodyCompositionChart({
   const hasData = weight.length > 0;
   const todayPt = hasData ? (weight.find((p) => p.ymd === today) || weight[weight.length - 1]) : null;
 
+  // Hover is SELF-CONTAINED now (Piece 7): it drives a local tooltip, NOT the right-column
+  // hero numbers (those always show today). Snaps to the nearest real weigh-in.
   function onMove(e) {
     if (!hasData) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const px = ((e.clientX - rect.left) / rect.width) * w; // client px → viewBox px
     const i = nearestIndex(weight, px, windowStart, windowEnd);
-    if (i < 0) return;
-    setHover(i);
-    const wp = weight[i];
-    const fp = valueOn(fat, wp.ymd);
-    onScrub?.({
-      ymd: wp.ymd, weightRaw: wp.raw, weightSmoothed: wp.smoothed,
-      bodyFatRaw: fp?.raw ?? null, bodyFatSmoothed: fp?.smoothed ?? null,
-    });
+    if (i >= 0) setHover(i);
   }
-  function onLeave() { setHover(null); onScrub?.(null); }
+  function onLeave() { setHover(null); }
 
   if (!hasData) {
     return <div className="bcc-empty">Not enough weigh-ins yet to chart the trend.</div>;
   }
 
   const hp = weight[hover ?? -1] || null;
-  const ticks = dateTicks(windowStart, windowEnd, 4);
+  const ticks = dateTicks(windowStart, windowEnd, 6); // Piece 7: more date labels (full-width room)
+  const hpFat = hp ? valueOn(fat, hp.ymd) : null; // body-fat value on the hovered day (for the tooltip)
 
   return (
     <div className="bcc" key={`${windowStart}_${windowEnd}`}>
@@ -84,9 +82,10 @@ export default function BodyCompositionChart({
         onMouseMove={onMove} onMouseLeave={onLeave}
       >
         {/* LEFT axis = weight (kg), the PRIMARY axis — it owns the gridlines. Ink/muted,
-            matching the solid ink weight line. Top + bottom kg labels. */}
+            matching the solid ink weight line. Piece 7: finer gridlines (5 levels) now the
+            chart is the full-width hero and has room for them without clutter. */}
         <line className="bcc-axis" x1={l} y1={t} x2={l} y2={h - b} />
-        {[wy.hi, wy.lo].map((v, i) => (
+        {yTicks(wy.lo, wy.hi, 5).map((v, i) => (
           <g key={i}>
             <line className="bcc-grid" x1={l} y1={wy.y(v)} x2={w - r} y2={wy.y(v)} />
             <text className="bcc-ytick" x={l - 6} y={wy.y(v) + 3} textAnchor="end">{v.toFixed(1)}</text>
@@ -98,7 +97,7 @@ export default function BodyCompositionChart({
             which — but NO gridlines of its own (a second grid would clutter; the grid
             belongs to the primary weight axis). */}
         <line className="bcc-axis" x1={w - r} y1={t} x2={w - r} y2={h - b} />
-        {[fy.hi, fy.lo].map((v, i) => (
+        {yTicks(fy.lo, fy.hi, 3).map((v, i) => (
           <text key={i} className="bcc-ytick bcc-ytick--fat" x={w - r + 6} y={fy.y(v) + 3} textAnchor="start">
             {v.toFixed(1)}%
           </text>
@@ -154,6 +153,22 @@ export default function BodyCompositionChart({
           </text>
         ))}
       </svg>
+
+      {/* SELF-CONTAINED tooltip (Piece 7): follows the snapped weigh-in near the cursor,
+          showing that day's date + weight + body fat. It does NOT touch the right column. */}
+      {hp && (
+        <div
+          className="bcc-tip"
+          style={{ left: `${(x(hp.ymd) / w) * 100}%`, top: `${(wy.y(hp.raw) / h) * 100}%` }}
+        >
+          <span className="bcc-tip-date">{humanDayLong(hp.ymd)}</span>
+          <span className="bcc-tip-row">{fmtFull("weight", hp.raw)}</span>
+          {(() => {
+            const fv = hpFat?.raw ?? hpFat?.smoothed;
+            return Number.isFinite(fv) ? <span className="bcc-tip-row bcc-tip-fat">{fmtFull("body_fat", fv)}</span> : null;
+          })()}
+        </div>
+      )}
     </div>
   );
 }

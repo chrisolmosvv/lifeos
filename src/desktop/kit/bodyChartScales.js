@@ -49,6 +49,18 @@ export function yScaleFrom(values, pad = 0.1, minSpan = 0) {
   return { y, lo, hi };
 }
 
+// N evenly-spaced values across [lo, hi] — the weight axis's gridline/label levels.
+// Piece 7: the chart is now the full-width hero, so it can carry finer gridlines than the
+// old two-line (min/max) treatment without clutter.
+export function yTicks(lo, hi, count = 5) {
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || count < 2) {
+    return [hi, lo].filter(Number.isFinite);
+  }
+  const out = [];
+  for (let i = 0; i < count; i++) out.push(lo + (i / (count - 1)) * (hi - lo));
+  return out;
+}
+
 // "x,y x,y …" points for a polyline over a series, reading `field` (skips gaps).
 export function polyPoints(series, xOf, yOf, field) {
   return (series || [])

@@ -9,7 +9,7 @@ import { metaFor } from "../../spine/logic/bodyFormat";
 import { useGoalWrites } from "./useGoalWrites";
 import BodyCompositionBlock from "./BodyCompositionBlock";
 import EnergySection from "./EnergySection";
-import VitalsColumn from "./VitalsColumn";
+import BodySideColumn from "./BodySideColumn";
 import GoalEditor from "./GoalEditor";
 import RangeSwitcher from "../kit/RangeSwitcher";
 import Breadcrumb from "../kit/Breadcrumb";
@@ -19,7 +19,7 @@ import Popover from "../kit/Popover";
 import Toast from "../kit/Toast";
 import "./healthChrome.css";
 import "../kit/bodyPage.css";
-import "../kit/vitalsColumn.css";
+import "../kit/bodySide.css";
 
 // BodyPage — the Body front page (Health Hub → Body), V2 "Scale Ticket". Breadcrumb
 // "Health / Body" + the shared RangeSwitcher chrome; the Latest view is a 3-group metric
@@ -140,7 +140,14 @@ export default function BodyPage({ onBack }) {
               onSetGoal={(el) => gw.openEditor("active_energy", el)}
             />
           </div>
-          <VitalsColumn body={state.body} rowsByMetric={state.rowsByMetric} today={state.today} />
+          <BodySideColumn
+            weightRows={state.rowsByMetric.weight}
+            bodyFatRows={state.rowsByMetric.body_fat}
+            weightGoal={goalMap.get("weight") ?? null}
+            body={state.body}
+            rowsByMetric={state.rowsByMetric}
+            today={state.today}
+          />
         </div>
       </div>
     );
