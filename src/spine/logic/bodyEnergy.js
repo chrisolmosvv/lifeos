@@ -7,9 +7,22 @@ import { shiftYMD } from "./gymDates.js";
 import { aggregateDaily } from "./healthActivity.js";
 
 // The Energy window per page range: the number of trailing days the bars show and the
-// rolling preset the ring/split average over. "Latest" defaults to a trailing WEEK
-// (owner ruling — the same 7-day context Sleep's Last-night page always shows).
-export const ENERGY_WINDOW = { latest: 7, week: 7, month: 30, "90": 90 };
+// window the ring/split average over. "Latest" defaults to a trailing FORTNIGHT (Piece 8
+// owner ruling — 14 days of context; was 7).
+export const ENERGY_WINDOW = { latest: 14, week: 7, month: 30, "90": 90 };
+
+// Average daily total over the last `days` COMPLETED days ending on `end` (pass yesterday
+// so today's partial day never drags the average down). Works for ANY window length —
+// activity's rolling getter only has 7/30/90 presets, and the 14-day default needs this.
+// → the mean kcal/day, or null when the window holds no data.
+export function avgPerDay(rows, end, days) {
+  const daily = aggregateDaily(rows, "sum");
+  const start = shiftYMD(end, -(days - 1));
+  const vals = daily
+    .filter((d) => d.ymd >= start && d.ymd <= end && Number.isFinite(d.value))
+    .map((d) => d.value);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
 
 // Per-day stacked burn for the trailing `days` ending on `end` (TODAY INCLUDED — its bar
 // is the partial day-so-far, so it reads a little short; the section marks it terracotta).

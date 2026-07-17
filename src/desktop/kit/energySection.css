@@ -1,14 +1,13 @@
-/* LifeOS — Body V3 (Piece 5): the Energy section. SECONDARY block — deliberately quieter
-   than Composition (smaller type, no hero numbers). Hairlines only. terracotta is reserved
-   for the ring arc + today's bar; nothing else in here reaches for it. */
+/* LifeOS — Body V3 (Piece 8): the FULL-WIDTH Energy section. One horizontal band —
+   ring · vertical avg-split · full-width day bars. No rule above it (spacing only);
+   its "ENERGY" label matches the "FAT / LEAN SPLIT" header treatment. terracotta is
+   reserved for the ring arc + today's bar; nothing else here reaches for it. */
 
 .energy {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--rule); /* hairline separating it from Composition */
+  margin-top: 20px; /* spacing separates it from the row above — NO hairline (Piece 8) */
 }
 .energy-eyebrow {
   font-family: var(--font-sans);
@@ -20,35 +19,43 @@
 .energy-window { margin-left: 8px; opacity: 0.7; }
 .energy-note { margin: 0; font-family: var(--font-sans); font-size: 11px; color: var(--ink-muted); }
 
-/* ── top row: ring (left) + bars (right) ─────────────────────────────────────── */
+/* ── the band: ring · split · bars ───────────────────────────────────────────── */
 .energy-top {
   display: flex;
-  align-items: center;
-  gap: 24px;
+  align-items: flex-start;
+  gap: 20px;
 }
 
-/* E6 — ring */
-.er-ring { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+/* E6 — ring (grown to ~match the 64px bar height; centre = number + caption) */
+.er-ring { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 0 0 auto; }
 .er-ring-dial { position: relative; width: 64px; height: 64px; }
 .er-ring-dial svg { width: 64px; height: 64px; display: block; }
 .er-ring-track { stroke: var(--rule); }
 .er-ring-arc { stroke: var(--accent); transition: stroke-dasharray 400ms ease; }
-.er-ring-num {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-sans); font-size: 17px; color: var(--ink);
-  font-variant-numeric: tabular-nums;
+.er-ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
 }
-.er-ring-cap { display: flex; flex-direction: column; gap: 2px; font-family: var(--font-sans); font-size: 12px; color: var(--ink-muted); }
-.er-ring-unit { color: var(--ink); }
+.er-ring-num { font-family: var(--font-sans); font-size: 16px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.er-ring-sub { font-family: var(--font-sans); font-size: 7.5px; letter-spacing: 0.02em; color: var(--ink-muted); text-transform: uppercase; }
+.er-ring-cap { font-family: var(--font-sans); font-size: 11px; color: var(--ink-muted); text-align: center; font-variant-numeric: tabular-nums; }
 .er-setgoal {
-  background: none; border: none; padding: 0; text-align: left; cursor: pointer;
+  background: none; border: none; padding: 0; cursor: pointer;
   font: inherit; color: var(--ink-muted); text-decoration: underline dotted;
 }
 .er-setgoal:hover { color: var(--accent); }
 
-/* E1 — stacked bars */
+/* E8 — thin vertical avg-split bar, between the ring and the bars */
+.er-split { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 0 0 auto; }
+.er-split-bar { width: 14px; height: 64px; display: flex; flex-direction: column; overflow: hidden; }
+.er-split--empty { width: 14px; height: 64px; background: var(--rule-faint); }
+.er-split-active { background: rgba(28, 25, 22, 0.5); }
+.er-split-resting { background: rgba(28, 25, 22, 0.22); }
+.er-split-cap { font-family: var(--font-sans); font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-muted); }
+
+/* E1 — full-width day bars + date labels beneath */
+.er-bars-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .er-bars {
-  flex: 1 1 auto;
   display: flex;
   align-items: flex-end;
   gap: 3px;
@@ -67,18 +74,15 @@
 .er-bar--today .er-bar-active { background: var(--accent); }
 .er-bar--today .er-bar-resting { background: rgba(200, 100, 61, 0.34); } /* terracotta base */
 
-/* E8 — average split bar */
-.er-split { display: flex; flex-direction: column; gap: 5px; }
-.er-split-bar { display: flex; height: 9px; width: 100%; overflow: hidden; }
-.er-split-resting { background: rgba(28, 25, 22, 0.22); }
-.er-split-active { background: rgba(28, 25, 22, 0.5); }
-.er-split-empty { margin: 0; font-family: var(--font-sans); font-size: 12px; color: var(--ink-muted); }
-.er-split-legend {
-  display: flex; gap: 16px; align-items: center;
-  font-family: var(--font-sans); font-size: 11px; color: var(--ink-muted);
+.er-bar-dates { display: flex; gap: 3px; }
+.er-bar-date {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
 }
-.er-key { display: inline-block; width: 8px; height: 8px; margin-right: 5px; vertical-align: middle; }
-.er-key-resting { background: rgba(28, 25, 22, 0.22); }
-.er-key-active { background: rgba(28, 25, 22, 0.5); }
-.er-split-note { margin-left: auto; opacity: 0.8; }

@@ -1,18 +1,11 @@
-/* LifeOS — Body V3 (Piece 7): the main-column Composition block = the full-width chart +
-   the fat/lean split bar beneath it. (The hero numbers + goal text moved to the right
-   column — their styles live in bodySide.css now.) Hairlines only. */
+/* LifeOS — Body V3 (Piece 8): the fat/lean split bar, now a FULL-WIDTH block below the
+   chart+sidebar row (its label matches the "ENERGY" header treatment). Hairlines only. */
 
-.bcb {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* fat / lean split beneath the chart */
 .bcb-split {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  margin-top: 18px; /* spacing separates it from the row above — no hairline */
 }
 .bcb-split-label {
   font-family: var(--font-sans);

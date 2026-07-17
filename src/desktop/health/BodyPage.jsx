@@ -7,7 +7,8 @@ import { metricView as activityView } from "../../spine/logic/healthActivity";
 import { composition } from "../../spine/logic/healthBodyRange";
 import { metaFor } from "../../spine/logic/bodyFormat";
 import { useGoalWrites } from "./useGoalWrites";
-import BodyCompositionBlock from "./BodyCompositionBlock";
+import BodyCompositionChart from "../kit/BodyCompositionChart";
+import BodyComposition from "./BodyComposition";
 import EnergySection from "./EnergySection";
 import BodySideColumn from "./BodySideColumn";
 import GoalEditor from "./GoalEditor";
@@ -20,6 +21,7 @@ import Toast from "../kit/Toast";
 import "./healthChrome.css";
 import "../kit/bodyPage.css";
 import "../kit/bodySide.css";
+import "../kit/bodyCompositionBlock.css";
 
 // BodyPage — the Body front page (Health Hub → Body), V2 "Scale Ticket". Breadcrumb
 // "Health / Body" + the shared RangeSwitcher chrome; the Latest view is a 3-group metric
@@ -120,24 +122,17 @@ export default function BodyPage({ onBack }) {
     const win = chartWindow();
     return (
       <div className="health-fade" key={range}>
+        {/* TOP ROW (two columns): the full-width chart | the Weight/Body-fat/Vitals column.
+            The divider (the side column's border-left) is scoped to THIS row (Piece 8). */}
         <div className="body-body">
           <div className="body-main">
-            <BodyCompositionBlock
+            <BodyCompositionChart
               weightRows={state.rowsByMetric.weight}
               bodyFatRows={state.rowsByMetric.body_fat}
-              splitComp={splitComp}
-              weightGoal={goalMap.get("weight") ?? null}
-              today={state.today}
               windowStart={win.start}
               windowEnd={win.end}
-            />
-            <EnergySection
-              activity={state.activity}
-              activityRows={state.activityRows}
-              goalMap={goalMap}
+              weightGoal={goalMap.get("weight") ?? null}
               today={state.today}
-              range={range}
-              onSetGoal={(el) => gw.openEditor("active_energy", el)}
             />
           </div>
           <BodySideColumn
@@ -149,6 +144,21 @@ export default function BodyPage({ onBack }) {
             today={state.today}
           />
         </div>
+
+        {/* FULL-WIDTH below the row: the fat/lean split bar, then the Energy section.
+            No rule between the row and these — spacing only (Piece 8). */}
+        <div className="bcb-split">
+          <span className="bcb-split-label">fat / lean split</span>
+          <BodyComposition comp={splitComp} />
+        </div>
+        <EnergySection
+          activity={state.activity}
+          activityRows={state.activityRows}
+          goalMap={goalMap}
+          today={state.today}
+          range={range}
+          onSetGoal={(el) => gw.openEditor("active_energy", el)}
+        />
       </div>
     );
   }
