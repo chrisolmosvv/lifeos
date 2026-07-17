@@ -9,6 +9,68 @@
 
 ---
 
+## Body V3 redesign — decisions banked (2026-07-18)
+
+> Pieces 1–9, src-only. As-built detail in `health-v2-build-doc.md` PART D; per-piece steps in
+> 04-handoff-log.md (2026-07-16 → -18). Grouped below; each with its one-line why.
+
+**Metrics**
+- **[Cut BMI + blood oxygen from Body entirely]** (desktop + mobile, all views). **Why:** BMI can't tell
+  muscle from fat and falsely flagged "above range" on an athletic build (body-fat% + lean mass already
+  told the truth); blood oxygen is a tripwire with no daily-trend value for a healthy person. **Trade-off:**
+  lost two at-a-glance numbers, but both misled more than they informed. (Respiratory rate KEPT — its
+  early-illness signal earns it.)
+- **[Lean mass stays LEGEND-ONLY in the fat/lean split bar]** — not promoted to a third hero. **Why:** owner
+  call; two heroes (weight, body fat) is the composition story, lean is context. **Trade-off:** lean loses
+  its own trend arrow.
+
+**Composition chart**
+- **[Hero numbers show raw-today AND the 7-day average together]** (not one or the other). **Why:** the raw
+  number is "where I am today," the smoothed is "the real trend" — you need both to read a noisy scale.
+- **[Body fat gets its OWN right-hand axis]** (terracotta labels), not shape-only on the weight axis.
+  **Why:** so its % is directly readable, not just its shape. **Trade-off:** a second axis to learn, hence
+  the colour-coding.
+- **[Body-fat axis has a 4-percentage-point MINIMUM span]** (`BODYFAT_AXIS_MIN_SPAN`). **Why:** body fat's
+  real range over weeks is often <1pp; a tight auto-scaled axis magnified sub-percent noise into a fake
+  violent zigzag. The floor keeps a real trend a gentle slope. **Trade-off:** a genuinely tiny real move
+  reads small (which is honest).
+- **[Goal zone = weight target ± 1.0 kg]** (`GOAL_ZONE_TOLERANCE_KG`), owner-confirmed against real data.
+  **Why:** the stored goal is a single target, not a range; ±1kg is a sane "close enough" band.
+- **[NO milestone markers — honest-omission ruling]** (do not reopen). **Why:** neither Gym-PR-pulls nor
+  manual life-event tagging exist as data; a chart annotation with nothing behind it is fabrication.
+  **Trade-off:** no "you hit X" flags until a real data source exists.
+
+**Piece 7 reflow**
+- **[The chart is the dominant hero; heroes + Vitals move to one right column; hover decouples to a local
+  tooltip]** (was: heroes above the chart, hover updated them). **Why:** the chart is the story; the numbers
+  are reference; a full-width chart + a stable right column reads calmer than a cross-column hover link.
+  **Trade-off:** the chart is taller (a zero-scroll risk, save-point = restore its width cap).
+
+**Energy**
+- **[Energy = three coordinated parts: move-goal ring + stacked day-bars + a resting/active proportion bar]**.
+  **Why:** the ring is "am I moving today," the bars are "the shape of my burn," the split is "resting vs
+  active make-up."
+- **[Ring is FIXED to today; day-bars + proportion bar PAGE with the viewed period]** — adjacent, different
+  behaviour, on purpose. **Why:** the ring is a current-status widget (today's goal), the bars/split are a
+  history view. **Trade-off:** two "avg" figures (the ring's fixed 14-day, the split's period avg) can
+  diverge when paged — accepted.
+- **[Energy's Today default = 14 days; bars always fill the full row width]** (regardless of count). **Why:**
+  14 days is enough context without crowding; flexing bar width avoids overflow or dead space.
+
+**Time control**
+- **[Retire Latest/Week/Month/90-day → Today / 3 Months / 6 Months / 1 Year + prev/next paging]**. **Why:**
+  the owner thinks in calendar spans, not rolling windows; paging turns Body into a real history view.
+  **Trade-off:** more chrome (arrows, label, back-to-today) than a plain switcher.
+- **[Paging boundaries: forward caps at today, backward caps at the earliest real data]**; a "back to today"
+  shortcut + date-range label appear once paged away. **Why:** no future data, no data before tracking began.
+- **[Energy bars collapse to WEEKLY above 90 days]** (`COLLAPSE_ABOVE_DAYS = 90`); Today/3mo stay daily.
+  **Why:** 180–365 daily slivers are illegible; 90 daily still reads across the full-width row.
+- **[Composition smoothing stays a FIXED 7-day at every zoom]** (not widened for longer windows). **Why:**
+  simple + consistent — the same "trend" line at every scale; owner-confirmed.
+- **[The Body switcher/paging state is BODY-LOCAL]** — shares nothing with Sleep's or Gym's switchers.
+  **Why:** confirmed via code (each page owns its own state; only the generic `RangeSwitcher` is shared,
+  untouched) — a hard gate before this architectural change.
+
 ## Doc-drift audit — decisions banked, none new (2026-07-15)
 
 > Stage 2 of the doc-drift audit (`doc-drift-audit.md`). Nothing below is new policy —

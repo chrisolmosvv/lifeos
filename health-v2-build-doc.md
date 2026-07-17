@@ -129,6 +129,11 @@ sub-2 layout `04f9c61` · sub-2 deletion `c9ca58c`.
   under the size guard.
 
 ## 3. BODY V2 (P2) — final as-built
+> **⚠️ SUPERSEDED (corrected 2026-07-18): the "Scale Ticket" 3-group TABLE described below is fully
+> RETIRED by the Body V3 redesign — see PART D for the current Body UI (chart-led, right-column heroes +
+> Vitals, full-width Energy, Today/3mo/6mo/1yr paging). BMI + blood oxygen are CUT; the Latest/Week/
+> Month/90-day range names no longer exist. The prose below is kept as P2 history only.**
+
 Commits: P2.0 extraction `15f9736` · calc `b3a41ee` · layout `7cc8b25` · deletion `8056c9f`.
 
 - **The "Scale Ticket" table — three groups, columns
@@ -791,3 +796,103 @@ the correction stands here as the authoritative record:
 7. **Axis "noon→noon" / "18:00→12:00"** (§1 prose) — STALE. The chart is **22:00→12:00** (C5). Two
    in-code CSS comments (`sleepClockChart.css:3`, `:81`) still say "noon→noon" — flagged for the
    next src touch (not fixed here: docs-only commit).
+
+---
+
+# PART D — BODY V3 REDESIGN (as-built, 2026-07-16 → 2026-07-18)
+
+> **AUTHORITATIVE for the current Body UI.** Ran AFTER P2's "Scale Ticket" table (end June) — that table
+> is fully RETIRED; where PART A §3 still describes it, this is the truth (§3 tagged corrected 2026-07-18).
+> Src-only throughout: no schema, no Checker. Pieces 1–9 (Piece 10 = this docs close). Per-piece steps in
+> 04-handoff-log.md (2026-07-16 → -18); decisions banked in 03-decisions.md (2026-07-18).
+
+## D1. Metric cuts — BMI + blood oxygen removed (Piece 2)
+Both gone from EVERY Body surface, desktop + mobile, all views. WHY:
+- **BMI** can't tell muscle from fat — it was flagging "above range" on an athletic build where body-fat%
+  + lean mass already told the real story. A number that misleads on THIS body is worse than absent.
+- **Blood oxygen** is a TRIPWIRE (meaningful only on a rare drop) with no daily-trend value for a healthy
+  person. Contrast **respiratory rate**, KEPT specifically for its early-illness-warning value — the test
+  is "does the daily number teach me anything," not "is it a vital."
+- The shared `fixedBand`/`FIXED_BANDS` getter these two used is LEFT in place (the throwaway
+  `HealthDebugV2` still uses it) — prove-dead respected; a separate cleanup call (see roadmap).
+
+## D2. Resting energy — now flowing (Piece 1 / owner device task)
+Was 0 rows — a phone-Shortcut ingest gap (the Apple Shortcut's activity payload wasn't sending
+resting_energy), NOT a schema or code problem (the column + ingest allow-list + calc were all ready). Fixed
+on the owner's device. **CONFIRMED LIVE 2026-07-18 by direct read-only DB query** (Management API, real
+project `cntlptuacsujbdtwvbis`): `activity_hourly` metric_type='resting_energy' = 380 rows, 17 distinct
+days, **2026-06-30 → 2026-07-16**, full days ~2000 kcal. So it is correct **going forward from ~2026-06-30**;
+there is NO earlier history (the other Body metrics go back to 2026-01-01, so on 3mo/6mo/1yr views the
+Jan–Jun bars show active-only until/unless a backfill happens — see roadmap).
+- ⚠️ **DATA-QUALITY WATCH (flagged, not fixed here):** some full (24-hour) days read ~2000 kcal, others
+  ~4000 (≈2×) — a likely intermittent double-count from the phone. Resting energy IS flowing; the doubling
+  on some days is a follow-up to watch (roadmap).
+
+## D3. Composition — the trend chart + heroes (Pieces 3, 3-follow-up, 4, 7)
+- **The chart** (`BodyCompositionChart` + `bodyComposition.js` calc + `bodyChartScales.js` geometry): weight
+  = a smoothed 7-day line (solid ink) + faint raw daily weigh-in dots + a ±1-SD spread band; body fat = a
+  smoothed 7-day DASHED line (terracotta). Compute-on-read (`smoothedSeries`) — smooths over the FULL
+  history then slices to the window, so the left edge is honest.
+- **Body fat on its OWN axis** (right side, terracotta labels colour-matched to its line) — NOT shape-only
+  sharing the kg axis. With a **minimum 4-percentage-point span** (`BODYFAT_AXIS_MIN_SPAN`): body fat's real
+  range over a few weeks is often <1pp, and a tight auto-scaled axis magnified sub-percent noise into a fake
+  full-height zigzag. The floor keeps a real trend a gentle slope. (The bug it fixed: the axis read
+  18.0–18.5 and the line slammed top-to-bottom on ordinary data.)
+- **Goal zone:** target ± **1.0 kg** (`GOAL_ZONE_TOLERANCE_KG`), owner-confirmed against real data — a shaded
+  "close enough" band derived from the single stored weight target (there is no stored range).
+- **Today dot:** terracotta, ambient pulse. **Load:** orchestrated draw-in (lines draw, dots/band fade),
+  full `prefers-reduced-motion` support (instant, no motion).
+- **NO MILESTONE MARKERS — RULED OUT, do NOT reopen.** Neither Gym-PR-pulls nor manual life-event tagging
+  exist as real data sources; a chart annotation with nothing behind it is fabrication → "honest omission
+  over fabrication." Recorded so it isn't accidentally re-added later.
+- **Two hero numbers** (weight, body fat), each = raw-today + its 7-day average. Piece 7 REFLOW moved them
+  OUT of the main column (they used to sit above the chart) into a RIGHT-HAND COLUMN with Vitals. The chart
+  is now the page's dominant visual, full main-column width. Hover = a LOCAL TOOLTIP only (date + weight +
+  body fat); the old cross-column link that updated the hero numbers on hover was deliberately REMOVED — the
+  heroes always show today.
+- **"X kg to goal" text** sits under the Weight hero specifically (re-surfaced from the retired weight-to-
+  goal bar; same getter + phrasing).
+- **Lean mass = legend-only** inside the fat/lean split bar (owner call — NOT promoted to a third hero). The
+  **split bar** stays under the chart, full width (Piece 8).
+
+## D4. Energy — ring + day-bars + proportion bar (Pieces 5, 8, 9)
+Three coordinated parts, full width beneath the chart+column row:
+- **RING** (move goal): centre = today's real active kcal + "active today"; beneath = "% of goal · avg
+  N/day" or a "set a move goal" link (never an invented default). Height-matched to the day-bar chart.
+- **STACKED DAY-BARS**: resting base + active top = total daily burn; date-labelled; ALWAYS fill the full
+  row width regardless of count (bar width flexes). Default **14 days** on "Today."
+- **PROPORTION BAR** (avg resting vs active): a thin VERTICAL bar between the ring and the day-bars.
+- ★ **KEY ASYMMETRY (deliberate, not a bug):** the RING is fixed to TODAY (today's kcal + today's goal % +
+  a fixed 14-day-from-today average). The day-bars AND the proportion bar PAGE with the viewed period. They
+  sit adjacent but behave differently on purpose.
+
+## D5. Vitals — the right-column side section (Piece 6)
+Resting HR (7-day value + trend arrow + a real sparkline + personal range) and Respiratory (deliberately
+QUIET — one muted line with range context, no chart: "tripwire, not a trend"). Always reflects TODAY /
+last-7-days-from-today regardless of paging — same "current status" category as the heroes + ring.
+
+## D6. Time control — Today / 3mo / 6mo / 1yr + paging (Piece 9)
+The old Latest/Week/Month/90-day switcher is RETIRED. New model (`BodyRangeControl`, Body-local):
+- **Today** (= old "Latest": chart = full journey, energy = 14-day) / **3 Months** / **6 Months** / **1 Year**.
+- **Prev/next paging arrows** (active on the windowed views only). Forward caps at today; backward disables
+  once the window would start before the earliest real data across weight/body-fat/energy. A **"back to
+  today"** shortcut + a **date-range label** ("Jan–Mar 2026") appear once paged away.
+- **Energy bar-collapse:** daily through 90 days (owner-confirmed not too crowded), WEEKLY above it —
+  `COLLAPSE_ABOVE_DAYS = 90` (6mo → ~26 weekly bars, 1yr → ~53). Same idea as Sleep's 90-day collapse.
+- **Chart smoothing = FIXED 7-day at every zoom** — deliberately NOT widened at longer windows.
+- **BODY-LOCAL:** confirmed via CODE (not just visually) that this switcher/paging state shares nothing with
+  Sleep's (`view`) or Gym's (`range`) separate switchers — each page owns its own state; the only shared
+  thing is the generic presentational `RangeSwitcher`, untouched.
+
+## D7. Layout / fit
+Two-column TOP ROW (full-width chart | Weight/Body-fat/Vitals column, one hairline divider scoped to that
+row), then the full-width fat/lean split bar + Energy section below (spacing, no rule). Zero-scroll under
+`.health-fit` (`overflow:hidden`). The chart is the tallest single element (~444px full-width); if a short
+window clips the bottom, the save-point is to restore the chart's `max-width:640px` cap (noted in
+`bodyCompositionChart.css`). Whole-page zero-scroll stays the owner's on-screen gate.
+
+## D8. Calc footprint (new getters, all compute-on-read, nothing stored)
+`bodyComposition.js`: `smoothedSeries`, `goalZone`, `valueOn`. `bodyChartScales.js`: the scales + `yTicks`
++ `dateTicks` + `nearestIndex`. `bodyEnergy.js`: `stackedDaily`, `stackedByWeek`, `stackedSeries`,
+`avgPerDay`. All Body src stays under ~250 lines; the retired Scale-Ticket table's `bodyGroups.jsx` +
+`BodyTable.jsx` were deleted (prove-dead) and `BodyCells.jsx` trimmed to just `Movement`.

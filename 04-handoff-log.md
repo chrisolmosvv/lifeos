@@ -33,6 +33,32 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-18 — Body V3 PIECE 10 — DOCS CLOSE. DOCS-ONLY. 1 COMMIT. No src, no schema, no Checker.
+
+WHAT CHANGED (docs only):
+- `health-v2-build-doc.md` — added **PART D — BODY V3 REDESIGN (as-built)** (D1 metric cuts · D2 resting
+  energy · D3 composition chart + heroes · D4 energy · D5 vitals · D6 time control · D7 layout/fit · D8
+  calc footprint). Tagged the old PART A §3 "Scale Ticket" section as **SUPERSEDED (corrected 2026-07-18)**.
+- `03-decisions.md` — banked the Body V3 decisions (2026-07-18), grouped: metric cuts, hero treatment,
+  own-axis + 4pp floor, ±1kg goal zone, no-milestones ruling, Piece-7 reflow, energy 3-part + ring/bars
+  paging asymmetry, 14-day energy default, the Today/3mo/6mo/1yr time model + boundaries + collapse
+  threshold, lean-mass-legend-only.
+- `02-roadmap.md` — Body V3 close session note + carried debt (HealthDebugV2/fixedBand cleanup;
+  zero-scroll save-point; collapse threshold) + the resting-energy backfill/data-quality notes.
+
+RESTING ENERGY — verified LIVE this session (read-only DB query, real project `cntlptuacsujbdtwvbis`):
+380 rows over 17 days, 2026-06-30 → 2026-07-16. Flowing. No pre-06-30 history (correct going forward; a
+backfill is optional/undone). ⚠️ Some full days read ~4000 kcal vs ~2000 — a likely phone double-count,
+flagged in the roadmap as a watch-item.
+
+HOW TO VERIFY: read PART D — it's the single source of truth for the current Body UI.
+
+KNOWN GAPS / RISKS: the three roadmap follow-ups above (debug-page/fixedBand cleanup, smallest-window
+zero-scroll, the 90-day collapse threshold) + the resting-energy double-count watch — none block; all
+recorded.
+
+NEXT: none — Body V3 is closed. (The debt items are optional owner calls.)
+
 ### 2026-07-18 — Body V3 PIECE 9 — time-control overhaul: Today/3mo/6mo/1yr + paging. SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED — the Latest/Week/Month/90-day range model is REPLACED wholesale:

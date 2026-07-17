@@ -9,6 +9,40 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-07-18 — Body V3 redesign close (Pieces 1–9 + docs) ✅
+The Body page is fully rebuilt: the "Scale Ticket" table is retired for a chart-led page — a full-width
+composition trend chart (smoothed weight line + raw dots + spread band + body-fat on its own terracotta
+axis + goal zone + pulsing today dot), Weight/Body-fat hero numbers + Vitals in a right column, a
+full-width Energy block (move-goal ring + stacked day-bars + resting/active proportion bar), and a new
+time model: **Today / 3 Months / 6 Months / 1 Year with prev/next paging**. Src-only throughout; no
+schema, no Checker. As-built in `health-v2-build-doc.md` PART D; decisions in 03-decisions.md
+(2026-07-18); per-piece steps in 04-handoff-log.md (2026-07-16 → -18). BMI + blood oxygen cut; resting
+energy now flowing (see below).
+
+**Resting energy — CONFIRMED LIVE 2026-07-18** (read-only DB query, real project): `activity_hourly`
+resting_energy = 380 rows over 17 days, **2026-06-30 → 2026-07-16**. It went from 0 rows (a phone-Shortcut
+gap, now fixed on the owner's device) to flowing. Two honest notes:
+- **No historical backfill (by default):** resting energy exists only **from 2026-06-30 forward**; the
+  other Body metrics go back to 2026-01-01, so on 3-month/6-month/1-year views the Jan–Jun Energy bars show
+  **active-only** (no resting base). This is simply correct-going-forward. A backfill (re-running the
+  activity Shortcut over Jan–Jun to pull older Apple-Health resting-energy data) is **possible but NOT
+  done** — an optional owner call if full-history resting data is wanted. ⬜
+- **⚠️ Data-quality watch:** some full 24-hour days read ~2000 kcal, others ~4000 (≈2×) — a likely
+  intermittent double-count from the phone. Resting energy IS flowing; the doubling is a follow-up to
+  watch, not resolved here. ⬜
+
+**Carried debt / follow-ups (not resolved in Body V3):**
+- **`HealthDebugV2` + its `fixedBand`/`FIXED_BANDS` dependency** — still present, NOT dead (the throwaway
+  debug page uses the getter, so BMI/SpO2's band code couldn't be fully prove-dead-removed in Piece 2).
+  Deleting the debug page + then the getter is a separate future cleanup decision, deferred. ⬜
+- **Zero-scroll on the smallest 13" windows** — the full-width chart (~444px) is the tallest element; on a
+  short browser window the page bottom can clip (`overflow:hidden`). Save-point on record: restore the
+  chart's `max-width:640px` cap. Owner's on-screen check is the gate. ⬜
+- **Bar-collapse threshold (`COLLAPSE_ABOVE_DAYS = 90`)** — 3-month is 90 daily bars (dense but reads); if
+  it looks crowded, lowering the threshold makes 3mo weekly too. Owner call. ⬜
+
+---
+
 ## Session note — 2026-07-15 — Sleep redesign close (Health V2 Pieces 1–6 + goal-hit-rate follow-up) ✅
 Every Sleep surface now speaks one visual language (the 22:00→12:00 clock chart), across Last-night /
 Week / Month / 90-day. Src-only throughout; no schema, no Checker. As-built detail in
