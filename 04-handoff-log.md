@@ -33,6 +33,56 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-17 — Body V3 PIECE 6 — Vitals side column + the whole-page layout. SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED — the last structural piece. The Body page is now a **two-column layout**:
+- **MAIN column:** the Composition block (heroes + chart + split), then the Energy section (ring + bars
+  + split) beneath it.
+- **SIDE column (right, narrower, one hairline divider):** **Vitals** — running alongside Composition/
+  Energy instead of stacked below. This is the locked "vitals is side info" call AND the mechanism that
+  frees the vertical room the zero-scroll layout needed.
+  - **Resting HR** gets a real look: 7-day value + trend arrow + a real sparkline + your personal range
+    ("your range 56–72 bpm").
+  - **Respiratory** is deliberately quiet: one muted line with range context ("Respiratory 16.2/min ·
+    steady in your 14.0–19.5 range"), no chart — the "tripwire, not a trend" call.
+- **The old Scale-Ticket table is fully retired.** Composition became the block (P4), Energy the section
+  (P5), and Vitals this column (P6) — so nothing renders the table anymore. Deleted `bodyGroups.jsx` +
+  `BodyTable.jsx` and trimmed `BodyCells.jsx` to just the `Movement` arrow (still used by Vitals), all
+  **prove-dead** (grep-confirmed no other importers) before deleting.
+
+FILES: NEW `src/desktop/health/VitalsColumn.jsx` + `src/desktop/kit/vitalsColumn.css` (the side column +
+the two-column layout CSS); edited `src/desktop/health/BodyPage.jsx` (two-column render) and
+`BodyCells.jsx` (trimmed to Movement); DELETED `bodyGroups.jsx` + `BodyTable.jsx`. No new calc — Vitals
+reuses the getters the old table row used.
+
+HOW TO VERIFY (owner, on the 13" — this is the REAL zero-scroll gate for the whole Body V3 build):
+1. **The full page, zero-scroll:** Composition (heroes + chart + split), Energy (ring + bars + split)
+   below it, and Vitals in a column to the RIGHT — all visible with **no scrollbar and no dead strip at
+   the bottom**. This is the whole build's fit test — check it carefully on your actual screen.
+2. **Resting HR** (side column): value + a small sparkline + a trend arrow + "your range X–Y bpm".
+3. **Respiratory** reads visibly QUIETER than Resting HR (smaller, muted, one line, no chart).
+4. Nothing from the old table lingers (no full-width metric rows anywhere).
+5. Try Week/Month/90 — the side column stays; Composition + Energy reframe as before.
+
+KNOWN GAPS / RISKS — **the height numbers, on record as the prompt asked** (CSS-derived; I could not
+browser-measure through the login wall, so your screen is the true gate):
+- **Content budget** = viewport − masthead (~123px) − page padding (~28px) ≈ **viewport − 151**. On a
+  13" that's roughly **~649px (short window, lots of browser chrome) to ~749px (taller/fullscreen)**.
+- **Main column height** (Composition ~466 + Energy ~181) ≈ **~647px**. The Vitals side column (~180px)
+  runs parallel, so it does NOT add to the column height.
+- **So: ~647px main vs ~649–749px budget → it fits on a typical or larger 13" window, but it's
+  knife-edge on the smallest** (a short browser window could still clip a few px to ~50px). The
+  side-column move removed the ~120px the Vitals table used to stack below, which is what brought a
+  clipping ~767px page down to a fitting ~647px.
+- **⚠️ If it STILL clips on your specific window, that's the genuine fork the prompt flagged — I did NOT
+  trim content to force it.** The one lever left is a slightly shorter composition chart (it's ~300px,
+  the biggest single item; dropping its width cap ~640→560 buys ~40px). That's a taste call (chart size
+  vs fit), so it's yours to make — tell me and I'll do it. Everything else is at its locked size.
+- Resting energy still not flowing (Piece-1 device task) and the ±1kg goal-zone tolerance (Piece 3) are
+  the only other standing flags; neither is affected here.
+
+NEXT: Piece 7 — docs close (roadmap status, decisions ledger, the Body V3 as-built section). No code.
+
 ### 2026-07-17 — Body V3 PIECE 5 — the Energy section (ring + stacked bars + avg split). SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED — Energy's old two table rows are replaced by the real **Energy block**, the page's modest
