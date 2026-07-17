@@ -33,6 +33,54 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-17 — Body V3 — composition chart BUGFIX: blank Latest, garbled dates, clipping. SRC-ONLY. 1 COMMIT.
+
+WHAT WAS ACTUALLY WRONG (owner's real Latest screenshot showed three linked problems; root cause per each):
+1. **Blank whole-journey / data crushed to the right.** ROOT CAUSE: the "Latest" chart started its x-axis
+   at `START = "2026-01-01"` — that constant is the **data-fetch lower bound**, and I'd reused it as the
+   chart's domain start. Your weigh-ins don't go back that far, so the axis spanned months of empty space
+   before your first reading and squeezed all the real data into the far right. (This was NOT honest
+   sparsity like Sleep's early weeks — it was a wrong start date.) FIX: "Latest" now starts at your
+   **earliest real weigh-in**, so the data fills the chart's width.
+2. **Garbled overlapping date labels ("325 J6n15Jul").** ROOT CAUSE: the date labels were picked from the
+   **data points by position in the list**, not by date. With all the data bunched at the right (problem
+   #1), the four labels landed on nearly the same pixels and printed on top of each other. FIX: labels are
+   now spaced **evenly across the date range itself**, so they never overlap — at ANY range width, not just
+   this one. (Verified headlessly across 6-month / 3-week / week / 2-day / 1-day windows: always evenly
+   spread and inside the plot.)
+3. **Energy + Vitals missing below the chart.** ROOT CAUSE: a genuinely separate issue, NOT a side effect
+   of #1. The chart's height follows its width (fixed shape), and it was allowed to grow to the full
+   1340px broadsheet column → about **560px tall**, which shoved Energy/Vitals past the zero-scroll fold
+   (the Health pages hard-clip, `overflow:hidden`). FIX: **capped the chart to its native ~640px width**,
+   which bounds its height to ~300px (and keeps the dots round + the hover-scrub exact — capping width, not
+   height, avoids any distortion). That roughly halves the chart's height and frees the space below it.
+
+FILES: `src/desktop/health/BodyPage.jsx` (#1 — earliest-weigh-in domain), `src/desktop/kit/bodyChartScales.js`
++ `BodyCompositionChart.jsx` (#2 — domain-spaced date ticks), `src/desktop/kit/bodyCompositionChart.css`
+(#3 — chart width cap).
+
+HOW TO VERIFY (owner, real page, reload Health → Body):
+1. **Latest:** the weight/body-fat data should now fill a sensible width of the chart (not crushed into the
+   right corner); the date labels along the bottom should be legible and spaced out, not stacked/garbled.
+2. **Energy + Vitals** should be visible below the chart, page still zero-scroll (see the risk note).
+3. **Check Week / Month / 90 days too** — the tick-spacing fix applies to all of them (should look tidier
+   than before); the domain fix only touches Latest, so those windows are unchanged in framing.
+
+KNOWN GAPS / RISKS:
+- **⚠️ Clipping may not be 100% gone — please confirm.** I shrank the chart a lot (~560px → ~300px tall),
+  which should bring Energy/Vitals back, but I can't measure your exact screen (the app needs login). If
+  the very bottom (last Vitals row) still clips, that's the deeper layout reality: a full-size chart PLUS
+  full-width stacked Energy+Vitals genuinely can't share one 13" fold — and that's exactly what **Piece 6**
+  fixes structurally (Vitals moves to a narrow side column, freeing the height). I did NOT shrink the chart
+  further into something too small to read, chasing a fit Piece 6 is designed to deliver. Tell me if you'd
+  rather a smaller chart in the meantime.
+- The "Latest" domain follows the **weight** history (the primary line); if body-fat readings ever start on
+  a different date, the body-fat line simply begins where its data does within that window. Not an issue on
+  your data (same device), flagging for completeness.
+
+NEXT: Piece 5 — the Energy section (move-goal ring + resting/active stacked bars + period-average split).
+The Piece-6 side-column layout is what ultimately guarantees the zero-scroll fit for the whole page.
+
 ### 2026-07-16 — Body V3 PIECE 4 FOLLOW-UP — the explicit "X kg to goal" text line is back. SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED:
