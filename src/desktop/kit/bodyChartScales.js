@@ -26,11 +26,21 @@ export function xScale(windowStart, windowEnd) {
 
 // A value domain [min..max] over `values` → y(v) in the plot box, plus the padded
 // lo/hi (for axis labels). Flat/empty domains still get a sane 1-unit spread.
-export function yScaleFrom(values, pad = 0.1) {
+// `minSpan` (optional) is a FLOOR on the domain width: when the real data range is
+// smaller than minSpan, the domain is widened symmetrically to minSpan BEFORE padding.
+// This stops a secondary axis auto-scaling so tight that ordinary sub-unit variation is
+// magnified to fill the whole height (the body-fat "fake zigzag"). It never SHRINKS a
+// genuinely wide range — a floor only — so real data keeps its true min/max.
+export function yScaleFrom(values, pad = 0.1, minSpan = 0) {
   const xs = (values || []).filter((v) => Number.isFinite(v));
   let lo = xs.length ? Math.min(...xs) : 0;
   let hi = xs.length ? Math.max(...xs) : 1;
   if (lo === hi) { lo -= 1; hi += 1; }
+  if (minSpan > 0 && hi - lo < minSpan) {
+    const mid = (lo + hi) / 2;
+    lo = mid - minSpan / 2;
+    hi = mid + minSpan / 2;
+  }
   const p = (hi - lo) * pad;
   lo -= p; hi += p;
   const { t, h, b } = DIMS;

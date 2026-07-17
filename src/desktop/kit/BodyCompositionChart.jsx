@@ -14,6 +14,12 @@ import "./bodyCompositionChart.css";
 // this file only renders and owns the scrub state. onScrub fires the snapped day's real
 // values so the page's hero numbers (Piece 4) can follow the crosshair.
 
+// ⚠️ The MINIMUM body-fat-axis span, in percentage points (a build default flagged for
+// the owner). Body fat's real range over a few weeks is often < 1pp; a floor of 4pp keeps
+// a real trend visible as a gentle slope while stopping sub-percent noise from filling the
+// whole chart. Raise it to calm the line further, lower it to exaggerate small moves.
+const BODYFAT_AXIS_MIN_SPAN = 4;
+
 export default function BodyCompositionChart({
   weightRows, bodyFatRows, windowStart, windowEnd, weightGoal, today, onScrub, smooth = 7,
 }) {
@@ -37,8 +43,12 @@ export default function BodyCompositionChart({
   if (zone) wVals.push(zone.lo, zone.hi);
   const wy = yScaleFrom(wVals);
   // Body fat rides its OWN scale, drawn as the RIGHT axis (terracotta), so its % is
-  // directly readable — not just its shape. Derived from the real data, padded.
-  const fy = yScaleFrom(fat.map((p) => p.smoothed));
+  // directly readable. Derived from the real smoothed data, padded — BUT with a minimum
+  // span (BODYFAT_AXIS_MIN_SPAN, percentage points): body-fat's real range over a short
+  // window is often well under 1pp, and without a floor that tiny range auto-scales to
+  // fill the whole height, magnifying sub-percent noise into a fake violent zigzag. The
+  // floor only widens a too-tight range; a genuinely wide range keeps its true min/max.
+  const fy = yScaleFrom(fat.map((p) => p.smoothed), 0.1, BODYFAT_AXIS_MIN_SPAN);
 
   const hasData = weight.length > 0;
   const todayPt = hasData ? (weight.find((p) => p.ymd === today) || weight[weight.length - 1]) : null;
