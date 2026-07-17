@@ -33,6 +33,61 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-18 — Body V3 PIECE 9 — time-control overhaul: Today/3mo/6mo/1yr + paging. SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED — the Latest/Week/Month/90-day range model is REPLACED wholesale:
+- **New switcher:** Today / 3 Months / 6 Months / 1 Year, with **prev/next paging arrows** (active only
+  on the three windowed views — Today is a single frame, nothing to page). A new Body-local component
+  `BodyRangeControl` owns this; it reuses the shared `RangeSwitcher` for the tabs but adds its own paging
+  chrome. **Sleep's and Gym's switchers are completely untouched** (their state was always separate — the
+  shared-state doom-loop check passed cleanly in Ground).
+- **Paging boundaries:** forward is capped at today (can't page into the future); backward disables once
+  the window would start **before the earliest real data** across weight/body-fat/energy (computed from
+  the loaded rows). A **date-range label** ("Jan–Mar 2026") and a **"back to today"** shortcut appear only
+  once you've paged into a windowed view / away from the present.
+- **What PAGES with you:** the composition chart's plotted range, the Energy bars, and the Energy
+  resting/active split bar. The Energy bars **collapse to WEEKLY above 90 days** (6-month → ~26 weekly
+  bars, 1-year → ~53) so they stay legible — same idea as Sleep's 90-day weekly collapse. Today (14 days)
+  and 3-month (90) stay daily. Chart smoothing stays a **fixed 7-day** at every zoom (as locked).
+- **What STAYS FIXED TO TODAY (verified they receive NO paging props):** the Energy **ring** (today's
+  active kcal + today's goal % + a fixed 14-day-from-today average — it no longer follows the window),
+  the right-column **hero numbers**, the **fat/lean split bar**, and **Vitals**. These are current-status
+  widgets; paging through history does not change them.
+- Removed the old `ENERGY_WINDOW` / `RANGE_DAYS` / "latest" logic (prove-dead — nothing else referenced them).
+
+FILES: NEW `BodyRangeControl.jsx` + `bodyRangeControl.css`; `bodyEnergy.js` (weekly collapse:
+`stackedByWeek` / `stackedSeries` / `COLLAPSE_ABOVE_DAYS`; dropped `ENERGY_WINDOW`); `EnergySection.jsx`
+(ring fixed to today, bars/split follow the viewed period); `BodyPage.jsx` (win + anchor paging state,
+boundaries, windows). No refetch on paging — the whole history loads once and is re-windowed client-side.
+
+HOW TO VERIFY (owner, on the 13"):
+1. **Four windows:** Today shows your full journey (as old "Latest" did); 3mo/6mo/1yr show those windows.
+2. **Paging:** the ‹ › arrows move the chart + Energy bars back/forward a full window. You **cannot page
+   past today** (› greys out at the present); paging back **greys ‹** once you reach your earliest data.
+3. **Back-to-today + label:** page back, confirm the "Jan–Mar 2026"-style label is accurate and the
+   "back to today" link jumps you to the present.
+4. **⚠️ THE REAL CHECK — click through history and confirm these DON'T change:** the Energy ring's
+   numbers, the two hero numbers, the fat/lean split bar, and Vitals should stay on today's values no
+   matter how far back you page. (Only the chart, the Energy bars, and the Energy split should move.)
+5. **Weekly collapse:** on 6-month and 1-year the Energy bars should be legible weekly bars, not slivers.
+6. Confirm **Sleep and Gym** still work exactly as before (their switchers untouched).
+7. **⚠️ Re-verify ZERO-SCROLL** on all four windows.
+
+KNOWN GAPS / RISKS:
+- **⚠️ BAR-COLLAPSE THRESHOLD = 90 days is my chosen number (flagged):** Today/3mo stay daily; 6mo/1yr
+  go weekly. 3-month is 90 daily bars, which is dense but reads across the full-width row; Sleep collapses
+  AT 90, but the prompt scoped Body's collapse to 6mo/1yr, so I kept 90 daily. If 90 daily bars look too
+  crowded, lowering the threshold (`COLLAPSE_ABOVE_DAYS` in `bodyEnergy.js`) makes 3mo weekly too — your call.
+- **Ring's "avg X/day" is now a FIXED 14-day-from-today figure** (not the viewed period), so the ring
+  stays a pure "today" widget. On the Today view it matches the split's 14-day; when paged they diverge
+  (ring = your current typical day, split = that period's make-up). Flag if that dual-avg reads oddly.
+- Weekly bars show the week's TOTAL burn (not a daily average), self-scaled — the tooltip says "week of X".
+- Zero-scroll is structurally unchanged from Piece 8 (chart height + Energy height are the same); still
+  worth the re-check. The Piece-7 chart-cap save-point still applies if any window clips.
+- Resting energy still not flowing (Piece-1 device task) — bars/split still active-only until it does.
+
+NEXT: Piece 10 — docs close (roadmap, decisions, the Body V3 as-built section). Genuinely the last piece.
+
 ### 2026-07-17 — Body V3 PIECE 8 — full-width Energy + split, ring rework, Energy reflow. SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED — ten locked layout/positioning changes (existing components; NO new range logic — Piece 9
