@@ -33,6 +33,57 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-17 — Body V3 PIECE 5 — the Energy section (ring + stacked bars + avg split). SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED — Energy's old two table rows are replaced by the real **Energy block**, the page's modest
+SECONDARY section (deliberately quieter than Composition: smaller type, no hero numbers), with three
+coordinated parts, all driven by the page's one range control:
+- **E6 RING** — today's active energy as a terracotta ring against your move goal; the centre shows the
+  kcal, the caption shows "% of goal · avg N/day". **No move goal set → it shows the raw number + avg +
+  a "set a move goal" link** (opens the existing goal editor). I did NOT invent a default goal number.
+- **E1 STACKED BARS** — one bar per day: resting as the base, active stacked on top, so bar height =
+  total daily burn. The window follows the range — 7 bars on Week, ~30 on Month, ~90 on 90-day, and
+  **Latest defaults to a trailing 7 days** (owner ruling). **Today's bar is terracotta**; the rest are a
+  quiet ink two-tone. (Today's bar reads a little short — it's the partial day-so-far.)
+- **E8 SPLIT** — one horizontal bar of the resting-vs-active make-up, **averaged over the selected
+  window** (Latest/Week → the week's average day, Month → the month's, etc.).
+
+FILES: NEW `src/spine/logic/bodyEnergy.js` (one pure getter, `stackedDaily` — per-day active+resting incl.
+today; + the range→window map), `src/desktop/health/EnergySection.jsx`, `src/desktop/kit/energySection.css`;
+edited `src/desktop/health/BodyPage.jsx` (renders Composition block → Energy section → Vitals-only table).
+No new stored data — compute-on-read; the ring/averages reuse the activity view getters that already exist.
+
+HOW TO VERIFY (owner, on the 13", real page):
+1. Below the Composition chart you should see **Energy**: a ring on the left, a row of stacked bars, and
+   a thin split bar. It should read visibly **quieter** than the Composition heroes/chart above it.
+2. **Ring:** the centre kcal = today's active energy; if you have a move goal, the arc + "% of goal" and
+   "avg N/day" should be right (hand-check: today's kcal ÷ your goal). No goal → a "set a move goal" link.
+3. **Bars:** count them per range — 7 on Latest and Week, ~30 on Month, ~90 on 90-day. Today's bar (far
+   right) is terracotta and a bit short (partial day). Hover a bar for its rest/active/total.
+4. **Split:** the resting-vs-active proportion for the window; the legend numbers are avg/day.
+5. **⚠️ Re-check zero-scroll** now that Energy is fully built (see the risk — this is the real test).
+
+KNOWN GAPS / RISKS:
+- **⚠️ RESTING ENERGY still isn't flowing** (0 rows — the Piece-1 owner device task to add it to the
+  Apple Shortcut is still pending). So right now the **bars show active-only (no resting base) and the
+  split reads ~100% active** — the section prints a small note saying so. It's built correctly and will
+  fill in the moment resting data arrives; nothing to change here, but that's why half the Energy story
+  is currently blank. **This is the standing Piece-1 flag.**
+- **⚠️ ZERO-SCROLL almost certainly does NOT hold yet — and this is expected.** With Composition +
+  Energy + the Vitals table all stacked in one column, the page is now tall enough that the bottom
+  (Vitals) very likely clips on the 13" (`overflow:hidden`). This is the honest result of the "real test"
+  the prompt asked for: a full Composition block + a full Energy block + full-width Vitals can't co-fit
+  one fold stacked vertically. **Piece 6 is the fix** — it moves Vitals into a right-hand SIDE column
+  beside Composition/Energy (the locked 2-D layout), which is what actually delivers zero-scroll. I did
+  not shrink Composition or Energy to force a fit that Piece 6 is designed to provide. Confirm the clip;
+  if it's bad enough to block using the page before Piece 6, tell me and I'll bound heights as a stopgap.
+- **Move goal:** the mechanism exists and I wired the ring to it, but whether a value is *set* is your
+  data — if you see "set a move goal", that's correct (none set), not a bug.
+- Today's bar being shorter (partial day) is intentional/honest; flag if you'd rather today show a
+  projected full-day estimate instead (I'd advise against — that's a fabricated number).
+
+NEXT: Piece 6 — Vitals side column + the 2-D layout that finally locks zero-scroll for the whole page.
+
 ### 2026-07-17 — Body V3 — composition chart BUGFIX: body-fat "fake zigzag". SRC-ONLY. 1 COMMIT.
 
 WHAT WAS ACTUALLY WRONG (owner's Latest screenshot: body-fat line swinging in sharp V's top-to-bottom
