@@ -33,6 +33,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-17 — Body V3 PIECE 7 — Composition reflow: chart is the hero, heroes → right column. SRC-ONLY. 1 COMMIT.
+
+WHAT CHANGED — a genuine reflow of Pieces 4 + 6 (not a new component):
+- **The trend chart is now the FULL-WIDTH hero** of the main column. The two hero numbers that used to
+  sit above it have left the main column (see right column below), so the chart fills the whole width.
+  Its internals (line thickness, dot size, axis label size) **scale up proportionally** with it (the SVG
+  viewBox does this for free), and it now carries **finer gridlines** (5 weight levels + 3 body-fat
+  levels) and **more date labels** (6) — there's room for them now without clutter.
+- **Hover is decoupled from the right column.** The old mechanism where hovering the chart changed the
+  hero numbers is GONE. Hovering now shows a **self-contained tooltip** that follows the snapped weigh-in
+  near the cursor — date + weight + body fat. The right-column numbers **always show today** now.
+- **The right column is now THREE stacked sections** (equal breathing room, hairline-separated):
+  **Weight** (full hero number + "7-day avg" caption + the "X kg to goal" text, which moved here) →
+  **Body fat %** (full hero + caption, no goal text) → **Vitals** (unchanged from Piece 6: Resting HR
+  with sparkline/trend/range, Respiratory quiet). Renamed the component `VitalsColumn` → `BodySideColumn`.
+- **Unchanged, as instructed:** the fat/lean split bar stays under the chart in the main column; the
+  Energy section stays below the split bar, full width.
+
+FILES: `BodyCompositionChart.jsx` (tooltip + finer ticks + hover decoupled) · `bodyChartScales.js` (new
+`yTicks`) · `bodyCompositionChart.css` (width cap removed + tooltip) · `BodyCompositionBlock.jsx` (stripped
+to chart + split) · `bodyCompositionBlock.css` (hero styles removed) · `BodySideColumn.jsx` +
+`bodySide.css` (renamed from VitalsColumn/vitalsColumn.css, + the two heroes + goal text) · `BodyPage.jsx`
+(rewired). No new calc — the heroes/goal reuse the same getters as before.
+
+HOW TO VERIFY (owner, on the 13"):
+1. **The chart fills the main column width** and reads calm against your busiest real data (the 90-day /
+   All range) — judge the added gridlines/labels hard; if it feels cluttered, say so.
+2. **Hover:** a tooltip appears near the cursor with the day's date + weight + body fat, snapping to real
+   weigh-ins. Confirm it does NOT change the right-column numbers at all (those stay on today).
+3. **Right column:** Weight → Body fat % → Vitals, roughly equal breathing room, the "X kg to goal" text
+   sitting under Weight. Confirm Resting HR's sparkline/range still render in the column, Respiratory quiet.
+4. **Split bar + Energy** look right below the now-bigger chart (they weren't restyled).
+5. **⚠️ RE-CHECK ZERO-SCROLL on all four ranges** — this is a structural change on both sides; don't
+   assume Piece 6's fit still holds (see the risk — it's the real gate). (Height is range-invariant: the
+   chart's size and the Energy block's height don't change with the range, so if one range fits, all do.)
+
+KNOWN GAPS / RISKS — **the zero-scroll numbers, on record (CSS-derived; I can't browser-measure past login):**
+- Removing the chart's width cap makes it fill the ~947px main column at its native 640×300 aspect →
+  **~444px tall (was capped at 300px)**. The two heroes leaving the main column free only **~72px**. So
+  the main column goes **~647px → ~708px (net +61px TALLER)**, against a **~649–749px** 13" budget.
+- **So this reflow makes the page taller, not shorter — it fits on a typical/larger 13" window but is
+  more likely to clip on a short one than Piece 6 was.** I built it to the locked spec (chart fills width,
+  cap removed) and did NOT silently re-cap or trim, per the instructions. **⚠️ SAVE-POINT is documented
+  in `bodyCompositionChart.css`: restore `max-width: 640px` on `.bcc` to bound the chart height again.**
+  If you see the bottom (Energy) clipping, tell me and I'll restore the cap (or we pick a middle height) —
+  that's the flagged fork, your call, not mine to trim on judgment.
+- Tooltip near the very top/left edge of the chart can slightly overflow (it's `pointer-events:none`, so
+  it never blocks); flag if it's annoying and I'll clamp it.
+- Standing flags unchanged: resting energy not flowing (Piece-1 device task), ±1kg goal-zone tolerance.
+
+NEXT: Piece 8 — docs close (roadmap status, decisions ledger, the Body V3 as-built section). No code.
+
 ### 2026-07-17 — Body V3 PIECE 6 — Vitals side column + the whole-page layout. SRC-ONLY. 1 COMMIT.
 
 WHAT CHANGED — the last structural piece. The Body page is now a **two-column layout**:
