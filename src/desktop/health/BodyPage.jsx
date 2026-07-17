@@ -11,8 +11,8 @@ import BodyCompositionChart from "../kit/BodyCompositionChart";
 import BodyComposition from "./BodyComposition";
 import EnergySection from "./EnergySection";
 import BodySideColumn from "./BodySideColumn";
+import BodyRangeControl from "./BodyRangeControl";
 import GoalEditor from "./GoalEditor";
-import RangeSwitcher from "../kit/RangeSwitcher";
 import Breadcrumb from "../kit/Breadcrumb";
 import Skeleton from "../kit/Skeleton";
 import InlineError from "../kit/InlineError";
@@ -23,32 +23,39 @@ import "../kit/bodyPage.css";
 import "../kit/bodySide.css";
 import "../kit/bodyCompositionBlock.css";
 
-// BodyPage — the Body front page (Health Hub → Body), V2 "Scale Ticket". Breadcrumb
-// "Health / Body" + the shared RangeSwitcher chrome; the Latest view is a 3-group metric
-// table (Composition / Energy / Vitals) under the .health-fit zero-scroll model. Data
-// loads ONCE per open; range switching is client-side.
-//
-// STAGE 1 (this commit): the chrome + .health-fit shell + the empty 3-group table
-// scaffold (headers, rows, freshness notes, placeholder bottom bars). The Latest cells
-// are placeholders / latest-raw values; the band/movement/trace/goal treatments and the
-// energy metrics (active/resting energy) fill in stages 2–4. The range views still render
-// the V1 tiles (restyled in stage 5).
+// BodyPage — the Body front page (Health Hub → Body), V3. Breadcrumb + a Body-local TIME
+// control: Today / 3 Months / 6 Months / 1 Year with prev/next paging (Piece 9). Data loads
+// ONCE per open (the whole history); paging just re-windows the loaded rows — no refetch.
+// The composition chart + the Energy bars/split follow the viewed period; the ring, hero
+// numbers, fat/lean split and Vitals stay fixed to TODAY (current-status widgets).
 
 const START = "2026-01-01";
-// The page loads the BODY_METRICS display list. (BMI + blood oxygen were cut from every
-// Body surface in the V3 redesign — no longer fetched or rendered here.)
-const LOAD_METRICS = [...BODY_METRICS];
-const ACTIVITY_LOAD = ["active_energy", "resting_energy"]; // Energy group (activity_hourly)
-const RANGES = [
-  { id: "latest", label: "Latest" },
-  { id: "week", label: "Week" },
-  { id: "month", label: "Month" },
-  { id: "90", label: "90 days" },
-];
-const RANGE_DAYS = { week: 7, month: 30, "90": 90 };
+const LOAD_METRICS = [...BODY_METRICS]; // BMI + blood oxygen were cut from Body in V3
+const ACTIVITY_LOAD = ["active_energy", "resting_energy"];
+const WINDOW_DAYS = { "3mo": 90, "6mo": 180, "1yr": 365 }; // Today = full journey (chart) / 14-day (energy)
+
+// The earliest real weigh-in (the chart's Today-view start) and the earliest data point
+// across ALL Body metrics (the backward-paging boundary). Both from the already-loaded rows.
+function earliestWeight(state) {
+  let min = null;
+  for (const r of state.rowsByMetric?.weight || []) {
+    if (r?.metric_date && (min === null || r.metric_date < min)) min = r.metric_date;
+  }
+  return min;
+}
+function earliestData(state) {
+  let min = earliestWeight(state);
+  const consider = (d) => { if (d && (min === null || d < min)) min = d; };
+  for (const r of state.rowsByMetric?.body_fat || []) consider(r.metric_date);
+  for (const m of ["active_energy", "resting_energy"]) {
+    for (const r of state.activityRows?.[m] || []) consider(r.day);
+  }
+  return min;
+}
 
 export default function BodyPage({ onBack }) {
-  const [range, setRange] = useState("latest");
+  const [win, setWin] = useState("today"); // 'today' | '3mo' | '6mo' | '1yr'
+  const [anchor, setAnchor] = useState(null); // the viewed period's END ymd; null → today
   const [state, setState] = useState({ loading: true });
   const [goalMap, setGoalMap] = useState(new Map());
   const gw = useGoalWrites(goalMap, setGoalMap);
@@ -84,53 +91,55 @@ export default function BodyPage({ onBack }) {
         setState({ loading: false, now, today, rowsByMetric, body, activityRows, activity });
       }
     })().catch((e) => alive && setState({ loading: false, error: e.message || String(e) }));
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => load(), [load]);
 
-  // The chart window for the current range. Week/Month/90 are trailing windows ending
-  // today; "Latest" shows the FULL journey — from the EARLIEST real weigh-in to today.
-  // (Bugfix: it used to start at the hardcoded fetch bound START = 2026-01-01, so the
-  // axis spanned months of empty space before the first weigh-in and crushed the data
-  // into the right edge. The domain now clamps to the first real reading.)
-  function chartWindow() {
-    const end = state.today;
-    if (range === "latest") {
-      let earliest = null;
-      for (const r of state.rowsByMetric.weight || []) {
-        if (r?.metric_date && (earliest == null || r.metric_date < earliest)) earliest = r.metric_date;
-      }
-      return { start: earliest || end, end };
-    }
-    return { start: shiftYMD(end, -(RANGE_DAYS[range] - 1)), end };
-  }
+  // ── PAGING derived state (safe before load: `today` is undefined until loaded) ──
+  const today = state.today;
+  const days = win === "today" ? null : WINDOW_DAYS[win];
+  const anchorEnd = anchor || today || null;
+  const earliest = state.rowsByMetric ? earliestData(state) : null;
 
-  // The live page is a TWO-COLUMN layout (Piece 6): the MAIN column holds the dominant
-  // Composition block (heroes + Var-2 chart + split) then the modest Energy section (ring +
-  // bars + avg split); the SIDE column holds Vitals alongside them (not stacked below) —
-  // the locked "vitals is side info" call, and what frees the vertical room so the whole
-  // page holds zero-scroll. All three respond to the one range control.
+  // The chart window: Today = the full journey (earliest weigh-in → today); a windowed view
+  // = [anchorEnd − days + 1 .. anchorEnd]. Energy's window matches on the paged views, but
+  // Today = a trailing 14 days ending today (its own current-status default).
+  const viewStart = win === "today" || !today ? null : shiftYMD(anchorEnd, -(days - 1));
+  const chartStart = win === "today" ? (earliestWeight(state) || today) : viewStart;
+  const chartEnd = win === "today" ? today : anchorEnd;
+  const energyEnd = win === "today" ? today : anchorEnd;
+  const energyDays = win === "today" ? 14 : days;
+
+  const prevDisabled = win === "today" || !earliest || (viewStart != null && viewStart <= earliest);
+  const nextDisabled = win === "today" || !today || anchorEnd >= today;
+  const showBackToToday = win !== "today" && !!today && anchorEnd < today;
+
+  const changeWin = (w) => { setWin(w); setAnchor(null); }; // switching level returns to the present
+  const page = (dir) => {
+    if (win === "today" || !today) return;
+    let next = shiftYMD(anchor || today, dir * WINDOW_DAYS[win]);
+    if (next > today) next = today; // cap forward at today
+    setAnchor(next);
+  };
+
+  // The live page: a two-column TOP ROW (full-width chart | Weight/Body-fat/Vitals column),
+  // then the full-width fat/lean split bar + Energy section below it.
   function renderBody() {
     const splitComp = composition(
       state.body?.weight?.latestRaw?.value,
       state.body?.body_fat?.latestRaw?.value,
       state.body?.lean_mass?.latestRaw?.value,
     );
-    const win = chartWindow();
     return (
-      <div className="health-fade" key={range}>
-        {/* TOP ROW (two columns): the full-width chart | the Weight/Body-fat/Vitals column.
-            The divider (the side column's border-left) is scoped to THIS row (Piece 8). */}
+      <div className="health-fade" key={`${win}_${anchor || "now"}`}>
         <div className="body-body">
           <div className="body-main">
             <BodyCompositionChart
               weightRows={state.rowsByMetric.weight}
               bodyFatRows={state.rowsByMetric.body_fat}
-              windowStart={win.start}
-              windowEnd={win.end}
+              windowStart={chartStart}
+              windowEnd={chartEnd}
               weightGoal={goalMap.get("weight") ?? null}
               today={state.today}
             />
@@ -145,8 +154,6 @@ export default function BodyPage({ onBack }) {
           />
         </div>
 
-        {/* FULL-WIDTH below the row: the fat/lean split bar, then the Energy section.
-            No rule between the row and these — spacing only (Piece 8). */}
         <div className="bcb-split">
           <span className="bcb-split-label">fat / lean split</span>
           <BodyComposition comp={splitComp} />
@@ -156,24 +163,36 @@ export default function BodyPage({ onBack }) {
           activityRows={state.activityRows}
           goalMap={goalMap}
           today={state.today}
-          range={range}
+          viewEnd={energyEnd}
+          viewDays={energyDays}
           onSetGoal={(el) => gw.openEditor("active_energy", el)}
         />
       </div>
     );
   }
 
-  const isFit = !state.loading && !state.error; // every table view is zero-scroll-fit
+  const isFit = !state.loading && !state.error;
   const breadcrumbEl = <Breadcrumb crumbs={[{ label: "Health", onClick: onBack }, { label: "Body" }]} />;
-  const switcherEl = (
-    <RangeSwitcher ranges={RANGES} value={range} ariaLabel="Body range" onChange={setRange} />
+  const controlEl = (
+    <BodyRangeControl
+      win={win}
+      onWin={changeWin}
+      onPrev={() => page(-1)}
+      onNext={() => page(1)}
+      prevDisabled={prevDisabled}
+      nextDisabled={nextDisabled}
+      viewStart={viewStart}
+      viewEnd={win === "today" ? null : anchorEnd}
+      showBackToToday={showBackToToday}
+      onBackToToday={() => setAnchor(null)}
+    />
   );
 
   return (
     <div className={isFit ? "body-page health-fit" : "body-page"}>
       <div className="health-chrome">
         {breadcrumbEl}
-        {switcherEl}
+        {controlEl}
       </div>
 
       {state.loading ? (
@@ -193,10 +212,7 @@ export default function BodyPage({ onBack }) {
             onSubmit={(vals) =>
               gw.submitGoal(
                 gw.editor.metric,
-                // active_energy is a MOVE-goal ("hit at least X") → force direction up,
-                // overriding GoalEditor's value-inferred direction. Scoped to this metric
-                // only; weight/body_fat keep their inferred direction, Food is untouched
-                // (it writes via its own NutritionGoalsEditor, not this handler).
+                // active_energy is a MOVE-goal ("hit at least X") → force direction up.
                 gw.editor.metric === "active_energy" ? { ...vals, direction: "up" } : vals,
               )
             }

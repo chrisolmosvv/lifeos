@@ -1,18 +1,18 @@
 import { humanDayShort, shiftYMD } from "../../spine/logic/gymDates";
-import { stackedDaily, avgPerDay, ENERGY_WINDOW } from "../../spine/logic/bodyEnergy";
+import { stackedSeries, avgPerDay } from "../../spine/logic/bodyEnergy";
 import "../kit/energySection.css";
 
-// LifeOS — Body V3 (Piece 8): the full-width Energy section. One horizontal band:
-//   RING (grown, height-matched to the bars) — centre shows today's real active kcal +
-//     "active today"; beneath it the goal context (% of goal · avg/day) or a set-goal link.
-//   SPLIT — a thin vertical resting/active average bar, between the ring and the day bars.
-//   BARS — one stacked bar/day (resting base + active on top) filling the full width, with
-//     date labels beneath; window follows the range (Latest = a trailing 14 days).
+// LifeOS — Body V3 (Piece 9): the Energy section under time-paging.
+//   RING — a fixed "current status" widget: today's real active kcal + today's goal
+//     progress + a fixed 14-day-from-today average. It NEVER follows the viewed period.
+//   SPLIT — the resting/active make-up AVERAGED over the VIEWED period (pages with you).
+//   BARS — one stacked bar/day over the viewed window (daily up to 90 days; WEEKLY beyond,
+//     so 6-month / 1-year read legibly), with date labels beneath. Pages with you.
 // terracotta is reserved for the ring arc + today's bar. Compute-on-read.
 
 const kcal = (v) => (Number.isFinite(v) ? Math.round(v) : "—");
 
-// E6 — the move-goal ring.
+// E6 — the move-goal ring (fixed to TODAY, regardless of paging).
 function Ring({ today, goal, avg, onSetGoal }) {
   const R = 29;
   const C = 2 * Math.PI * R;
@@ -49,11 +49,10 @@ function Ring({ today, goal, avg, onSetGoal }) {
   );
 }
 
-// E8 — resting-vs-active average as a thin VERTICAL bar (resting base + active top),
-// height-matched to the day bars, sitting between the ring and the bars.
+// E8 — resting-vs-active average over the VIEWED period, as a thin vertical bar.
 function SplitBar({ restingAvg, activeAvg }) {
   const total = (restingAvg || 0) + (activeAvg || 0);
-  if (total <= 0) return <div className="er-split er-split--empty" title="no energy data yet" />;
+  if (total <= 0) return <div className="er-split er-split--empty" title="no energy data for this period" />;
   const rPct = ((restingAvg || 0) / total) * 100;
   return (
     <div className="er-split" title={`avg/day — resting ${kcal(restingAvg)} + active ${kcal(activeAvg)}`}>
@@ -66,11 +65,12 @@ function SplitBar({ restingAvg, activeAvg }) {
   );
 }
 
-// E1 — stacked bars filling the full width, with a few date labels beneath.
-function Bars({ days }) {
+// E1 — stacked bars (daily or weekly) filling the full width, with a few date labels beneath.
+function Bars({ days, weekly }) {
   const max = Math.max(1, ...days.map((d) => d.total));
   const n = days.length;
   const labelIdx = new Set([0, Math.round((n - 1) * 0.25), Math.round((n - 1) * 0.5), Math.round((n - 1) * 0.75), n - 1]);
+  const unit = weekly ? "week of " : "";
   return (
     <div className="er-bars-col">
       <div className="er-bars">
@@ -78,7 +78,7 @@ function Bars({ days }) {
           <div
             key={d.ymd}
             className={`er-bar${d.isToday ? " er-bar--today" : ""}`}
-            title={`${humanDayShort(d.ymd)} · ${kcal(d.total)} kcal (rest ${kcal(d.resting)} + active ${kcal(d.active)})`}
+            title={`${unit}${humanDayShort(d.ymd)} · ${kcal(d.total)} kcal (rest ${kcal(d.resting)} + active ${kcal(d.active)})`}
           >
             <span className="er-bar-active" style={{ height: `${(d.active / max) * 100}%` }} />
             <span className="er-bar-resting" style={{ height: `${(d.resting / max) * 100}%` }} />
@@ -94,23 +94,27 @@ function Bars({ days }) {
   );
 }
 
-export default function EnergySection({ activity, activityRows, goalMap, today, range, onSetGoal }) {
-  const days = ENERGY_WINDOW[range] ?? 14;
-  const yesterday = shiftYMD(today, -1); // averages exclude today's partial day
+export default function EnergySection({ activity, activityRows, goalMap, today, viewEnd, viewDays, onSetGoal }) {
   const active = activity?.active_energy;
   const goal = goalMap?.get("active_energy")?.target_value ?? null;
-  const bars = stackedDaily(activityRows?.active_energy, activityRows?.resting_energy, today, days);
-  const activeAvg = avgPerDay(activityRows?.active_energy, yesterday, days);
-  const restingAvg = avgPerDay(activityRows?.resting_energy, yesterday, days);
+
+  // RING — fixed to today: today's kcal + a 14-day-from-today average (never the viewed period).
+  const ringAvg = avgPerDay(activityRows?.active_energy, shiftYMD(today, -1), 14);
+
+  // BARS + SPLIT — the viewed period.
+  const { bars, weekly } = stackedSeries(activityRows?.active_energy, activityRows?.resting_energy, viewEnd, viewDays);
+  const splitEnd = viewEnd === today ? shiftYMD(today, -1) : viewEnd; // exclude today's partial when at the present
+  const activeAvg = avgPerDay(activityRows?.active_energy, splitEnd, viewDays);
+  const restingAvg = avgPerDay(activityRows?.resting_energy, splitEnd, viewDays);
   const restingHasData = (activityRows?.resting_energy?.length || 0) > 0;
 
   return (
     <section className="energy">
-      <div className="energy-eyebrow">Energy <span className="energy-window">{days}-day</span></div>
+      <div className="energy-eyebrow">Energy <span className="energy-window">{weekly ? "weekly" : `${viewDays}-day`}</span></div>
       <div className="energy-top">
-        <Ring today={active?.todaySoFar?.value ?? null} goal={goal} avg={activeAvg} onSetGoal={onSetGoal} />
+        <Ring today={active?.todaySoFar?.value ?? null} goal={goal} avg={ringAvg} onSetGoal={onSetGoal} />
         <SplitBar restingAvg={restingAvg} activeAvg={activeAvg} />
-        <Bars days={bars} />
+        <Bars days={bars} weekly={weekly} />
       </div>
       {!restingHasData && (
         <p className="energy-note">Resting energy isn’t syncing yet — bars and split show active only until it flows.</p>
