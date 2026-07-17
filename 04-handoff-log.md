@@ -33,6 +33,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-07-17 — Body V3 — composition chart BUGFIX: body-fat "fake zigzag". SRC-ONLY. 1 COMMIT.
+
+WHAT WAS ACTUALLY WRONG (owner's Latest screenshot: body-fat line swinging in sharp V's top-to-bottom
+while the weight line stayed smooth; right axis read 18.0–18.5%):
+- **Ruled out BOTH of the offered hypotheses, from the code:** (1) the axis is NOT computed from a
+  narrow/stale slice — it uses ALL the visible smoothed points, computed live each render; (2) the line
+  is NOT plotting raw values — it plots the 7-day SMOOTHED series (Piece 3's getter), confirmed at the
+  draw call.
+- **The real root cause:** the body-fat axis auto-scales *tightly* to its own real range, and that range
+  is genuinely small — the 18.0–18.5 axis reading in the screenshot IS the evidence: the real smoothed
+  body-fat variation in that window is only ~0.4 percentage points. With no minimum span, that 0.4pp got
+  stretched to fill the full ~300px chart height, so a 0.1pp wiggle became a ~75px swing — a "fake
+  zigzag" out of ordinary sub-percent noise. The weight line looks calm ONLY because its axis is
+  stretched much wider by the goal zone (~80 kg), the raw dots and the ±SD band — wideners the body-fat
+  axis doesn't have. So it's a magnification artifact of a too-tight secondary auto-scale, not clipping
+  and not raw data.
+- **Honest limit:** I could not run a direct SQL query of the rows (row-level security + no service key
+  in the local env), so the "real range is ~0.4pp" reading comes from the axis label in the owner's own
+  screenshot (a real-data readout) plus the code that feeds it — not an estimate, but not a DB query
+  either. If the owner ever wants the raw numbers confirmed, the debug page (`#health-debug-v2`) prints
+  body-fat rows.
+
+FIX: `yScaleFrom` gains an optional **minimum-span floor**; the body-fat axis passes **4 percentage
+points** (`BODYFAT_AXIS_MIN_SPAN`). A too-tight range is widened symmetrically to 4pp (centered on the
+data), so real variation reads as a gentle slope; a genuinely wide range keeps its true min/max (the
+floor only widens, never shrinks). The weight axis, raw dots, goal zone and spread band are untouched.
+
+FILES: `src/desktop/kit/bodyChartScales.js` (the `minSpan` floor) + `src/desktop/kit/BodyCompositionChart.jsx`
+(body-fat axis passes the 4pp floor; the constant is named + flagged).
+
+HOW TO VERIFY (owner, reload Latest on the 13"):
+1. The terracotta body-fat line should now read as a **gentle curve**, not V's slamming the top and
+   bottom edges. The right axis should read a wider window (e.g. ~16–20%) instead of 18.0–18.5.
+2. **Spot-check** (same discipline as Piece 3): the smoothed VALUES didn't change — only the axis
+   scaling — so the line's height at a date still corresponds to its axis labels. Hover a date and
+   confirm the body-fat hero number matches where the line sits against the (now wider) right axis.
+3. **Check Week / Month / 90-day** — same axis logic feeds them; body fat should read calm on all.
+   Confirm the **weight line, its dots, and the goal zone are visually identical** to before.
+
+KNOWN GAPS / RISKS:
+- **⚠️ The 4pp floor is a chosen constant, flagged for your eyes** (`BODYFAT_AXIS_MIN_SPAN` in
+  `BodyCompositionChart.jsx`). It's the sensible-default for "a real body-fat trend stays visible while
+  noise stays small." If the line still looks too twitchy, raise it (calmer); if it looks too flat and
+  you want small real moves more visible, lower it. One number, one place.
+- If body-fat readings are SPARSE (recorded every few days rather than daily), the 7-day smoothed line
+  can still gently step as readings enter/leave the window — the floor makes those steps small and calm
+  rather than violent, but they're real. Not changing the smoothing window (that's the locked "7-day"
+  design); flag if you'd want a longer body-fat smoothing window later.
+
+NEXT: nothing blocks on this. Piece 5 (Energy section) / Piece 6 (Vitals side column + the zero-scroll
+fit) continue independently.
+
 ### 2026-07-17 — Body V3 — composition chart BUGFIX: blank Latest, garbled dates, clipping. SRC-ONLY. 1 COMMIT.
 
 WHAT WAS ACTUALLY WRONG (owner's real Latest screenshot showed three linked problems; root cause per each):
