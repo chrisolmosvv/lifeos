@@ -3552,3 +3552,14 @@ The current partial week only EXTENDS the streak (if already met), never breaks 
   • Known wrinkle: the bar MOVES with the average, so a streak can end because other
     weeks lifted the average, not because this week fell. If the owner prefers a fixed
     target (e.g. ≥3/week) that's a trivial swap. Owner's call — NOT settled here.
+
+### 2026-07-18 · Gym V2 Piece 3 — routine classification + delta semantics
+  • ROUTINE CLASSIFICATION (owner-decided): case-insensitive title PREFIX. "push*"→Push,
+    "pull*"→Pull, "legs*"→Legs, ELSE→Other. No keyword-rescue: "Harriot Legs" and "Chest
+    and Triceps 2" go to Other (deliberate simplicity). Verified 37/35/27/8 = 107 live.
+  • DEFAULT TAB = Push (arbitrary-but-consistent). OPEN/flagged: could be most-recently-
+    trained routine instead. Owner's call.
+  • DELTA SEMANTICS (flagged): "current best" = heaviest working weight IN the selected
+    window; delta = that minus the best BEFORE the window (same routine). Consequence: at a
+    short window a lift may display a best below its all-time PR with a negative delta if the
+    PR wasn't hit recently — intentional (recent form vs history), but confirm it reads right.

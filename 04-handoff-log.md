@@ -12395,3 +12395,70 @@ NEXT — PIECE 3: routine classification + Push/Pull/Legs tabs + per-lift delta 
 99/107, 8 outliers, two naming eras. The classification + outlier handling is an OPEN
 owner decision to settle at the top of Piece 3.)
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-18 — Gym V2 redesign · PIECE 3: Push/Pull/Legs/Other tabs + lift delta table
+
+WHAT CHANGED
+Replaced Piece 1's combined box-score+trend Training zone with a 4-TAB routine view:
+  • TABS: Push / Pull / Legs / Other. Classification is a case-insensitive PREFIX on the
+    free-text title (no stored routine field): starts with push/pull/legs → that routine;
+    EVERYTHING else → Other. Per the owner's call, the 8 oddballs ("Morning workout" ×5,
+    "Afternoon workout", "Chest and Triceps 2", "Harriot Legs") go to Other — NOT keyword-
+    guessed. Verified live: 37 Push / 35 Pull / 27 Legs / 8 Other = 107.
+  • Selecting a tab shows: that routine's session count + volume (in-window), its OWN
+    volume trend line (scoped to that routine only — Push volume never mixed with Legs),
+    and a per-lift table: exercise · current best (heaviest working weight in-window) ·
+    delta vs the best BEFORE the window (same routine). Bodyweight/duration lifts show "—"
+    (no fake 0); a lift with no prior baseline shows "new"; unchanged shows "±0".
+  • The whole zone PAGES with the Piece-1 time switcher. Default tab = Push (FLAGGED).
+
+FILES
+  NEW:       src/spine/logic/gymRoutine.js  (classifyRoutine, routineWorkouts, liftTable)
+  NEW:       src/desktop/health/GymLiftTable.jsx  (the per-lift rows)
+  REWRITTEN: src/desktop/health/GymTraining.jsx  (tabs + scoped trend + table; was the
+             combined view)
+  MODIFIED:  src/desktop/Health.jsx  (passes built + window bounds to GymTraining instead
+             of precomputed box/series; dropped now-unused boxScore/dailyVolumeSeries imports)
+  MODIFIED:  src/desktop/kit/gymPage.css  (tabs, lift table, + the flex-shrink fix below)
+  REUSED as-is: gymCalc.boxScore + prWeight, gymTrend.dailyVolumeSeries, gymFormat.
+
+HOW TO VERIFY (verified live on 1440×900, owner logged in)
+  • HAND-CHECKED DELTA (the gate): Bench Press (Barbell) in Push. Queried the DB: best-in-
+    window 90 / best-before 85 at the 14-day "Today" window → UI shows "90 kg, +5 kg". At
+    3-Month window: best 90 / before 80 → UI shows "90 kg, +10 kg". The delta RESCOPES with
+    the time switcher and matches the DB exactly. ✓
+  • Tabs rescope: Push (Today) = 4 sessions/18,182 kg; Legs = 2 sessions/15,650 kg with a
+    totally different lift list (Hip Thrust 120 / Squat 95 / Seated Leg Curl 60 — no Bench),
+    proving Push is never mixed with Legs. Other (Today) = 0 sessions → honest "No lifts
+    logged for this routine in this window." (its 8 sessions are all Jan–Jun, so they show
+    at wider windows). Push (3mo) = 18 sessions/77,674 kg.
+  • Zero-scroll holds across the spot-checked tab×window extremes (Push/Today, Legs/Today,
+    Other/Today, Push/3mo). No console errors. Prod build passes.
+
+KNOWN GAPS / RISKS
+  • LAYOUT BUG FOUND + FIXED DURING VERIFY (lesson): the new content made the main column
+    exactly full, and flex-shrink then squeezed the FIXED elements — first the Consistency
+    grid overlapped Training, then the routine TABS were crushed to a 10px sliver that
+    clipped their labels (looked blank). Fix: .gym-zone → flex:0 0 auto (no shrink) and
+    inside Training only the lift table may shrink/scroll (.gym-training > *:not(.gym-lift-
+    table){flex:0 0 auto}). Watch this pattern — a full flex column silently eats fixed rows.
+  • "Current best" = best IN the window, NOT all-time. So at a short window a lift can show
+    a best BELOW its all-time PR (with a negative delta) if you didn't hit the PR recently.
+    That's intentional (recent form vs history) but worth confirming it reads right to the
+    owner. FLAG.
+  • DEFAULT TAB = Push (arbitrary-but-consistent). Could default to the most-recently-trained
+    routine instead — one line. FLAG — owner's call.
+  • Volume trend reuses the rolling-7 daily series scoped to the routine (per Piece 1's
+    approved chart); a once-weekly routine's rolling line reads low/calm. Per-session raw
+    spikes are a possible refinement if the owner wants punchier per-session bars.
+  • The lift table scrolls internally (~4–5 rows visible on the 13" before scroll) because
+    the main column is genuinely full (Consistency + Training + full Balance). Functional;
+    if the owner wants more table height, we'd trade against the Balance list.
+  • Dead CSS from earlier pieces still in formGuide.css (mobile shares .gym-grid — scoped
+    sweep still pending). lastNWeeksSessions still unused on desktop.
+
+NEXT — PIECE 4: the vertical steps bar chart in the Activity side column (most-recent day
+at the top, reverse-chronological; collapses to weekly averages at longer windows — no Body
+threshold to inherit, steps data only ~3 weeks deep, so propose one).
+────────────────────────────────────────────────────────────────────────────────

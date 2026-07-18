@@ -13,8 +13,7 @@ import InlineError from './kit/InlineError'
 import { amsTodayYMD, shiftYMD, amsYMD } from '../spine/logic/gymDates'
 import { fetchActivity } from '../spine/data/healthLoad'
 import { loadGymData } from '../spine/data/gymLoad'
-import { buildWorkouts, boxScore } from '../spine/logic/gymCalc'
-import { dailyVolumeSeries } from '../spine/logic/gymTrend'
+import { buildWorkouts } from '../spine/logic/gymCalc'
 import { muscleBalance } from '../spine/logic/gymBalance'
 import { recentSessions } from '../spine/logic/gymSessions'
 import './health/healthChrome.css'
@@ -97,8 +96,6 @@ export default function Health({ onBack }) {
   const actStart = actEnd ? shiftYMD(actEnd, -(days - 1)) : null
   const nowForWindow = win === 'today' ? Date.now() : (anchorEnd ? noonMs(anchorEnd) : Date.now())
 
-  const box = useMemo(() => boxScore(built, days, nowForWindow), [built, days, nowForWindow])
-  const series = useMemo(() => (built.length ? dailyVolumeSeries(built, { days, now: nowForWindow }) : null), [built, days, nowForWindow])
   // Body-Part Balance is FIXED to the trailing 7 days (never pages).
   const balance = useMemo(() => (built.length ? muscleBalance(built, { days: 7 }) : null), [built])
   const openWorkout = useMemo(() => (openId ? built.find((w) => w.id === openId) : null), [openId, built])
@@ -155,7 +152,15 @@ export default function Health({ onBack }) {
           <div className="gym-body">
             <div className="gym-main">
               <GymConsistency built={built} />
-              <GymTraining box={box} series={series} onMore={() => setView('archive')} onRecords={() => setView('records')} />
+              <GymTraining
+                built={built}
+                windowStart={viewStart}
+                windowEnd={anchorEnd}
+                days={days}
+                nowForWindow={nowForWindow}
+                onMore={() => setView('archive')}
+                onRecords={() => setView('records')}
+              />
               <GymBalance balance={balance} />
             </div>
             <div className="gym-side">

@@ -1,11 +1,16 @@
+import { useMemo, useState } from "react";
+import { boxScore } from "../../spine/logic/gymCalc";
+import { dailyVolumeSeries } from "../../spine/logic/gymTrend";
 import { formatVolume } from "../../spine/logic/gymFormat";
+import { ROUTINES, routineWorkouts, liftTable } from "../../spine/logic/gymRoutine";
+import GymLiftTable from "./GymLiftTable";
 
-// LifeOS — Gym V2 (Piece 1): the Training Progress zone. The EXISTING combined view lifted
-// from the old over-time quadrant, AS-IS — the box-score band (sessions + volume) and the
-// rolling-7 volume trend line — just repositioned into the new shell. It PAGES with the time
-// switcher (the parent computes box + series for the viewed window). The routine tabs (Push/
-// Pull/Legs) + the per-lift delta table are Piece 3. The "more ›" / "records ›" links keep the
-// session archive + per-lift records reachable. Pure presentation.
+// LifeOS — Gym V2 (Piece 3): the Training Progress zone, now TABBED by routine (Push / Pull
+// / Legs / Other — replaces Piece 1's combined box-score+trend). Selecting a tab shows THAT
+// routine's own volume trend (scoped to that routine only — Push volume is never mixed with
+// Legs) + a per-lift table with window deltas. The whole zone PAGES with the time switcher
+// (parent passes the viewed window). Default tab = Push (flagged: could default to the
+// most-recently-trained routine instead). Keeps the "more ›"/"records ›" drill-in links.
 
 // A compact volume trend line (stretched to the zone; no axis — the numbers are above).
 function VolLine({ pts }) {
@@ -23,16 +28,39 @@ function VolLine({ pts }) {
   );
 }
 
-export default function GymTraining({ box, series, onMore, onRecords }) {
+export default function GymTraining({ built, windowStart, windowEnd, days, nowForWindow, onMore, onRecords }) {
+  const [routine, setRoutine] = useState("push");
+  const wk = useMemo(() => routineWorkouts(built || [], routine), [built, routine]);
+  const box = useMemo(() => boxScore(wk, days, nowForWindow), [wk, days, nowForWindow]);
+  const series = useMemo(() => (wk.length ? dailyVolumeSeries(wk, { days, now: nowForWindow }) : null), [wk, days, nowForWindow]);
+  const rows = useMemo(() => liftTable(wk, { start: windowStart, end: windowEnd }), [wk, windowStart, windowEnd]);
   const vol = formatVolume(box?.volume);
+
   return (
     <section className="gym-zone gym-training">
-      <span className="gym-kicker">Training progress</span>
+      <div className="gym-tabs" role="tablist" aria-label="Routine">
+        {ROUTINES.map((r) => (
+          <button
+            key={r.id}
+            type="button"
+            role="tab"
+            aria-selected={r.id === routine}
+            className={r.id === routine ? "gym-tab is-active" : "gym-tab"}
+            onClick={() => setRoutine(r.id)}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+
       <div className="gym-over-stats">
         <span><b>{box?.sessions ?? 0}</b> sessions</span>
         <span><b>{vol.num}</b> kg</span>
       </div>
       {series?.rolling?.length ? <VolLine pts={series.rolling} /> : null}
+
+      <GymLiftTable rows={rows} />
+
       <div className="gym-more-row">
         <button type="button" className="gym-more" onClick={onMore}>more ›</button>
         <button type="button" className="gym-more" onClick={onRecords}>records ›</button>

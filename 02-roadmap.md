@@ -2567,3 +2567,13 @@ gymConsistency.js; reuses recentSessions for day+PR. Src-only. Hand-verified cou
 [5,4,3,3,0,2,5,2,5,3,6,4,5] + PR dots vs archive. Details/risks in handoff.
   ▸ Piece 3 (NEXT): routine tabs (Push/Pull/Legs — DERIVED from title, classification OPEN) + per-lift delta table.
   ▸ Piece 4: vertical steps bar chart.
+
+### 2026-07-18 · Gym V2 redesign — Piece 3 of ~4 ✅ (built + live-verified on 1440×900)
+Training zone is now 4 routine tabs (Push/Pull/Legs/Other) replacing the combined view.
+Classification = case-insensitive title PREFIX (push/pull/legs; else Other — the 8 oddballs
+incl. Harriot Legs land in Other per owner). Each tab: routine session count+volume, its OWN
+volume trend (never mixed across routines), + a per-lift table (best-in-window + delta vs
+best-before-window; "—" for bodyweight, "new" for no-baseline). Pages with the switcher.
+Hand-checked delta: Bench (Barbell) +5 @Today / +10 @3mo — matches DB. New calc gymRoutine.js
++ GymLiftTable.jsx. Src-only. (Fixed a flex-shrink layout bug during verify — see handoff.)
+  ▸ Piece 4 (NEXT): vertical steps bar chart in the Activity side column.

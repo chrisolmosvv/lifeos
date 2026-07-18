@@ -33,12 +33,15 @@
   overflow: hidden;
 }
 
-/* Every zone stacks its kicker label above its body. */
+/* Every zone stacks its kicker label above its body. flex:0 0 auto so a zone keeps its
+   natural height and never SHRINKS under column pressure (shrinking made the Consistency
+   grid overflow into Training) — only .gym-training opts back into growing + scrolling. */
 .gym-zone {
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-height: 0;
+  flex: 0 0 auto;
 }
 
 /* ── CONSISTENCY (Piece 2): weekday-by-week grid + hero + streak badge ──────────── */
@@ -120,20 +123,81 @@
   padding: 3px 8px;
 }
 
-/* ── TRAINING PROGRESS (reuses .gym-over-stats / .gym-volline / .gym-more-row) ──── */
-.gym-training .gym-over-stats {
-  margin-top: 2px;
-}
-.gym-training .gym-volline {
-  margin-top: 4px;
-}
-.gym-training .gym-more-row {
-  margin-top: 10px;
-}
-
-/* ── BODY-PART BALANCE (full ranked list — fills remaining main height) ────────── */
-.gym-balance-zone {
+/* ── TRAINING PROGRESS (Piece 3: routine tabs + scoped trend + per-lift table) ──── */
+/* Training grows to fill the space between Consistency and Balance; its lift table
+   scrolls INTERNALLY so the page itself stays zero-scroll for any lift count. */
+.gym-training {
   flex: 1 1 auto;
+  min-height: 0;
+}
+/* Only the lift table may shrink/scroll; the tabs, stats, trend + links keep full height
+   (otherwise flex-shrink squeezed the tabs to a 10px sliver and clipped their labels). */
+.gym-training > *:not(.gym-lift-table) {
+  flex: 0 0 auto;
+}
+.gym-tabs {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  align-self: flex-start;
+}
+.gym-tab {
+  background: var(--paper);
+  border: none;
+  border-left: 1px solid var(--rule);
+  padding: 5px 16px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+.gym-tab:first-child { border-left: none; }
+.gym-tab:hover { color: var(--accent); }
+.gym-tab.is-active { background: var(--ink); color: var(--paper); }
+.gym-tab.is-active:hover { color: var(--paper); }
+.gym-training .gym-over-stats { margin-top: 6px; }
+.gym-training .gym-volline { margin-top: 4px; }
+.gym-training .gym-more-row { flex: 0 0 auto; margin-top: 8px; }
+
+/* The lift table — the flex-grow, internally-scrolling child. */
+.gym-lift-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin-top: 6px;
+  border-top: 1px solid var(--rule-faint);
+}
+.gym-lt-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 16px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule-faint);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.gym-lt-name { color: var(--ink); }
+.gym-lt-best {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.gym-lt-delta {
+  min-width: 58px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* movement = ink (state ≠ accent); flat/new/none = muted. Terracotta stays reserved. */
+.gym-lt-delta--move { color: var(--ink); }
+.gym-lt-delta--flat,
+.gym-lt-delta--new,
+.gym-lt-delta--none { color: var(--ink-muted); }
+
+/* ── BODY-PART BALANCE (full ranked list — natural height under Training) ───────── */
+.gym-balance-zone {
+  flex: 0 0 auto;
 }
 .gym-balance-zone .gym-balance {
   gap: 7px;
