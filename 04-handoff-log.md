@@ -12462,3 +12462,64 @@ NEXT — PIECE 4: the vertical steps bar chart in the Activity side column (most
 at the top, reverse-chronological; collapses to weekly averages at longer windows — no Body
 threshold to inherit, steps data only ~3 weeks deep, so propose one).
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-18 — Gym V2 redesign · PIECE 4: vertical steps bar chart + default-tab fix
+
+WHAT CHANGED (last BUILD piece — Piece 5 is docs-close only)
+PART A — the steps chart in the Activity side column (below the 3 average tiles):
+  • A VERTICAL, REVERSE-CHRONOLOGICAL list of horizontal bars — MOST RECENT DAY AT THE
+    TOP, stepping backward down the column. Bar length ∝ that day's step count.
+  • PAGES with the time switcher. At ≤60-day windows (Today = 14d) it shows DAILY rows;
+    above 60 days (3mo/6mo/1yr) it COLLAPSES to WEEKLY AVERAGES (rolling 7-day blocks from
+    the window end), same reverse-chron order, most recent week at top. Kicker says which:
+    "Steps · daily" vs "Steps · weekly avg".
+  • A day/week with no data is an honest "–" row (never a fake 0); a real 0-step day shows
+    0. The list scrolls INTERNALLY for long/weekly windows so the page stays zero-scroll.
+PART B — Piece-3 default-tab fix: the initial routine tab is now whichever routine the
+  MOST RECENTLY trained session belongs to (reusing gymRoutine.classifyRoutine on
+  built[0]), not hardcoded Push. Falls back to Push if there's no session.
+
+FILES
+  NEW:      src/spine/logic/gymSteps.js  (stepsChart() + STEPS_COLLAPSE_ABOVE_DAYS=60)
+  NEW:      src/desktop/health/GymStepsChart.jsx
+  MODIFIED: src/desktop/Health.jsx  (load 'steps'; render <GymStepsChart> in the side col,
+            windowed on viewStart..anchorEnd so TODAY is the top row)
+  MODIFIED: src/desktop/health/GymTraining.jsx  (Part B — default tab from most-recent session)
+  MODIFIED: src/desktop/kit/gymPage.css  (steps chart rows/bars; .gym-steps fills + scrolls)
+  REUSED as-is: healthActivity.aggregateDaily (steps = SUM), gymDates, gymRoutine.classifyRoutine.
+
+HOW TO VERIFY (verified live on 1440×900, owner logged in)
+  • Reverse-chron + spot-checks (the gate): Today view → top row 18 Jul = "–" (today has NO
+    steps data yet — data ends 07-17, honest empty), then 17 Jul = 30, 16 Jul = "–", 15 Jul
+    = 602, 14 Jul = 0, … down to 5 Jul = 903. Queried the DB directly: 07-17=30, 07-15=602,
+    07-14=0 — all match exactly. Most recent at top, stepping backward. ✓
+  • Weekly collapse mechanism: 3 Months AND 1 Year both switch the kicker to "Steps · weekly
+    avg" and show weekly rows (most recent week 12 Jul at top). Real weekly averages for the
+    ~4 weeks with data (21 Jun=18,600, 28 Jun=5,735, 5 Jul=209, 12 Jul=158) and honest "–"
+    for every older week. Long list scrolls internally; page stays zero-scroll.
+  • Part B: default tab = Pull, because the most recent session is Pull D (2026-07-17) →
+    classifyRoutine → pull. Confirmed against the real newest workout. ✓
+  • Zero-scroll: JS-verified documentElement.scrollHeight == clientHeight (900==900), no
+    overflow, across Today and 1 Year. No console errors. Prod build passes.
+  • WHOLE-PAGE final look (as asked): all four Gym V2 zones read finished + coherent as one
+    two-column broadsheet. Nothing reads half-built.
+
+KNOWN GAPS / RISKS
+  • SHALLOW STEPS DATA: only ~19 real days (2026-06-24 → 07-17). So the daily view has real
+    bars only for late June–mid July, and at 3mo/6mo/1yr MOST weekly rows are honestly "–".
+    Expected, not a bug — the chart fills in as history deepens.
+  • COLLAPSE THRESHOLD = 60 days is a PLACEHOLDER (owner-approved) — the first daily→weekly
+    collapse anywhere in the app, NO Body precedent. The MECHANISM is verified working, but
+    it can't be fully exercised at scale until there's >60 days of dense data. Tunable: one
+    constant (STEPS_COLLAPSE_ABOVE_DAYS in gymSteps.js).
+  • Today's row is empty ("–") whenever today has no steps synced yet (as now) — honest, but
+    means the very top row can read blank. Intentional.
+  • Carried-over (not this piece): dead CSS in formGuide.css (mobile shares .gym-grid —
+    scoped sweep still pending); lastNWeeksSessions unused on desktop; the Piece-3 flags
+    (delta = best-in-window semantics; routine-scoped volume trend uses rolling-7) still open.
+
+NEXT — PIECE 5: docs close (the genuinely last piece of Gym V2). No new build. Reconcile the
+roadmap/decisions/architecture to the as-built four-piece design, bank the open flags for the
+owner, and note the deferred cleanup (dead CSS sweep, lastNWeeksSessions) as roadmap debt.
+────────────────────────────────────────────────────────────────────────────────

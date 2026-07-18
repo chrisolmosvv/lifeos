@@ -7,6 +7,7 @@ import GymConsistency from './health/GymConsistency'
 import GymTraining from './health/GymTraining'
 import GymBalance from './health/GymBalance'
 import GymActivity from './health/GymActivity'
+import GymStepsChart from './health/GymStepsChart'
 import Breadcrumb from './kit/Breadcrumb'
 import Skeleton from './kit/Skeleton'
 import InlineError from './kit/InlineError'
@@ -32,7 +33,8 @@ import './kit/gymPage.css'
 const START = '2026-01-01'
 // The three Activity averages the side column shows. steps arrives with the P4 bar chart;
 // walking_speed (mislabeled pace) + walking_step_length (stride) are cut by design.
-const ACTIVITY_METRICS = ['flights_climbed', 'stand_minutes', 'walking_heart_rate_avg']
+// steps feeds the vertical bar chart (Piece 4); the other three are the average tiles.
+const ACTIVITY_METRICS = ['steps', 'flights_climbed', 'stand_minutes', 'walking_heart_rate_avg']
 // Window size per switcher level. "Today" has no natural number — 14 days mirrors Body's
 // Piece-9 "today" span (a made-call, flagged in the handoff; the owner tunes it). 3/6/12 mo
 // are 90/180/365. Governs Training Progress + the Activity side column (the paged zones).
@@ -165,6 +167,12 @@ export default function Health({ onBack }) {
             </div>
             <div className="gym-side">
               <GymActivity activityRows={activityRows} windowStart={actStart} windowEnd={actEnd} />
+              <GymStepsChart
+                rows={activityRows?.steps}
+                windowStart={viewStart}
+                windowEnd={anchorEnd}
+                windowDays={days}
+              />
             </div>
           </div>
         </div>

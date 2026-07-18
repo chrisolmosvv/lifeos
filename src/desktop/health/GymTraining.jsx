@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { boxScore } from "../../spine/logic/gymCalc";
 import { dailyVolumeSeries } from "../../spine/logic/gymTrend";
 import { formatVolume } from "../../spine/logic/gymFormat";
-import { ROUTINES, routineWorkouts, liftTable } from "../../spine/logic/gymRoutine";
+import { ROUTINES, routineWorkouts, liftTable, classifyRoutine } from "../../spine/logic/gymRoutine";
 import GymLiftTable from "./GymLiftTable";
 
 // LifeOS — Gym V2 (Piece 3): the Training Progress zone, now TABBED by routine (Push / Pull
@@ -29,7 +29,9 @@ function VolLine({ pts }) {
 }
 
 export default function GymTraining({ built, windowStart, windowEnd, days, nowForWindow, onMore, onRecords }) {
-  const [routine, setRoutine] = useState("push");
+  // Default tab = the routine of the MOST RECENTLY trained session (built is newest-first),
+  // reusing Piece 3's classifier. Falls back to Push if there's somehow no session.
+  const [routine, setRoutine] = useState(() => classifyRoutine(built?.[0]?.title) || "push");
   const wk = useMemo(() => routineWorkouts(built || [], routine), [built, routine]);
   const box = useMemo(() => boxScore(wk, days, nowForWindow), [wk, days, nowForWindow]);
   const series = useMemo(() => (wk.length ? dailyVolumeSeries(wk, { days, now: nowForWindow }) : null), [wk, days, nowForWindow]);

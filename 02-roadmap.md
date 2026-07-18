@@ -2577,3 +2577,12 @@ best-before-window; "—" for bodyweight, "new" for no-baseline). Pages with the
 Hand-checked delta: Bench (Barbell) +5 @Today / +10 @3mo — matches DB. New calc gymRoutine.js
 + GymLiftTable.jsx. Src-only. (Fixed a flex-shrink layout bug during verify — see handoff.)
   ▸ Piece 4 (NEXT): vertical steps bar chart in the Activity side column.
+
+### 2026-07-18 · Gym V2 redesign — Piece 4 of ~4 ✅ (LAST build piece; live-verified 1440×900)
+Steps chart shipped: vertical, reverse-chronological bars (most recent day at TOP), pages
+with the switcher, collapses daily→weekly above 60 days (placeholder threshold), honest "–"
+rows for gaps. Spot-checked vs DB (07-17=30, 07-15=602, 07-14=0). Also Part B: default tab is
+now the most-recent session's routine (Pull today), not hardcoded Push. New gymSteps.js +
+GymStepsChart.jsx. Src-only. Zero-scroll JS-verified (900==900).
+  ▸ Piece 5 (NEXT, final): docs close — reconcile brain docs to the as-built 4-piece design,
+    bank open flags, log deferred cleanup (dead CSS sweep, unused lastNWeeksSessions) as debt.

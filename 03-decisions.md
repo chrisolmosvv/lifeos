@@ -3563,3 +3563,14 @@ The current partial week only EXTENDS the streak (if already met), never breaks 
     window; delta = that minus the best BEFORE the window (same routine). Consequence: at a
     short window a lift may display a best below its all-time PR with a negative delta if the
     PR wasn't hit recently — intentional (recent form vs history), but confirm it reads right.
+
+### 2026-07-18 · Gym V2 Piece 4 — steps chart + default tab
+  • STEPS CHART = vertical reverse-chronological (most recent day at TOP, backward down the
+    column) — deliberately NOT a left-to-right time series (owner's design). Bar ∝ steps.
+  • COLLAPSE THRESHOLD = 60 days (STEPS_COLLAPSE_ABOVE_DAYS) — PLACEHOLDER, owner-approved.
+    First daily→weekly collapse in the app; no Body precedent. Above it → weekly averages
+    (rolling 7-day blocks from window end). Tunable one constant. Steps data is only ~3 weeks
+    deep now, so it rarely triggers yet — expected.
+  • Gaps = honest "–" rows, never a fabricated 0; a real 0-step day stays 0 (distinct).
+  • DEFAULT ROUTINE TAB (supersedes Piece 3's "Push" flag): now the most-recently-trained
+    session's routine, via the existing classifier. Resolves the Piece-3 open flag.
