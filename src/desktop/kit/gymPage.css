@@ -1,0 +1,132 @@
+/* LifeOS — Gym V2 (Piece 1): the TWO-COLUMN shell + zone styles. Broadsheet tokens
+   (theme.css): paper/ink, Fraunces for big numbers, Inter for labels, terracotta reserved
+   for affordances/movement only. Consumes the shared chrome/fit model (healthChrome.css:
+   .health-chrome, .health-fit, .health-fade) and reuses the surviving gym-* atoms from
+   formGuide.css (.gym-kicker, .gym-over-stats, .gym-volline, .gym-balance, .gym-more). The
+   .gym-body is the flex-grow child that fills the fold with no scroll. */
+
+/* ── THE TWO COLUMNS: main (grows) | side (fixed), hairline between ───────────── */
+.health-fit .gym-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.gym-body {
+  display: flex;
+  gap: 32px;
+}
+.gym-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow: hidden;
+}
+.gym-side {
+  flex: 0 0 300px;
+  min-height: 0;
+  border-left: 1px solid var(--rule);
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow: hidden;
+}
+
+/* Every zone stacks its kicker label above its body. */
+.gym-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* ── CONSISTENCY (placeholder fidelity — hero number + caption; grid/streak = P2) ── */
+.gym-consist-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.gym-consist-num {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 52px;
+  line-height: 1;
+  color: var(--ink);
+}
+.gym-consist-cap {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+/* ── TRAINING PROGRESS (reuses .gym-over-stats / .gym-volline / .gym-more-row) ──── */
+.gym-training .gym-over-stats {
+  margin-top: 2px;
+}
+.gym-training .gym-volline {
+  margin-top: 4px;
+}
+.gym-training .gym-more-row {
+  margin-top: 10px;
+}
+
+/* ── BODY-PART BALANCE (full ranked list — fills remaining main height) ────────── */
+.gym-balance-zone {
+  flex: 1 1 auto;
+}
+.gym-balance-zone .gym-balance {
+  gap: 7px;
+  overflow: hidden;
+}
+.gym-bal-row {
+  align-items: center;
+  gap: 12px;
+}
+.gym-bal-name {
+  flex: 0 0 34%;
+}
+.gym-bal-bar {
+  flex: 1 1 auto;
+  height: 6px;
+  border-radius: 4px;
+  background: var(--rule-faint);
+  overflow: hidden;
+}
+.gym-bal-fill {
+  display: block;
+  height: 100%;
+  background: var(--ink); /* informational proportion — ink, NOT terracotta */
+  border-radius: 4px;
+}
+.gym-bal-pct {
+  flex: 0 0 auto;
+  min-width: 34px;
+  text-align: right;
+}
+
+/* ── ACTIVITY side column (three averages; steps bar chart = P4) ───────────────── */
+.gym-act-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gym-act-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gym-act-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.gym-act-val {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--ink);
+}

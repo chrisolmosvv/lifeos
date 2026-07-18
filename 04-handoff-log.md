@@ -12251,3 +12251,87 @@ empty week-view calendar visible on desktop, stripped layout on phone.
 
 FOR THE CHECKER: Confirm the live Vercel URL loads correctly and the GitHub repo
 contains only the brain docs + app source (no node_modules, no .env files).
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-18 — Gym V2 redesign · PIECE 1: two-column shell + new time control
+
+WHAT CHANGED
+Replaced the P4 2×2 quadrant grid on the Gym front page with the new TWO-COLUMN
+layout + a Gym-local Today/3mo/6mo/1yr time control (its own state; reuses the
+shared RangeSwitcher chrome + Body's .brc paging styles, same as Body Piece 9).
+Every zone shows real, correct data — just not yet at final designed fidelity
+(the weekday grid, streak, routine tabs, and steps bar chart are Pieces 2–4).
+  • MAIN column, top→bottom:
+     – Consistency (PLACEHOLDER): "sessions this week" hero number (lastNWeeksSessions,
+       default bumped 8→13 weeks so Piece 2's grid has depth) + one-line caption.
+       FIXED to this week — never pages.
+     – Training Progress: the existing box-score band (sessions + volume) + rolling-7
+       volume trend line, lifted AS-IS from the old over-time quad. PAGES with the
+       switcher. Kept the "more ›"/"records ›" drill-in links (see MADE-CALL #2).
+     – Body-Part Balance: the muscleBalance FULL ranked list (old quad showed top-3),
+       with a faint proportion bar per row. FIXED to trailing 7 days — never pages.
+  • SIDE column: Activity — avg Flights, avg Stand, avg Walking HR, each averaged over
+     the switcher's window (aggregateDaily + statsForRange). PAGES. Shows an honest
+     "No activity data in this window yet." when a window predates activity's start
+     (late June) — no fabricated numbers. Steps bar chart is Piece 4.
+Deleted the 5 P4 cards (prove-dead: reachable only from Health.jsx): GymTodayCard,
+GymOverTimeCard, WalkingTodayCard, WalkingOverTimeCard, WalkingDaysTable. With them
+go walking_speed (the m/s-mislabeled-"km/h" pace) and walking_step_length (stride) —
+gone from desktop by design. Ingest (health-ingest/activity.ts) untouched; mobile
+(MobileHealthGym) untouched (separate surface, out of scope).
+
+FILES
+  NEW: src/desktop/health/GymTimeControl.jsx, GymConsistency.jsx, GymTraining.jsx,
+       GymBalance.jsx, GymActivity.jsx ; src/desktop/kit/gymPage.css
+  REWRITTEN: src/desktop/Health.jsx (two-column shell, win/anchor paging state, load)
+  DELETED: src/desktop/kit/{GymTodayCard,GymOverTimeCard,WalkingTodayCard,
+       WalkingOverTimeCard,WalkingDaysTable}.jsx
+  Calc layer UNCHANGED (reused as-is): gymCalc (boxScore, lastNWeeksSessions),
+       gymTrend (dailyVolumeSeries), gymBalance (muscleBalance), gymSessions
+       (recentSessions), gymFormat ; healthActivity (aggregateDaily, aggMode),
+       healthStats (statsForRange).
+
+HOW TO VERIFY (verified live on 1440×900, owner logged in)
+  1. Health → Gym. Four zones show real data: This week 5 · Training 9 sessions/
+     48,660 kg (14-day "Today") · full Balance list (Shoulders 25%…Other 2%) ·
+     Activity Flights 23 / Stand 131m / Walk HR 103 bpm.
+  2. Switcher: 3 Months → Training 47/287,028 kg, Activity 24/137m/105bpm ; 1 Year →
+     Training 107 sessions/655,486 kg (= ALL 107 workouts in the DB). Consistency (5)
+     and Balance (last 7 days) stay FIXED across every window.
+  3. Paging: on a windowed view, ‹ › arrows + a date-range label appear ("Apr–Jul
+     2026", cross-year "Jul 2025 – Jul 2026"). Page back to Jan–Apr 2026: Training
+     still shows gym history (50/307,215 kg) but Activity shows "No activity data in
+     this window yet." (honest empty). "back to today" appears once paged away.
+  4. ZERO-SCROLL: holds at Today / 3mo / 6mo / 1yr (13" 1440×900) — no page scroll.
+  5. Drill-ins: "more ›" opens The Archive (107 sessions), "records ›" opens Records;
+     back link returns to the front page. No console errors. Prod build passes.
+  6. walking_speed + stride appear nowhere on the desktop Gym surface.
+
+KNOWN GAPS (all EXPECTED — later pieces / deliberate)
+  • Consistency is placeholder: just the number. Weekday-by-week grid + streak = PIECE 2.
+    (Note: currentStreakDays was DELETED in P4 — the streak must be rebuilt from scratch.)
+  • Training Progress is the pre-routine combined view — Push/Pull/Legs tabs + the
+    per-lift delta table = PIECE 3. (RECON: routines are NOT a stored field; they're
+    derived from the free-text workout title — Push/Pull/Legs prefix covers 99/107,
+    with 8 outliers + two naming eras. That classification decision is still OPEN.)
+  • Activity side column has no steps bar chart yet = PIECE 4.
+  • DEAD CSS LEFT IN PLACE: the old .gym-grid/.gym-quad*/.gym-today*/.gym-walk*/
+    .walkdays*/.gym-dot* blocks in formGuide.css are now unused on desktop, but
+    .gym-grid is ALSO a class name used by mobile (MobileHealth/MobileHealthGym) — I
+    did NOT trim formGuide.css this piece to avoid breaking mobile across an unclear
+    CSS boundary. Needs a careful desktop/mobile-scoped sweep later.
+  • gymStory.js (storyHeadline) no longer used by desktop (the old story lead was
+    dropped); still used by mobile, so the file stays. Not dead.
+
+MADE-CALLS TO CONFIRM (flagged, NOT decided — reversible; owner's call per CLAUDE.md)
+  1. "Today" window span for the PAGED zones (Training + Activity) = 14 days. The
+     switcher's other levels are 90/180/365; "Today" has no natural number, so I
+     mirrored Body Piece 9's 14-day "today". Tune freely.
+  2. Kept the "more ›"/"records ›" drill-in links (to the session Archive + per-lift
+     Records) under Training Progress. The design didn't mention them for Piece 1, but
+     dropping them would orphan the whole Form-Guide sub-app (Archive/Records/
+     SessionReport). Preserved access; relocate or remove on request.
+
+NEXT — PIECE 2: the Consistency weekday-by-week timeline grid + the streak rebuild
+(replace the placeholder hero). weekdayNarrow() helper already exists in gymDates.
+────────────────────────────────────────────────────────────────────────────────

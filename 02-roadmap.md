@@ -2545,3 +2545,15 @@ passes for the newer pillars, and the Hermes proactive missions.
   added and verified all seven brain docs, built a minimal React+Vite app (single
   page showing "LifeOS"), confirmed it builds cleanly, and deployed it live on
   Vercel. Repo is public at github.com/chrisolmosvv/lifeos.
+
+### 2026-07-18 · Gym V2 redesign — Piece 1 of ~4 ✅ (built + live-verified on 1440×900)
+Two-column shell replaces the P4 2×2 grid + a NEW Gym-local time control (Today/3mo/
+6mo/1yr + paging, own state, reuses RangeSwitcher chrome). MAIN: Consistency hero
+(placeholder — number only), Training Progress (existing box-score+trend, pages),
+Body-Part Balance (full list, fixed 7d). SIDE: Activity avgs (flights/stand/walk-HR,
+page; honest empty state before activity's late-June start). Deleted 5 P4 cards
+(prove-dead); walking_speed + stride gone from desktop. Src-only. Details + made-calls
+in the handoff log.
+  ▸ Piece 2 (NEXT): Consistency weekday-by-week grid + streak REBUILD (P4 deleted currentStreakDays).
+  ▸ Piece 3: routine tabs (Push/Pull/Legs — DERIVED from free-text title, classification OPEN) + per-lift delta table.
+  ▸ Piece 4: vertical steps bar chart (steps data only ~3 weeks deep; collapse threshold TBD, no Body value to inherit).

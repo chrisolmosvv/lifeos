@@ -3526,3 +3526,18 @@ Full as-built record in `health-v2-build-doc.md` PART C. These are the choices w
   logged nights). **Why:** honest per-week goal context without a duration axis. **Terracotta on an
   all-hit week was considered and explicitly declined** — terracotta stays reserved to per-night
   marks; extending it to an aggregate meaning is a new use, not a free one.
+
+### 2026-07-18 · Gym V2 Piece 1 — two made-calls (OPEN, reversible — owner to confirm)
+Per "FLAG, don't quietly decide": these were built to stay unblocked, NOT decided.
+  1. **"Today" window span = 14 days** for the paged zones (Training Progress + Activity).
+     The switcher's other levels map to 90/180/365 days; "Today" has no natural number,
+     so I mirrored Body Piece 9's 14-day "today". Reversible — one constant (WINDOW_DAYS.today
+     in Health.jsx). Owner's call whether 14 / 7 / something else reads right.
+  2. **Kept "more ›"/"records ›" drill-in links** under Training Progress. The Piece-1
+     spec listed four zones and no drill-in links; dropping them would orphan the Form-
+     Guide Archive/Records/SessionReport sub-app. Preserved access as the safe default.
+     Owner's call to relocate/remove.
+Also noted (RECON-confirmed, decision deferred to Piece 3): **routine tagging is NOT a
+stored field** — Push/Pull/Legs is derivable from the free-text workout title (prefix
+covers 99/107 sessions; 8 outliers; two naming eras 1/2 vs A/B/C/D). The 3-way-split
+classification + outlier handling is an OPEN owner decision for Piece 3, not settled here.
