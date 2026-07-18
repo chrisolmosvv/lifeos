@@ -3574,3 +3574,33 @@ The current partial week only EXTENDS the streak (if already met), never breaks 
   • Gaps = honest "–" rows, never a fabricated 0; a real 0-step day stays 0 (distinct).
   • DEFAULT ROUTINE TAB (supersedes Piece 3's "Push" flag): now the most-recently-trained
     session's routine, via the existing classifier. Resolves the Piece-3 open flag.
+
+### 2026-07-18 · Gym V2 redesign — CLOSE (consolidated decisions bank)
+As-built truth lives in health-v2-build-doc.md PART E. The key calls, each with its why:
+  • HERO HIERARCHY — Consistency dominant, Training + Body-Part Balance an equal secondary tier,
+    Activity sidelined to a side column. *Why:* "am I showing up" is the first question; mirrors
+    Body's Composition/Energy/Vitals but with two secondaries.
+  • ROUTINE TAGGING — no stored field; Push/Pull/Legs/Other by case-insensitive title PREFIX
+    (37/35/27/8 of 107, verified live). *Why:* the data has no routine column; prefix is honest.
+    ★ OWNER OVERRIDE: the 8 non-matching titles get their OWN "Other" tab — NOT dropped, NOT
+    keyword-guessed ("Harriot Legs" stays Other). *Why:* a title that doesn't clearly state its
+    routine shouldn't be forced into one — simplicity + honesty over a clever guess.
+  • DEFAULT TAB = most-recently-trained session's routine (not hardcoded Push). *Why:* opens on
+    what you last did. (Supersedes Piece 3's interim "Push" default.)
+  • PER-LIFT "CURRENT BEST" = WINDOW-SCOPED (best in the selected period), delta vs best-before-
+    window. *Why:* owner wants recent FORM, not the all-time peak — accepted that a short window
+    can show below the true PR with a negative delta, by design.
+  • STREAK RULE — self-referential: a week counts if sessions ≥ the trailing-13-week average (no
+    stored weekly gym goal exists). ★ SHIP-AS-IS: the owner reviewed the known quirk (the bar is
+    the average, so a strong stretch can raise the average and break the streak on a week that
+    didn't get worse) and chose to ship and revisit later. *Why:* good-enough now; NOT settled/ideal.
+  • walking_speed CUT FROM DISPLAY ONLY (unit-label bug: m/s shown as "km/h"); INGESTION CONTINUES.
+    *Why:* low daily value, but keep collecting in case it's useful later. walking_step_length
+    (stride) dropped entirely. *Why:* rode the retired P4 cards, no design role.
+  • ⚠️ STEPS COLLAPSE THRESHOLD = 60 days (STEPS_COLLAPSE_ABOVE_DAYS) — a PLACEHOLDER, and it
+    DIFFERS from the app's established 90 (Body energy day-bars COLLAPSE_ABOVE_DAYS=90; Sleep at 90
+    nights). The Piece-4 premise "no Body precedent to inherit" was FACTUALLY WRONG (found during
+    docs close). Consequence: 3-month view → Gym steps go weekly while Body energy stays daily.
+    NOT silently changed this build (code was verified at 60); 60-vs-90 reconciliation is OPEN —
+    owner's call (roadmap). *Why recorded:* don't bank a false "no precedent" claim; flag the real
+    inconsistency.

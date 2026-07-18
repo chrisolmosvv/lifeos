@@ -2586,3 +2586,22 @@ now the most-recent session's routine (Pull today), not hardcoded Push. New gymS
 GymStepsChart.jsx. Src-only. Zero-scroll JS-verified (900==900).
   ▸ Piece 5 (NEXT, final): docs close — reconcile brain docs to the as-built 4-piece design,
     bank open flags, log deferred cleanup (dead CSS sweep, unused lastNWeeksSessions) as debt.
+
+### 2026-07-18 · Gym V2 — CLOSE + FIRST DEPLOY · carried DEBT (flagged, not fixed)
+Gym V2 Recon + Pieces 1–4 shipped and deployed to production (main → Vercel auto-deploy). As-built =
+health-v2-build-doc.md PART E; decisions banked 03-decisions.md 2026-07-18. Open debt:
+  1. STREAK moving-bar quirk — the streak bar IS the 13-week average, so a strong stretch can break
+     the streak on a week that didn't get worse. Owner explicitly DEFERRED (ship-as-is); revisit
+     (fixed target? different rule?) when convenient. [gymConsistency.js computeStreak/threshold]
+  2. ⚠️ STEPS COLLAPSE THRESHOLD 60 vs the app's 90 — Gym steps collapse daily→weekly above 60 days;
+     Body energy + Sleep use 90. Surfaced during docs close (the "no Body precedent" premise was
+     wrong). Placeholder + inconsistent: at 3mo, Gym steps go weekly while Body energy stays daily.
+     Needs a reconcile decision (align Gym to 90, or keep 60 deliberately) AND real-world tuning once
+     steps history is deep enough to exercise it (only ~19 days now). [gymSteps.js STEPS_COLLAPSE_ABOVE_DAYS]
+  3. DEAD CSS in formGuide.css from the retired P4 cards (.gym-grid/.gym-quad*/.gym-today*/.gym-walk*/
+     .walkdays*/.gym-dot* etc.) — one class name, `.gym-grid`, is SHARED with mobile
+     (MobileHealth/MobileHealthGym), so this needs a careful desktop-scoped sweep, NOT a blind delete.
+  4. walking_speed — STILL INGESTED, NOT DISPLAYED (owner call). Recorded so it's not mistaken for an
+     oversight/dead ingest later; the m/s-vs-"km/h" unit-label bug was the reason it was cut from UI.
+  5. lastNWeeksSessions — now UNUSED on the desktop Gym front page (Consistency uses consistencyGrid);
+     still referenced elsewhere, left in place (prove-dead) — fold into the same cleanup pass as #3.

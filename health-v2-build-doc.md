@@ -30,8 +30,8 @@
 > with commit refs, the corrected band-render reality, the carried flags, and amendments 10–19).
 > **Part B — Original Locked Intent** is the pre-build spec + decision archaeology; where the two
 > disagree about Sleep/Body, **Part A wins.** Superseded sections in Part B are tagged inline.
-> **Activity (Part B §4C), Gym (§4D, §8), and the close (§7 P4/P5, §10–11) are NOT yet built — they
-> remain live forward spec.** NEXT piece = **P3 shared-kit consolidation** (its inventory is
+> ~~**Activity (Part B §4C), Gym (§4D, §8), and the close (§7 P4/P5, §10–11) are NOT yet built — they
+> remain live forward spec.**~~ **(corrected 2026-07-18: Gym V2 + Activity are now BUILT + DEPLOYED — see PART E; this banner is stale.)** NEXT piece = **P3 shared-kit consolidation** (its inventory is
 > pre-written in Part A §4).
 > *(corrected 2026-07-15: P3 shipped 2026-06-30 `5904429`; P4 shipped 2026-07-01; the Sleep
 > redesign (Part C) is the P5-era pass. "NEXT = P3" is stale wherever it appears below.)*
@@ -253,8 +253,8 @@ original §9 — stored verbatim from the device, not derived from weight/height
 
 > These are the original sections 0–11 as locked **before** the build. They are kept for the *why*
 > behind each decision and for the parts not yet built. Where Part B and Part A disagree about
-> **Sleep/Body, Part A (as-built) wins.** **Activity (§4C), Gym (§4D + §8), and the close (§7 P4/P5,
-> §10–11) remain LIVE forward spec.**
+> **Sleep/Body, Part A (as-built) wins.** ~~**Activity (§4C), Gym (§4D + §8), and the close (§7 P4/P5,
+> §10–11) remain LIVE forward spec.**~~ **(corrected 2026-07-18: Gym V2 + Activity are BUILT — PART E is the as-built truth; §4C/§4D/§8 are archaeology.)**
 
 ---
 
@@ -271,7 +271,10 @@ section** (this closes the long-open Layer-4 IA question — no fourth card).
   `resting_energy`). Becomes a **two-source page** (point readings + daily-total shape).
 - **Activity (inside the Gym page, below training)** — new section, six metrics (`steps`,
   `stand_minutes`, `flights_climbed`, `walking_speed`, `walking_heart_rate_avg`,
-  `walking_step_length`). Inherits the interaction system wholesale.
+  `walking_step_length`). Inherits the interaction system wholesale. *(corrected 2026-07-18: shipped as a
+  right-hand SIDE column with only `flights_climbed` / `stand_minutes` / `walking_heart_rate_avg` as
+  averages + a `steps` bar chart; `walking_speed` cut from display (unit-label bug, still ingested) and
+  `walking_step_length` dropped entirely — see PART E2/E8.)*
 - **Gym front page** — reopened for a full zero-scroll respec (the deferred Form-Guide debt) and
   to host Activity. **Recon-gated** — Gym internals were never mapped; its piece begins with a
   characterisation.
@@ -373,7 +376,7 @@ Gym inherits it once its zones are mapped.
 
 ## 4. Per-surface locked spec
 
-> **SUPERSEDED for Sleep + Body by Part A (as-built).** 4A and 4B below are the ORIGINAL INTENT, kept for archaeology; what shipped differs (Sleep aggregate hero became stacked bars, not a trend line; Body became the Scale Ticket table). **4C Activity and 4D Gym remain LIVE spec — not yet built.**
+> **SUPERSEDED for Sleep + Body by Part A (as-built).** 4A and 4B below are the ORIGINAL INTENT, kept for archaeology; what shipped differs (Sleep aggregate hero became stacked bars, not a trend line; Body became the Scale Ticket table). ~~**4C Activity and 4D Gym remain LIVE spec — not yet built.**~~ **(superseded 2026-07-18 — Gym V2 shipped; 4C/4D are archaeology now, see PART E for the as-built Gym incl. Activity.)**
 
 ### 4A. Sleep — presentation-only rework (no new data)
 
@@ -426,7 +429,7 @@ Gym inherits it once its zones are mapped.
 - **BMI stored verbatim** (Amendment #1) — body_metrics point reading; the generic body ingest
   path takes it with zero code once the Shortcut sends it.
 
-### 4C. Activity — new section inside the Gym page (below training)
+### 4C. Activity — new section inside the Gym page (below training) — (superseded 2026-07-18 → PART E; Activity became the right-hand SIDE column, and walking_speed/walking_step_length were cut)
 
 - **Two groups:** **Activity** (steps / flights_climbed / stand_minutes — cumulative daily
   totals) + **Mobility** (walking_speed / walking_heart_rate_avg / walking_step_length —
@@ -436,7 +439,7 @@ Gym inherits it once its zones are mapped.
   condensed tiles. Almost pure inheritance — minimal genuinely-new surface.
 - Reuses `healthActivity` + the condensed tile (same shape as Body's Energy group).
 
-### 4D. Gym front page — full zero-scroll respec (RECON-GATED)
+### 4D. Gym front page — full zero-scroll respec (RECON-GATED) — (superseded 2026-07-18 → PART E)
 
 - **Approach locked; per-zone layout NOT pre-specced** — Gym's internal zones, its calc, and its
   overflow points were never mapped. The Gym piece **begins with a characterisation** (§7), then
@@ -559,7 +562,7 @@ pairs with a SEPARATE deletion commit after its replacement verifies live.
 
 ---
 
-## 8. Gym characterisation prompt (paste to a fresh Builder for P4a)
+## 8. Gym characterisation prompt (paste to a fresh Builder for P4a) — (superseded 2026-07-18 → PART E; the "one Latest/Week/Month/90 switcher governs the whole page" model was replaced by the Today/3mo/6mo/1yr control with a FIXED vs PAGED split — see E4)
 
 ```
 LifeOS — Track S — Gym front page + new Activity section: CHARACTERISE (no changes yet)
@@ -881,8 +884,10 @@ The old Latest/Week/Month/90-day switcher is RETIRED. New model (`BodyRangeContr
   `COLLAPSE_ABOVE_DAYS = 90` (6mo → ~26 weekly bars, 1yr → ~53). Same idea as Sleep's 90-day collapse.
 - **Chart smoothing = FIXED 7-day at every zoom** — deliberately NOT widened at longer windows.
 - **BODY-LOCAL:** confirmed via CODE (not just visually) that this switcher/paging state shares nothing with
-  Sleep's (`view`) or Gym's (`range`) separate switchers — each page owns its own state; the only shared
-  thing is the generic presentational `RangeSwitcher`, untouched.
+  Sleep's (`view`) or Gym's separate switchers — each page owns its own state; the only shared
+  thing is the generic presentational `RangeSwitcher`, untouched. *(corrected 2026-07-18: Gym's old `range`
+  W/M/90 state is retired; Gym V2 now has its own `win`/`anchor` Today/3mo/6mo/1yr control — PART E4 —
+  still fully Gym-local, still sharing only the `RangeSwitcher` chrome.)*
 
 ## D7. Layout / fit
 Two-column TOP ROW (full-width chart | Weight/Body-fat/Vitals column, one hairline divider scoped to that
@@ -896,3 +901,118 @@ window clips the bottom, the save-point is to restore the chart's `max-width:640
 + `dateTicks` + `nearestIndex`. `bodyEnergy.js`: `stackedDaily`, `stackedByWeek`, `stackedSeries`,
 `avgPerDay`. All Body src stays under ~250 lines; the retired Scale-Ticket table's `bodyGroups.jsx` +
 `BodyTable.jsx` were deleted (prove-dead) and `BodyCells.jsx` trimmed to just `Movement`.
+
+# PART E — GYM V2 REDESIGN (as-built, 2026-07-18)
+
+> **AUTHORITATIVE for the current Gym UI.** SUPERSEDES the pre-build Gym intent in PART B §4C/§4D/§8
+> (those were recon-gated placeholders; tagged superseded 2026-07-18 in place) AND the P4 "2×2 quadrant
+> grid" that actually shipped between them and now (GymTodayCard / GymOverTimeCard / WalkingTodayCard /
+> WalkingOverTimeCard / WalkingDaysTable — all retired + deleted this build). Src-only throughout: no
+> schema, no Checker. Recon + Pieces 1–4 (Piece 5 = this docs close + first deploy). Per-piece steps in
+> 04-handoff-log.md (2026-07-18); decisions banked in 03-decisions.md (2026-07-18).
+
+## E1. Hero hierarchy — Consistency dominant, two equal secondaries, Activity sidelined
+The page mirrors Body's Composition/Energy/Vitals shape but with TWO secondary sections, not one:
+- **CONSISTENCY is the dominant story** (top of the main column): a weekday-by-week grid + the hero
+  "sessions this week" number + a streak callout. This is the "am I showing up" question, answered first.
+- **TRAINING PROGRESS and BODY-PART BALANCE are an equal SECONDARY tier** below it (both in the main
+  column) — the "what am I doing / is it balanced" detail.
+- **ACTIVITY (walking) is SIDELINED into a right-hand side column** — averages + the steps chart — the
+  same "supporting, not the story" role Vitals plays on Body.
+Two-column shell (main | hairline | side), zero-scroll under `.health-fit` (`overflow:hidden`).
+
+## E2. Metric cut — walking_speed (display only) + walking_step_length (gone)
+- **`walking_speed` removed from DISPLAY only.** It was a confirmed unit-label bug: stored in **m/s** but
+  the old P4 cards printed it labelled **"km/h"** with no conversion. Rather than fix a metric of low
+  daily value, it was cut from the UI. **INGESTION CONTINUES** (`health-ingest/activity.ts` untouched) —
+  owner's explicit call, so the data keeps accumulating in case it's useful later. NOT an oversight (see
+  roadmap so it isn't mistaken for one).
+- **`walking_step_length` (stride) dropped ENTIRELY** — no display, no replacement. It rode the same
+  retired P4 walking cards; the new side column shows only Flights / Stand / Walking-HR + steps.
+
+## E3. The old P4 2×2 quadrant grid — RETIRED (superseded 2026-07-18)
+The P4 front page was a 2×2 grid — Gym·today / Gym·over-time / Walking·today / Walking·over-time —
+built from `GymTodayCard`, `GymOverTimeCard`, `WalkingTodayCard`, `WalkingOverTimeCard`, plus the
+`WalkingDaysTable` drill-in. **All five deleted** this build (prove-dead: reachable only from
+`Health.jsx`). Replaced by the two-column shell (E1). The mobile surface (`MobileHealthGym`) is a
+SEPARATE codebase and was NOT touched.
+
+## E4. Time control — Today / 3mo / 6mo / 1yr + paging (Gym-local)
+The old Week / Month / 90-day training switcher is RETIRED. New model (`GymTimeControl`):
+- **Today** (paged zones use a trailing 14 days) / **3 Months** (90) / **6 Months** (180) / **1 Year** (365),
+  with **prev/next paging arrows** (windowed views only), a **date-range label** ("Apr–Jul 2026", cross-
+  year format supported), and a **"back to today"** shortcut once paged away. Backward caps at the
+  earliest gym session (2026-01-04); forward caps at today.
+- **Reuses the shared presentational `RangeSwitcher` chrome + Body's `.brc` paging styles** — the SAME
+  pattern as Body's `BodyRangeControl`. Confirmed Gym-LOCAL: the anchor/window state lives in
+  `Health.jsx` and shares NOTHING with Body's (`win`/`anchor`) or Sleep's switchers; only the stateless
+  `RangeSwitcher` button-strip is common.
+- ★ **FIXED vs PAGED split (deliberate):** **Consistency** (always "this week" + trailing 13 weeks) and
+  **Body-Part Balance** (always trailing 7 days) DO NOT page — they ignore the switcher. **Training
+  Progress** and **Activity** (averages + steps) DO page with it. Same fixed/paged asymmetry Body uses
+  (heroes/ring fixed, day-bars page).
+
+## E5. Routine classification — title-prefix, owner's "Other" override
+There is **NO stored routine field** — `gym_workouts.title` is free text from Hevy. Push/Pull/Legs/Other
+is DERIVED at read time by a case-insensitive **prefix** match (`classifyRoutine`): starts with
+"push"/"pull"/"legs" → that routine; **everything else → "Other"**. Verified live against real data:
+**37 Push / 35 Pull / 27 Legs / 8 Other = 107** sessions.
+- ★ **OWNER'S EXPLICIT OVERRIDE (not an oversight):** the 8 non-matching titles ("Morning workout" ×5,
+  "Afternoon workout", "Chest and Triceps 2", "Harriot Legs") get their OWN "Other" tab — NOT dropped,
+  NOT keyword-guessed into a routine ("Harriot Legs" does NOT become Legs). A deliberate
+  simplicity-and-honesty choice: a title that doesn't clearly say its routine isn't forced into one.
+- **DEFAULT TAB on load = the routine of the MOST RECENTLY trained session** (reusing `classifyRoutine`
+  on the newest workout), not hardcoded Push.
+- Each tab shows that routine's own volume trend (scoped to that routine ONLY — Push volume is never
+  mixed with Legs, the complaint that started this piece) + a per-lift table (E6).
+
+## E6. Per-lift "current best" is WINDOW-SCOPED (not all-time)
+For each lift in the selected routine + time window, the table shows **current best = heaviest working
+weight IN the selected window** (e.g. last 14 / 90 days), and **delta = that minus the best BEFORE the
+window** (same routine). ★ **This is the owner's explicit choice and is counter-intuitive at a glance:**
+"current best" is recent FORM, not the historical peak — so at a short window a lift can display a number
+BELOW its all-time PR, with a NEGATIVE delta, BY DESIGN (it means "you haven't matched your peak
+recently"). Bodyweight/duration lifts show "—" (never a fake 0); a lift with no prior baseline shows
+"new". Hand-verified against the DB: Bench Press (Barbell) = 90 kg / +5 at Today (prior 85), 90 kg / +10
+at 3mo (prior 80).
+
+## E7. The streak rule — self-referential, shipped with a known quirk
+The streak badge counts consecutive weeks (back from the current week) whose session count ≥ **the
+person's OWN trailing-13-week average** (rounded, floor 1) — NOT a fixed weekly target (there is no
+stored weekly gym goal anywhere; Ground-confirmed). The current partial week can only EXTEND the streak,
+never break it.
+- ★ **KNOWN QUIRK, recorded honestly (NOT understated as ideal):** because the bar IS the average, a
+  strong training stretch RAISES the average and can BREAK the streak on a week that didn't actually get
+  worse. **The owner reviewed this and explicitly chose to SHIP AS-IS and revisit later** — it is a
+  deliberate "good enough for now," not a settled/correct design. Reconsider when convenient (roadmap).
+
+## E8. The steps chart — vertical, reverse-chronological, with a collapse
+A VERTICAL list of horizontal bars in the side column: one row per day, **MOST RECENT AT THE TOP,
+stepping backward down the column** (reverse-chronological — deliberately NOT a left-to-right time
+series). Bar length ∝ that day's steps. Pages with the switcher. A day/week with no data is an honest
+"–" row (never a fake 0); a real 0-step day stays 0 (distinct). Scrolls internally on long windows so the
+page stays zero-scroll.
+- **The vertical reverse-chronological LAYOUT is genuinely net-new** to the app (Body's energy bars +
+  Sleep's clock are different, horizontal/left-to-right forms).
+- **⚠️ CORRECTION to the piece prompt's premise (recorded honestly):** the daily→weekly COLLAPSE
+  mechanism is NOT net-new — the earlier recon/prompt said "no Body precedent to inherit," but that is
+  WRONG. **Body's Energy day-bars collapse at `COLLAPSE_ABOVE_DAYS = 90`, and Sleep collapses at 90
+  nights.** Gym's steps chart uses **`STEPS_COLLAPSE_ABOVE_DAYS = 60`** — a DIFFERENT threshold than the
+  established 90. Consequence: at the **3-Month (90-day) view, Gym steps collapse to WEEKLY while Body's
+  energy bars stay DAILY** — a cross-surface inconsistency. 60 was shipped as a placeholder (owner-
+  approved at the time under the "no precedent" premise); reconciling 60-vs-90 is banked as OPEN debt
+  (roadmap) for the owner to decide — this build does NOT silently change it.
+- **Shallow-data caveat:** real steps history is only ~19 days (2026-06-24 → 2026-07-17), so the collapse
+  rarely triggers with meaningful data yet and long windows are mostly honest "–" rows. Expected.
+
+## E9. Calc footprint (all compute-on-read, nothing stored)
+NEW pure calc: `gymConsistency.js` (`consistencyGrid`), `gymRoutine.js` (`classifyRoutine`,
+`routineWorkouts`, `liftTable`), `gymSteps.js` (`stepsChart` + `STEPS_COLLAPSE_ABOVE_DAYS`). REUSED
+as-is: `gymCalc` (`boxScore`, `prWeight`, `lastNWeeksSessions`), `gymTrend` (`dailyVolumeSeries`),
+`gymBalance` (`muscleBalance`), `gymSessions` (`recentSessions`), `gymFormat`; `healthActivity`
+(`aggregateDaily`, `aggMode`), `healthStats` (`statsForRange`). New UI: `GymTimeControl`,
+`GymConsistency`, `GymTraining`, `GymLiftTable`, `GymBalance`, `GymActivity`, `GymStepsChart`, and a
+rewritten `Health.jsx` shell — all under ~250 lines. `lastNWeeksSessions` is now UNUSED on the desktop
+front page (Consistency uses `consistencyGrid`); left in place (still used elsewhere / prove-dead) — a
+cleanup call (roadmap). Dead CSS from the retired P4 cards remains in `formGuide.css` (one class name,
+`.gym-grid`, is SHARED with mobile — needs a targeted scoped sweep, not a blind delete; roadmap).
