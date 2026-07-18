@@ -2557,3 +2557,13 @@ in the handoff log.
   ▸ Piece 2 (NEXT): Consistency weekday-by-week grid + streak REBUILD (P4 deleted currentStreakDays).
   ▸ Piece 3: routine tabs (Push/Pull/Legs — DERIVED from free-text title, classification OPEN) + per-lift delta table.
   ▸ Piece 4: vertical steps bar chart (steps data only ~3 weeks deep; collapse threshold TBD, no Body value to inherit).
+
+### 2026-07-18 · Gym V2 redesign — Piece 2 of ~4 ✅ (built + live-verified on 1440×900)
+Consistency hero is now REAL: weekday-by-week grid (7×13 calendar weeks, terracotta
+cells + white PR dots) + hero "5 sessions this week" + "avg 3.6/week · 13 weeks" +
+"3-week streak" badge. Fixed (doesn't page). Streak = consecutive weeks ≥ own 13-week
+average (self-referential — NO stored gym goal exists; FLAGGED for owner). New pure calc
+gymConsistency.js; reuses recentSessions for day+PR. Src-only. Hand-verified counts
+[5,4,3,3,0,2,5,2,5,3,6,4,5] + PR dots vs archive. Details/risks in handoff.
+  ▸ Piece 3 (NEXT): routine tabs (Push/Pull/Legs — DERIVED from title, classification OPEN) + per-lift delta table.
+  ▸ Piece 4: vertical steps bar chart.

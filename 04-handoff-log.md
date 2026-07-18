@@ -12335,3 +12335,63 @@ MADE-CALLS TO CONFIRM (flagged, NOT decided — reversible; owner's call per CLA
 NEXT — PIECE 2: the Consistency weekday-by-week timeline grid + the streak rebuild
 (replace the placeholder hero). weekdayNarrow() helper already exists in gymDates.
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-18 — Gym V2 redesign · PIECE 2: Consistency weekday grid + streak
+
+WHAT CHANGED
+Replaced Piece 1's placeholder (number-only) Consistency hero with the REAL hero:
+  • A WEEKDAY-BY-WEEK GRID — 7 rows (Mon→Sun) × 13 CALENDAR weeks (Monday-started,
+    Amsterdam; oldest left, current week right). A filled terracotta cell = a session
+    that weekday that week; a white dot on it = that session set a PR.
+  • The hero number "sessions this week" + caption "avg X/week · 13 weeks".
+  • A terracotta-bordered STREAK badge (shown only when streak ≥ 1).
+FIXED to this week / trailing 13 weeks — does NOT page with the time switcher (verified:
+grid unchanged across Today/3mo/6mo/1yr).
+
+STREAK DEFINITION (see RISKS — no precedent, my flagged proposal):
+consecutive weeks, counting back from the current week, whose session count ≥ the
+person's own 13-week AVERAGE (rounded, floor 1). The current PARTIAL week can only
+EXTEND the streak (if already ≥ threshold) — it never breaks it (an unfinished week
+can't be judged a miss). Ground-confirmed there is NO stored weekly gym goal anywhere
+(health_goals has no gym/sessions goal_type; no target/streak column in any table), so
+this is self-referential by necessity — no invented target number.
+
+FILES
+  NEW:      src/spine/logic/gymConsistency.js  (pure calc: consistencyGrid())
+  REWRITTEN: src/desktop/health/GymConsistency.jsx  (grid + hero + streak badge)
+  MODIFIED:  src/desktop/kit/gymPage.css  (consistency block: grid cells, PR dot, badge)
+  REUSED as-is: gymSessions.recentSessions (per-session dateYMD + isPR — the same PR
+    rule, no second PR path), gymDates (shiftYMD/amsTodayYMD). lastNWeeksSessions is NO
+    LONGER used by the front page (it gave per-week counts only, not per-weekday) — left
+    in gymCalc.js, still used elsewhere? (grep: only was Piece-1 consistency; now unused
+    on desktop — candidate for the later dead-code sweep, NOT removed this piece.)
+
+HOW TO VERIFY (verified live on 1440×900, owner logged in)
+  Hand-checked the real per-calendar-week counts (Amsterdam, Mon-start), oldest→current:
+    [5,4,3,3,0,2,5,2,5,3,6,4,5]  (the week of 2026-05-18 genuinely had 0 sessions)
+    → sum 47, avg 3.615 → caption "avg 3.6/week", threshold round(3.6)=4, this week = 5.
+    → streak: 5(cur)≥4, 4≥4, 6≥4, then 3<4 → "3-week streak". UI shows exactly this.
+  PR dots spot-check vs the archive: current column (wk of 07-13) fills Mon–Fri; PR dots
+    on Mon(Push C)/Tue(Pull C)/Wed(Legs C)/Fri(Pull D) but NOT Thu(Push D, no PR) —
+    matches the archive's PR badges exactly. The empty 05-18 column renders all-quiet.
+  Zero-scroll holds at all four windows (grid is taller than the placeholder). No console
+  errors. Prod build passes.
+
+KNOWN GAPS / RISKS
+  • STREAK DEFINITION is a PROPOSAL with no precedent — the real gate on this piece. It's
+    self-referential (≥ own 13-week avg). Consequences to be aware of: (a) the threshold
+    MOVES as the average moves, so a streak can break because OTHER weeks pulled the avg
+    up, not because this week dropped; (b) rounding means avg 3.6 → bar of 4. If the owner
+    would rather a fixed target (e.g. "≥3/week") or a different rule, it's one function
+    (computeStreak/threshold in gymConsistency.js). FLAGGED — owner's call.
+  • Grid is CALENDAR weeks (Mon-start), so "this week" = current calendar week, not a
+    rolling 7 days. Today (Sat) both happen to = 5; they can differ on other days.
+  • Dead CSS from earlier pieces still in formGuide.css (mobile shares .gym-grid — needs a
+    scoped sweep). lastNWeeksSessions now unused on desktop (see FILES).
+
+NEXT — PIECE 3: routine classification + Push/Pull/Legs tabs + per-lift delta table.
+(RECON: routine is NOT a stored field — derived from free-text title; prefix covers
+99/107, 8 outliers, two naming eras. The classification + outlier handling is an OPEN
+owner decision to settle at the top of Piece 3.)
+────────────────────────────────────────────────────────────────────────────────

@@ -41,11 +41,54 @@
   min-height: 0;
 }
 
-/* ── CONSISTENCY (placeholder fidelity — hero number + caption; grid/streak = P2) ── */
+/* ── CONSISTENCY (Piece 2): weekday-by-week grid + hero + streak badge ──────────── */
+.gym-consist-body {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+/* The grid: 7 rows (Mon→Sun) each a daylabel + 13 week cells. */
+.gym-grid-cal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gym-grid-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.gym-grid-daylabel {
+  flex: 0 0 12px;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  color: var(--ink-muted);
+  text-align: center;
+}
+.gym-cell {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  background: var(--rule-faint); /* quiet = no session */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gym-cell--on {
+  background: var(--accent); /* a trained day — the sanctioned terracotta */
+}
+.gym-cell-pr {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--paper); /* white PR dot on the filled cell */
+}
+/* The hero block beside the grid. */
 .gym-consist-hero {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 .gym-consist-num {
   font-family: var(--font-serif);
@@ -58,6 +101,23 @@
   font-family: var(--font-sans);
   font-size: 13px;
   color: var(--ink-muted);
+}
+.gym-consist-avg {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+.gym-streak {
+  margin-top: 8px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 3px 8px;
 }
 
 /* ── TRAINING PROGRESS (reuses .gym-over-stats / .gym-volline / .gym-more-row) ──── */

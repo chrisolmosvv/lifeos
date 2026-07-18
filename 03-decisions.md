@@ -3541,3 +3541,14 @@ Also noted (RECON-confirmed, decision deferred to Piece 3): **routine tagging is
 stored field** — Push/Pull/Legs is derivable from the free-text workout title (prefix
 covers 99/107 sessions; 8 outliers; two naming eras 1/2 vs A/B/C/D). The 3-way-split
 classification + outlier handling is an OPEN owner decision for Piece 3, not settled here.
+
+### 2026-07-18 · Gym V2 Piece 2 — streak definition (OPEN, flagged — no precedent)
+There is NO stored weekly gym/session goal anywhere (Ground-confirmed: health_goals has
+no gym goal_type; no target/streak column in any table). So the streak badge is defined
+SELF-REFERENTIALLY, not from any real target: **streak = consecutive weeks (back from the
+current week) whose session count ≥ the person's own 13-week average (rounded, floor 1)**.
+The current partial week only EXTENDS the streak (if already met), never breaks it.
+  • Reversible: one function (computeStreak) + threshold in gymConsistency.js.
+  • Known wrinkle: the bar MOVES with the average, so a streak can end because other
+    weeks lifted the average, not because this week fell. If the owner prefers a fixed
+    target (e.g. ≥3/week) that's a trivial swap. Owner's call — NOT settled here.
