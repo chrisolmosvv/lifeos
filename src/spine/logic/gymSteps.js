@@ -10,14 +10,15 @@
 // distinct from a gap. Steps history is shallow (~3 weeks as of 2026-07), so at long windows
 // most rows are honestly empty — expected, not a bug.
 //
-// COLLAPSE THRESHOLD: 60 days is a PLACEHOLDER — the first daily→weekly collapse anywhere in
-// the app (Body has no precedent to inherit). With ~3 weeks of data it will rarely trigger
-// yet; the mechanism is here for when the history deepens. Owner-approved placeholder.
+// COLLAPSE THRESHOLD: 90 days — ALIGNED to the app's existing precedent (Body's Energy day-bars
+// collapse at COLLAPSE_ABOVE_DAYS = 90, Sleep at 90 nights), so the 3-Month view stays DAILY
+// everywhere and the three modules behave consistently (was a 60-day placeholder in Piece 4;
+// reconciled 2026-07-19). With ~3 weeks of steps data it rarely triggers yet regardless.
 
 import { shiftYMD, humanDayShort } from "./gymDates.js";
 import { aggregateDaily } from "./healthActivity.js";
 
-export const STEPS_COLLAPSE_ABOVE_DAYS = 60;
+export const STEPS_COLLAPSE_ABOVE_DAYS = 90;
 
 // stepsChart(rawHourlyRows, { start, end, windowDays }) →
 //   { mode:'daily'|'weekly', rows:[{ key, label, value|null }]…most-recent-first, max }
