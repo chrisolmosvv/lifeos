@@ -2593,11 +2593,11 @@ health-v2-build-doc.md PART E; decisions banked 03-decisions.md 2026-07-18. Open
   1. STREAK moving-bar quirk — the streak bar IS the 13-week average, so a strong stretch can break
      the streak on a week that didn't get worse. Owner explicitly DEFERRED (ship-as-is); revisit
      (fixed target? different rule?) when convenient. [gymConsistency.js computeStreak/threshold]
-  2. ⚠️ STEPS COLLAPSE THRESHOLD 60 vs the app's 90 — Gym steps collapse daily→weekly above 60 days;
-     Body energy + Sleep use 90. Surfaced during docs close (the "no Body precedent" premise was
-     wrong). Placeholder + inconsistent: at 3mo, Gym steps go weekly while Body energy stays daily.
-     Needs a reconcile decision (align Gym to 90, or keep 60 deliberately) AND real-world tuning once
-     steps history is deep enough to exercise it (only ~19 days now). [gymSteps.js STEPS_COLLAPSE_ABOVE_DAYS]
+  2. ✅ RECONCILED 2026-07-19 — steps collapse threshold aligned 60 → 90 (`a973e66`, deployed +
+     verified live: 3-Month steps view now stays DAILY, matching Body's energy bars + Sleep; 6mo/1yr
+     still collapse to weekly). [gymSteps.js STEPS_COLLAPSE_ABOVE_DAYS = 90]
+     ↳ Remaining: real-world TUNING of 90 once steps history is actually deep enough to exercise the
+       collapse (only ~19 days of data now, 2026-06-24→) — low priority, revisit when data deepens.
   3. DEAD CSS in formGuide.css from the retired P4 cards (.gym-grid/.gym-quad*/.gym-today*/.gym-walk*/
      .walkdays*/.gym-dot* etc.) — one class name, `.gym-grid`, is SHARED with mobile
      (MobileHealth/MobileHealthGym), so this needs a careful desktop-scoped sweep, NOT a blind delete.
