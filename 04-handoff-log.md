@@ -12592,3 +12592,47 @@ KNOWN GAPS / RISKS
 
 NEXT — PIECE 7: Activity's three-block layout → a dense value+delta stat strip (already GO'd).
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-25 — Gym V2 · PIECE 6 HOTFIX + PIECE 7: Activity stat strip
+
+PIECE 6 HOTFIX (commit A) — PR-dot ring
+The chart's preserveAspectRatio="none" stretch thinned the PR dot's 1px paper stroke to
+nothing, so PR nodes read as plain terracotta dots (owner caught this on live). Fix:
+`.gym-vol-pr` → 2px stroke + `vector-effect: non-scaling-stroke` (crisp true-pixel ring
+regardless of the stretch) + radius 2.8→3.4. Verified: computed style stroke-width 2px /
+non-scaling; PR nodes now render 10.4×6.5px vs plain dots 4.9×3.1px with a visible ring.
+FILES: GymVolChart.jsx, gymPage.css (.gym-vol-pr only).
+
+PIECE 7 (commit B) — Activity three-block → dense STAT STRIP
+Replaced the three equal value blocks with three terse rows (Flights / Stand / Walk HR),
+each = its window average + a "vs typical" trend delta. No charts/sparklines.
+  • "vs typical" = this window's avg vs the IMMEDIATELY PRIOR window of equal length (adopted
+    from Body-Part Balance's locked basis — owner CONFIRMED keeping it identical for all three,
+    incl. Walk HR: consistency over marginal precision).
+  • UP reads terracotta (a gain, matching the lift table); down/steady muted.
+  • A prior window with no data → the value shows with NO delta (never fabricated). So deltas
+    currently appear on the Today (14d) view; 3mo/6mo/1yr predate activity's ~24-Jun start →
+    values only.
+  • Computed cheap from already-loaded rows (aggregateDaily + statsForRange over the prior
+    window) — no query.
+FILES: GymActivity.jsx (rewritten), gymPage.css (.gym-act-* stat-strip block).
+
+HOW TO VERIFY (Builder-verified live this time — auth restored)
+  • 1-Year zero-scroll: JS pageOverflows=false; the 1-Year volume line starts at real data
+    (~Jan 2026), no flat lead-in.
+  • PR ring: zoomed a PR node on the live chart — distinct larger ringed dot, not a plain dot.
+  • Piece 7 (Today): three rows show value + "↓/↑ N vs typical" (owner saw Flights ↓9, Stand
+    ↓14m, Walk HR ↓6bpm — all muted decreases, correct). 3mo shows values with no delta.
+
+KNOWN GAPS / RISKS
+  • "vs typical" only populates where a prior equal-length window has data (Today, for now) —
+    expected given shallow activity history; fills in as data deepens.
+  • Walk HR "up = terracotta" is the numeric convention; semantically a higher walking HR isn't
+    strictly a "gain" — kept consistent with the lift table per owner call. Minor, flagged.
+  • Two commits (hotfix, then Piece 7) for independent rollback; gymPage.css was split hunk-wise
+    between them (revert-recommit) so each commit's CSS matches its piece.
+  • Browser-auth flakiness earlier this relay is resolved for now.
+
+NEXT — PIECE 8: Body-Part Balance (recon-first).
+────────────────────────────────────────────────────────────────────────────────

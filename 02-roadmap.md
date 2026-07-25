@@ -2616,3 +2616,11 @@ GymVolChart.jsx. Src-only.
   ▸ NOTE: automated-browser auth broke mid-relay (separate Chrome context, no shared session) — live
     verification is now owner-assisted. Flagged in handoff.
   ▸ Piece 7 (NEXT): Activity three-block → dense stat strip (value + delta). Piece 8: Balance (recon-first).
+
+### 2026-07-25 · Gym V2 · Piece 6 hotfix + Piece 7 ✅ (Builder-verified live, auth restored)
+Hotfix (commit A): PR-dot white ring now renders (2px non-scaling-stroke + bigger radius; the
+preserveAspectRatio=none stretch had thinned the 1px ring away — was live-broken in Piece 6).
+Piece 7 (commit B): Activity three-block → dense stat strip (value + "vs typical" delta = this
+window vs prior equal-length window; up=terracotta, down/steady muted; no delta where prior has
+no data). Owner confirmed same comparison basis for all three metrics incl. Walk HR.
+  ▸ Piece 8 (NEXT): Body-Part Balance — recon-first.

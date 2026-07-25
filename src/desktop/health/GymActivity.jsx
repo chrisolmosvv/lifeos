@@ -1,34 +1,47 @@
 import { aggregateDaily, aggMode } from "../../spine/logic/healthActivity";
 import { statsForRange } from "../../spine/logic/healthStats";
+import { shiftYMD } from "../../spine/logic/gymDates";
 
-// LifeOS — Gym V2 (Piece 1): the Activity SIDE column. Avg Flights, avg Stand minutes, avg
-// Walking Heart Rate — each averaged over WHATEVER window the time switcher is set to (the
-// parent passes the window's [start, end]). It PAGES with the switcher. The vertical steps
-// bar chart is Piece 4. walking_speed (the mislabeled pace) and walking_step_length (stride)
-// are gone by design — this column never renders them.
+// LifeOS — Gym V2 (Piece 1 + Piece 7): the Activity SIDE column, a dense STAT STRIP. Three
+// rows — Flights / Stand / Walk HR — each = its window-scoped average (pages with the switcher)
+// + a trend delta "vs typical". No charts, no sparklines: deliberately the terse, numbers-
+// forward option, distinct from Training/Balance.
 //
-// AVERAGE = the mean of the daily values in-window (flights/stand are daily SUMS; walk-HR is
-// a daily active-hour mean — aggMode picks the right per-day rule). A window with no data
-// yields null → an honest "—", never a fabricated 0. So paging before late June (activity's
-// start) shows a real sparse/empty state, not invented numbers.
+// AVERAGE = the mean of the daily values in-window (flights/stand are daily SUMS; walk-HR is a
+// daily active-hour mean — aggMode picks the right per-day rule). "vs typical" = this window's
+// avg vs the IMMEDIATELY PRIOR window of equal length (adopting Body-Part Balance's locked
+// comparison basis — FLAGGED as an adopted pattern, not Activity-specified). A window with no
+// data → honest "—"; a prior window with no data (e.g. before activity's late-June start) →
+// the value shows with NO delta, never a fabricated one. Up reads terracotta (a gain, same
+// convention as the lift table); down/steady stay muted.
 
+const DAY = 86400000;
 const METRICS = [
-  { key: "flights_climbed", label: "flights", unit: "", round: true },
-  { key: "stand_minutes", label: "stand", unit: "m", round: true },
-  { key: "walking_heart_rate_avg", label: "walk HR", unit: " bpm", round: true },
+  { key: "flights_climbed", label: "flights", unit: "" },
+  { key: "stand_minutes", label: "stand", unit: "m" },
+  { key: "walking_heart_rate_avg", label: "walk HR", unit: " bpm" },
 ];
 
-function windowAvg(rows, metric, start, end) {
-  if (!rows || !start || !end) return null;
-  const daily = aggregateDaily(rows, aggMode(metric));
+function avgOver(daily, start, end) {
   return statsForRange(daily, start, end).avg;
 }
 
 export default function GymActivity({ activityRows, windowStart, windowEnd }) {
+  const len = windowStart && windowEnd
+    ? Math.round((Date.parse(windowEnd) - Date.parse(windowStart)) / DAY) + 1
+    : 0;
+  const priorEnd = windowStart ? shiftYMD(windowStart, -1) : null;
+  const priorStart = priorEnd && len ? shiftYMD(priorEnd, -(len - 1)) : null;
+
   const cells = METRICS.map((m) => {
-    const avg = windowAvg(activityRows?.[m.key], m.key, windowStart, windowEnd);
-    const val = Number.isFinite(avg) ? `${Math.round(avg).toLocaleString("en-GB")}${m.unit}` : "—";
-    return { ...m, val };
+    const rows = activityRows?.[m.key];
+    if (!rows || !windowStart || !windowEnd) return { ...m, val: "—", delta: null };
+    const daily = aggregateDaily(rows, aggMode(m.key));
+    const cur = avgOver(daily, windowStart, windowEnd);
+    const prior = priorStart ? avgOver(daily, priorStart, priorEnd) : null;
+    const val = Number.isFinite(cur) ? `${Math.round(cur).toLocaleString("en-GB")}${m.unit}` : "—";
+    const delta = Number.isFinite(cur) && Number.isFinite(prior) ? Math.round(cur - prior) : null;
+    return { ...m, val, delta };
   });
   const anyData = cells.some((c) => c.val !== "—");
 
@@ -40,7 +53,18 @@ export default function GymActivity({ activityRows, windowStart, windowEnd }) {
           {cells.map((c) => (
             <div className="gym-act-cell" key={c.key}>
               <span className="gym-act-label">{c.label}</span>
-              <b className="gym-act-val">{c.val}</b>
+              <span className="gym-act-line">
+                <b className="gym-act-val">{c.val}</b>
+                {c.delta != null && (
+                  c.delta === 0 ? (
+                    <span className="gym-act-delta gym-act-delta--flat">≈ typical</span>
+                  ) : (
+                    <span className={`gym-act-delta ${c.delta > 0 ? "gym-act-delta--up" : "gym-act-delta--down"}`}>
+                      {c.delta > 0 ? "↑" : "↓"} {Math.abs(c.delta)}{c.unit} vs typical
+                    </span>
+                  )
+                )}
+              </span>
             </div>
           ))}
         </div>

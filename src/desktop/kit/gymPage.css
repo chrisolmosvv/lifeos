@@ -289,11 +289,11 @@
   text-align: right;
 }
 
-/* ── ACTIVITY side column (three averages; steps bar chart = P4) ───────────────── */
+/* ── ACTIVITY side column (Piece 7: dense stat strip — value + "vs typical" delta) ── */
 .gym-act-cells {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 .gym-act-cell {
   display: flex;
@@ -307,13 +307,28 @@
   text-transform: uppercase;
   color: var(--ink-muted);
 }
+.gym-act-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .gym-act-val {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 30px;
+  font-size: 27px;
   line-height: 1;
   color: var(--ink);
 }
+.gym-act-delta {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gym-act-delta--up { color: var(--accent); } /* a gain reads terracotta (lift-table convention) */
+.gym-act-delta--down,
+.gym-act-delta--flat { color: var(--ink-muted); }
 
 /* ── STEPS vertical bar chart (Piece 4) — fills the rest of the side column, scrolls
    internally for long/weekly windows so the page stays zero-scroll. Reverse-chron rows. */
