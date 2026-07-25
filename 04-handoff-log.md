@@ -12523,3 +12523,72 @@ NEXT — PIECE 5: docs close (the genuinely last piece of Gym V2). No new build.
 roadmap/decisions/architecture to the as-built four-piece design, bank the open flags for the
 owner, and note the deferred cleanup (dead CSS sweep, lastNWeeksSessions) as roadmap debt.
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-25 — Gym V2 redesign · PIECE 6: visual/animation polish (Consistency, Training, Steps)
+
+WHAT CHANGED (pure CSS/SVG/animation polish — no data logic, no behaviour change)
+CONSISTENCY:
+  • Hero number 52→76px Fraunces + a rise-in on load (fade + upward translate).
+  • Heatmap cells cascade in oldest→newest (staggered fade/scale, per-cell delay set inline by
+    column); cells scale up on hover. Streak badge gains a pulsing terracotta dot.
+TRAINING PROGRESS chart (the bare line → a real chart, new GymVolChart.jsx):
+  • kg gridlines + axis labels (0 / mid / max, compact "16k").
+  • SMOOTHED + BOUNDED line: new gymTrend.routineVolumeSeries emits ONE point per real SESSION
+    DAY (never a faked zero-day — that zero-sawtooth was the long-range "jagged zigzag"), each a
+    trailing-7-calendar-day mean (the SAME technique Body's composition chart uses). Because only
+    real days are plotted, the line is bounded to actual data — NO flat lead-in before a routine's
+    history starts (fixes the 1-Year misleading flat line).
+  • PR dots: terracotta with a white ring (the grid's "white-mark-on-terracotta" PR language),
+    REUSING recentSessions' isPR flag (same source as Consistency's white dots — not recomputed).
+LIFT TABLE:
+  • Custom thin scrollbar (webkit + firefox) — hairline rest, terracotta on hover — replaces the
+    raw OS scrollbar. Same custom scrollbar applied to the steps list.
+  • Delta colour-coding: a GAIN (+) and first-time "new" read terracotta; ±0/flat and a regression
+    read muted grey.
+STEPS chart:
+  • Bar width switched linear → SQUARE ROOT so small real values (1, 4, 30…) stay visible next to
+    20,000+. A "√ scale · max N" note makes the compression legible.
+  • A no-data (–) row drops its track entirely, staying visually distinct from a real 0-step day
+    (which keeps its empty track).
+All animations respect prefers-reduced-motion (auto-play disabled; hover interactions kept).
+
+FILES
+  NEW:      src/desktop/health/GymVolChart.jsx
+  MODIFIED: src/spine/logic/gymTrend.js (routineVolumeSeries), src/desktop/health/GymTraining.jsx
+            (uses GymVolChart + reuses PR flag), GymConsistency.jsx (cascade delays + streak dot),
+            GymLiftTable.jsx (delta classes), GymStepsChart.jsx (√ + scale note + gap/zero),
+            src/desktop/kit/gymPage.css (all the above styles + keyframes + reduced-motion).
+
+HOW TO VERIFY (verified via the OWNER's live 1440×900 screenshot — see VERIFICATION NOTE)
+  • Consistency: big hero, "· N-week streak" badge with a pulsing dot; grid cells cascade in on load.
+  • Training (Push/3mo): chart shows 0/2k/5k gridlines + kg labels, a calm smoothed terracotta line
+    with faint point nodes + white-ringed terracotta PR dots; line starts at real data (1-Year:
+    no flat lead-in). Lift deltas coloured: Bench +10 kg / Overhead "new" / Triceps +8.5 kg all
+    terracotta; the ±0 rows muted. Custom thin scrollbar on the table.
+  • Steps: "√ scale · max 21,481" note; small days (1, 4, 30) render as visible bars; "–" days
+    have no track, "0" days keep an empty track.
+
+⚠️ VERIFICATION NOTE (honest): the localhost login session expired mid-relay and the automated
+browser runs in a separate Chrome context that does NOT share the owner's auth (and its window
+came up 1440×631, not a true 900). So the Builder could NOT drive the page. The owner logged in
+and provided a live screenshot at a 1440×900 aspect that confirms every visible gate AND zero-
+scroll for that state (Consistency→Training→Balance all fit, no scrollbar). The 1-Year data-
+boundary is guaranteed by construction (points only on real session days); zero-scroll on other
+tabs/windows follows from the layout (Balance fixed-height, lift table internally scrolling).
+
+KNOWN GAPS / RISKS
+  • BROWSER-AUTH TOOLING LIMITATION: the Builder's automated browser can't authenticate to
+    localhost OR production, so live checks now depend on the owner's eyes. The production live-
+    glance after this deploy is the owner's to make.
+  • The hero (+24px) + chart (+56px vs the old 40px line) add ~80px to the main column. Current
+    state fits at 1440×900; a much busier Balance week (many muscles) is the tightest case — worth
+    an eye if it ever looks cramped (fix = trim chart to ~76px or hero to ~68px).
+  • Design call FLAGGED: volume LINE stays terracotta; PR dots are terracotta + white ring to pop
+    off it (grid PR language). If the owner prefers an ink line reserving terracotta purely for PR
+    dots, it's a one-line change.
+  • Carried debt unchanged (dead formGuide.css P4 classes / mobile-shared .gym-grid; walking_speed
+    ingest-not-display; steps 90-day threshold tuning).
+
+NEXT — PIECE 7: Activity's three-block layout → a dense value+delta stat strip (already GO'd).
+────────────────────────────────────────────────────────────────────────────────

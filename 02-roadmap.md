@@ -2605,3 +2605,14 @@ health-v2-build-doc.md PART E; decisions banked 03-decisions.md 2026-07-18. Open
      oversight/dead ingest later; the m/s-vs-"km/h" unit-label bug was the reason it was cut from UI.
   5. lastNWeeksSessions — now UNUSED on the desktop Gym front page (Consistency uses consistencyGrid);
      still referenced elsewhere, left in place (prove-dead) — fold into the same cleanup pass as #3.
+
+### 2026-07-25 · Gym V2 redesign — Piece 6 ✅ (visual/animation polish; owner-verified via live 1440×900 screenshot)
+Consistency: 76px hero + rise-in, heatmap cascade + hover, pulsing streak dot. Training: bare line →
+charted GymVolChart (gridlines + kg axis, smoothed line bounded to REAL session days = no 1-Year flat
+lead-in, white-ringed terracotta PR dots reusing recentSessions' isPR). Lift table: custom thin
+scrollbar + delta colour-coding (gain/new terracotta, flat/down muted). Steps: √ bar scale + "√ scale ·
+max N" note + gap/zero distinction. Reduced-motion respected. New gymTrend.routineVolumeSeries +
+GymVolChart.jsx. Src-only.
+  ▸ NOTE: automated-browser auth broke mid-relay (separate Chrome context, no shared session) — live
+    verification is now owner-assisted. Flagged in handoff.
+  ▸ Piece 7 (NEXT): Activity three-block → dense stat strip (value + delta). Piece 8: Balance (recon-first).

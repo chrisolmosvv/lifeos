@@ -26,8 +26,9 @@ export default function GymConsistency({ built }) {
               {g.weeks.map((w, col) => {
                 const cell = w.cells[row];
                 const cls = cell.trained ? "gym-cell gym-cell--on" : "gym-cell";
+                // Cascade in oldest→newest (left→right): delay grows with the column.
                 return (
-                  <span className={cls} key={col}>
+                  <span className={cls} key={col} style={{ animationDelay: `${col * 26 + row * 6}ms` }}>
                     {cell.isPR ? <span className="gym-cell-pr" /> : null}
                   </span>
                 );
@@ -41,7 +42,7 @@ export default function GymConsistency({ built }) {
           <span className="gym-consist-cap">{cap}</span>
           <span className="gym-consist-avg">avg {avg}/week · 13 weeks</span>
           {g.streak > 0 && (
-            <span className="gym-streak">{g.streak}-week streak</span>
+            <span className="gym-streak"><i className="gym-streak-dot" aria-hidden="true" />{g.streak}-week streak</span>
           )}
         </div>
       </div>

@@ -1,41 +1,38 @@
 import { useMemo, useState } from "react";
 import { boxScore } from "../../spine/logic/gymCalc";
-import { dailyVolumeSeries } from "../../spine/logic/gymTrend";
+import { routineVolumeSeries } from "../../spine/logic/gymTrend";
+import { recentSessions } from "../../spine/logic/gymSessions";
 import { formatVolume } from "../../spine/logic/gymFormat";
 import { ROUTINES, routineWorkouts, liftTable, classifyRoutine } from "../../spine/logic/gymRoutine";
 import GymLiftTable from "./GymLiftTable";
+import GymVolChart from "./GymVolChart";
 
-// LifeOS — Gym V2 (Piece 3): the Training Progress zone, now TABBED by routine (Push / Pull
-// / Legs / Other — replaces Piece 1's combined box-score+trend). Selecting a tab shows THAT
-// routine's own volume trend (scoped to that routine only — Push volume is never mixed with
-// Legs) + a per-lift table with window deltas. The whole zone PAGES with the time switcher
-// (parent passes the viewed window). Default tab = Push (flagged: could default to the
-// most-recently-trained routine instead). Keeps the "more ›"/"records ›" drill-in links.
-
-// A compact volume trend line (stretched to the zone; no axis — the numbers are above).
-function VolLine({ pts }) {
-  const vals = pts.map((p) => p.value);
-  const max = Math.max(1, ...vals);
-  const n = pts.length;
-  const W = 300, H = 40;
-  const x = (i) => (n <= 1 ? W / 2 : (i / (n - 1)) * W);
-  const y = (v) => H - (v / max) * (H - 3) - 1.5;
-  const line = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
-  return (
-    <svg className="gym-volline" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="volume trend">
-      <polyline points={line} />
-    </svg>
-  );
-}
+// LifeOS — Gym V2 (Piece 3 + Piece 6): the Training Progress zone, TABBED by routine (Push /
+// Pull / Legs / Other). Selecting a tab shows THAT routine's own volume chart (scoped to that
+// routine only — Push volume is never mixed with Legs) + a per-lift table with window deltas.
+// Piece 6: the bare trend line became a charted GymVolChart (gridlines, smoothed line bounded
+// to real data, terracotta PR dots reusing Consistency's PR flag). Pages with the time
+// switcher. Default tab = the most-recently-trained routine. Keeps the drill-in links.
 
 export default function GymTraining({ built, windowStart, windowEnd, days, nowForWindow, onMore, onRecords }) {
-  // Default tab = the routine of the MOST RECENTLY trained session (built is newest-first),
-  // reusing Piece 3's classifier. Falls back to Push if there's somehow no session.
   const [routine, setRoutine] = useState(() => classifyRoutine(built?.[0]?.title) || "push");
   const wk = useMemo(() => routineWorkouts(built || [], routine), [built, routine]);
   const box = useMemo(() => boxScore(wk, days, nowForWindow), [wk, days, nowForWindow]);
-  const series = useMemo(() => (wk.length ? dailyVolumeSeries(wk, { days, now: nowForWindow }) : null), [wk, days, nowForWindow]);
   const rows = useMemo(() => liftTable(wk, { start: windowStart, end: windowEnd }), [wk, windowStart, windowEnd]);
+
+  // PR days for THIS routine — reuse recentSessions' isPR (all-history flag), same source as
+  // the Consistency grid's white dots; never recompute PR logic. Then the chart series.
+  const prDays = useMemo(() => {
+    const set = new Set();
+    for (const s of recentSessions(built || [])) {
+      if (s.isPR && classifyRoutine(s.title) === routine) set.add(s.dateYMD);
+    }
+    return set;
+  }, [built, routine]);
+  const series = useMemo(
+    () => routineVolumeSeries(wk, { start: windowStart, end: windowEnd, prDays }),
+    [wk, windowStart, windowEnd, prDays],
+  );
   const vol = formatVolume(box?.volume);
 
   return (
@@ -59,7 +56,7 @@ export default function GymTraining({ built, windowStart, windowEnd, days, nowFo
         <span><b>{box?.sessions ?? 0}</b> sessions</span>
         <span><b>{vol.num}</b> kg</span>
       </div>
-      {series?.rolling?.length ? <VolLine pts={series.rolling} /> : null}
+      <GymVolChart points={series} windowStart={windowStart} windowEnd={windowEnd} />
 
       <GymLiftTable rows={rows} />
 

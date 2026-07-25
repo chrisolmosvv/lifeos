@@ -47,6 +47,32 @@ function weekBuckets(n, now) {
   return weeks;
 }
 
+// routineVolumeSeries — the Training-chart series (Piece 6). ONE point per real SESSION DAY
+// (never a faked zero-day — that zero-sawtooth was the long-range "jagged zigzag"), each with
+// that day's total volume + a trailing-`smooth`-calendar-day mean (the SAME technique Body's
+// composition chart uses: smooth over the full history, then slice to the window). Emitting
+// only real days also means the line is BOUNDED to real data — no flat lead-in before the
+// routine's first session. `prDays` (a Set of Amsterdam ymds, from recentSessions' isPR flag
+// over ALL history — reused, not recomputed) marks the PR points. → [{ymd,value,smoothed,isPR}].
+export function routineVolumeSeries(workouts, { start, end, smooth = 7, prDays } = {}) {
+  const byDay = new Map();
+  for (const w of workouts || []) {
+    const ymd = amsYMD(w.started_at);
+    if (!ymd) continue;
+    byDay.set(ymd, (byDay.get(ymd) || 0) + workoutVolume(w));
+  }
+  const days = [...byDay.keys()].sort();
+  const pts = days.map((ymd) => {
+    const winStart = shiftYMD(ymd, -(smooth - 1));
+    let sum = 0, n = 0;
+    for (const d of days) {
+      if (d >= winStart && d <= ymd) { sum += byDay.get(d); n += 1; }
+    }
+    return { ymd, value: byDay.get(ymd), smoothed: n ? sum / n : byDay.get(ymd), isPR: prDays ? prDays.has(ymd) : false };
+  });
+  return pts.filter((p) => (!start || p.ymd >= start) && (!end || p.ymd <= end));
+}
+
 const liftKey = (ex) => ex.exercise_template_id || ex.title || "?";
 
 // The lift trained in the MOST sessions across all history → { key, name } or null.

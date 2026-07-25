@@ -76,6 +76,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: gym-cell-in 300ms ease both; /* cascade — per-cell delay set inline (col→right) */
+  transition: transform 120ms ease;
+}
+.gym-cell:hover {
+  transform: scale(1.28); /* lift a cell on hover */
 }
 .gym-cell--on {
   background: var(--accent); /* a trained day — the sanctioned terracotta */
@@ -96,9 +101,10 @@
 .gym-consist-num {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 52px;
-  line-height: 1;
+  font-size: 76px;
+  line-height: 0.95;
   color: var(--ink);
+  animation: gym-rise 460ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 .gym-consist-cap {
   font-family: var(--font-sans);
@@ -113,6 +119,9 @@
 }
 .gym-streak {
   margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
@@ -121,6 +130,13 @@
   border: 1px solid var(--accent);
   border-radius: 4px;
   padding: 3px 8px;
+}
+.gym-streak-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: gym-pulse 1.8s ease-in-out infinite;
 }
 
 /* ── TRAINING PROGRESS (Piece 3: routine tabs + scoped trend + per-lift table) ──── */
@@ -158,17 +174,56 @@
 .gym-tab.is-active { background: var(--ink); color: var(--paper); }
 .gym-tab.is-active:hover { color: var(--paper); }
 .gym-training .gym-over-stats { margin-top: 6px; }
-.gym-training .gym-volline { margin-top: 4px; }
 .gym-training .gym-more-row { flex: 0 0 auto; margin-top: 8px; }
 
-/* The lift table — the flex-grow, internally-scrolling child. */
+/* Volume chart (Piece 6): gridlines + kg axis, smoothed terracotta line bounded to real data,
+   faint point nodes, white-ringed terracotta PR dots. preserveAspectRatio="none" → hairlines
+   use non-scaling-stroke so the grid/line stay crisp when the box stretches. */
+.gym-vol {
+  width: 100%;
+  height: 96px;
+  display: block;
+  margin-top: 6px;
+}
+.gym-vol-grid {
+  stroke: var(--rule-faint);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.gym-vol-ytick {
+  font-family: var(--font-sans);
+  font-size: 8px;
+  fill: var(--ink-muted);
+}
+.gym-vol-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.gym-vol-dots circle { fill: var(--accent); }
+.gym-vol-pr {
+  fill: var(--accent);
+  stroke: var(--paper); /* white ring → the PR node pops off the line (grid PR-dot language) */
+  stroke-width: 1;
+}
+
+/* The lift table — the flex-grow, internally-scrolling child. Custom thin scrollbar
+   (Piece 6) replaces the raw OS one — hairline rest, terracotta on hover. */
 .gym-lift-table {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   margin-top: 6px;
   border-top: 1px solid var(--rule-faint);
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
 }
+.gym-lift-table::-webkit-scrollbar { width: 6px; }
+.gym-lift-table::-webkit-scrollbar-track { background: transparent; }
+.gym-lift-table::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+.gym-lift-table::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 .gym-lt-row {
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -189,10 +244,11 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-/* movement = ink (state ≠ accent); flat/new/none = muted. Terracotta stays reserved. */
-.gym-lt-delta--move { color: var(--ink); }
+/* Piece 6 colour-coding: a GAIN or first-time "new" reads terracotta (a real improvement is
+   the signal); ±0/flat and a regression stay muted grey (calm, not alarming). */
+.gym-lt-delta--gain { color: var(--accent); }
+.gym-lt-delta--down,
 .gym-lt-delta--flat,
-.gym-lt-delta--new,
 .gym-lt-delta--none { color: var(--ink-muted); }
 
 /* ── BODY-PART BALANCE (full ranked list — natural height under Training) ───────── */
@@ -261,6 +317,12 @@
   flex: 1 1 auto;
   min-height: 0;
 }
+.gym-steps-scale {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
 .gym-steps-list {
   flex: 1 1 auto;
   min-height: 0;
@@ -269,7 +331,13 @@
   flex-direction: column;
   gap: 5px;
   margin-top: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
 }
+.gym-steps-list::-webkit-scrollbar { width: 6px; }
+.gym-steps-list::-webkit-scrollbar-track { background: transparent; }
+.gym-steps-list::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+.gym-steps-list::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 .gym-steps-row {
   display: grid;
   grid-template-columns: 44px 1fr 46px;
@@ -301,3 +369,26 @@
   font-variant-numeric: tabular-nums;
 }
 .gym-steps-val--gap { color: var(--ink-muted); }
+/* a no-data (–) row drops its track entirely, so it reads distinct from a real 0-step day
+   (which keeps its empty track) even under √-scaling. */
+.gym-steps-row--gap .gym-steps-track { background: transparent; }
+
+/* ── ANIMATION KEYFRAMES (Piece 6) ────────────────────────────────────────────── */
+@keyframes gym-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes gym-cell-in {
+  from { opacity: 0; transform: scale(0.55); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes gym-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+/* Respect reduced-motion: no auto-playing animation (hover interactions stay). */
+@media (prefers-reduced-motion: reduce) {
+  .gym-consist-num,
+  .gym-cell,
+  .gym-streak-dot { animation: none; }
+}
