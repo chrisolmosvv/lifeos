@@ -2624,3 +2624,10 @@ Piece 7 (commit B): Activity three-block → dense stat strip (value + "vs typic
 window vs prior equal-length window; up=terracotta, down/steady muted; no delta where prior has
 no data). Owner confirmed same comparison basis for all three metrics incl. Walk HR.
   ▸ Piece 8 (NEXT): Body-Part Balance — recon-first.
+
+### 2026-07-25 · Gym V2 · Piece 7 follow-up ✅ — Walk HR delta colour corrected
+The Piece-7 flag (Walk HR "up=terracotta" semantically off) is RESOLVED: per-metric
+`lowerIsBetter` flips Walk HR so DOWN (lower bpm = fitness-positive) reads terracotta, UP muted;
+flights/stand unchanged. Colour is now gain-aware; the arrow still shows the real numeric
+direction. Builder-verified live. [GymActivity.jsx]
+  ▸ Piece 8 (NEXT): Body-Part Balance — recon-first.

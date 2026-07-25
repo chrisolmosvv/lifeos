@@ -326,8 +326,10 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.gym-act-delta--up { color: var(--accent); } /* a gain reads terracotta (lift-table convention) */
-.gym-act-delta--down,
+/* a GAIN reads terracotta (fitness-positive direction — up for flights/stand, DOWN for walk
+   HR); everything else muted. The arrow shows the real numeric direction regardless. */
+.gym-act-delta--gain { color: var(--accent); }
+.gym-act-delta--muted,
 .gym-act-delta--flat { color: var(--ink-muted); }
 
 /* ── STEPS vertical bar chart (Piece 4) — fills the rest of the side column, scrolls

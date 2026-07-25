@@ -12636,3 +12636,18 @@ KNOWN GAPS / RISKS
 
 NEXT — PIECE 8: Body-Part Balance (recon-first).
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-25 — Gym V2 · Piece 7 follow-up: Walk HR delta colour flipped
+
+WHAT CHANGED: Piece 7's stat strip coloured ALL three deltas "up = terracotta (gain)". That's
+right for flights/stand (more = the win) but BACKWARDS for Walk HR — a LOWER walking HR at
+similar effort is the fitness-positive direction. Added a per-metric `lowerIsBetter` flag
+(walk HR = true) and decoupled COLOUR (gain-aware) from the ARROW (always the real numeric
+direction). Now: Walk HR down = terracotta / up = muted; flights + stand unchanged.
+FILES: GymActivity.jsx (lowerIsBetter flag + gain calc), gymPage.css (delta classes renamed
+--up/--down → semantic --gain/--muted). Src-only.
+VERIFY (Builder-verified live): Today strip — Flights ↓9 muted, Stand ↓14m muted, Walk HR
+↓6bpm TERRACOTTA. Corrects the Piece-7 flag that "Walk HR up=terracotta" was semantically off.
+NEXT — PIECE 8: Body-Part Balance (recon-first).
+────────────────────────────────────────────────────────────────────────────────

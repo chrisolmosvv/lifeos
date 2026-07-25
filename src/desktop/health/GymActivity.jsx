@@ -16,10 +16,14 @@ import { shiftYMD } from "../../spine/logic/gymDates";
 // convention as the lift table); down/steady stay muted.
 
 const DAY = 86400000;
+// `lowerIsBetter` flips which direction reads as a GAIN (terracotta). More flights/stand is
+// the win; a LOWER walking HR at similar effort is the fitness-positive direction, so its
+// gain is DOWN. The arrow itself always shows the real numeric direction (↑/↓) — only the
+// COLOUR is gain-aware.
 const METRICS = [
   { key: "flights_climbed", label: "flights", unit: "" },
   { key: "stand_minutes", label: "stand", unit: "m" },
-  { key: "walking_heart_rate_avg", label: "walk HR", unit: " bpm" },
+  { key: "walking_heart_rate_avg", label: "walk HR", unit: " bpm", lowerIsBetter: true },
 ];
 
 function avgOver(daily, start, end) {
@@ -41,7 +45,9 @@ export default function GymActivity({ activityRows, windowStart, windowEnd }) {
     const prior = priorStart ? avgOver(daily, priorStart, priorEnd) : null;
     const val = Number.isFinite(cur) ? `${Math.round(cur).toLocaleString("en-GB")}${m.unit}` : "—";
     const delta = Number.isFinite(cur) && Number.isFinite(prior) ? Math.round(cur - prior) : null;
-    return { ...m, val, delta };
+    // GAIN = movement in the fitness-positive direction for this metric (colour only).
+    const gain = delta == null || delta === 0 ? null : (m.lowerIsBetter ? delta < 0 : delta > 0);
+    return { ...m, val, delta, gain };
   });
   const anyData = cells.some((c) => c.val !== "—");
 
@@ -59,7 +65,7 @@ export default function GymActivity({ activityRows, windowStart, windowEnd }) {
                   c.delta === 0 ? (
                     <span className="gym-act-delta gym-act-delta--flat">≈ typical</span>
                   ) : (
-                    <span className={`gym-act-delta ${c.delta > 0 ? "gym-act-delta--up" : "gym-act-delta--down"}`}>
+                    <span className={`gym-act-delta ${c.gain ? "gym-act-delta--gain" : "gym-act-delta--muted"}`}>
                       {c.delta > 0 ? "↑" : "↓"} {Math.abs(c.delta)}{c.unit} vs typical
                     </span>
                   )
