@@ -41,7 +41,7 @@ export default function GymVolChart({ points, windowStart, windowEnd }) {
         ))}
       </g>
       {prs.map((p) => (
-        <circle key={`pr-${p.ymd}`} className="gym-vol-pr" cx={x(p.ymd)} cy={y(p.smoothed)} r={2.8} />
+        <circle key={`pr-${p.ymd}`} className="gym-vol-pr" cx={x(p.ymd)} cy={y(p.smoothed)} r={3.4} />
       ))}
     </svg>
   );

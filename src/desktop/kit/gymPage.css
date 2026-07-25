@@ -203,10 +203,14 @@
   stroke-linejoin: round;
 }
 .gym-vol-dots circle { fill: var(--accent); }
+/* PR node: white-ringed terracotta. vector-effect keeps the ring a crisp true-pixel width
+   despite the chart's non-uniform (preserveAspectRatio="none") stretch — without it the 1px
+   ring thinned to nothing and PR dots read as plain terracotta dots. */
 .gym-vol-pr {
   fill: var(--accent);
-  stroke: var(--paper); /* white ring → the PR node pops off the line (grid PR-dot language) */
-  stroke-width: 1;
+  stroke: var(--paper);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 
 /* The lift table — the flex-grow, internally-scrolling child. Custom thin scrollbar
