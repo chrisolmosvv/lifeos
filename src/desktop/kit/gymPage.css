@@ -55,81 +55,32 @@
   gap: 28px;
 }
 
-/* ── CONSISTENCY (Piece 2): weekday-by-week grid + hero + streak badge ──────────── */
-.gym-consist-body {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
-/* The grid: 7 rows (Mon→Sun) each a daylabel + 13 week cells. */
-.gym-grid-cal {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.gym-grid-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.gym-grid-daylabel {
-  flex: 0 0 12px;
-  font-family: var(--font-sans);
-  font-size: 9px;
-  color: var(--ink-muted);
-  text-align: center;
-}
-.gym-cell {
-  width: 15px;
-  height: 15px;
-  border-radius: 3px;
-  background: var(--rule-faint); /* quiet = no session */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: gym-cell-in 300ms ease both; /* cascade — per-cell delay set inline (col→right) */
-  transition: transform 120ms ease;
-}
-.gym-cell:hover {
-  transform: scale(1.28); /* lift a cell on hover */
-}
-.gym-cell--on {
-  background: var(--accent); /* a trained day — the sanctioned terracotta */
-}
-.gym-cell-pr {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--paper); /* white PR dot on the filled cell */
-}
-/* The hero block beside the grid. */
+/* ── CONSISTENCY (Piece 10): calendar months + hero + streak badge ─────────────── */
+/* Hero: big number + a meta column (caption, weekly-avg, streak) beside it, above the calendar. */
 .gym-consist-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.gym-consist-herometa {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
+  min-width: 0;
 }
 .gym-consist-num {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 76px;
+  font-size: 60px;
   line-height: 0.95;
   color: var(--ink);
   animation: gym-rise 460ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-.gym-consist-cap {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-.gym-consist-avg {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  color: var(--ink-muted);
-  margin-top: 2px;
-}
+.gym-consist-cap { font-family: var(--font-sans); font-size: 13px; color: var(--ink); }
+.gym-consist-avg { font-family: var(--font-sans); font-size: 11px; color: var(--ink-muted); }
 .gym-streak {
-  margin-top: 8px;
+  margin-top: 6px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -148,6 +99,47 @@
   border-radius: 50%;
   background: var(--accent);
   animation: gym-pulse 1.8s ease-in-out infinite;
+}
+
+/* Calendar area — a single current month (Today) or a tiled grid of mini-months (3/6/12mo). */
+.gym-cal-single { margin-top: 12px; max-width: 300px; }
+.gym-cal-tiles { display: grid; gap: 14px 12px; margin-top: 12px; }
+.gym-cal { display: flex; flex-direction: column; gap: 4px; }
+.gym-cal-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+.gym-cal--tile .gym-cal-label { font-size: 9px; text-transform: uppercase; }
+.gym-cal-dow,
+.gym-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.gym-cal--tile .gym-cal-grid { gap: 2px; }
+.gym-cal-dow span {
+  font-family: var(--font-sans);
+  font-size: 8px;
+  color: var(--ink-muted);
+  text-align: center;
+}
+.gym-cal-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--rule-faint); /* 'none' — no session that day */
+}
+.gym-cal-cell--blank { background: transparent; }
+.gym-cal-cell--on { background: var(--accent); } /* selected routine trained (any routine at "All") */
+.gym-cal-cell--other { background: color-mix(in srgb, var(--accent) 30%, var(--paper)); } /* a DIFFERENT routine — light tint */
+.gym-cal-cell--today { box-shadow: inset 0 0 0 1.5px var(--ink); } /* today's cell, ringed */
+.gym-cal-badge {
+  align-self: flex-start;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
 }
 
 /* ── TRAINING PROGRESS (Piece 3: routine tabs + scoped trend + per-lift table) ──── */

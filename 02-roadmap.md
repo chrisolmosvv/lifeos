@@ -2646,3 +2646,14 @@ Body-Part Balance full width below. Side column untouched. Switcher left as-is (
 Pure repositioning (Health.jsx + gymPage.css .gym-top); no component internals touched.
   ▸ DEBT: empty lower-left under Consistency — accepted as temporary, resolves with Piece 10.
   ▸ Piece 10 (NEXT): RECON for the calendar-month Consistency rebuild.
+
+### 2026-07-27 · Gym V2 · Piece 10 ✅ (calendar Consistency + routine-tab integration; largest piece)
+Routine tab LIFTED to Health.jsx (shared Training+Consistency; Balance's metric stays independent).
+"All" tab first + default (replaces most-recent default). Consistency → real calendar months (current
+month at Today; tiled mini-months + badges at 3/6/12mo), three-state cells when a routine is selected
+(selected=terracotta, other=tint, none=grey), hero/caption/streak scope to routine (streak stays
+weekly). New gymCalendar.js + GymMonth.jsx. Src-only; verified live at 900px (zero-scroll, three-state
+spot-checked, badges sum to hero total).
+  ▸ DEBT: consistency counts by calendar-month vs training's rolling-window (can differ 1-2 at edges);
+    PR dots dropped from consistency (still on training chart); streak currently 0 (data-driven).
+  ▸ Piece 11 (NEXT): steps hybrid. Piece 12: docs close.

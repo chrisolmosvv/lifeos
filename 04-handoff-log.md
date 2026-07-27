@@ -12750,3 +12750,59 @@ KNOWN GAPS / RISKS
 
 NEXT — PIECE 10: RECON for the calendar-month Consistency rebuild.
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-27 — Gym V2 · PIECE 10: calendar-month Consistency + routine-tab integration
+
+WHAT CHANGED (the largest piece — first cross-component state dependency in the arc)
+STATE LIFT: Training's routine tab moved from local `useState` to `Health.jsx` (alongside
+win/anchor — same pattern), shared with Consistency. Balance's Sets/Volume state stays LOCAL +
+untouched (verified: switching routines does not change Balance's metric).
+"ALL" TAB: added FIRST + as the DEFAULT (replaces the old most-recently-trained default, removed
+from GymTraining). "All" = every routine combined (no filter).
+CALENDAR (replaces the 13-week weekday grid):
+  • AT TODAY: a real current-month grid (Sun→Sat, weeks as rows), today's cell ringed.
+  • AT 3/6/12mo: tiled mini-months (one per calendar month), each with a terracotta session-count
+    badge. Tiles use FIXED widths so cells stay legible: 3/6mo = 112px tiles (~14px cells, 3 cols),
+    1yr = 90px tiles (~11px cells, 4 cols). These fill the empty space Piece 9 left under Consistency.
+  • THREE-STATE cells when a specific routine is selected: selected routine = full terracotta,
+    a DIFFERENT routine = light terracotta tint (color-mix 30%), no session = grey. "All" = binary
+    (any training day terracotta). Verified Pull: 4 on + 10 other + today = 14 (= all trained days).
+HERO + CAPTION reframe (gymCalendar.heroInfo), scoped to routine:
+  • Today/All → "14" + "sessions this month"; Today/Pull → "4" + "Pull sessions this month".
+  • 3/6/12mo/All → window TOTAL + "avg N/month · last X months"; +", Pull" when scoped
+    (e.g. 3mo/Pull → "13" + "avg 4.3/month · last 3 months, Pull").
+  • The weekly-avg caption + STREAK stay WEEKLY (unchanged unit), scoped to routine-filtered
+    workouts via consistencyGrid — no computeStreak rewrite.
+
+FILES
+  NEW:      src/spine/logic/gymCalendar.js (sessionDayMap, monthGrid, monthsInWindow, heroInfo),
+            src/desktop/health/GymMonth.jsx
+  MODIFIED: src/spine/logic/gymRoutine.js ("all" first in ROUTINES + routineWorkouts handles it),
+            src/desktop/health/GymConsistency.jsx (calendar rebuild), GymTraining.jsx (controlled
+            routine, "all" PR-days), src/desktop/Health.jsx (lift routine, default "all"),
+            src/desktop/kit/gymPage.css (calendar/tile/three-state styles; old weekday-grid removed).
+
+HOW TO VERIFY (Builder-verified live on localhost at a true 900px viewport)
+  • "All" is the default + first tab; Today shows the July calendar (14 on / 0 other / today ringed),
+    hero "14 sessions this month". Select Pull → 4 on / 10 other / today ringed, hero "4 Pull sessions
+    this month", weekly avg scopes ("avg 1.0/week" vs All's 3.0). Balance metric unchanged (Sets).
+  • 1yr → 12 tiles (badges 0,0,0,0,0,5,5,5,7,3,6,4 = 35 = Pull-total hero), 11px cells; 3mo → 3 tiles.
+  • Zero-scroll (pageOverflows=false) at Today and 1yr; Training stays wider than Consistency.
+
+KNOWN GAPS / RISKS
+  • NO-MULTI-ROUTINE-DAY: real data is 1:1 (108 workouts, 108 days). sessionDayMap keeps LAST-wins if
+    a future day ever has 2 different-routine workouts — a tie-break rule to decide THEN (code comment
+    notes it); not built now.
+  • CALENDAR-MONTH vs ROLLING-WINDOW: Consistency counts by CALENDAR MONTH; Training counts by the
+    ROLLING window — so the two session numbers can differ by 1–2 at a window boundary (saw hero 13 vs
+    training 14 at 3mo). By design (consistency is calendar-based); flag if it reads confusingly.
+  • STREAK currently shows 0 (no badge) — real data (training tapered after Jul 22; recent weeks fell
+    below the 13-week-average threshold). The weekly streak CALC is unchanged; it's date/data-driven.
+  • PR white-dots DROPPED from Consistency (the calendar has no PR marks per the Piece-10 design);
+    PR dots still live on the Training volume chart.
+  • Tile-size fallback (recon's 4×3 @ ~100 vs 3×4) resolved to fixed-px tiles once the real hero block
+    measured a compact 57px — 1yr stays 4-col @ 90px (11px cells, legible).
+
+NEXT — PIECE 11: steps hybrid (already speced, independent). Then PIECE 12: docs close.
+────────────────────────────────────────────────────────────────────────────────

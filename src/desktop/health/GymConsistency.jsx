@@ -1,51 +1,59 @@
+import { useMemo } from "react";
 import { consistencyGrid } from "../../spine/logic/gymConsistency";
+import { routineWorkouts } from "../../spine/logic/gymRoutine";
+import { sessionDayMap, monthGrid, monthsInWindow, heroInfo } from "../../spine/logic/gymCalendar";
+import { amsTodayYMD } from "../../spine/logic/gymDates";
+import GymMonth from "./GymMonth";
 
-// LifeOS — Gym V2 (Piece 2): the Consistency hero — REAL fidelity (replaces Piece 1's
-// number-only placeholder). A weekday-by-week timeline grid (7 rows Mon→Sun × 13 columns,
-// oldest left, current week right) — a filled terracotta cell = a session that weekday that
-// week; a white dot on it = a PR was set. Beside it: the hero "sessions this week" number,
-// the 13-week average caption, and a streak badge. ALWAYS fixed to this week / the trailing
-// 13 weeks — it does NOT page with the time switcher. The calc (gymConsistency) owns the
-// maths incl. the self-referential streak definition; this only DISPLAYS it.
+// LifeOS — Gym V2 (Piece 10): the Consistency hero — real CALENDAR months. AT TODAY a single
+// current-month grid; at 3/6/12 months a tiled row of mini-months (each with a session-count
+// badge). SCOPED to Training's selected routine (lifted to Health.jsx): "All" = binary (any
+// training day terracotta); a specific routine = THREE-STATE cells (selected routine = full
+// terracotta, a different routine = light tint, none = grey). The hero number + caption reframe
+// per window/routine (gymCalendar.heroInfo). The STREAK stays WEEKLY (unchanged unit — reuses
+// consistencyGrid on routine-filtered workouts), just scoped when a routine is selected.
 
-const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"]; // Mon→Sun row labels
+// cols × fixed tile width per window — fixed px (not 1fr) so tiles don't collapse in the
+// auto-width Consistency column, keeping day-cells legible (~11–15px).
+const TILE_COLS = { "3mo": 3, "6mo": 3, "1yr": 4 };
+const TILE_PX = { "3mo": 112, "6mo": 112, "1yr": 90 };
 
-export default function GymConsistency({ built }) {
-  const g = consistencyGrid(built || [], { weeks: 13 });
-  const avg = g.average.toFixed(1);
-  const cap = g.thisWeek === 1 ? "session this week" : "sessions this week";
+export default function GymConsistency({ built, win = "today", routine = "all" }) {
+  const today = amsTodayYMD();
+  const wk = useMemo(() => routineWorkouts(built || [], routine), [built, routine]);
+  const g = useMemo(() => consistencyGrid(wk, { weeks: 13 }), [wk]); // weekly streak + avg (scoped)
+  const dayMap = useMemo(() => sessionDayMap(built || []), [built]);
+  const hero = useMemo(() => heroInfo(dayMap, routine, win), [dayMap, routine, win]);
+  const months = useMemo(() => {
+    const list = win === "today"
+      ? [{ year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) - 1 }]
+      : monthsInWindow(win);
+    return list.map((mm) => monthGrid(dayMap, { ...mm, selectedRoutine: routine, today }));
+  }, [dayMap, win, routine, today]);
+
+  const tiled = win !== "today";
 
   return (
     <section className="gym-zone gym-consist">
-      <span className="gym-kicker">Consistency · last 13 weeks</span>
-      <div className="gym-consist-body">
-        <div className="gym-grid-cal" role="img" aria-label={`Training grid, ${g.streak}-week streak`}>
-          {WEEKDAYS.map((d, row) => (
-            <div className="gym-grid-row" key={row}>
-              <span className="gym-grid-daylabel">{d}</span>
-              {g.weeks.map((w, col) => {
-                const cell = w.cells[row];
-                const cls = cell.trained ? "gym-cell gym-cell--on" : "gym-cell";
-                // Cascade in oldest→newest (left→right): delay grows with the column.
-                return (
-                  <span className={cls} key={col} style={{ animationDelay: `${col * 26 + row * 6}ms` }}>
-                    {cell.isPR ? <span className="gym-cell-pr" /> : null}
-                  </span>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        <div className="gym-consist-hero">
-          <b className="gym-consist-num">{g.thisWeek}</b>
-          <span className="gym-consist-cap">{cap}</span>
-          <span className="gym-consist-avg">avg {avg}/week · 13 weeks</span>
+      <span className="gym-kicker">Consistency</span>
+      <div className="gym-consist-hero">
+        <b className="gym-consist-num">{hero.number}</b>
+        <div className="gym-consist-herometa">
+          <span className="gym-consist-cap">{hero.caption}</span>
+          {win === "today" && <span className="gym-consist-avg">avg {g.average.toFixed(1)}/week · 13 weeks</span>}
           {g.streak > 0 && (
             <span className="gym-streak"><i className="gym-streak-dot" aria-hidden="true" />{g.streak}-week streak</span>
           )}
         </div>
       </div>
+
+      {tiled ? (
+        <div className="gym-cal-tiles" style={{ gridTemplateColumns: `repeat(${TILE_COLS[win] || 3}, ${TILE_PX[win] || 112}px)` }}>
+          {months.map((m) => <GymMonth key={`${m.year}-${m.month}`} month={m} tile showBadge />)}
+        </div>
+      ) : (
+        <div className="gym-cal-single"><GymMonth month={months[0]} /></div>
+      )}
     </section>
   );
 }

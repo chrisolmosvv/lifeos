@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { boxScore } from "../../spine/logic/gymCalc";
 import { routineVolumeSeries } from "../../spine/logic/gymTrend";
 import { recentSessions } from "../../spine/logic/gymSessions";
@@ -14,8 +14,9 @@ import GymVolChart from "./GymVolChart";
 // to real data, terracotta PR dots reusing Consistency's PR flag). Pages with the time
 // switcher. Default tab = the most-recently-trained routine. Keeps the drill-in links.
 
-export default function GymTraining({ built, windowStart, windowEnd, days, nowForWindow, onMore, onRecords }) {
-  const [routine, setRoutine] = useState(() => classifyRoutine(built?.[0]?.title) || "push");
+// Piece 10: `routine` is now LIFTED to Health.jsx (shared with Consistency) — this is a
+// controlled tab. Default "all" is set there, replacing the old most-recently-trained default.
+export default function GymTraining({ built, routine, onRoutine, windowStart, windowEnd, days, nowForWindow, onMore, onRecords }) {
   const wk = useMemo(() => routineWorkouts(built || [], routine), [built, routine]);
   const box = useMemo(() => boxScore(wk, days, nowForWindow), [wk, days, nowForWindow]);
   const rows = useMemo(() => liftTable(wk, { start: windowStart, end: windowEnd }), [wk, windowStart, windowEnd]);
@@ -25,7 +26,7 @@ export default function GymTraining({ built, windowStart, windowEnd, days, nowFo
   const prDays = useMemo(() => {
     const set = new Set();
     for (const s of recentSessions(built || [])) {
-      if (s.isPR && classifyRoutine(s.title) === routine) set.add(s.dateYMD);
+      if (s.isPR && (routine === "all" || classifyRoutine(s.title) === routine)) set.add(s.dateYMD);
     }
     return set;
   }, [built, routine]);
@@ -45,7 +46,7 @@ export default function GymTraining({ built, windowStart, windowEnd, days, nowFo
             role="tab"
             aria-selected={r.id === routine}
             className={r.id === routine ? "gym-tab is-active" : "gym-tab"}
-            onClick={() => setRoutine(r.id)}
+            onClick={() => onRoutine(r.id)}
           >
             {r.label}
           </button>

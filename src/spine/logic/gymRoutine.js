@@ -15,7 +15,10 @@
 import { amsYMD } from "./gymDates.js";
 import { prWeight } from "./gymCalc.js";
 
+// "all" (Piece 10) is FIRST + the default tab — no filter, every routine combined. The four
+// real buckets follow. classifyRoutine never returns "all"; it's a UI/selection value only.
 export const ROUTINES = [
+  { id: "all", label: "All" },
   { id: "push", label: "Push" },
   { id: "pull", label: "Pull" },
   { id: "legs", label: "Legs" },
@@ -31,8 +34,9 @@ export function classifyRoutine(title) {
   return "other";
 }
 
-// The workouts belonging to one routine bucket.
+// The workouts belonging to one routine bucket. "all" → every workout (no filter).
 export function routineWorkouts(workouts, routine) {
+  if (routine === "all") return workouts || [];
   return (workouts || []).filter((w) => classifyRoutine(w.title) === routine);
 }
 

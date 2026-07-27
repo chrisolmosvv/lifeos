@@ -52,6 +52,8 @@ export default function Health({ onBack }) {
   const [openId, setOpenId] = useState(null) // a session drilled into, or null
   const [win, setWin] = useState('today') // 'today' | '3mo' | '6mo' | '1yr'
   const [anchor, setAnchor] = useState(null) // the viewed period's END ymd; null → today
+  // Piece 10: routine tab LIFTED here (shared by Training + Consistency). Default 'all'.
+  const [routine, setRoutine] = useState('all')
   const [today, setToday] = useState(null)
 
   useEffect(() => {
@@ -160,9 +162,11 @@ export default function Health({ onBack }) {
               {/* Piece 9: top half = Consistency (narrow) + Training (wide) side by side;
                   bottom half = Balance full width. Components unchanged internally. */}
               <div className="gym-top">
-                <GymConsistency built={built} />
+                <GymConsistency built={built} win={win} routine={routine} />
                 <GymTraining
                   built={built}
+                  routine={routine}
+                  onRoutine={setRoutine}
                   windowStart={viewStart}
                   windowEnd={anchorEnd}
                   days={days}
