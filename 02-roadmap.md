@@ -2638,3 +2638,11 @@ driving both, per-bucket minor-collapse (<3% grand), trend arrows (current vs pr
 and FIXED→PAGED (Consistency stays fixed). Non-muscular groups (cardio/full_body/other) excluded +
 %s renormalised to 100%. New gymBalanceGroups.js. Src-only.
   ▸ Piece 9 (NEXT, FINAL): docs close for the whole Gym V2 arc.
+
+### 2026-07-27 · Gym V2 · Piece 9 ✅ (main-column restructure; owner-verified zero-scroll on the 13")
+Main column: Consistency (narrow) + Training (wider, leads) side by side in a new .gym-top row;
+Body-Part Balance full width below. Side column untouched. Switcher left as-is (owner (c) — the
+"extra margin" is the whole broadsheet inset from the masthead, a page-level choice not changed).
+Pure repositioning (Health.jsx + gymPage.css .gym-top); no component internals touched.
+  ▸ DEBT: empty lower-left under Consistency — accepted as temporary, resolves with Piece 10.
+  ▸ Piece 10 (NEXT): RECON for the calendar-month Consistency rebuild.

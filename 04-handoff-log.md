@@ -12705,3 +12705,48 @@ KNOWN GAPS / RISKS
 
 NEXT — PIECE 9: docs close (genuinely the last piece of the whole Gym V2 arc).
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-27 — Gym V2 · PIECE 9: main-column restructure (top row + full-width Balance)
+
+WHAT CHANGED (pure repositioning — no component internals touched)
+The main column went from three STACKED zones to a top section + bottom section:
+  • TOP: Consistency (natural/narrow width) + Training Progress (grows wider — it LEADS) sit
+    SIDE BY SIDE in a new .gym-top flex row. Training keeps everything (tabs, stat row, volume
+    chart, lift table with its internal scroll, more/records links) — nothing cut; its table
+    scrolls to fill the row height. Consistency is its natural content width (grid + hero row).
+  • BOTTOM: Body-Part Balance, now FULL WIDTH of the main column (radar + list + Sets/Volume
+    tab unchanged internally, just more horizontal room).
+  • Because Consistency + Training now share ONE row height instead of stacking two, the page is
+    SHORTER vertically than before (helped zero-scroll).
+SIDE COLUMN (Activity + Steps): untouched, per the owner's explicit call.
+SWITCHER: LEFT AS-IS (owner decision (c)). Ground finding recorded: the switcher already aligns
+  with the gym content (both at 1358px); the 58px "extra margin" the owner saw is the whole gym
+  broadsheet (max-width:1340 centred + 32px padding) being inset from the full-width masthead
+  (edge at 1416px) — a page-level width choice, deliberately NOT changed this piece.
+
+FILES
+  MODIFIED: src/desktop/Health.jsx (wrap Consistency + Training in a .gym-top div),
+            src/desktop/kit/gymPage.css (add .gym-top: flex row, fills above Balance).
+  The zones' existing flex values do the rest: .gym-zone flex:0 0 auto → Consistency natural
+  width; .gym-training flex:1 1 auto → grows wider; Balance stays a .gym-main child, full width.
+
+HOW TO VERIFY (owner-verified zero-scroll on the real 13" across all 4 windows; Builder verified
+structure via JS)
+  • Main column: [.gym-top [Consistency | Training]] then Balance full-width (915px = main width).
+    Training wider than Consistency (469 vs 418px). Balance below the top row.
+  • Training's full content present + usable in its narrower column (chart, scrolling lift table,
+    links). Balance reads well at full width. Side column unchanged.
+  • Zero-scroll holds on all four windows (owner-confirmed, no scrollbar).
+
+KNOWN GAPS / RISKS
+  • Empty space in the lower-left (under the short Consistency grid, beside Training's tall
+    column) — inherent to "Consistency narrow/short + Training tall". Owner ACCEPTS it as a
+    temporary state; expected to resolve when Piece 10's calendar-month Consistency rebuild lands.
+  • Training leads on width only modestly (469 vs 418px) — Consistency's natural width (grid+hero
+    side by side) sets the floor. Fine for now.
+  • Switcher inset vs masthead left unresolved by owner choice (c) — see above; a future page-wide
+    alignment decision if ever revisited.
+
+NEXT — PIECE 10: RECON for the calendar-month Consistency rebuild.
+────────────────────────────────────────────────────────────────────────────────

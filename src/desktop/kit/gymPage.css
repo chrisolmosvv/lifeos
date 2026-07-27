@@ -44,6 +44,17 @@
   flex: 0 0 auto;
 }
 
+/* Piece 9: TOP section of the main column — Consistency (natural/narrow, .gym-zone's flex:0 0
+   auto) + Training (grows wider via its own flex:1 1 auto) side by side. .gym-top fills the space
+   above Balance; Training stretches to its height and its lift table scrolls. Balance stays a
+   direct .gym-main child below, full width. */
+.gym-top {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 28px;
+}
+
 /* ── CONSISTENCY (Piece 2): weekday-by-week grid + hero + streak badge ──────────── */
 .gym-consist-body {
   display: flex;

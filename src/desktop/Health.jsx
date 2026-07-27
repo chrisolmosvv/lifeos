@@ -157,16 +157,20 @@ export default function Health({ onBack }) {
         <div className="health-fade" key={`${win}_${anchor || 'now'}`}>
           <div className="gym-body">
             <div className="gym-main">
-              <GymConsistency built={built} />
-              <GymTraining
-                built={built}
-                windowStart={viewStart}
-                windowEnd={anchorEnd}
-                days={days}
-                nowForWindow={nowForWindow}
-                onMore={() => setView('archive')}
-                onRecords={() => setView('records')}
-              />
+              {/* Piece 9: top half = Consistency (narrow) + Training (wide) side by side;
+                  bottom half = Balance full width. Components unchanged internally. */}
+              <div className="gym-top">
+                <GymConsistency built={built} />
+                <GymTraining
+                  built={built}
+                  windowStart={viewStart}
+                  windowEnd={anchorEnd}
+                  days={days}
+                  nowForWindow={nowForWindow}
+                  onMore={() => setView('archive')}
+                  onRecords={() => setView('records')}
+                />
+              </div>
               <GymBalance balance={balance} balancePrior={balancePrior} />
             </div>
             <div className="gym-side">
