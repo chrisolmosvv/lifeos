@@ -2631,3 +2631,10 @@ The Piece-7 flag (Walk HR "up=terracotta" semantically off) is RESOLVED: per-met
 flights/stand unchanged. Colour is now gain-aware; the arrow still shows the real numeric
 direction. Builder-verified live. [GymActivity.jsx]
   ▸ Piece 8 (NEXT): Body-Part Balance — recon-first.
+
+### 2026-07-27 · Gym V2 · Piece 8 ✅ (LAST build piece; owner-verified zero-scroll on the 13")
+Body-Part Balance rebuilt: radar (new GymRadar) + Upper/Lower/Core grouped list, Sets/Volume tab
+driving both, per-bucket minor-collapse (<3% grand), trend arrows (current vs prior equal window),
+and FIXED→PAGED (Consistency stays fixed). Non-muscular groups (cardio/full_body/other) excluded +
+%s renormalised to 100%. New gymBalanceGroups.js. Src-only.
+  ▸ Piece 9 (NEXT, FINAL): docs close for the whole Gym V2 arc.

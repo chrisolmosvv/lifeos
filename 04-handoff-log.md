@@ -12651,3 +12651,57 @@ VERIFY (Builder-verified live): Today strip — Flights ↓9 muted, Stand ↓14m
 ↓6bpm TERRACOTTA. Corrects the Piece-7 flag that "Walk HR up=terracotta" was semantically off.
 NEXT — PIECE 8: Body-Part Balance (recon-first).
 ────────────────────────────────────────────────────────────────────────────────
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-07-27 — Gym V2 · PIECE 8: Body-Part Balance → radar + grouped list (last build piece)
+
+WHAT CHANGED
+Rebuilt Body-Part Balance from a flat ranked list into a radar + an Upper/Lower/Core grouped
+list, driven by a SETS / VOLUME tab, and flipped its behaviour from FIXED to PAGED.
+  • TAXONOMY (owner-locked, gymBalanceGroups.REGION): UPPER = shoulders/triceps/biceps/chest/
+    upper_back/lats/traps/forearms/neck; LOWER = quadriceps/hamstrings/glutes/calves/abductors/
+    adductors; CORE = abdominals/lower_back. EXCLUDED (never shown, any tab/window): cardio,
+    full_body, other — and anything unmapped falls through to excluded (safe default).
+  • RENORMALISE after exclusion: %s divide by the total of INCLUDED groups only (per active
+    metric), so the three buckets sum to 100% (verified live: pctSum = 100 on both tabs).
+  • RADAR (GymRadar.jsx, genuinely new): top-7 groups by the active metric, dynamic max scale,
+    grows from centre on load, hover a spoke → raw sets/kg. ≥3 groups → filled polygon; <3 →
+    line/points (handled, not live-exercised). INK, not terracotta (neutral/descriptive).
+  • GROUPED LIST: Upper/Lower/Core, sorted % desc; per-bucket MINOR COLLAPSE — groups under 3%
+    of the GRAND total fold into one "(N minor)" line nested in their OWN bucket. Hover a row →
+    raw value.
+  • TREND ARROWS per group: current window's grand-% minus the prior equal-length window's (pp);
+    ±1pp = steady (→). Neutral ink (no good/bad colour — a share shift isn't a win/loss).
+  • PAGED: Balance now reads the viewed window + the prior window (Health.jsx computes both
+    muscleBalance calls). Consistency stays FIXED — separate code path, unaffected (verified).
+
+FILES
+  NEW:      src/spine/logic/gymBalanceGroups.js (REGION/BUCKETS/MINOR_PCT + balanceView),
+            src/desktop/health/GymRadar.jsx
+  MODIFIED: src/desktop/health/GymBalance.jsx (tabs + radar + grouped list), src/desktop/Health.jsx
+            (balance paged + prior window), src/desktop/kit/gymPage.css (radar + grouped-list
+            styles, compaction: radar 178×162 + groups list bounded/scroll, vol chart 96→80).
+
+HOW TO VERIFY (owner-verified zero-scroll on the real 13"; Builder verified the rest via JS + a
+real-data hand-check, since the automation window was stuck at a 687px viewport this session)
+  • pctSum = 100 (Sets + Volume) → renormalisation correct. Cardio/Full body/Other appear nowhere.
+  • Sets vs Volume radars differ correctly (Calves is minor by sets but #2 by volume; Shoulders/
+    Biceps leave the volume top-7). Both tabs drive radar + list together.
+  • Trend hand-check: Shoulders 15.1% now (Apr–Jul) vs 12.5% prior (Jan–Apr) → ↑, matches UI.
+  • Minor collapse nests correctly (Lower's minor = Calves/Abductors/Adductors).
+  • Consistency height + behaviour unchanged.
+
+KNOWN GAPS / RISKS
+  • TERMINOLOGY: the "Sets" tab counts WORKING SETS (warm-ups excluded, per gymCalc) — not reps.
+    Volume = weight×reps summed. Bodyweight/duration work has sets but ~0 volume, so the Volume
+    view underweights abs/plank-type groups (real, not a bug).
+  • MINOR-COLLAPSE MATH chosen: threshold = 3% of the GRAND included total (same base as the
+    displayed %), collapsed per-bucket — NOT 3% of the bucket's own total. So a "(N minor)" row's
+    summed % can exceed 3% (e.g. two 2.9% groups → ~6%); intentional.
+  • LAYOUT is dense (four rich zones) — fits the 13" but the training lift-table is the give (it
+    scrolls). If a future zone is added, this is the first thing to feel tight.
+  • Radar <3-group path (line/points) is coded but not live-exercised (no real window yields <3
+    included groups).
+
+NEXT — PIECE 9: docs close (genuinely the last piece of the whole Gym V2 arc).
+────────────────────────────────────────────────────────────────────────────────

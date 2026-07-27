@@ -98,8 +98,12 @@ export default function Health({ onBack }) {
   const actStart = actEnd ? shiftYMD(actEnd, -(days - 1)) : null
   const nowForWindow = win === 'today' ? Date.now() : (anchorEnd ? noonMs(anchorEnd) : Date.now())
 
-  // Body-Part Balance is FIXED to the trailing 7 days (never pages).
-  const balance = useMemo(() => (built.length ? muscleBalance(built, { days: 7 }) : null), [built])
+  // Body-Part Balance now PAGES with the switcher (Piece 8): the viewed window + the
+  // immediately-prior equal-length window (for per-group trend arrows). Consistency stays fixed
+  // (it's a separate code path that never sees the window).
+  const balance = useMemo(() => (built.length ? muscleBalance(built, { days, now: nowForWindow }) : null), [built, days, nowForWindow])
+  const priorNow = viewStart ? noonMs(shiftYMD(viewStart, -1)) : nowForWindow
+  const balancePrior = useMemo(() => (built.length ? muscleBalance(built, { days, now: priorNow }) : null), [built, days, priorNow])
   const openWorkout = useMemo(() => (openId ? built.find((w) => w.id === openId) : null), [openId, built])
 
   const prevDisabled = win === 'today' || !earliestGym || (viewStart != null && viewStart <= earliestGym)
@@ -163,7 +167,7 @@ export default function Health({ onBack }) {
                 onMore={() => setView('archive')}
                 onRecords={() => setView('records')}
               />
-              <GymBalance balance={balance} />
+              <GymBalance balance={balance} balancePrior={balancePrior} />
             </div>
             <div className="gym-side">
               <GymActivity activityRows={activityRows} windowStart={actStart} windowEnd={actEnd} />
