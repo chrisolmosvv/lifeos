@@ -41,9 +41,38 @@ export function comboSeries(workouts, { start, end } = {}) {
   return comboFrom(workouts, { start, end }, (ex) => ex.sets || []);
 }
 
-// A single exercise (by key): only that exercise's sets count.
-export function exerciseComboSeries(workouts, key, { start, end } = {}) {
-  return comboFrom(workouts, { start, end }, (ex) => (liftKey(ex) === key ? ex.sets || [] : []));
+// Single-exercise DETAIL series (Screen 3, Piece 15). Per real session day for one exercise:
+//   { ymd, volume, reps, maxWeight, isPR }
+//   maxWeight = that day's heaviest WORKING-set weight (gymCalc.prWeight; null = bodyweight/duration)
+//   isPR      = maxWeight STRICTLY beats the exercise's best from every day BEFORE it (first-ever
+//               weighted day counts; ties do NOT). Same rule as recentSessions' PR flag — a single
+//               chronological pass over ALL history seeds the running best, so a day early in the
+//               window is judged against history the window itself may not include; only in-window
+//               days are emitted. Reps/volume are per-day totals (all sets, matching the volume rule).
+export function exerciseDetailSeries(workouts, key, { start, end } = {}) {
+  const byDay = new Map(); // ymd → { volume, reps, sets:[] } across ALL history for this exercise
+  for (const w of workouts || []) {
+    const ymd = amsYMD(w.started_at);
+    if (!ymd) continue;
+    for (const ex of w.exercises || []) {
+      if (liftKey(ex) !== key) continue;
+      const rec = byDay.get(ymd) || { volume: 0, reps: 0, sets: [] };
+      rec.volume += sumVolume(ex.sets);
+      rec.reps += sumReps(ex.sets);
+      if (ex.sets) rec.sets.push(...ex.sets);
+      byDay.set(ymd, rec);
+    }
+  }
+  const out = [];
+  let best = null; // running best heaviest-working-set weight, oldest→newest
+  for (const ymd of [...byDay.keys()].sort()) {
+    const rec = byDay.get(ymd);
+    const maxWeight = prWeight(rec.sets);
+    let isPR = false;
+    if (maxWeight != null && (best == null || maxWeight > best)) { isPR = true; best = maxWeight; }
+    if (inWindow(ymd, start, end)) out.push({ ymd, volume: rec.volume, reps: rec.reps, maxWeight, isPR });
+  }
+  return out;
 }
 
 // ── Period totals (Screen 1 stat row) ─────────────────────────────────────────

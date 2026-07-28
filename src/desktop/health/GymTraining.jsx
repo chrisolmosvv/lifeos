@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { periodTotals, comboSeries, exerciseComboSeries, exerciseRanking } from "../../spine/logic/gymProgress";
+import { periodTotals, comboSeries, exerciseDetailSeries, exerciseRanking } from "../../spine/logic/gymProgress";
 import { formatVolume } from "../../spine/logic/gymFormat";
 import { ROUTINES, routineWorkouts } from "../../spine/logic/gymRoutine";
 import GymComboChart from "./GymComboChart";
+import GymExerciseChart from "./GymExerciseChart";
 import GymExerciseGrid from "./GymExerciseGrid";
 
 // LifeOS — Gym V2 (Piece 12; Piece 14 tweaks): Training Progress, a three-screen drill-down INSIDE
@@ -72,7 +73,7 @@ export default function GymTraining({ built, routine, onRoutine, windowStart, wi
   const series = useMemo(() => comboSeries(wk, win), [wk, windowStart, windowEnd]);
   const ranking = useMemo(() => exerciseRanking(wk, { ...win, metric }), [wk, windowStart, windowEnd, metric]);
   const detail = useMemo(
-    () => (picked ? exerciseComboSeries(wk, picked.key, win) : []),
+    () => (picked ? exerciseDetailSeries(wk, picked.key, win) : []),
     [wk, picked, windowStart, windowEnd],
   );
   const vol = formatVolume(totals.volume);
@@ -129,7 +130,7 @@ export default function GymTraining({ built, routine, onRoutine, windowStart, wi
             <span className="gym-trail-sep">/</span>
             <span className="gym-trail-here">{picked?.name}</span>
           </nav>
-          <GymComboChart points={detail} windowStart={windowStart} windowEnd={windowEnd} label="exercise" />
+          <GymExerciseChart points={detail} windowStart={windowStart} windowEnd={windowEnd} />
         </>
       )}
     </section>

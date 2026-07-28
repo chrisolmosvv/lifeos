@@ -38,6 +38,18 @@
   transition: opacity 100ms ease;
 }
 .gym-combo-bar.is-hot { opacity: 0.34; }
+/* Piece 15 (Screen 3 exercise chart): a bar that set a new all-time PR that day reads terracotta —
+   the sanctioned accent, the one signal that pops against the calm ink weight bars. */
+.gym-combo-bar--pr { fill: var(--accent); opacity: 0.85; }
+.gym-combo-bar--pr.is-hot { opacity: 1; }
+/* tiny axis captions distinguishing the two kg scales (weight bars vs volume line) */
+.gym-combo-axcap {
+  font-family: var(--font-sans);
+  font-size: 7px;
+  letter-spacing: 0.02em;
+  fill: var(--ink-muted);
+}
+.gym-combo-axcap--vol { fill: var(--accent); }
 
 /* ── reps line — terracotta, the single accent ────────────────────────────────── */
 .gym-combo-repline {
