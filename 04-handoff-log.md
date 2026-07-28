@@ -12871,3 +12871,51 @@ KNOWN GAPS / RISKS
 
 NEXT — PIECE 11: steps hybrid (already speced, independent). Then PIECE 13: docs close (the genuine last piece).
 ────────────────────────────────────────────────────────────────────────────────
+
+## 2026-07-28 — Gym V2 · PIECE 11: steps → true-to-value linear scaling + number-cell hybrid
+
+WHAT CHANGED (a deliberate REVERSAL of Piece 6's own √ fix — owner-chosen, supersedes it)
+  • SCALING now TRUE-TO-VALUE (linear, value ÷ max). Removed the √ compression AND its minimum-width
+    floor (was Math.max(3, …)). A 30-step day now reads as a tiny sliver next to a 974-step day — the
+    owner explicitly chose honest proportion over keeping small values visible. NOT a bug.
+  • Removed the "√ scale · max N" note (no compression left to explain).
+  • RESTYLE to a number CELL per row: the day label sits in a fixed 44px LEFT gutter (always on bare
+    paper); a solid terracotta fill grows left→right across the bar area proportional to the day's steps;
+    the number is pinned at a FIXED RIGHT position that never rides the fill's edge (equally readable at
+    3% or 100% fill — the point of the hybrid). Rows separated by a hairline only — no grey track box.
+  • INVERT-ON-FULL-FILL (the edge case): the number is rendered twice — an ink base, and a PAPER copy
+    clipped (inline `clip-path: inset(0 (100−pct)% 0 0)`) to exactly the fill's width. Wherever the fill
+    sits under the number the paper copy shows through, so the number stays legible on terracotta. This is
+    pixel-exact (the paper shows precisely when the fill's right edge reaches the number), width-independent,
+    and needs no guessed threshold — the fill edge can even bisect a number (half paper / half ink).
+  • KEPT: reverse-chronological (today at top), the switcher paging, the 90-day collapse-to-weekly
+    threshold, and the genuine-0 ("0") vs no-data ("–") distinction (now carried by the number text, since
+    there's no track to drop). gymSteps.js (the calc) is UNTOUCHED — this was a presentation-only revert.
+
+FILES
+  MODIFIED: src/desktop/health/GymStepsChart.jsx (linear pct, note removed, two-layer number cell),
+            src/desktop/kit/gymPage.css (steps block: gutter + bararea + fill + clipped paper number;
+            removed .gym-steps-scale/.gym-steps-track/.gym-steps-bar).
+  Commit 62042d1 (src-only, one commit). Live on lifeos-blond-xi.vercel.app (Vercel = success).
+
+HOW TO VERIFY (Builder-verified: local 900px + DB spot-checks + live prod render)
+  • Today (14d, max 975): 18 Jul 975 + 21 Jul 974 = FULL bars, numbers INVERTED (paper on terracotta);
+    20 Jul 909 = fill edge bisects the number; 30/19 = tiny slivers, ink numbers; 28/25 Jul = "–" gaps.
+  • 3-Month (daily, max 21,481 from late June): July's "high" days shrink to slivers (honest proportion);
+    14 Jul shows "0" (real zero, no fill) — DISTINCT from the "–" gaps.
+  • INVERT on the REAL max: 26 Jun = 21,481 → full bar, 6-char number renders paper/white and stays legible.
+    Graded correctly: 18,848 / 18,817 (~88%) invert; 15,470 / 14,420 (~70%) stay ink.
+  • DB SPOT-CHECKS (activity_hourly summed per day, Frankfurt — independent of the UI): 26 Jun 21,481,
+    25 Jun 18,848, 29 Jun 18,817, 24 Jun 15,470, 28 Jun 14,420, 30 Jun 4,625 — all match the rendered numbers.
+  • Reverse-chrono + paging (Today ↔ 3mo, window relabels Apr–Jul) work. Zero-scroll (900==900). No console errors.
+
+KNOWN GAPS / RISKS
+  • OUTLIER DOMINATES AT LONG WINDOWS: because scaling is now honestly linear, one big day (26 Jun 21,481)
+    makes every other bar in that window a small fraction — by DESIGN (owner's explicit choice), but worth a
+    glance if the late-June spike ever reads as "everything else is flat." Tunable only by reverting to √ (don't).
+  • The invert is geometric: a number is paper only where the fill actually covers it, so a mid-fill day whose
+    bar stops just short of the number keeps an ink number on bare paper (correct, but the fill edge can sit
+    visually close to the number). Reads fine on real data; flag if a future dataset makes it look cramped.
+
+NEXT — PIECE 13: docs close (the genuine LAST piece of the whole Gym V2 arc; Pieces 9/10/12/11 all shipped).
+────────────────────────────────────────────────────────────────────────────────

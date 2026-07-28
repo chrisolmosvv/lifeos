@@ -2673,3 +2673,14 @@ they already existed on the Body chart). Src-only (commit b7b3f70); live-verifie
     have orphaned Archive + Records + single-session reports; owner chose "keep a quiet path"). See decisions.
   ▸ DEBT: GymVolChart.jsx + GymLiftTable.jsx now orphaned (unused, left as reversible dead code → Piece-13 cleanup).
   ▸ Piece 11 (NEXT): steps hybrid. Piece 13: docs close (the genuine last piece, after 11 lands).
+
+### 2026-07-28 · Gym V2 · Piece 11 ✅ (steps → true-to-value linear scaling + number-cell hybrid)
+REVERSAL of Piece 6's √ compression (owner-chosen honest proportion: a 30-step day SHOULD look tiny vs 974).
+Removed √ scaling + the min-width floor + the "√ scale · max N" note. Each row is now a number cell: day
+label in a fixed left gutter (bare), a solid terracotta fill grown linearly (value/max), the number pinned
+fixed-right. When the fill reaches under the number, a paper copy clipped to the fill's exact width shows
+through → legible on terracotta (pixel-exact, no threshold). Kept reverse-chrono, paging, 90d collapse, and
+0-vs-"–" distinction. gymSteps.js untouched (presentation-only). Src-only (commit 62042d1); live-verified +
+DB spot-checks (26 Jun 21,481 full-bar inverted 6-char number; July days become slivers; 14 Jul real "0").
+  ▸ DEBT: at long windows one big day (26 Jun 21,481) dwarfs the rest — by design (owner's explicit call).
+  ▸ Piece 13 (NEXT): docs close — the genuine LAST piece of the whole Gym V2 arc (9/10/12/11 all shipped).

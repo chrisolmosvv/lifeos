@@ -3575,6 +3575,21 @@ The current partial week only EXTENDS the streak (if already met), never breaks 
   • DEFAULT ROUTINE TAB (supersedes Piece 3's "Push" flag): now the most-recently-trained
     session's routine, via the existing classifier. Resolves the Piece-3 open flag.
 
+### 2026-07-28 · Gym V2 Piece 11 — steps scaling REVERSAL (supersedes Piece 6's √ decision)
+  • ★ OWNER DECISION — TRUE-TO-VALUE (LINEAR) STEPS SCALING: reverts Piece 6's square-root compression
+    AND its minimum-width floor. Bar/fill width = value ÷ max, honestly. *Why:* the owner explicitly chose
+    honest proportion over keeping small values visible — a 30-step day SHOULD look tiny next to a 974-step
+    day; that's now intended, not a bug. Consequence (accepted): at long windows one big day (26 Jun =
+    21,481) makes every other bar a small fraction. This SUPERSEDES the Piece-6 "√ keeps small values
+    present" decision — do not re-introduce √ without a new owner call.
+  • NUMBER-CELL HYBRID + INVERT: the number is pinned at a fixed RIGHT position (never rides the fill edge),
+    so it's equally readable at 3% or 100% fill. When the terracotta fill reaches under it, a paper-coloured
+    copy clipped to the fill's exact width shows through (pixel-exact, no guessed threshold). *Why:* keeps
+    the value legible on the fill without a moving label. ★ TERRACOTTA used for the steps fill here is a
+    sanctioned, owner-specified use (the "reserved" rule bends on an explicit design call, as with the reps line).
+  • KEPT: reverse-chronological order, switcher paging, the 90-day collapse-to-weekly threshold, and the
+    genuine-0 ("0") vs no-data ("–") distinction (now carried by the number text, no track). Calc untouched.
+
 ### 2026-07-28 · Gym V2 Piece 12 — Training Progress three-screen drill-down
   • ★ OWNER DECISION — QUIET PATH KEPT (a flagged fork): the drill-down replaced the old prominent
     "more ›"/"records ›" links. Removing them outright would have orphaned THREE things — the workout
