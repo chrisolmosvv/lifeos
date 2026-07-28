@@ -390,19 +390,12 @@
   flex: 1 1 auto;
   min-height: 0;
 }
-.gym-steps-scale {
-  font-family: var(--font-sans);
-  font-size: 10px;
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
-}
 .gym-steps-list {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 5px;
   margin-top: 2px;
   scrollbar-width: thin;
   scrollbar-color: var(--rule) transparent;
@@ -411,40 +404,58 @@
 .gym-steps-list::-webkit-scrollbar-track { background: transparent; }
 .gym-steps-list::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
 .gym-steps-list::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+/* Piece 11: number-cell hybrid. Day label in a fixed left gutter (always bare); the bar area
+   carries a TRUE-TO-VALUE (linear) terracotta fill growing from the left; the number sits at a
+   FIXED RIGHT position over it. Rows are separated by a hairline only — no track box. */
 .gym-steps-row {
-  display: grid;
-  grid-template-columns: 44px 1fr 46px;
+  display: flex;
   align-items: center;
   gap: 8px;
+  height: 22px;
   font-family: var(--font-sans);
   font-size: 11px;
+  border-bottom: 1px solid var(--rule-faint);
 }
+.gym-steps-row:last-child { border-bottom: none; }
 .gym-steps-day {
+  flex: 0 0 44px;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.gym-steps-track {
-  height: 9px;
-  background: var(--rule-faint);
-  border-radius: 3px;
+/* the bar area — relative box the fill + fixed-right number share */
+.gym-steps-bararea {
+  position: relative;
+  flex: 1 1 auto;
+  align-self: stretch;
   overflow: hidden;
 }
-.gym-steps-bar {
-  display: block;
-  height: 100%;
-  background: var(--ink); /* informational — terracotta stays reserved */
+/* the proportional fill — solid terracotta, grown left→right, clipped by the bararea's radius */
+.gym-steps-fill {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  background: var(--accent);
   border-radius: 3px;
 }
+/* the number — pinned to the right of the bar area, does NOT ride the fill edge. Two layers:
+   the base is ink; the --on copy is PAPER and clipped (inline clip-path) to exactly the fill's
+   width, so wherever the fill sits under the number the paper text shows through and stays legible. */
 .gym-steps-val {
-  text-align: right;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 5px;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
+.gym-steps-val--on { color: var(--paper); }
+/* a no-data (–) row: no fill, muted number — distinct from a real 0-step day (shows "0"). */
 .gym-steps-val--gap { color: var(--ink-muted); }
-/* a no-data (–) row drops its track entirely, so it reads distinct from a real 0-step day
-   (which keeps its empty track) even under √-scaling. */
-.gym-steps-row--gap .gym-steps-track { background: transparent; }
 
 /* ── ANIMATION KEYFRAMES (Piece 6) ────────────────────────────────────────────── */
 @keyframes gym-rise {
