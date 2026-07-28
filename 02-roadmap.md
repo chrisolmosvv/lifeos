@@ -2698,3 +2698,16 @@ DB-checked (18,159 kg / 60 sets / 497 reps), Monday-first confirmed (Jul starts 
     but fill height. Stat-row-on-all-windows is a made-call (reversible to Today-only). See decisions.
   ▸ Piece 15 (NEXT): single-exercise detail chart redesign (recon done — max-weight bars / PR colour / volume
     line / reps hover-only). Piece 13: docs close.
+
+### 2026-07-29 · Gym V2 · Piece 15 ✅ (Screen 3 redesign — max-weight bars, PR colour, volume line, reps hover-only)
+FORKED a new GymExerciseChart for Screen 3 so Screen 1 stays byte-for-byte unchanged. Bars = that day's
+heaviest working-set weight (prWeight); ink by default, TERRACOTTA on a new all-time PR (strictly-greater,
+warm-ups excluded, ties stay ink). Line (terracotta) = daily volume. Reps dropped from the chart → hover-only.
+Tooltip now 4 values: volume, reps, heaviest weight (+PR marker), per-day avg kg/rep (dayAvg, distinct from
+Screen 2's window avg). Both axes kg at different scales → captioned "kg·set" / "kg·vol". New calc
+gymProgress.exerciseDetailSeries folds all pre-window history for the PR flag (replaces exerciseComboSeries).
+Src-only (commit 184ff95); live-verified with DB spot-checks (2 Mar 80kg = PR terracotta; 6 Jun 85kg ties =
+ink), Screen 1 confirmed unchanged, zero-scroll, no console errors.
+  ▸ MADE-CALLS (see decisions): axis wording "kg·set"/"kg·vol"; fork over generalize. Bodyweight lifts have
+    no bars (degenerate Screen 3) — flagged.
+  ▸ Piece 16 (NEXT): docs close — the genuine LAST piece of the whole Gym V2 arc (covers Pieces 9–15).

@@ -3575,6 +3575,23 @@ The current partial week only EXTENDS the streak (if already met), never breaks 
   • DEFAULT ROUTINE TAB (supersedes Piece 3's "Push" flag): now the most-recently-trained
     session's routine, via the existing classifier. Resolves the Piece-3 open flag.
 
+### 2026-07-29 · Gym V2 Piece 15 — Screen 3 exercise-detail redesign (made-calls)
+  • PR DEFINITION reused verbatim (not reinvented): gymCalc.prWeight (heaviest WORKING set, warm-ups
+    excluded), keyed by exercise_template_id || title, STRICTLY greater than every prior day; first-ever
+    weighted day counts. ★ OWNER-CONFIRMED: ties do NOT count — a day matching (not beating) the all-time
+    best stays ink; only strictly beating turns the bar terracotta. Consistent with the app's PR-dots.
+  • BAR HEIGHT = prWeight's value directly (not a separate "max across all sets") so the bar's height and
+    its PR colour are computed from the SAME function and can never disagree.
+  • FORK over generalize: a new GymExerciseChart drives Screen 3; GymComboChart (Screen 1) is untouched.
+    *Why:* the two charts differ in metrics/colour/units/tooltip; a configurable shared base risked
+    regressing Screen 1, which had to stay identical. Revisit only if the two ever need to converge.
+  • AXIS LABELS: both y-axes are kg at very different magnitudes (weight tens–hundreds vs volume
+    hundreds–thousands), captioned "kg·set" (left, bars) and "kg·vol" (right, line). ★ MADE-CALL on
+    wording (wasn't specified) — reword freely (e.g. "kg (top set)" / "kg (volume)").
+  • PER-DAY AVG KG/REP (`dayAvg` = that day's volume ÷ reps) is named apart from Screen 2's window-level
+    `avgWeightPerRep` so the two scopes never collide.
+  • Reps removed from the persistent Screen-3 chart entirely (hover-only); the tooltip carries 4 values.
+
 ### 2026-07-29 · Gym V2 Piece 14 — main-column fill + stat row + calendar (made-calls, all reversible)
   • MAIN-COLUMN "50/50": the literal 50/50 top/bottom split was NOT built — Balance's natural content is
     only ~201px, so forcing it to half would add dead space THERE. Grounded reading: FILL the top half.

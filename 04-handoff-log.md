@@ -12986,3 +12986,57 @@ cells), using a second row of the column height. FILE: src/desktop/health/GymCon
 fa0a521 (src-only). Live on lifeos-blond-xi.vercel.app. VERIFIED live: 3mo gridCols "144px 144px",
 6mo "92px×3", 1yr "66px×4", zero-scroll all windows. (Piece-14 3mo-tile debt now CLEARED.)
 ────────────────────────────────────────────────────────────────────────────────
+
+## 2026-07-29 — Gym V2 · PIECE 15: Screen 3 redesign (max-weight bars · PR colour · volume line · reps hover-only)
+
+WHAT CHANGED (single-exercise DETAIL view only; Screen 1 untouched)
+  • FORK, not generalize (decision): a NEW component GymExerciseChart drives Screen 3; GymComboChart
+    (Screen 1) is left byte-for-byte unchanged. Rationale — the two charts differ in metric fields, bar
+    colouring, axis units, and tooltip shape; a config-heavy shared component risked regressing Screen 1
+    (which the spec required identical). Some SVG scaffold is duplicated; the shared bodyChartScales
+    helpers (dateTicks/yTicks/humanDayShort) are still reused by both.
+  • BARS = that day's heaviest WORKING-set weight (gymCalc.prWeight — the value that is itself PR-tested,
+    so bar height and colour can never drift). Ink by default; TERRACOTTA when that day set a new all-time
+    PR — STRICTLY greater than every prior day (warm-ups excluded; first-ever weighted day counts; TIES
+    STAY INK). Same rule as recentSessions' PR flag; no new PR definition invented.
+  • LINE (terracotta) = that day's total volume for the exercise.
+  • REPS removed from the persistent chart entirely (no reps axis/ticks/line/dots/crosshair). Reps are
+    hover-only now.
+  • TOOLTIP = FOUR values: volume (kg), reps, heaviest weight (kg) + a "· PR" marker on PR days, and a
+    PER-DAY avg kg/rep (`dayAvg` = that day's volume ÷ reps — deliberately named apart from Screen 2's
+    window-level `avgWeightPerRep`).
+  • AXIS LABELS (flagged wording — wasn't pixel-specified): both axes are kg at very different scales, so
+    the left (weight, bars) is captioned "kg·set" and the right (volume, line, terracotta) "kg·vol". Change
+    the wording if the owner prefers e.g. "kg (top set)" / "kg (volume)".
+
+FILES
+  NEW:      src/desktop/health/GymExerciseChart.jsx (the forked Screen-3 chart)
+  MODIFIED: src/spine/logic/gymProgress.js (+exerciseDetailSeries; REMOVED exerciseComboSeries — replaced),
+            src/desktop/health/GymTraining.jsx (Screen 3 wires exerciseDetailSeries + GymExerciseChart),
+            src/desktop/health/gymComboChart.css (+.gym-combo-bar--pr terracotta, +.gym-combo-axcap captions)
+  Commit 184ff95 (src-only, one commit). Live on lifeos-blond-xi.vercel.app (Vercel = success).
+
+HOW TO VERIFY (Builder-verified live-local + live prod, 1yr, Bench Press (Barbell), + DB spot-checks)
+  • The new PR series folds ALL history before the window (chronological running-best) so an in-window day
+    is judged against history the window may exclude — only in-window days are emitted.
+  • DB SPOT-CHECKS (independent recompute of the Bench Press trace, matching recon's table):
+      – PR day: 2 Mar 2026 = 80 kg, strictly beats prior best 72.5 → TERRACOTTA bar; tooltip
+        "1,560 kg vol · 23 reps · 80 kg top set · PR · 67.8 kg/rep" (67.8 = 1560/23, the per-day avg).
+      – TIE day: 6 Jun 2026 = 85 kg TIES the 14 May 85 all-time best → INK bar; tooltip "85 kg top set"
+        with NO "· PR". (Also 5 Feb 70 ties 22 Jan 70 → ink.) Confirms strictly-greater / ties-stay-ink.
+  • Volume line reads correct daily volume; reps are gone from the chart but present in the tooltip.
+  • SCREEN 1 unchanged — side-by-side check: still volume bars + reps line, 2-value tooltip (vol/reps),
+    original axes (volume-left kfmt, reps-right), no PR colouring, no kg·set/kg·vol captions.
+  • Zero-scroll; no console errors on a clean load.
+
+KNOWN GAPS / RISKS
+  • AXIS-LABEL WORDING "kg·set" / "kg·vol" is a made-call (see above) — trivial to reword.
+  • GENERALIZE-VS-FORK: chose FORK. If Screen 1 and Screen 3 charts drift further apart this is fine; if
+    they need to converge later, a shared configurable base could be extracted then (not now).
+  • BODYWEIGHT/DURATION EXERCISES have no weight → maxWeight null → no bars (and volume ~0), so Screen 3
+    is degenerate for them. Real barbell/machine lifts (what the grid surfaces) are unaffected. Flagged in recon.
+  • Non-PR bars use the calm ink 0.16 opacity (same as Screen 1's bars); PR bars are terracotta 0.85 and
+    clearly pop. If the ink weight bars read too faint as the primary metric, bump their opacity.
+
+NEXT — PIECE 16: docs close — the genuine LAST piece of the whole Gym V2 arc (now covering Pieces 9–15).
+────────────────────────────────────────────────────────────────────────────────
