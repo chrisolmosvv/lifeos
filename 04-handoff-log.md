@@ -12806,3 +12806,68 @@ KNOWN GAPS / RISKS
 
 NEXT — PIECE 11: steps hybrid (already speced, independent). Then PIECE 12: docs close.
 ────────────────────────────────────────────────────────────────────────────────
+
+## 2026-07-28 — Gym V2 · PIECE 12: Training Progress → three-screen drill-down (biggest piece in the arc)
+
+NB — NUMBERING: a new drill-down build was slotted in as PIECE 12 (this entry). Steps-hybrid stays
+PIECE 11 (still queued, independent). Docs-close is now PIECE 13 (the genuine last piece, after 11 lands).
+
+WHAT CHANGED (Training Progress rebuilt as chart → grid → detail, all view-state LOCAL to GymTraining)
+  SCREEN 1 CHART: a NEW combo chart — volume as BARS (left kg axis, calm ink haze) + total reps as an
+    overlaid LINE (right axis, terracotta = the one accent). Dual axes with volume gridlines (primary)
+    and terracotta reps tick-values (secondary, no 2nd grid). Full date axis, thinned to ~6 evenly-spread
+    labels. Hovering snaps a crosshair to the nearest session day + a tooltip showing THAT day's real
+    volume AND reps. Bars bounded to real session days (no faked zero-days).
+  SCREEN 2 GRID: the routine's top-6 exercises, ranked by a Volume/Reps toggle (Balance's tab chrome,
+    reused). Each card: name, current best weight + delta (terracotta-for-gain, reused), and a secondary
+    line — reps · AVG WEIGHT PER REP (new metric = volume ÷ reps) · sets. Clicking a card → Screen 3.
+  SCREEN 3 DETAIL: that one exercise's own combo chart (same treatment; tooltip shows the day's volume/reps
+    for THAT exercise only). Breadcrumb trail (Chart / Top exercises / name) walks back up.
+  NAV: routine tabs stay on top at every screen; switching routine resets to Screen 1 (local effect on the
+    shared `routine` prop — Consistency/Balance untouched, as Pieces 8/10 established).
+  QUIET FOOTER (owner's call — see decisions): the old prominent "more ›"/"records ›" links became a
+    discreet "history › · records ›" footer, so Archive + PR-Records + single-session reports stay reachable
+    (removing the links outright would have orphaned all three, incl. session reports — flagged, owner chose
+    "keep a quiet path").
+
+RECON CORRECTION (banked): recon said dual-axis / multi-date-label / interactive two-value tooltip were all
+  first-of-their-kind. WRONG — `kit/BodyCompositionChart.jsx` + `kit/bodyChartScales.js` already provide a
+  dual-axis, `dateTicks`-thinned, mouse-tracked TWO-value tooltip chart. This piece REUSES those helpers
+  (dateTicks/yTicks/humanDayShort) → the only genuinely-new visual was volume-as-bars. Much smaller than scoped.
+
+FILES
+  NEW:      src/spine/logic/gymProgress.js (comboSeries, exerciseComboSeries, exerciseRanking),
+            src/desktop/health/GymComboChart.jsx (+ gymComboChart.css), src/desktop/health/GymExerciseGrid.jsx
+  MODIFIED: src/spine/logic/gymCalc.js (+sumReps, +workoutReps — twins of sumVolume, count ALL sets),
+            src/desktop/health/GymTraining.jsx (rewritten as the 3-screen switchboard),
+            src/desktop/kit/gymPage.css (combo-wrap/More-hint, quiet footer, breadcrumb trail, grid cards)
+  ORPHANED (dead code, left in place, reversible): GymVolChart.jsx + GymLiftTable.jsx — no longer imported
+            (Screen 1 chart replaced by the combo chart; the lift table replaced by the top-6 grid). Remove
+            in a later cleanup piece.
+  Commit b7b3f70 (src-only, one commit). Live on lifeos-blond-xi.vercel.app (Vercel = success).
+
+HOW TO VERIFY (Builder-verified: local at 900px viewport + DB spot-checks + live prod render)
+  • Screen 1 renders at every routine tab (checked All + Push) and every window (Today 14d + 1yr): bars +
+    terracotta reps line + dual axes + 6 thinned date labels. Hover a bar → date + volume + reps tooltip.
+  • DB SPOT-CHECKS (raw gym_sets, Frankfurt, independent of the UI's own maths):
+      – Whole-routine 22 Jul: tooltip 7,297 kg / 173 reps  ==  DB 7,297 / 173  ✓  (also = the archive row)
+      – Bent Over Row 22 Jul (Screen 3): tooltip 2,190 kg / 41 reps  ==  DB 2,190 / 41  ✓
+      – AVG WEIGHT PER REP hand-check: Bent Over Row window = DB 4,285 kg ÷ 74 reps = 57.9 kg/rep  ==  card 57.9  ✓
+  • Grid ranks correctly BOTH sorts: Volume (Bent Over Row 4,285 > Hip Thrust 3,120 > Squat 3,020 …);
+    Reps (74 > 42 > 36 > 34 > 31 > 31) — the exercise SET changes between sorts, as expected.
+  • Routine switch from the detail screen → Screen 1 for the new routine (Consistency followed to Push; Balance unchanged).
+  • Zero-scroll (scrollHeight 900 == innerHeight 900) at All/1yr (108 bars, busiest case, still legible). No console errors.
+  • "history ›" → The archive (108 sessions, 22 Jul row 7,297 kg) → each row still opens its single-session report.
+
+KNOWN GAPS / RISKS
+  • ORPHANED FILES: GymVolChart.jsx + GymLiftTable.jsx are now unused (nothing imports them). Left as
+    reversible dead code; earmarked for the Piece-13 docs-close/cleanup. They do NOT ship in any bundle path.
+  • LEFT-AXIS LABEL FORMAT: kg ticks under 1,000 show raw (e.g. "730") while ≥1,000 abbreviate ("1k"/"2k"),
+    so a short-volume detail chart can read "0 / 730 / 1k / 2k". Honest but slightly mixed; leave unless it bothers.
+  • TOOLTIP EDGE: the tooltip is centred on the hovered day (translateX(-50%)); hovering the last bar of a
+    wide window can nudge it a few px past the right edge. Not clipped (container doesn't hide overflow); cosmetic.
+  • Reps count ALL sets (warm-ups included) to stay consistent with volume — so avg-weight-per-rep is a
+    weighted average across every logged set, not working-sets-only. Deliberate (decisions doc).
+
+NEXT — PIECE 11: steps hybrid (already speced, independent). Then PIECE 13: docs close (the genuine last piece).
+────────────────────────────────────────────────────────────────────────────────

@@ -3575,6 +3575,25 @@ The current partial week only EXTENDS the streak (if already met), never breaks 
   • DEFAULT ROUTINE TAB (supersedes Piece 3's "Push" flag): now the most-recently-trained
     session's routine, via the existing classifier. Resolves the Piece-3 open flag.
 
+### 2026-07-28 · Gym V2 Piece 12 — Training Progress three-screen drill-down
+  • ★ OWNER DECISION — QUIET PATH KEPT (a flagged fork): the drill-down replaced the old prominent
+    "more ›"/"records ›" links. Removing them outright would have orphaned THREE things — the workout
+    Archive, the PR-Records page, AND the single-session report (the only door to one workout's report is
+    the Archive list). Builder flagged this BEFORE building the removal; owner chose "keep a quiet path" —
+    a discreet "history › · records ›" footer under Screen 1 keeps all three reachable. *Why:* losing the
+    per-session report was a bigger consequence than the "drop the links" instruction pictured.
+  • AVG WEIGHT PER REP (new metric) = total volume ÷ total reps for an exercise in the window — a weighted
+    average of the weight moved per rep. *Why:* cheap, honest, reads next to best-weight. Counts ALL sets
+    (warm-ups included), matching the locked Volume rule, so volume ÷ reps stays internally consistent —
+    NOT working-sets-only. Reps totals themselves (new sumReps) follow the same all-sets rule.
+  • ROUTINE-SWITCH RESETS TO SCREEN 1 (confirmed the sensible default, not flagged as wrong): switching the
+    routine tab from any screen returns to that routine's chart. *Why:* the tab is a context switch; deep
+    state (a specific exercise's detail) shouldn't survive it. View-state is LOCAL to GymTraining — no lift.
+  • CHART CONVENTIONS REUSED (recon correction): dual-axis + thinned date labels (dateTicks) + mouse-tracked
+    TWO-value tooltip already existed on the Body composition chart (kit/bodyChartScales.js). This piece
+    reuses them rather than inventing; volume-as-bars was the only genuinely-new mark. Terracotta stays
+    reserved — the reps line + its right-axis ticks are the single accent; volume bars are calm ink.
+
 ### 2026-07-18 · Gym V2 redesign — CLOSE (consolidated decisions bank)
 As-built truth lives in health-v2-build-doc.md PART E. The key calls, each with its why:
   • HERO HIERARCHY — Consistency dominant, Training + Body-Part Balance an equal secondary tier,

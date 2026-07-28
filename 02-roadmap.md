@@ -2657,3 +2657,19 @@ spot-checked, badges sum to hero total).
   ▸ DEBT: consistency counts by calendar-month vs training's rolling-window (can differ 1-2 at edges);
     PR dots dropped from consistency (still on training chart); streak currently 0 (data-driven).
   ▸ Piece 11 (NEXT): steps hybrid. Piece 12: docs close.
+
+### 2026-07-28 · Gym V2 · Piece 12 ✅ (Training Progress → three-screen drill-down; biggest piece in the arc)
+NB numbering: drill-down slotted in as Piece 12; steps-hybrid stays Piece 11 (queued); docs-close is now Piece 13.
+Training rebuilt as chart → top-6 grid → single-exercise detail, all view-state LOCAL to GymTraining.
+Screen 1: NEW combo chart — volume BARS (left kg axis) + reps LINE (right axis, terracotta), volume
+gridlines + terracotta reps ticks, ~6 thinned date labels, mouse-tracked tooltip showing that day's
+volume AND reps. Screen 2: top-6 exercises ranked by a Volume/Reps toggle; cards show best+delta, reps,
+AVG WEIGHT PER REP (new metric = volume÷reps), sets. Screen 3: that exercise's own combo chart. Switching
+routine resets to Screen 1 (Consistency/Balance untouched). New gymProgress.js + GymComboChart + GymExerciseGrid;
+gymCalc gains sumReps/workoutReps. REUSES kit/bodyChartScales (recon wrongly called dual-axis/tooltip new —
+they already existed on the Body chart). Src-only (commit b7b3f70); live-verified + 2 DB spot-checks
+(22 Jul 7,297kg/173reps; Bent Over Row 2,190kg/41reps; avg 4,285÷74=57.9 kg/rep). Zero-scroll at All/1yr.
+  ▸ OWNER DECISION: old "more ›/records ›" links → a quiet "history ›/records ›" footer (dropping them would
+    have orphaned Archive + Records + single-session reports; owner chose "keep a quiet path"). See decisions.
+  ▸ DEBT: GymVolChart.jsx + GymLiftTable.jsx now orphaned (unused, left as reversible dead code → Piece-13 cleanup).
+  ▸ Piece 11 (NEXT): steps hybrid. Piece 13: docs close (the genuine last piece, after 11 lands).
