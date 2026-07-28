@@ -46,6 +46,26 @@ export function exerciseComboSeries(workouts, key, { start, end } = {}) {
   return comboFrom(workouts, { start, end }, (ex) => (liftKey(ex) === key ? ex.sets || [] : []));
 }
 
+// ── Period totals (Screen 1 stat row) ─────────────────────────────────────────
+// Volume (kg), total SETS, and total REPS for a routine over [start, end] — all three
+// counting EVERY set (warm-ups included, matching the volume rule) so the stat row's
+// figures are internally consistent. Cheap client-side over the already-loaded workouts.
+export function periodTotals(workouts, { start, end } = {}) {
+  let volume = 0, sets = 0, reps = 0;
+  for (const w of workouts || []) {
+    const ymd = amsYMD(w.started_at);
+    if (!ymd || !inWindow(ymd, start, end)) continue;
+    for (const ex of w.exercises || []) {
+      for (const s of ex.sets || []) {
+        volume += setVolume(s);
+        reps += num(s?.reps);
+        sets += 1;
+      }
+    }
+  }
+  return { volume, sets, reps };
+}
+
 // ── Top-N exercise ranking (Screen 2) ─────────────────────────────────────────
 // For each exercise trained IN the window, a card row:
 //   { key, name, muscle, volume, reps, sets, avgWeightPerRep, best, delta, isNew, bodyweight }

@@ -101,9 +101,31 @@
   animation: gym-pulse 1.8s ease-in-out infinite;
 }
 
-/* Calendar area — a single current month (Today) or a tiled grid of mini-months (3/6/12mo). */
-.gym-cal-single { margin-top: 12px; max-width: 300px; }
-.gym-cal-tiles { display: grid; gap: 14px 12px; margin-top: 12px; }
+/* Piece 14: Consistency gets a STABLE width so the calendar has a known box to fill (killing the
+   dead space above Balance) and Training keeps the rest of the row. */
+.gym-consist { flex: 0 0 300px; }
+
+/* Calendar area — a single current month (Today) or a tiled grid of mini-months (3/6/12mo).
+   Piece 14: the calendar GROWS to fill Consistency's height (flex:1) — the fix for the 50/50 gap. */
+.gym-cal-single {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 12px;
+  display: flex; /* let the inner .gym-cal stretch to full height */
+}
+.gym-cal-single .gym-cal { flex: 1 1 auto; min-height: 0; }
+/* Single-month grid fills the height: cells stay SQUARE (aspect-ratio) and the week-rows spread
+   apart (align-content) to absorb the extra height — the calendar breathes, no dead gap. */
+.gym-cal-single .gym-cal-grid { flex: 1 1 auto; align-content: space-between; }
+.gym-cal-tiles {
+  display: grid;
+  gap: 14px 12px;
+  margin-top: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: space-evenly;  /* centre a single row (3mo), spread multiple rows (6/12mo) to fill */
+  grid-auto-rows: min-content;  /* tiles keep their natural height; extra space → gaps, not giant tiles */
+}
 .gym-cal { display: flex; flex-direction: column; gap: 4px; }
 .gym-cal-label {
   font-family: var(--font-sans);
@@ -142,17 +164,23 @@
   color: var(--accent);
 }
 
-/* ── TRAINING PROGRESS (Piece 3: routine tabs + scoped trend + per-lift table) ──── */
-/* Training grows to fill the space between Consistency and Balance; its lift table
-   scrolls INTERNALLY so the page itself stays zero-scroll for any lift count. */
+/* ── TRAINING PROGRESS (Piece 3 tabs + trend; Piece 14: chart fills its half) ────── */
+/* Training grows to fill the space between Consistency and Balance. */
 .gym-training {
   flex: 1 1 auto;
   min-height: 0;
 }
-/* Only the lift table may shrink/scroll; the tabs, stats, trend + links keep full height
-   (otherwise flex-shrink squeezed the tabs to a 10px sliver and clipped their labels). */
-.gym-training > *:not(.gym-lift-table) {
+/* Everything keeps its natural height EXCEPT the chart wrapper, which grows to absorb the
+   column's slack and centres the chart — so the top half reads full (no dead space above
+   Balance) without stretching/distorting the chart, and the quiet footer pins to the bottom. */
+.gym-training > *:not(.gym-combo-wrap) {
   flex: 0 0 auto;
+}
+.gym-training .gym-combo-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
 }
 .gym-tabs {
   display: inline-flex;
@@ -547,10 +575,35 @@
 .gym-trail-sep { color: var(--rule); }
 .gym-trail-here { color: var(--ink); }
 
+/* Piece 14: Screen 2's consolidated ONE-ROW header — two zones split by a hairline:
+   LEFT = back-link + title (context), RIGHT = routine tabs + Volume/Reps toggle (controls). */
+.gym-grid-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.gym-grid-head-z { display: flex; align-items: center; gap: 12px; }
+.gym-grid-head-r {
+  margin-left: auto;          /* push controls to the right */
+  padding-left: 16px;
+  border-left: 1px solid var(--rule-faint); /* the hairline dividing context | controls */
+}
+.gym-trail-back {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.gym-trail-back:hover { color: var(--accent); }
+
 /* Top-6 exercise grid (Screen 2). Two calm columns of cards; scrolls internally on a tall
    window so the page stays zero-scroll. */
 .gym-grid-zone { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
-.gym-grid-zone .gym-bal-head { margin-top: 6px; }
 .gym-grid {
   margin-top: 8px;
   display: grid;

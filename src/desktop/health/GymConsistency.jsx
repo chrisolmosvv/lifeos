@@ -13,10 +13,9 @@ import GymMonth from "./GymMonth";
 // per window/routine (gymCalendar.heroInfo). The STREAK stays WEEKLY (unchanged unit — reuses
 // consistencyGrid on routine-filtered workouts), just scoped when a routine is selected.
 
-// cols × fixed tile width per window — fixed px (not 1fr) so tiles don't collapse in the
-// auto-width Consistency column, keeping day-cells legible (~11–15px).
+// Piece 14: Consistency now has a stable 300px width, so tiles are 1fr (fill the column width →
+// bigger at longer windows) and the grid spreads vertically to fill the height. Cols per window.
 const TILE_COLS = { "3mo": 3, "6mo": 3, "1yr": 4 };
-const TILE_PX = { "3mo": 112, "6mo": 112, "1yr": 90 };
 
 export default function GymConsistency({ built, win = "today", routine = "all" }) {
   const today = amsTodayYMD();
@@ -48,7 +47,7 @@ export default function GymConsistency({ built, win = "today", routine = "all" }
       </div>
 
       {tiled ? (
-        <div className="gym-cal-tiles" style={{ gridTemplateColumns: `repeat(${TILE_COLS[win] || 3}, ${TILE_PX[win] || 112}px)` }}>
+        <div className="gym-cal-tiles" style={{ gridTemplateColumns: `repeat(${TILE_COLS[win] || 3}, 1fr)` }}>
           {months.map((m) => <GymMonth key={`${m.year}-${m.month}`} month={m} tile showBadge />)}
         </div>
       ) : (

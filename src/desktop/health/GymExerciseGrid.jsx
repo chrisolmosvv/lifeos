@@ -1,15 +1,9 @@
-// LifeOS — Gym V2 (Piece 12), Screen 2: the top-6 exercise grid. Ranks the selected
-// routine's exercises (or all, at the All tab) by a Volume / Reps toggle — the SAME tab
-// chrome Balance uses for Sets/Volume. Each card: exercise name, current best weight + delta
-// (the established terracotta-for-gain convention, reused from the lift table), and a new
-// secondary line — reps this window · avg weight PER REP (volume ÷ reps, new this piece) ·
-// sets. Clicking a card drills into that one exercise's own combo chart (Screen 3). Pure
-// presentation — gymProgress.exerciseRanking owns the maths.
-
-const METRICS = [
-  { id: "volume", label: "Volume" },
-  { id: "reps", label: "Reps" },
-];
+// LifeOS — Gym V2 (Piece 12; Piece 14: header lifted out), Screen 2: the top-6 exercise grid.
+// Ranked by the Volume/Reps toggle that now lives in Training's consolidated two-zone header. Each
+// card: exercise name, current best weight + delta (the established terracotta-for-gain convention,
+// reused from the lift table), and a secondary line — reps this window · avg weight PER REP
+// (volume ÷ reps) · sets. Clicking a card drills into that exercise's own combo chart (Screen 3).
+// Pure presentation — gymProgress.exerciseRanking owns the maths.
 
 const kg = (n) => (n == null ? "—" : `${Number(n.toFixed(1))}`);
 function deltaText(row) {
@@ -23,27 +17,9 @@ function deltaText(row) {
 }
 const nfmt = (n) => Math.round(n).toLocaleString("en-GB");
 
-export default function GymExerciseGrid({ rows, metric, onMetric, onPick }) {
+export default function GymExerciseGrid({ rows, onPick }) {
   return (
     <div className="gym-grid-zone">
-      <div className="gym-bal-head">
-        <span className="gym-kicker">Top exercises</span>
-        <div className="gym-tabs gym-tabs--sm" role="tablist" aria-label="Rank exercises by">
-          {METRICS.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              role="tab"
-              aria-selected={m.id === metric}
-              className={m.id === metric ? "gym-tab is-active" : "gym-tab"}
-              onClick={() => onMetric(m.id)}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {!rows || rows.length === 0 ? (
         <p className="gym-ph">No exercises logged for this routine in this window.</p>
       ) : (

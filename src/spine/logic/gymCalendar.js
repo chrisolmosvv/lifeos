@@ -23,11 +23,13 @@ export function sessionDayMap(workouts) {
 const pad = (n) => String(n).padStart(2, "0");
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-// One calendar month, Sun-start weeks. `month` is 0-11. → { label, year, month, weeks, count }
-// where a cell is { state:'blank'|'none'|'on'|'other', day?, ymd?, isToday? }. `count` = the
-// routine-scoped session count for the month (all-days if selectedRoutine==='all').
+// One calendar month, MONDAY-start weeks (matches the Piece-2 M/T/W/T/F/S/S convention).
+// `month` is 0-11. → { label, year, month, weeks, count } where a cell is
+// { state:'blank'|'none'|'on'|'other', day?, ymd?, isToday? }. `count` = the routine-scoped
+// session count for the month (all-days if selectedRoutine==='all').
 export function monthGrid(dayMap, { year, month, selectedRoutine, today }) {
-  const firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay(); // 0=Sun
+  const sundayFirst = new Date(Date.UTC(year, month, 1)).getUTCDay(); // 0=Sun..6=Sat
+  const firstWeekday = (sundayFirst + 6) % 7; // shift to Monday-first: Mon=0 … Sun=6
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
   const cells = [];
   for (let i = 0; i < firstWeekday; i++) cells.push({ state: "blank" });

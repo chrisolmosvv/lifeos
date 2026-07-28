@@ -1,10 +1,10 @@
-// LifeOS — Gym V2 (Piece 10): one calendar month, Sun→Sat. Full size (Today view, with a
-// weekday header) or a compact TILE (3/6/12-month views, with a short label + a terracotta
-// session-count badge). Three-state cells: 'on' = the selected routine trained that day (full
-// terracotta), 'other' = a different routine trained (light tint), 'none' = no session (grey);
-// 'blank' = padding outside the month. Today's cell is ringed. Pure presentation.
+// LifeOS — Gym V2 (Piece 10; Piece 14: Monday-first). One calendar month, Mon→Sun. Full size
+// (Today view, with a weekday header) or a compact TILE (3/6/12-month views, with a short label +
+// a terracotta session-count badge). Three-state cells: 'on' = the selected routine trained that
+// day (full terracotta), 'other' = a different routine trained (light tint), 'none' = no session
+// (grey); 'blank' = padding outside the month. Today's cell is ringed. Pure presentation.
 
-const DOW = ["S", "M", "T", "W", "T", "F", "S"];
+const DOW = ["M", "T", "W", "T", "F", "S", "S"];
 
 function cellClass(c) {
   let cls = "gym-cal-cell";

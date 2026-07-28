@@ -15,7 +15,7 @@ import "./gymComboChart.css";
 // as the same chart family as Body. Grid belongs to the PRIMARY (volume) axis only; the reps
 // axis shows tick VALUES in terracotta, colour-matched to its line (no second grid = no clutter).
 
-const DIMS = { w: 600, h: 168, l: 34, r: 32, t: 10, b: 20 };
+const DIMS = { w: 600, h: 208, l: 34, r: 32, t: 10, b: 20 };
 const DAY = 86400000;
 const dayIdx = (ymd, start) => Math.round((Date.parse(ymd) - Date.parse(start)) / DAY);
 const kfmt = (v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${Math.round(v)}`);
