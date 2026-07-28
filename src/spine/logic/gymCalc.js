@@ -44,6 +44,17 @@ export function sumVolume(sets) {
   return (sets || []).reduce((t, s) => t + setVolume(s), 0);
 }
 
+// ── Reps (Piece 12) ──────────────────────────────────────────────────────────
+// Total reps across a list of sets — the twin of sumVolume, counting ALL sets
+// (warm-ups included, matching the volume rule) so avg-weight-per-rep = volume ÷
+// reps stays consistent. A duration/distance set (reps null) adds 0, never NaN.
+export function sumReps(sets) {
+  return (sets || []).reduce((t, s) => t + num(s?.reps), 0);
+}
+export function workoutReps(workout) {
+  return sumReps(allSetsOf(workout));
+}
+
 // ── Estimated 1RM (Epley) ────────────────────────────────────────────────────
 // weight × (1 + reps/30). Needs a real positive weight AND reps, so a bodyweight
 // or duration set yields null (no estimate) rather than 0 or NaN. Warm-ups never

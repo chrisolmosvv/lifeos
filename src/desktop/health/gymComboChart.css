@@ -1,0 +1,76 @@
+/* LifeOS — Gym V2 (Piece 12) combo chart. Same broadsheet-calm language as the Body
+   composition chart: hairline grid, ink for the primary (volume) marks, terracotta reserved
+   for the SECONDARY reps line + its right-axis values. Volume bars are a calm ink haze so the
+   terracotta reps line reads as the single accent. */
+
+.gym-combo {
+  width: 100%;
+  position: relative; /* positioning context for the hover tooltip */
+  margin-top: 6px;
+}
+.gym-combo-svg {
+  display: block;
+  width: 100%;
+  height: auto; /* aspect-ratio driven by the viewBox — predictable, keeps the page zero-scroll */
+  cursor: crosshair;
+}
+
+/* ── axis + grid (volume = primary, left) ─────────────────────────────────────── */
+.gym-combo-grid {
+  stroke: var(--rule-faint);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.gym-combo-ytick,
+.gym-combo-xtick {
+  font-family: var(--font-sans);
+  font-size: 8px;
+  fill: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+/* reps (right) axis values — terracotta, colour-matched to the reps line */
+.gym-combo-ytick--rep { fill: var(--accent); }
+
+/* ── volume bars — calm ink haze, the hovered bar firms up ────────────────────── */
+.gym-combo-bar {
+  fill: var(--ink);
+  opacity: 0.16;
+  transition: opacity 100ms ease;
+}
+.gym-combo-bar.is-hot { opacity: 0.34; }
+
+/* ── reps line — terracotta, the single accent ────────────────────────────────── */
+.gym-combo-repline {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.gym-combo-repdots circle { fill: var(--accent); opacity: 0.5; }
+
+/* ── hover crosshair + snapped reps node ──────────────────────────────────────── */
+.gym-combo-cross line { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
+.gym-combo-cross-dot { fill: var(--accent); stroke: var(--paper); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+
+/* ── self-contained hover tooltip (date + volume + reps) ──────────────────────── */
+.gym-combo-tip {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  z-index: 2;
+}
+.gym-combo-tip-date { font-size: 9px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.gym-combo-tip-row { font-size: 12px; color: var(--ink); }
+.gym-combo-tip-reps { color: var(--accent); }
