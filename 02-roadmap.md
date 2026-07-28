@@ -2684,3 +2684,17 @@ through → legible on terracotta (pixel-exact, no threshold). Kept reverse-chro
 DB spot-checks (26 Jun 21,481 full-bar inverted 6-char number; July days become slivers; 14 Jul real "0").
   ▸ DEBT: at long windows one big day (26 Jun 21,481) dwarfs the rest — by design (owner's explicit call).
   ▸ Piece 13 (NEXT): docs close — the genuine LAST piece of the whole Gym V2 arc (9/10/12/11 all shipped).
+
+### 2026-07-29 · Gym V2 · Piece 14 ✅ (main-column fill · KG/Sets/Reps · Monday-first · Screen 2 one-row header)
+Four layout/display fixes. (1) Killed the dead space above Balance: the Consistency calendar now fills its
+column height (cells spread) and the Training chart grows/centres (taller viewBox) — both columns fill to the
+same bottom at every window (true 50/50 was wrong — Balance is only ~201px natural). Consistency pinned to
+300px. (2) Stat row drops the session count → KG · Sets · Reps for the period (new gymProgress.periodTotals;
+applied at all windows). (3) Calendar Monday-first everywhere (monthGrid pad + M/T/W/T/F/S/S header); tiles
+1fr + spread to fill (6/12mo fill, 3mo centres). (4) Screen 2 header → one row, two zones (back+title |
+tabs+toggle) split by a hairline. Src-only (commit 71fa77c); live-verified, zero-scroll all windows, stat row
+DB-checked (18,159 kg / 60 sets / 497 reps), Monday-first confirmed (Jul starts Wed at col 3).
+  ▸ DEBT: 3mo tiles centre (can't fill a tall column with 3 tiles); 1yr tiles ~72px (smaller than old 90px)
+    but fill height. Stat-row-on-all-windows is a made-call (reversible to Today-only). See decisions.
+  ▸ Piece 15 (NEXT): single-exercise detail chart redesign (recon done — max-weight bars / PR colour / volume
+    line / reps hover-only). Piece 13: docs close.

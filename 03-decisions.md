@@ -3575,6 +3575,24 @@ The current partial week only EXTENDS the streak (if already met), never breaks 
   • DEFAULT ROUTINE TAB (supersedes Piece 3's "Push" flag): now the most-recently-trained
     session's routine, via the existing classifier. Resolves the Piece-3 open flag.
 
+### 2026-07-29 · Gym V2 Piece 14 — main-column fill + stat row + calendar (made-calls, all reversible)
+  • MAIN-COLUMN "50/50": the literal 50/50 top/bottom split was NOT built — Balance's natural content is
+    only ~201px, so forcing it to half would add dead space THERE. Grounded reading: FILL the top half.
+    The Consistency calendar fills its column height and the Training chart grows/centres (taller viewBox);
+    both columns bottom-align at every window. Consistency pinned to a stable 300px width. *Why:* the real
+    defect was dead space, not the ratio; filling both columns reads balanced without starving Balance.
+  • STAT ROW = KG · SETS · REPS for the selected period, session count dropped (owner's instruction, scoped
+    to "on today"). ★ MADE-CALL: applied at ALL windows, not just Today — the row is shared and "for the
+    period" reads fine at 3/6/12mo. Reversible to Today-only if the owner prefers. periodTotals counts ALL
+    sets (warm-ups incl.), consistent with the volume rule.
+  • CALENDAR MONDAY-FIRST (matches the Piece-2 M/T/W/T/F/S/S convention) — the Today month grid AND every
+    tiled mini-month. Fixed a Sunday-first bug in monthGrid + the DOW header.
+  • TILE FILL: tiles are 1fr (fill the 300px width) and spread to fill height. ★ ACCEPTED LIMIT: 3mo (one
+    row of 3 tiles) can't fill a tall column without absurd aspect, so it CENTRES; 6/12mo fill. 1yr tiles
+    (~72px, 4-col) are a touch smaller than the old auto-widened 90px but now fill height. Flag if wanted bigger.
+  • SCREEN 2 HEADER — one row, two zones (context: back-link + title | controls: routine tabs + Volume/Reps
+    toggle) split by a hairline. Routine tabs live at the top on chart/detail but move into this header on grid.
+
 ### 2026-07-28 · Gym V2 Piece 11 — steps scaling REVERSAL (supersedes Piece 6's √ decision)
   • ★ OWNER DECISION — TRUE-TO-VALUE (LINEAR) STEPS SCALING: reverts Piece 6's square-root compression
     AND its minimum-width floor. Bar/fill width = value ÷ max, honestly. *Why:* the owner explicitly chose

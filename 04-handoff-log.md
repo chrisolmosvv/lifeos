@@ -12919,3 +12919,60 @@ KNOWN GAPS / RISKS
 
 NEXT — PIECE 13: docs close (the genuine LAST piece of the whole Gym V2 arc; Pieces 9/10/12/11 all shipped).
 ────────────────────────────────────────────────────────────────────────────────
+
+## 2026-07-29 — Gym V2 · PIECE 14: 50/50 fill · KG/Sets/Reps stat row · Monday-first calendar · Screen 2 one-row header
+
+WHAT CHANGED (layout/display on existing components — no schema, one new tiny calc)
+  1) MAIN-COLUMN GAP KILLED. Grounded the real cause (1440×844): .gym-top is forced to 415px while
+     BOTH columns' content was ~300px → dead space below the calendar AND below the Training footer.
+     Fix: the Consistency calendar now FILLS its column height (square cells, week-rows spread via
+     align-content) and the Training chart wrapper GROWS to absorb slack + centres a TALLER chart
+     (combo viewBox 168→208h; the stale `:not(.gym-lift-table)` grow-exemption repointed to
+     `.gym-combo-wrap`). Consistency pinned to a stable 300px so the calendar has a known box.
+     Result: both columns fill to y=602 at every window; no literal 50/50 (Balance is only ~201px
+     natural — forcing 50% would add dead space THERE), so "fill the top half" was the right reading.
+  2) STAT ROW: dropped the session count → KG · SETS · REPS for the selected period. New pure
+     gymProgress.periodTotals (volume/sets/reps over [start,end], all sets). Applied at EVERY window
+     (the row is shared across windows; "for the selected period" reads fine everywhere) — a made-call,
+     reversible if the owner wanted Today-only.
+  3) CALENDAR MONDAY-FIRST everywhere: monthGrid pads Monday-first ((getUTCDay()+6)%7); GymMonth DOW
+     header = M/T/W/T/F/S/S (matches the Piece-2 convention). Tiles are 1fr (fill the 300px width →
+     bigger) and spread (align-content:space-evenly) to fill height at 6/12mo; a single row (3mo)
+     centres. TILE_PX removed.
+  4) SCREEN 2 HEADER → ONE ROW, TWO ZONES split by a hairline: LEFT = back-link + "Top exercises"
+     title (context); RIGHT = routine tabs + Volume/Reps toggle (controls). The tabs render at the top
+     on chart/detail screens but move INTO this header on the grid screen. GymExerciseGrid lost its own
+     header (now just the cards); RoutineTabs/MetricToggle extracted as small components in GymTraining.
+
+FILES
+  MODIFIED: src/spine/logic/gymProgress.js (+periodTotals), src/spine/logic/gymCalendar.js (Monday-first pad),
+            src/desktop/health/GymMonth.jsx (DOW M-first), GymConsistency.jsx (300px width, 1fr tiles),
+            GymTraining.jsx (KG/Sets/Reps row, RoutineTabs/MetricToggle, one-row grid header),
+            GymExerciseGrid.jsx (header removed), GymComboChart.jsx (taller viewBox),
+            src/desktop/kit/gymPage.css (consist width, calendar-fill, chart grow/centre, grid-head zones).
+  Commit 71fa77c (src-only, one commit). Live on lifeos-blond-xi.vercel.app (Vercel = success).
+
+HOW TO VERIFY (Builder-verified live-local at 1440×844 + a DB spot-check)
+  • No dead gap: .gym-consist and .gym-training both bottom at y=602 at Today/3mo/6mo/1yr; Balance below.
+    Zero-scroll (scrollHeight==innerHeight) at ALL four windows.
+  • Stat row = DB: Today window [16–29 Jul] raw sum = 18,159 kg / 60 sets / 497 reps == the rendered row.
+    (3mo shows 268,054 kg / 751 sets / 6,502 reps.)
+  • Monday-first: DOW header "M T W T F S S"; monthGrid(July 2026) first row = [_,_,1,2,3,4,5] (Jul 1 = Wed);
+    the 29th (Wed) sits in column 2. Tiles at 6/12mo fill (3×2, 4×3); 3mo one row centres.
+  • Screen 2: one row, two zones (context | controls) with a hairline; back-link, routine tabs (reset to
+    chart), and Volume/Reps toggle (re-sort) all work.
+
+KNOWN GAPS / RISKS
+  • 3-MONTH TILES don't truly "fill": only 3 tiles / one row can't tile a ~300×330 column without absurd
+    aspect, so they CENTRE (equal space above/below) rather than fill. Accepted; 6/12mo fill well. Flag if
+    the owner wants bigger 3mo tiles (would need a 2-col / stacked layout, uneven last row).
+  • 1YR TILES are ~72px (4-col in the fixed 300px) — slightly SMALLER than the old auto-widened 90px, but
+    they now fill height (3 rows). Trade-off of the stable-width column; flag if too small.
+  • CONSISTENCY fixed at 300px (was auto ~203): Training's chart is correspondingly narrower (~587). Reads well.
+  • STAT ROW applies to ALL windows (not just Today) — a made-call; trivial to scope to Today if wanted.
+
+NEXT — PIECE 15: single-exercise detail chart redesign (max-weight bars, terracotta-on-PR; volume line;
+reps hover-only; 4-value tooltip). RECON already done (this session) — the PR definition (gymCalc.prWeight,
+strictly-greater, warm-ups excluded) is the one to reuse; ties are NOT PRs (flag). Recon flagged that
+GymComboChart hardcodes volume-bars/reps-line, so Screen 3 needs it parameterised or forked.
+────────────────────────────────────────────────────────────────────────────────
