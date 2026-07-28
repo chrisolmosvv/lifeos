@@ -12976,3 +12976,13 @@ reps hover-only; 4-value tooltip). RECON already done (this session) — the PR 
 strictly-greater, warm-ups excluded) is the one to reuse; ties are NOT PRs (flag). Recon flagged that
 GymComboChart hardcodes volume-bars/reps-line, so Screen 3 needs it parameterised or forked.
 ────────────────────────────────────────────────────────────────────────────────
+
+## 2026-07-29 — Gym V2 · follow-up to PIECE 14: bigger 3-month calendar tiles
+
+Resolves the Piece-14 DEBT "3mo tiles centre / small". Replaced the fixed per-window TILE_COLS map with
+cols = ceil(√monthCount) in GymConsistency.jsx: 3mo→2, 6mo→3, 1yr→4. 6/12mo are unchanged (√6/√12
+already round to 3/4); 3mo now lays out 2-over-1 with ~1.5× larger tiles (144px vs 92px; 19px vs 11px
+cells), using a second row of the column height. FILE: src/desktop/health/GymConsistency.jsx. Commit
+fa0a521 (src-only). Live on lifeos-blond-xi.vercel.app. VERIFIED live: 3mo gridCols "144px 144px",
+6mo "92px×3", 1yr "66px×4", zero-scroll all windows. (Piece-14 3mo-tile debt now CLEARED.)
+────────────────────────────────────────────────────────────────────────────────
