@@ -3673,3 +3673,24 @@ As-built truth lives in health-v2-build-doc.md PART E. The key calls, each with 
     NOT silently changed this build (code was verified at 60); 60-vs-90 reconciliation is OPEN —
     owner's call (roadmap). *Why recorded:* don't bank a false "no precedent" claim; flag the real
     inconsistency.
+
+## 2026-07-29 — Gym V2 · Piece 17: "Today" = rolling last-30-days (replaces 14-day)
+  • "TODAY" WINDOW = ROLLING 30 DAYS everywhere on the Gym page (was 14). Owner-directed. The old 14
+    was itself a made-call ("mirrors Body's Piece-9 span, owner tunes it"); this settles it at 30.
+    Supersedes the abandoned "calendar-month-to-date" idea explored in an earlier recon (30-vs-30 is
+    always clean — no month-length-mismatch handling needed anywhere).
+  • CONSISTENCY KEEPS ITS OWN WINDOW CONSTANT (TODAY_WINDOW_DAYS=30 in gymCalendar.js), deliberately
+    SEPARATE from Health.jsx's shared paged `days` (also 30). *Why:* Consistency is a separate code path
+    that never receives the shared window; coupling them would be a false dependency. They happen to
+    match at 30; if either is ever retuned, that's a conscious two-place decision, not an accident.
+  • CONSISTENCY GRID: rolling-range, NOT calendar-month, on Today only. Built as an ADDITIVE rangeGrid
+    (monthGrid left untouched) so the 3/6/12-month tiled views stay calendar-month-aligned and identical.
+    The rolling grid reuses monthGrid's exact cell/shape contract → GymMonth renders it with no changes.
+  • HERO CAPTION "sessions · last 30 days" (routine-scoped: "Push sessions · last 30 days") — owner-
+    confirmed wording. Replaces "sessions this month". Grid header label = the date range "30 Jun – 29 Jul"
+    (humanDayShort, no year even across New Year, e.g. "31 Dec – 29 Jan" — confirmed acceptable).
+  • ACTIVITY "vs typical" + BALANCE trend arrows: NO logic change — both already compared against the
+    immediately-prior equal-length window, so they became current-30-vs-prior-30 for free. (Nothing to
+    "revert" — the shipped code never left the fixed-length design.)
+  • STREAK stays WEEKLY, untouched — it reads a separate function (consistencyGrid, 13-week) that never
+    touches the month/range grid. This change did NOT sweep in a streak-unit change (guarded per CLAUDE.md).

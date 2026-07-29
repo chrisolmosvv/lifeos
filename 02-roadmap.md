@@ -2711,3 +2711,27 @@ ink), Screen 1 confirmed unchanged, zero-scroll, no console errors.
   ▸ MADE-CALLS (see decisions): axis wording "kg·set"/"kg·vol"; fork over generalize. Bodyweight lifts have
     no bars (degenerate Screen 3) — flagged.
   ▸ Piece 16 (NEXT): docs close — the genuine LAST piece of the whole Gym V2 arc (covers Pieces 9–15).
+
+### 2026-07-29 · Gym V2 · Piece 17 ✅ ("Today" → rolling last-30-days window everywhere)
+"Today" was a rolling 14-day window; it is now a rolling 30 days across all five zones. ONE lever —
+`WINDOW_DAYS.today` 14→30 in Health.jsx — moves Training, Activity, Steps AND Balance, because each
+already derives its window purely from the shared `days`/date-pair (no "14" baked in anywhere in the
+gym code; the only hardcoded 14s live on the Body page, out of scope). Activity's "vs typical" needed
+ZERO change — it already compares against the immediately-prior equal-length window, so it became
+"current 30 vs prior 30" automatically. Balance likewise — it already reads the shared window; only the
+number changed. The REAL work was Consistency's grid: it was anchored to the calendar MONTH (monthGrid
+from {year,month}; heroInfo counted by "YYYY-MM" prefix). Added an ADDITIVE `rangeGrid(dayMap,{start,end,
+selectedRoutine,today})` in gymCalendar.js that spans an arbitrary [start,end] and returns monthGrid's
+exact shape (Monday-first weeks, {state,day,ymd,isToday} cells, blank padding) so GymMonth renders it
+with NO changes. `monthGrid` is untouched → the 3/6/12mo tiled views are byte-identical (still "Jul 2026"
+labels + count badges, still calendar-month-aligned). heroInfo's today-branch now counts the rolling
+30-day window (new `TODAY_WINDOW_DAYS=30`, Consistency's own window, deliberately separate from Health's
+shared `days`); caption "sessions · last 30 days"; grid label "30 Jun – 29 Jul" via humanDayShort. Streak
+stays WEEKLY (separate consistencyGrid path, untouched). Also corrected two stale "fixed trailing 7 days"
+Balance comments (Health.jsx header + gymBalance.js top). Src-only (commit 7ccfd0f); live-verified on the
+13" (1440×900) with DB spot-checks: Consistency hero "15 sessions · last 30 days" == 15 real sessions in
+[30 Jun,29 Jul]; Activity flights avg 20 matches, prior 30-day window genuinely empty (0 rows) → correctly
+NO fabricated delta; 3/6/12mo tiled views unchanged (badges May 10/Jun 17/Jul 14 = hero 41, caption
+reverts to "avg 13.7/month · last 3 months"); zero-scroll at all four windows; no console errors.
+  ▸ NEXT (queued separately, owner's two new update requests): (a) Training Top-6 (Screen 2) screen-state
+    preservation; (b) max-set-weight-per-session display. Both are their own recon+build pieces.

@@ -13055,3 +13055,54 @@ Today/3mo/6mo/1yr, zero-scroll all windows.
 KNOWN GAP: at 1yr the 12 months leave cells small (~5px squares) — legible but tiny; inherent to fitting
 a year into half the column. (Piece-14 "not literal 50/50" decision is now SUPERSEDED.)
 ────────────────────────────────────────────────────────────────────────────────
+
+
+## 2026-07-29 — Gym V2 · PIECE 17: "Today" → rolling last-30-days window everywhere
+
+WHAT CHANGED
+  • "Today" is now a rolling 30-day window (was 14) across all five Gym zones: Consistency, Training,
+    Activity, Steps, Balance.
+  • ONE lever did four of them: `WINDOW_DAYS.today` 14→30 in Health.jsx. Training/Activity/Steps/Balance
+    all derive their window dynamically from the shared `days` (or its start/end date-pair) — no "14" was
+    baked in anywhere in the gym code — so they follow automatically. Activity's "vs typical" and Balance's
+    trend arrows already compared against the immediately-prior EQUAL-length window, so they became
+    "current 30 vs prior 30" with zero code change.
+  • The real work was Consistency's grid, which was anchored to the calendar MONTH. Added an ADDITIVE
+    `rangeGrid()` in gymCalendar.js spanning an arbitrary [start,end], returning monthGrid's EXACT shape
+    (Monday-first weeks, {state,day,ymd,isToday} cells, blank padding) → GymMonth renders it unchanged.
+    `monthGrid` itself was NOT touched, so the 3/6/12-month tiled views are identical. heroInfo's today-
+    branch now counts the 30-day window (new `TODAY_WINDOW_DAYS=30`); caption "sessions · last 30 days";
+    grid label "30 Jun – 29 Jul". GymConsistency's `months` memo calls rangeGrid for the today case only.
+  • Corrected two stale "fixed trailing 7 days" Balance comments (Health.jsx header + gymBalance.js top) —
+    Balance has shared the paged window for several pieces.
+
+FILES (src-only, commit 7ccfd0f)
+  • src/desktop/Health.jsx — WINDOW_DAYS.today 14→30 + two comment corrections.
+  • src/spine/logic/gymCalendar.js — new TODAY_WINDOW_DAYS const, new rangeGrid() builder, heroInfo
+    today-branch rewritten (range-count + new caption). monthGrid + monthsInWindow untouched.
+  • src/desktop/health/GymConsistency.jsx — months memo today-branch → rangeGrid; new imports.
+  • src/spine/logic/gymBalance.js — stale comment fix only (no logic change).
+
+HOW TO VERIFY (Builder-verified live-local 1440×900 + DB spot-checks against Frankfurt)
+  • Consistency Today: hero "15 · sessions · last 30 days", grid "30 Jun – 29 Jul", Monday-first, today
+    (29 Jul) ringed in the bottom row's Wed column, same visual shape as before. DB: exactly 15 real gym
+    sessions fall in Amsterdam-day [30 Jun, 29 Jul] (15 distinct days, last one 22 Jul — matches where the
+    terracotta stops). ✓
+  • Activity: Flights avg 20 (DB: 30-day flights_climbed avg == 20). NO "vs typical" delta shown, and that
+    is CORRECT — the prior 30-day window (before ~29 Jun) has 0 activity rows, so no delta is fabricated. ✓
+  • 3/6/12mo tiled views: unchanged — month labels ("MAY/JUN/JUL"), count badges (10/17/14 = hero 41),
+    calendar-month grids; hero caption reverts to "avg 13.7/month · last 3 months". ✓
+  • Streak: still weekly ("avg 3.0/week · 13 weeks"), unaffected. ✓
+  • Zero-scroll at Today / 3mo / 6mo / 1yr (all scrollHeight == innerHeight == 900). No console errors.
+
+KNOWN GAPS / RISKS
+  • Consistency's Today window (TODAY_WINDOW_DAYS=30) is a SEPARATE constant from Health's shared `days`
+    (also 30) by design — they must be tuned together if ever changed. Documented in decisions.
+  • Label omits the year (humanDayShort) — fine within a year and acceptable across New Year ("31 Dec –
+    29 Jan"), owner-confirmed. If a year is ever wanted at the boundary, it's a one-line format tweak.
+  • Grid cells before the window start (leading pad to Monday) render blank, not "none" — matches how
+    monthGrid pads pre-month days; keeps exactly 30 active days. This is the intended reading.
+
+NEXT (queued separately — owner's two new update requests, each its own recon+build piece)
+  • (a) Training Top-6 (Screen 2) screen-state preservation.
+  • (b) Max-set-weight-per-session display.
