@@ -48,8 +48,10 @@
    auto) + Training (grows wider via its own flex:1 1 auto) side by side. .gym-top fills the space
    above Balance; Training stretches to its height and its lift table scrolls. Balance stays a
    direct .gym-main child below, full width. */
+/* Piece 15 follow-up: the top half (Consistency + Training) and the bottom half (Balance) split the
+   main column 50/50 — flex:1 1 0 on BOTH so each genuinely claims half (was: top grew, Balance natural). */
 .gym-top {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   gap: 28px;
@@ -114,19 +116,20 @@
   display: flex; /* let the inner .gym-cal stretch to full height */
 }
 .gym-cal-single .gym-cal { flex: 1 1 auto; min-height: 0; }
-/* Single-month grid fills the height: cells stay SQUARE (aspect-ratio) and the week-rows spread
-   apart (align-content) to absorb the extra height — the calendar breathes, no dead gap. */
-.gym-cal-single .gym-cal-grid { flex: 1 1 auto; align-content: space-between; }
+/* Piece 15 follow-up: with the top half capped at 50%, the calendar must FIT a shorter box — so the
+   grid FILLS its height (grid-auto-rows:1fr) and cells size to the grid (no fixed aspect), staying
+   near-square while never overflowing into Balance below. */
+.gym-cal-single .gym-cal-grid { flex: 1 1 auto; min-height: 0; }
 .gym-cal-tiles {
   display: grid;
-  gap: 14px 12px;
+  gap: 12px;
   margin-top: 12px;
   flex: 1 1 auto;
   min-height: 0;
-  align-content: space-evenly;  /* centre a single row (3mo), spread multiple rows (6/12mo) to fill */
-  grid-auto-rows: min-content;  /* tiles keep their natural height; extra space → gaps, not giant tiles */
+  grid-auto-rows: 1fr;  /* tile rows share the container height → tiles fit the shorter top half */
 }
-.gym-cal { display: flex; flex-direction: column; gap: 4px; }
+.gym-cal { display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.gym-cal--tile .gym-cal-grid { flex: 1 1 auto; min-height: 0; }
 .gym-cal-label {
   font-family: var(--font-sans);
   font-size: 11px;
@@ -140,6 +143,7 @@
   grid-template-columns: repeat(7, 1fr);
   gap: 3px;
 }
+.gym-cal-grid { grid-auto-rows: 1fr; }   /* cell rows fill the calendar's height (see Piece-15 follow-up) */
 .gym-cal--tile .gym-cal-grid { gap: 2px; }
 .gym-cal-dow span {
   font-family: var(--font-sans);
@@ -148,7 +152,12 @@
   text-align: center;
 }
 .gym-cal-cell {
-  aspect-ratio: 1;
+  min-height: 0;
+  aspect-ratio: 1;          /* keep cells SQUARE, sized to the smaller of the grid track's w/h… */
+  height: 100%;
+  width: auto;
+  max-width: 100%;          /* …so a short/wide track squares by width, a tall/narrow one by height */
+  justify-self: center;
   border-radius: 3px;
   background: var(--rule-faint); /* 'none' — no session that day */
 }
@@ -287,27 +296,40 @@
 .gym-lt-delta--none { color: var(--ink-muted); }
 
 /* ── BODY-PART BALANCE (Piece 8: radar + Upper/Lower/Core grouped list, Sets/Volume tab) ── */
+/* Piece 15 follow-up: Balance claims its full 50% half — the body fills the height, the radar scales
+   with it (much bigger than the old fixed 178×162), the list gets breathing room. */
 .gym-balance-zone {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-height: 0;
 }
 .gym-bal-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex: 0 0 auto;
 }
 /* compact metric tabs — reuse .gym-tab, tighter */
 .gym-tabs--sm .gym-tab { padding: 3px 12px; font-size: 12px; }
 .gym-bal-body {
   display: flex;
   gap: 24px;
-  align-items: flex-start;
+  align-items: stretch;   /* radar + list both fill the half's height */
   margin-top: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-/* Radar (ink — informational, NOT terracotta; neutral/descriptive per the section's tone) */
-.gym-radar-wrap { flex: 0 0 auto; }
-.gym-radar { width: 178px; height: 162px; display: block; }
+/* Radar (ink — informational, NOT terracotta; neutral/descriptive per the section's tone). Scales to
+   fill the half's height (viewBox 240×216 → width follows aspect); capped so it never crowds the list. */
+.gym-radar-wrap { flex: 0 0 auto; display: flex; align-items: center; }
+.gym-radar {
+  height: 100%;
+  width: auto;
+  aspect-ratio: 240 / 216;
+  max-height: 300px;
+  display: block;
+}
 .gym-radar-ring,
 .gym-radar-axis { fill: none; stroke: var(--rule-faint); stroke-width: 1; }
 .gym-radar-poly {
@@ -329,11 +351,12 @@
 .gym-bal-groups {
   flex: 1 1 auto;
   min-width: 0;
-  max-height: 162px;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-evenly; /* breathing room — spread the groups down the taller half */
+  gap: 10px;
   scrollbar-width: thin;
   scrollbar-color: var(--rule) transparent;
 }
