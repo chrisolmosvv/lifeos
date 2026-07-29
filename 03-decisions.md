@@ -3593,7 +3593,7 @@ The current partial week only EXTENDS the streak (if already met), never breaks 
   • Reps removed from the persistent Screen-3 chart entirely (hover-only); the tooltip carries 4 values.
 
 ### 2026-07-29 · Gym V2 Piece 14 — main-column fill + stat row + calendar (made-calls, all reversible)
-  • MAIN-COLUMN "50/50": the literal 50/50 top/bottom split was NOT built — Balance's natural content is
+  • MAIN-COLUMN "50/50" [SUPERSEDED 2026-07-29 — owner reversed; genuine 50/50 now built, see that day's handoff]: the literal 50/50 top/bottom split was NOT built — Balance's natural content is
     only ~201px, so forcing it to half would add dead space THERE. Grounded reading: FILL the top half.
     The Consistency calendar fills its column height and the Training chart grows/centres (taller viewBox);
     both columns bottom-align at every window. Consistency pinned to a stable 300px width. *Why:* the real

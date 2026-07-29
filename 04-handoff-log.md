@@ -13040,3 +13040,18 @@ KNOWN GAPS / RISKS
 
 NEXT — PIECE 16: docs close — the genuine LAST piece of the whole Gym V2 arc (now covering Pieces 9–15).
 ────────────────────────────────────────────────────────────────────────────────
+
+## 2026-07-29 — Gym V2 · follow-up to PIECE 14: genuine 50/50 main-column split (owner reversal)
+
+Supersedes Piece 14's made-call ("literal 50/50 is wrong — fill the top instead"): the owner confirmed
+they DO want a real 50/50 with Balance (radar included) claiming half. Now flex:1 1 0 on BOTH .gym-top
+and .gym-balance-zone → each exactly 308px at 1440×844. Balance's body fills its half; the radar scales
+with it (178×162 → 299×269, ~1.66×) and the group list spreads (justify-content:space-evenly). The
+shorter top half forced the calendar to fit a smaller box: single month + tiles now fill their height
+(grid-auto-rows:1fr) with cells kept SQUARE (aspect-ratio + height:100% + max-width:100%, so cells size
+to the smaller grid track) — nothing overflows into Balance. FILE: src/desktop/kit/gymPage.css. Commit
+95d6e40 (src-only). Live-verified: top==bottom==308, radar 299×269, no calendar clip + square cells at
+Today/3mo/6mo/1yr, zero-scroll all windows.
+KNOWN GAP: at 1yr the 12 months leave cells small (~5px squares) — legible but tiny; inherent to fitting
+a year into half the column. (Piece-14 "not literal 50/50" decision is now SUPERSEDED.)
+────────────────────────────────────────────────────────────────────────────────
