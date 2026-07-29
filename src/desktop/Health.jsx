@@ -54,6 +54,12 @@ export default function Health({ onBack }) {
   const [anchor, setAnchor] = useState(null) // the viewed period's END ymd; null → today
   // Piece 10: routine tab LIFTED here (shared by Training + Consistency). Default 'all'.
   const [routine, setRoutine] = useState('all')
+  // Piece 18: Training's drill-down nav state (screen / picked exercise / grid-sort metric) is LIFTED
+  // here too — it lives ABOVE the window-keyed fade wrapper, so paging or switching the window keeps
+  // you on the same screen instead of snapping back to the chart. GymTraining is a controlled child.
+  const [trainScreen, setTrainScreen] = useState('chart')
+  const [trainPicked, setTrainPicked] = useState(null)
+  const [trainMetric, setTrainMetric] = useState('volume')
   const [today, setToday] = useState(null)
 
   useEffect(() => {
@@ -169,8 +175,12 @@ export default function Health({ onBack }) {
                   onRoutine={setRoutine}
                   windowStart={viewStart}
                   windowEnd={anchorEnd}
-                  days={days}
-                  nowForWindow={nowForWindow}
+                  screen={trainScreen}
+                  onScreen={setTrainScreen}
+                  picked={trainPicked}
+                  onPicked={setTrainPicked}
+                  metric={trainMetric}
+                  onMetric={setTrainMetric}
                   onMore={() => setView('archive')}
                   onRecords={() => setView('records')}
                 />

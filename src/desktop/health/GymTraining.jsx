@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { periodTotals, comboSeries, exerciseDetailSeries, exerciseRanking } from "../../spine/logic/gymProgress";
 import { formatVolume } from "../../spine/logic/gymFormat";
 import { ROUTINES, routineWorkouts } from "../../spine/logic/gymRoutine";
@@ -59,14 +59,13 @@ function MetricToggle({ metric, onMetric }) {
   );
 }
 
-export default function GymTraining({ built, routine, onRoutine, windowStart, windowEnd, onMore, onRecords }) {
-  const [screen, setScreen] = useState("chart"); // 'chart' | 'grid' | 'detail'
-  const [metric, setMetric] = useState("volume"); // grid sort
-  const [picked, setPicked] = useState(null); // { key, name } for the detail screen
-
-  // Switching the routine tab always returns to Screen 1 for the newly selected routine.
-  useEffect(() => { setScreen("chart"); setPicked(null); }, [routine]);
-
+// Piece 18: screen / picked / metric are LIFTED to Health.jsx (controlled here) so they survive the
+// parent's window-change remount — switching the routine tab or the time window no longer snaps back to
+// Screen 1. State-shape: screen 'chart'|'grid'|'detail', picked { key, name }|null, metric 'volume'|'reps'.
+export default function GymTraining({
+  built, routine, onRoutine, windowStart, windowEnd,
+  screen, onScreen, picked, onPicked, metric, onMetric, onMore, onRecords,
+}) {
   const wk = useMemo(() => routineWorkouts(built || [], routine), [built, routine]);
   const win = { start: windowStart, end: windowEnd };
   const totals = useMemo(() => periodTotals(wk, win), [wk, windowStart, windowEnd]);
@@ -76,10 +75,21 @@ export default function GymTraining({ built, routine, onRoutine, windowStart, wi
     () => (picked ? exerciseDetailSeries(wk, picked.key, win) : []),
     [wk, picked, windowStart, windowEnd],
   );
+
+  // Screen-3 fallback: when the routine tab changes to one where the picked exercise has NO data,
+  // drop to the grid rather than showing an empty detail chart. Only fires on an actual routine
+  // switch (the ref guards against the window-remount / metric / screen re-renders).
+  const prevRoutine = useRef(routine);
+  useEffect(() => {
+    const routineChanged = prevRoutine.current !== routine;
+    prevRoutine.current = routine;
+    if (routineChanged && screen === "detail" && picked && detail.length === 0) onScreen("grid");
+  }, [routine, detail, screen, picked, onScreen]);
+
   const vol = formatVolume(totals.volume);
   const n = (v) => v.toLocaleString("en-GB");
 
-  const openDetail = (row) => { setPicked({ key: row.key, name: row.name }); setScreen("detail"); };
+  const openDetail = (row) => { onPicked({ key: row.key, name: row.name }); onScreen("detail"); };
 
   return (
     <section className="gym-zone gym-training">
@@ -95,7 +105,7 @@ export default function GymTraining({ built, routine, onRoutine, windowStart, wi
           <div className="gym-combo-wrap">
             <GymComboChart points={series} windowStart={windowStart} windowEnd={windowEnd} />
             {series.length > 0 && (
-              <button type="button" className="gym-more-hint" onClick={() => setScreen("grid")}>More →</button>
+              <button type="button" className="gym-more-hint" onClick={() => onScreen("grid")}>More →</button>
             )}
           </div>
           <div className="gym-quiet-links">
@@ -109,12 +119,12 @@ export default function GymTraining({ built, routine, onRoutine, windowStart, wi
         <>
           <div className="gym-grid-head">
             <div className="gym-grid-head-z gym-grid-head-l">
-              <button type="button" className="gym-trail-back" onClick={() => setScreen("chart")}>‹ Chart</button>
+              <button type="button" className="gym-trail-back" onClick={() => onScreen("chart")}>‹ Chart</button>
               <span className="gym-kicker">Top exercises</span>
             </div>
             <div className="gym-grid-head-z gym-grid-head-r">
               <RoutineTabs routine={routine} onRoutine={onRoutine} small />
-              <MetricToggle metric={metric} onMetric={setMetric} />
+              <MetricToggle metric={metric} onMetric={onMetric} />
             </div>
           </div>
           <GymExerciseGrid rows={ranking} onPick={openDetail} />
@@ -124,9 +134,9 @@ export default function GymTraining({ built, routine, onRoutine, windowStart, wi
       {screen === "detail" && (
         <>
           <nav className="gym-trail">
-            <button type="button" onClick={() => setScreen("chart")}>Chart</button>
+            <button type="button" onClick={() => onScreen("chart")}>Chart</button>
             <span className="gym-trail-sep">/</span>
-            <button type="button" onClick={() => setScreen("grid")}>Top exercises</button>
+            <button type="button" onClick={() => onScreen("grid")}>Top exercises</button>
             <span className="gym-trail-sep">/</span>
             <span className="gym-trail-here">{picked?.name}</span>
           </nav>

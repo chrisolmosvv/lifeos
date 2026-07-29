@@ -52,11 +52,12 @@ export function balanceView(ranked, priorRanked, metric = "sets") {
   });
 
   // Radar = the top 7 included groups by the active metric (any bucket), dynamic max scale.
+  // Carries `trend` (share pp-change vs the prior window) so the hover card can show an arrow (Piece 18).
   const radar = rows
     .slice()
     .sort((a, b) => b.value - a.value)
     .slice(0, 7)
-    .map((r) => ({ muscle: r.muscle, value: r.value, pct: r.pct }));
+    .map((r) => ({ muscle: r.muscle, value: r.value, pct: r.pct, trend: r.trend }));
   const radarMax = radar.length ? Math.max(...radar.map((r) => r.value)) : 0;
 
   // Grouped list: per bucket, major rows (≥3%) sorted desc + one collapsed (minor) line.

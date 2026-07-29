@@ -86,3 +86,29 @@
 .gym-combo-tip-date { font-size: 9px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .gym-combo-tip-row { font-size: 12px; color: var(--ink); }
 .gym-combo-tip-reps { color: var(--accent); }
+
+/* Piece 18 (Screen 3): weight printed inside each bar near its top. Adaptive fill for legibility —
+   ink on the calm normal bars, paper on the terracotta PR bars. */
+.gym-combo-barlabel {
+  font-family: var(--font-sans);
+  font-size: 7px;
+  font-weight: 600;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.gym-combo-barlabel--pr { fill: var(--paper); }
+
+/* Piece 18 (Screen 3): per-set breakdown table under the day summary. */
+.gym-combo-tip-sets {
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px solid var(--rule-faint);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.gym-combo-tip-set { display: flex; gap: 6px; font-size: 10px; color: var(--ink); }
+.gym-combo-tip-set.is-warmup { color: var(--ink-muted); }
+.gym-combo-tip-setn { width: 10px; text-align: right; color: var(--ink-muted); }
+.gym-combo-tip-setv { font-variant-numeric: tabular-nums; }

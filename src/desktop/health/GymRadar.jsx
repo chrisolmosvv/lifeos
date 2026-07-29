@@ -3,12 +3,24 @@ import { prettyMuscle } from "../../spine/logic/gymFormat";
 
 // LifeOS — Gym V2 (Piece 8): the Body-Part Balance radar. A hand-rolled SVG spoke chart — one
 // axis per group (the top-7 by the active metric), DYNAMIC max scale (always scaled to the
-// current top group), the data polygon grows outward from centre on load. Hovering a spoke
-// reveals the raw number behind the % (sets or kg). ≥3 groups → filled polygon; 1–2 groups →
-// spokes + points only (a minimal gauge, never a broken shape). Pure presentation.
+// current top group), the data polygon grows outward from centre on load. ≥3 groups → filled
+// polygon; 1–2 groups → spokes + points only (a minimal gauge, never a broken shape).
+// Piece 18: hovering a spoke now floats a rich bordered CARD (title · hero number · % of total ·
+// trend arrow) that repositions per point — replacing the old SVG label that overlapped the axis
+// text. The card is an absolutely-positioned HTML overlay; its edge-aware transform keeps it off
+// the labels and inside view. Pure presentation.
 
 const CX = 120, CY = 108, R = 66;
+const VBW = 240, VBH = 216; // viewBox — the card maps SVG point coords to % of this box
 const RINGS = [0.5, 1];
+
+// Share pp-change → arrow (same thresholds as GymBalance's list: ±1pp is steady).
+function trendArrow(pp) {
+  if (pp == null) return null;
+  if (pp >= 1) return "↑";
+  if (pp <= -1) return "↓";
+  return "→";
+}
 
 export default function GymRadar({ radar, radarMax, metric }) {
   const [hover, setHover] = useState(null);
@@ -21,6 +33,19 @@ export default function GymRadar({ radar, radarMax, metric }) {
   const dataPts = radar.map((r, i) => pt(i, (r.value / max) * R));
   const poly = dataPts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
   const fmtVal = (v) => (metric === "volume" ? `${Math.round(v).toLocaleString("en-GB")} kg` : `${v} set${v === 1 ? "" : "s"}`);
+
+  // Floating-card placement: anchor at the hovered point (as % of the viewBox), then offset with an
+  // edge-aware transform — card sits BELOW points in the upper half / ABOVE in the lower half, and
+  // hugs left/right when the point is near an edge, so it never rides the axis labels or clips out.
+  const hp = hover == null ? null : radar[hover];
+  const cardStyle = (() => {
+    if (hover == null) return null;
+    const [px, py] = dataPts[hover];
+    const leftPct = (px / VBW) * 100, topPct = (py / VBH) * 100;
+    const tx = leftPct < 28 ? "0%" : leftPct > 72 ? "-100%" : "-50%";
+    const ty = py < CY ? "10px" : "calc(-100% - 10px)";
+    return { left: `${leftPct}%`, top: `${topPct}%`, transform: `translate(${tx}, ${ty})` };
+  })();
 
   return (
     <div className="gym-radar-wrap">
@@ -48,15 +73,23 @@ export default function GymRadar({ radar, radarMax, metric }) {
             <g key={r.muscle}>
               <circle className={on ? "gym-radar-dot is-on" : "gym-radar-dot"} cx={px} cy={py} r={on ? 3.4 : 2.4} />
               <text className="gym-radar-label" x={lx} y={ly + 3} textAnchor={anchor}>{prettyMuscle(r.muscle)}</text>
-              {on && (
-                <text className="gym-radar-tip" x={px} y={py - 7} textAnchor="middle">{fmtVal(r.value)}</text>
-              )}
               <circle className="gym-radar-hit" cx={px} cy={py} r={11}
                 onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} />
             </g>
           );
         })}
       </svg>
+
+      {hp && (
+        <div className="gym-radar-card" style={cardStyle}>
+          <span className="gym-radar-card-title">{prettyMuscle(hp.muscle)}</span>
+          <span className="gym-radar-card-hero">{fmtVal(hp.value)}</span>
+          <span className="gym-radar-card-meta">
+            {Math.round(hp.pct)}% of total
+            {trendArrow(hp.trend) && <span className="gym-radar-card-trend">{trendArrow(hp.trend)}</span>}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

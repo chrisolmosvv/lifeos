@@ -37,6 +37,21 @@ export default function GymExerciseChart({ points, windowStart, windowEnd }) {
   const vy = (v) => t + ih - (v / vMax) * ih;
   const barW = Math.max(3, Math.min(13, (iw / Math.max(points.length, 6)) * 0.62));
 
+  // Piece 18: which bars show a weight label — tall enough to hold it inside AND far enough from the
+  // previous label (left→right) that the numbers never overprint. Dense windows (e.g. 1yr with clustered
+  // sessions) thin themselves automatically; spaced windows (Today/3mo) label every bar. Legibility guard.
+  const labelYmds = new Set();
+  if (barW >= 8) {
+    let lastX = -Infinity;
+    for (const p of points) {
+      if (p.maxWeight == null || t + ih - wy(p.maxWeight) < 15) continue;
+      const bx = x(p.ymd);
+      if (bx - lastX < 16) continue;
+      labelYmds.add(p.ymd);
+      lastX = bx;
+    }
+  }
+
   const volLine = points.map((p) => `${x(p.ymd).toFixed(1)},${vy(p.volume).toFixed(1)}`).join(" ");
   const wTicks = yTicks(0, wMax, 4);
   const vTicks = yTicks(0, vMax, 4);
@@ -85,6 +100,20 @@ export default function GymExerciseChart({ points, windowStart, windowEnd }) {
           ) : null))}
         </g>
 
+        {/* Piece 18: the day's heaviest-set weight, printed INSIDE the bar near its top. Colour is
+            ADAPTIVE for legibility (flagged): dark ink on the calm 16%-opacity normal bars (paper text
+            would vanish on them), paper on the saturated terracotta PR bars. Only bars in labelYmds
+            (tall + non-colliding) are labelled — see the guard above. */}
+        <g>
+          {points.map((p) => (labelYmds.has(p.ymd) ? (
+            <text
+              key={`bl${p.ymd}`}
+              className={`gym-combo-barlabel${p.isPR ? " gym-combo-barlabel--pr" : ""}`}
+              x={x(p.ymd)} y={wy(p.maxWeight) + 8} textAnchor="middle"
+            >{wfmt(p.maxWeight)}</text>
+          ) : null))}
+        </g>
+
         {/* volume line + nodes (terracotta) */}
         {points.length > 1 && <polyline className="gym-combo-repline" points={volLine} />}
         <g className="gym-combo-repdots">
@@ -117,6 +146,18 @@ export default function GymExerciseChart({ points, windowStart, windowEnd }) {
             {hp.maxWeight != null ? `${kg(hp.maxWeight)} kg top set` : "—"}{hp.isPR ? " · PR" : ""}
           </span>
           <span className="gym-combo-tip-row">{dayAvg != null ? `${kg(dayAvg)} kg/rep` : "—"}</span>
+          {/* Piece 18: per-set breakdown — the real individual sets (weight × reps), in order. This is
+              raw set data, distinct from the day aggregates above. Warm-up sets read muted. */}
+          {hp.sets && hp.sets.length > 0 && (
+            <div className="gym-combo-tip-sets">
+              {hp.sets.map((s, i) => (
+                <div className={`gym-combo-tip-set${s.warmup ? " is-warmup" : ""}`} key={i}>
+                  <span className="gym-combo-tip-setn">{i + 1}</span>
+                  <span className="gym-combo-tip-setv">{s.weight == null ? "BW" : kg(s.weight)} × {s.reps}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

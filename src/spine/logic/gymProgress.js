@@ -7,7 +7,7 @@
 // cheap client-side maths over the already-loaded workouts — no fetch, no new data.
 
 import { amsYMD } from "./gymDates.js";
-import { setVolume, sumVolume, sumReps, prWeight } from "./gymCalc.js";
+import { setVolume, sumVolume, sumReps, prWeight, isWarmup } from "./gymCalc.js";
 
 const liftKey = (ex) => ex.exercise_template_id || ex.title || "?";
 const inWindow = (ymd, start, end) => (!start || ymd >= start) && (!end || ymd <= end);
@@ -44,6 +44,8 @@ export function comboSeries(workouts, { start, end } = {}) {
 // Single-exercise DETAIL series (Screen 3, Piece 15). Per real session day for one exercise:
 //   { ymd, volume, reps, maxWeight, isPR }
 //   maxWeight = that day's heaviest WORKING-set weight (gymCalc.prWeight; null = bodyweight/duration)
+//   sets      = that day's individual sets IN ORDER (Piece 18, for the tooltip's per-set table):
+//               [{ weight|null, reps, warmup }] — real per-set data, not the day aggregates above
 //   isPR      = maxWeight STRICTLY beats the exercise's best from every day BEFORE it (first-ever
 //               weighted day counts; ties do NOT). Same rule as recentSessions' PR flag — a single
 //               chronological pass over ALL history seeds the running best, so a day early in the
@@ -70,7 +72,10 @@ export function exerciseDetailSeries(workouts, key, { start, end } = {}) {
     const maxWeight = prWeight(rec.sets);
     let isPR = false;
     if (maxWeight != null && (best == null || maxWeight > best)) { isPR = true; best = maxWeight; }
-    if (inWindow(ymd, start, end)) out.push({ ymd, volume: rec.volume, reps: rec.reps, maxWeight, isPR });
+    if (inWindow(ymd, start, end)) {
+      const sets = rec.sets.map((s) => ({ weight: s.weight_kg == null ? null : num(s.weight_kg), reps: num(s.reps), warmup: isWarmup(s) }));
+      out.push({ ymd, volume: rec.volume, reps: rec.reps, maxWeight, isPR, sets });
+    }
   }
   return out;
 }

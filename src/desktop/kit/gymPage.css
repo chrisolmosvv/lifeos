@@ -322,7 +322,7 @@
 
 /* Radar (ink — informational, NOT terracotta; neutral/descriptive per the section's tone). Scales to
    fill the half's height (viewBox 240×216 → width follows aspect); capped so it never crowds the list. */
-.gym-radar-wrap { flex: 0 0 auto; display: flex; align-items: center; }
+.gym-radar-wrap { flex: 0 0 auto; display: flex; align-items: center; position: relative; }
 .gym-radar {
   height: 100%;
   width: auto;
@@ -342,8 +342,27 @@
 .gym-radar-line { fill: none; stroke: var(--ink); stroke-width: 1.5; }
 .gym-radar-dot { fill: var(--ink); transition: r 100ms ease; }
 .gym-radar-label { font-family: var(--font-sans); font-size: 8px; fill: var(--ink-muted); }
-.gym-radar-tip { font-family: var(--font-sans); font-size: 9px; font-weight: 600; fill: var(--ink); }
 .gym-radar-hit { fill: transparent; }
+/* Piece 18: floating hover card (mirrors the Screen-3 combo tooltip's bordered-paper style).
+   Absolutely positioned within .gym-radar-wrap; the per-point transform is set inline. */
+.gym-radar-card {
+  position: absolute;
+  pointer-events: none;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  z-index: 3;
+}
+.gym-radar-card-title { font-size: 9px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.gym-radar-card-hero { font-size: 14px; color: var(--ink); font-weight: 600; }
+.gym-radar-card-meta { font-size: 10px; color: var(--ink-muted); display: flex; align-items: center; gap: 4px; }
+.gym-radar-card-trend { color: var(--ink); }
 
 /* Grouped list — Upper / Lower / Core. Bounded to the radar's height; a long list (many
    groups at a wide window) scrolls INTERNALLY so the balance zone stays compact + the page
