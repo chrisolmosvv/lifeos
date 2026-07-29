@@ -13106,3 +13106,72 @@ KNOWN GAPS / RISKS
 NEXT (queued separately — owner's two new update requests, each its own recon+build piece)
   • (a) Training Top-6 (Screen 2) screen-state preservation.
   • (b) Max-set-weight-per-session display.
+
+
+## 2026-07-29 — Gym V2 · PIECE 18: nav persistence · radar hover card · Screen 3 bar labels + per-set tooltip
+
+Four independent fixes, each touching a different already-shipped piece.
+
+WHAT CHANGED
+  1. NAVIGATION PERSISTENCE (Screen 2/3). Two things reset the drill-down before: a routine-tab effect
+     (`setScreen("chart")` on routine change) AND the parent's window-keyed `.health-fade` remount
+     (which wiped GymTraining's local state on any window/page change). Fix: LIFTED screen / picked /
+     metric to Health.jsx (above the keyed wrapper), making GymTraining a controlled child — so both a
+     routine switch and a window switch keep you on the same screen, only the data updates. Screen-3
+     FALLBACK: on a routine switch to one where the picked exercise has no data, drop to the grid (not
+     an empty detail chart) — guarded by a prevRoutine ref so it only fires on an actual routine change.
+  2. RADAR HOVER CARD. The old SVG tip (`<text>` at the point) overlapped the axis labels. Replaced
+     with a rich bordered HTML card (title · hero number · % of total · trend arrow) styled like the
+     Screen-3 tooltip, absolutely positioned in the radar wrap and repositioned PER POINT (below points
+     in the upper half / above in the lower half, hugging left/right near edges). Overlap is
+     structurally gone. Radar data now carries `trend` (added in gymBalanceGroups.balanceView).
+  3. SCREEN 3 BARS — weight inside the bar. Each bar prints its heaviest-set weight near the top.
+     ⚠️ FLAGGED made-call: the text colour is ADAPTIVE, not the literal "paper" the spec suggested —
+     the normal bars are a deliberate 16%-opacity ink HAZE (Piece 15), on which paper text would vanish.
+     So: ink text on normal bars, paper text on the saturated terracotta PR bars — this is what actually
+     satisfies the spec's real requirement ("legible against both"). Reversible; owner's call if they
+     want a different treatment. A height + horizontal-collision guard omits labels that can't fit or
+     would overprint a neighbour, so dense windows (1yr) thin themselves instead of garbling.
+  4. SCREEN 3 TOOLTIP — per-set table. Below the day summary, a compact Set # | Weight × Reps table of
+     the day's real individual sets (warm-ups muted). exerciseDetailSeries now emits each day's `sets`.
+
+FILES (src-only, commit 1cfdc89)
+  • src/desktop/Health.jsx — lift trainScreen/trainPicked/trainMetric; drop the dead days/nowForWindow props.
+  • src/desktop/health/GymTraining.jsx — controlled props; remove blanket reset; add Screen-3 fallback effect.
+  • src/desktop/health/GymRadar.jsx — floating hover card (replaces the SVG tip); trendArrow helper.
+  • src/desktop/kit/gymPage.css — .gym-radar-wrap position:relative + .gym-radar-card styles (old .gym-radar-tip removed).
+  • src/desktop/health/GymExerciseChart.jsx — bar labels (adaptive colour + collision guard) + per-set table.
+  • src/desktop/health/gymComboChart.css — .gym-combo-barlabel(+--pr) and .gym-combo-tip-set(s) styles.
+  • src/spine/logic/gymProgress.js — exerciseDetailSeries emits per-day `sets` [{weight|null,reps,warmup}].
+  • src/spine/logic/gymBalanceGroups.js — radar objects carry `trend`.
+
+HOW TO VERIFY (Builder-verified live-local 1440×900 + DB spot-checks)
+  • Nav: on Screen 2, switching routine (All→Push) and window (Today→3mo) both STAYED on the grid — no
+    snap to Screen 1 (the window case is the remount fix). On Screen 3 (Bench Press, Push), switching to
+    Legs fell back to the grid (Bench Press absent from Legs), not an empty chart.
+  • Radar: hovering Shoulders (top) floats the card BELOW it ("SHOULDERS · 39 sets · 15% of total →");
+    hovering Biceps (bottom) floats it ABOVE ("BICEPS · 23 sets · 9% of total ↑") — no label overlap
+    either way. %s match the grouped list.
+  • Screen 3 bars: at 3mo, Bench Press bars show 80/83/85… — dark ink on normal bars, PAPER on the
+    terracotta PR bars (85, 90), both legible. At 1yr the collision guard thins labels (130/140/150/155…)
+    so none overprint.
+  • Screen 3 tooltip: Mon 6 Jul Bench Press showed 1: 20×10, 2: 60×8 (warm-ups, muted), 3: 80×8, 4: 85×6,
+    5: 90×4 — DB-CONFIRMED exactly (gym_sets: warmup 20×10 / warmup 60×8 / normal 80×8 / 85×6 / 90×4).
+    Day totals consistent (36 reps, 2,190 kg vol, 90 top set · PR, 60.8 kg/rep).
+  • Zero-scroll at Today / 3mo / 6mo / 1yr (900 == 900). No console errors on a clean load.
+
+KNOWN GAPS / RISKS
+  • ⚠️ ADAPTIVE BAR-LABEL COLOUR (item 3) is a made-call, not the literal "paper" spec — because the
+    normal bars are a 16%-opacity haze paper text can't sit on. Flagged for the owner; trivially reversible.
+  • BAR LABELS THIN AT DENSE WINDOWS. The collision guard omits some labels at 1yr (clustered sessions)
+    so numbers never overprint — a legibility guard, not "label every bar". If the owner wants a different
+    rule (e.g. PR bars always labelled, or hovered-only at long windows), that's a small follow-up.
+  • BODYWEIGHT/DURATION lifts still have no bars (no weight) → no labels and a sparse Screen 3; unchanged
+    from Piece 15.
+  • Nav state resets when you LEAVE Health entirely and return (the gym view unmounts) — expected; the
+    persistence is within a gym session, not across app sections.
+
+NEXT — PIECE 19: Body-Part Balance's Routine/Region ratio redesign (recon). Its RECON has been run this
+  relay; headline finding to carry in: the Push:Pull:Legs ratio's session-based vs static-muscle-map
+  attribution DIVERGE materially on real data (Pull reads 36% session-based vs 29% static; shoulders and
+  abdominals are the drivers) — a genuine owner decision, flagged, not to be picked silently.
