@@ -23,8 +23,8 @@ import './kit/gymPage.css'
 
 // Health — the Gym front page (Health Hub → Gym), V2 TWO-COLUMN (Piece 1). Replaces the P4
 // 2×2 grid. A Gym-LOCAL time control (Today / 3mo / 6mo / 1yr + paging, its own state) sits
-// top-right. MAIN column: Consistency (fixed to this week) → Training Progress (pages) →
-// Body-Part Balance (fixed trailing 7 days). SIDE column: Activity averages (page). Gym +
+// top-right. MAIN column: Consistency (rolling 30-day grid on Today) → Training Progress (pages)
+// → Body-Part Balance (shares the paged window, currently 30 days). SIDE column: Activity averages (page). Gym +
 // activity load ONCE per open (the whole history); paging just re-windows the loaded rows.
 // The UI only DISPLAYS calc-layer output (gym* + healthActivity); it never recomputes a metric.
 //
@@ -35,10 +35,10 @@ const START = '2026-01-01'
 // walking_speed (mislabeled pace) + walking_step_length (stride) are cut by design.
 // steps feeds the vertical bar chart (Piece 4); the other three are the average tiles.
 const ACTIVITY_METRICS = ['steps', 'flights_climbed', 'stand_minutes', 'walking_heart_rate_avg']
-// Window size per switcher level. "Today" has no natural number — 14 days mirrors Body's
-// Piece-9 "today" span (a made-call, flagged in the handoff; the owner tunes it). 3/6/12 mo
-// are 90/180/365. Governs Training Progress + the Activity side column (the paged zones).
-const WINDOW_DAYS = { today: 14, '3mo': 90, '6mo': 180, '1yr': 365 }
+// Window size per switcher level. "Today" is a rolling last-30-days window (Piece 17; was 14).
+// 3/6/12 mo are 90/180/365. Governs Training Progress, Body-Part Balance, and the Activity side
+// column (Steps + averages) — every paged zone reads this one value.
+const WINDOW_DAYS = { today: 30, '3mo': 90, '6mo': 180, '1yr': 365 }
 
 // A UTC-noon ms timestamp for an Amsterdam day — lets boxScore/dailyVolumeSeries end their
 // rolling window on the VIEWED day (their `now` arg), not always today, when paged back.

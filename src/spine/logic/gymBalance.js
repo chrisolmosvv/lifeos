@@ -1,6 +1,8 @@
 // LifeOS — Health → Gym: body-part balance (PURE — calc layer).
 //
-// Groups the last-7-Amsterdam-days training by PRIMARY muscle group. The muscle
+// Groups the last-N-Amsterdam-days training by PRIMARY muscle group, where N is the shared
+// paged window the caller passes (currently 30 on Today; the `days = 7` default is a fallback
+// only — Health.jsx always supplies the real window). The muscle
 // comes from the G6 dictionary, already joined onto each exercise as `ex.muscle`
 // by buildWorkouts (gym_exercises.exercise_template_id → primary_muscle_group).
 //

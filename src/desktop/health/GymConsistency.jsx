@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { consistencyGrid } from "../../spine/logic/gymConsistency";
 import { routineWorkouts } from "../../spine/logic/gymRoutine";
-import { sessionDayMap, monthGrid, monthsInWindow, heroInfo } from "../../spine/logic/gymCalendar";
-import { amsTodayYMD } from "../../spine/logic/gymDates";
+import { sessionDayMap, monthGrid, rangeGrid, monthsInWindow, heroInfo, TODAY_WINDOW_DAYS } from "../../spine/logic/gymCalendar";
+import { amsTodayYMD, shiftYMD } from "../../spine/logic/gymDates";
 import GymMonth from "./GymMonth";
 
 // LifeOS — Gym V2 (Piece 10): the Consistency hero — real CALENDAR months. AT TODAY a single
@@ -27,10 +27,12 @@ export default function GymConsistency({ built, win = "today", routine = "all" }
   const dayMap = useMemo(() => sessionDayMap(built || []), [built]);
   const hero = useMemo(() => heroInfo(dayMap, routine, win), [dayMap, routine, win]);
   const months = useMemo(() => {
-    const list = win === "today"
-      ? [{ year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) - 1 }]
-      : monthsInWindow(win);
-    return list.map((mm) => monthGrid(dayMap, { ...mm, selectedRoutine: routine, today }));
+    // Today = a single ROLLING 30-day range grid (Piece 17); 3/6/12mo = the tiled calendar months.
+    if (win === "today") {
+      const start = shiftYMD(today, -(TODAY_WINDOW_DAYS - 1));
+      return [rangeGrid(dayMap, { start, end: today, selectedRoutine: routine, today })];
+    }
+    return monthsInWindow(win).map((mm) => monthGrid(dayMap, { ...mm, selectedRoutine: routine, today }));
   }, [dayMap, win, routine, today]);
 
   const tiled = win !== "today";

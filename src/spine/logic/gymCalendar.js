@@ -7,8 +7,17 @@
 // DIFFERENT routines this map would keep the LAST one — a tie-break rule to decide THEN; not
 // built now because no such day exists.
 
-import { amsYMD, amsTodayYMD } from "./gymDates.js";
+import { amsYMD, amsTodayYMD, shiftYMD, humanDayShort } from "./gymDates.js";
 import { classifyRoutine, ROUTINES } from "./gymRoutine.js";
+
+// Piece 17: the Today view's Consistency grid is a ROLLING window of this many days ending today
+// (was a calendar-month-to-date view). This is Consistency's OWN window definition — separate from
+// Health.jsx's shared paged `days` (which also happens to be 30) by design; Consistency never sees
+// that value. Both heroInfo's today-count and the rangeGrid builder read this one constant.
+export const TODAY_WINDOW_DAYS = 30;
+
+// Weekday of an Amsterdam calendar date as Mon=0 … Sun=6 (noon-UTC never crosses midnight).
+const weekdayMon = (ymd) => (new Date(`${ymd}T12:00:00Z`).getUTCDay() + 6) % 7;
 
 // Amsterdam day (YYYY-MM-DD) → routine id, one per day (see caveat above).
 export function sessionDayMap(workouts) {
@@ -48,6 +57,28 @@ export function monthGrid(dayMap, { year, month, selectedRoutine, today }) {
   return { label: `${MONTHS[month]} ${year}`, year, month, weeks, count };
 }
 
+// Piece 17 — a ROLLING date-range grid for the Today view. Same shape monthGrid returns
+// ({ label, weeks, count }, cells { state, day, ymd, isToday }), but spanning an arbitrary
+// [start, end] window instead of a calendar month, so it crosses month boundaries cleanly.
+// Leading/trailing days pad to Monday-first full weeks exactly like monthGrid — so GymMonth
+// renders it with NO changes. `label` is the human range, e.g. "30 Jun – 29 Jul".
+export function rangeGrid(dayMap, { start, end, selectedRoutine, today }) {
+  const cells = [];
+  for (let i = 0, lead = weekdayMon(start); i < lead; i++) cells.push({ state: "blank" });
+  let count = 0;
+  for (let ymd = start; ymd <= end; ymd = shiftYMD(ymd, 1)) {
+    const routine = dayMap.get(ymd);
+    const matches = routine && (selectedRoutine === "all" || routine === selectedRoutine);
+    if (matches) count += 1;
+    const state = !routine ? "none" : matches ? "on" : "other";
+    cells.push({ state, day: Number(ymd.slice(8, 10)), ymd, isToday: ymd === today });
+  }
+  while (cells.length % 7 !== 0) cells.push({ state: "blank" });
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return { label: `${humanDayShort(start)} – ${humanDayShort(end)}`, start, end, weeks, count };
+}
+
 // The list of {year, month} for a windowed (tiled) view — the last N calendar months incl. the
 // current one, oldest first. 3mo→3, 6mo→6, 1yr→12; anything else → just the current month.
 export function monthsInWindow(win, now = Date.now()) {
@@ -63,17 +94,19 @@ export function monthsInWindow(win, now = Date.now()) {
 }
 
 // The hero number + primary caption, per window + routine selection.
-//   Today       → { number: <count this month>, caption: "[Routine ]sessions this month" }
+//   Today       → { number: <count in rolling window>, caption: "[Routine ]sessions · last 30 days" }
 //   3/6/12 mo   → { number: <window total>, caption: "avg N/month · last X months[, Routine]" }
 export function heroInfo(dayMap, routine, win, now = Date.now()) {
   const label = routine === "all" ? "" : (ROUTINES.find((r) => r.id === routine)?.label || "");
   const inScope = (r) => routine === "all" || r === routine;
 
   if (win === "today") {
-    const prefix = amsTodayYMD(now).slice(0, 7); // "YYYY-MM"
+    // Piece 17: sessions in the rolling last-30-days window (inclusive of today), not the month.
+    const end = amsTodayYMD(now);
+    const start = shiftYMD(end, -(TODAY_WINDOW_DAYS - 1));
     let count = 0;
-    for (const [ymd, r] of dayMap) if (ymd.startsWith(prefix) && inScope(r)) count += 1;
-    return { number: count, caption: label ? `${label} sessions this month` : "sessions this month" };
+    for (const [ymd, r] of dayMap) if (ymd >= start && ymd <= end && inScope(r)) count += 1;
+    return { number: count, caption: label ? `${label} sessions · last 30 days` : "sessions · last 30 days" };
   }
 
   const months = monthsInWindow(win, now);
