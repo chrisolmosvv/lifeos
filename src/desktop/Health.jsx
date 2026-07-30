@@ -16,6 +16,7 @@ import { fetchActivity } from '../spine/data/healthLoad'
 import { loadGymData } from '../spine/data/gymLoad'
 import { buildWorkouts } from '../spine/logic/gymCalc'
 import { muscleBalance } from '../spine/logic/gymBalance'
+import { routineBalance } from '../spine/logic/gymRoutineBalance'
 import { recentSessions } from '../spine/logic/gymSessions'
 import './health/healthChrome.css'
 import './kit/formGuide.css'
@@ -112,6 +113,9 @@ export default function Health({ onBack }) {
   const balance = useMemo(() => (built.length ? muscleBalance(built, { days, now: nowForWindow }) : null), [built, days, nowForWindow])
   const priorNow = viewStart ? noonMs(shiftYMD(viewStart, -1)) : nowForWindow
   const balancePrior = useMemo(() => (built.length ? muscleBalance(built, { days, now: priorNow }) : null), [built, days, priorNow])
+  // Piece 19: the session-based (routine-tagged) view of the SAME window — feeds Balance's Routine
+  // toggle. No prior window needed (the routine breakdown shows × deviation, not trend arrows).
+  const routineBal = useMemo(() => (built.length ? routineBalance(built, { days, now: nowForWindow }) : null), [built, days, nowForWindow])
   const openWorkout = useMemo(() => (openId ? built.find((w) => w.id === openId) : null), [openId, built])
 
   const prevDisabled = win === 'today' || !earliestGym || (viewStart != null && viewStart <= earliestGym)
@@ -185,7 +189,7 @@ export default function Health({ onBack }) {
                   onRecords={() => setView('records')}
                 />
               </div>
-              <GymBalance balance={balance} balancePrior={balancePrior} />
+              <GymBalance balance={balance} balancePrior={balancePrior} routineBalance={routineBal} />
             </div>
             <div className="gym-side">
               <GymActivity activityRows={activityRows} windowStart={actStart} windowEnd={actEnd} />

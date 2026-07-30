@@ -364,9 +364,49 @@
 .gym-radar-card-meta { font-size: 10px; color: var(--ink-muted); display: flex; align-items: center; gap: 4px; }
 .gym-radar-card-trend { color: var(--ink); }
 
-/* Grouped list — Upper / Lower / Core. Bounded to the radar's height; a long list (many
-   groups at a wide window) scrolls INTERNALLY so the balance zone stays compact + the page
-   zero-scrolls. */
+/* Piece 19: the list column = ratio header + optional footnote + the scrolling breakdown. */
+.gym-bal-listcol {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* One-line ratio header with the inline Routine/Region toggle at the end. */
+.gym-bal-ratio {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule-faint);
+  margin-bottom: 6px;
+}
+.gym-bal-ratio-nums { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-family: var(--font-sans); }
+.gym-bal-ratio-part { display: inline-flex; align-items: baseline; gap: 6px; }
+.gym-bal-ratio-sep { color: var(--rule); }
+.gym-bal-ratio-label { font-size: 12px; color: var(--ink-muted); }
+.gym-bal-ratio-num { font-size: 15px; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+/* the ⇄ toggle — a quiet text button, not an accent (terracotta stays reserved) */
+.gym-bal-modetoggle {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gym-bal-modetoggle:hover { color: var(--ink); }
+.gym-bal-othernote { font-family: var(--font-sans); font-size: 11px; color: var(--ink-muted); padding-bottom: 6px; }
+/* routine breakdown row: muscle name | × multiplier (2 columns, no trend/%). */
+.gym-bal-row2--rt { grid-template-columns: 1fr auto; }
+.gym-bal-mult { color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Grouped list — Upper / Lower / Core (Region) or Push / Pull / Legs (Routine). Bounded to the
+   radar's height; a long list scrolls INTERNALLY so the balance zone stays compact + zero-scrolls. */
 .gym-bal-groups {
   flex: 1 1 auto;
   min-width: 0;
