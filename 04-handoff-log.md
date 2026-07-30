@@ -13175,3 +13175,64 @@ NEXT — PIECE 19: Body-Part Balance's Routine/Region ratio redesign (recon). It
   relay; headline finding to carry in: the Push:Pull:Legs ratio's session-based vs static-muscle-map
   attribution DIVERGE materially on real data (Pull reads 36% session-based vs 29% static; shoulders and
   abdominals are the drivers) — a genuine owner decision, flagged, not to be picked silently.
+
+
+## 2026-07-30 — Gym V2 · PIECE 19: Body-Part Balance → Routine/Region toggle (session-based)
+
+WHAT CHANGED
+  • Body-Part Balance's list gains a SECOND, orthogonal toggle (independent of the Sets/Volume tab),
+    inline at the end of a new one-line ratio header:
+      – ROUTINE (new, default): a session-based Push : Pull : Legs ratio (normalised to P+P+L only) +
+        a per-side muscle breakdown, each muscle with a × deviation-from-even multiplier.
+      – REGION (existing, unchanged): the Upper/Lower/Core grouped list with %s + trend arrows.
+  • SESSION-BASED, not a static muscle→PPL map (owner-confirmed): reuses classifyRoutine (Piece 3),
+    the same title-prefix rule every routine feature uses. Consequence (the whole point): a muscle can
+    appear under MORE THAN ONE side with its own independently-scoped set-count / volume / × — e.g.
+    shoulders under both Push (pressing) and Pull (rear-delt work). Abdominals (no static PPL home) is
+    kept, not dropped.
+  • The 3-way ratio excludes "Other" sessions; those show as a footnote instead of being folded in.
+  • × multiplier = actualShareWithinSide × groupCountWithinSide (even share = 1 ÷ #muscles in that
+    side). 1.0× = fair share; >1 over-, <1 under-trained, scoped to that side only. Both Sets & Volume.
+  • The radar is UNAFFECTED by the Routine/Region toggle — it still reads top-muscles-by-metric.
+
+FILES (src-only, commit 6fdfc3d)
+  • NEW src/spine/logic/gymRoutineBalance.js (84) — routineBalance() (routine-tag-preserving muscle
+    aggregation over the shared window) + routineView() (ratio, footnote value, per-side × rows).
+  • src/desktop/Health.jsx — computes routineBalance for the same window (no prior window needed — the
+    routine breakdown shows × deviation, not trend), passes it to GymBalance.
+  • src/desktop/health/GymBalance.jsx — mode state (default 'routine'), inline ⇄ toggle in a new ratio
+    header, routine breakdown (multi-column muscles), Other footnote; region view kept below, unchanged.
+  • src/desktop/kit/gymPage.css — ratio-header / ⇄-toggle / footnote / × -row styles.
+
+HOW TO VERIFY (Builder-verified live-local 1440×900 + fresh DB query for the live window [1–30 Jul])
+  • Routine · Sets: ratio "Push 40 : Pull 32 : Legs 29", footnote "+ 23 sets in uncategorised sessions".
+    DB matches exactly. (The recon's 37:36:27 snapshot was the [30 Jun–29 Jul] window; it rolled a day.)
+  • ★ CROSS-ROUTINE MUSCLE (the core check): Shoulders appears under Push (29 sets, 1.4×) AND under Pull
+    (7 sets, 0.6×) — different, independently-scoped counts and multipliers. DB-CONFIRMED both. Also
+    Glutes (Pull 0.3× / Legs 0.4×) and Abdominals (Push 0.4× / Pull 0.9×) appear in two sides. Rendered
+    correctly as separate rows under each side.
+  • Routine · Volume: ratio flips to "Push 23 : Pull 22 : Legs 55" (legs dominate by volume — heavy
+    compounds), footnote "+ 7,097 kg in uncategorised sessions"; shoulders Push 1.0× / Pull 0.5×.
+  • Region · Sets: "Upper 63 : Lower 28 : Core 9" header + the UNCHANGED Upper/Lower/Core list (%s +
+    trend arrows). Region · Volume works (pre-existing metric path). All four combinations coherent.
+  • Radar identical in Routine vs Region for a given metric (re-ranks only on Sets↔Volume, by design).
+  • Zero-scroll at Today/3mo/6mo/1yr (844==844); routine list scrolls INTERNALLY. No console errors.
+
+KNOWN GAPS / RISKS — flagged made-calls (owner's call, all reversible)
+  • OTHER-FOOTNOTE WORDING = "+ N sets in uncategorised sessions" / "+ N kg in uncategorised sessions"
+    (British spelling, matching the app's "normalised"/"renormalised"). This was not pixel-specified —
+    reword freely.
+  • REGION RATIO HEADER = 3-way "Upper : Lower : Core". The design example showed a 2-way "Upper 70 :
+    Lower 30" (omitting Core), but the same spec said "keep the existing Region grouping unchanged" —
+    and that grouping is 3-bucket. I kept 3-way to stay consistent with the list below it. If you want a
+    2-way Upper:Lower header (folding/hiding Core), it's a small tweak — YOUR CALL.
+  • DEFAULT MODE = Routine (the new headline). The examples led with routine; flipping the default to
+    Region is one line if you'd rather open on the anatomical view.
+  • LAYOUT: the per-side breakdown is rendered as stacked GROUPS (Push, then Pull, then Legs — same
+    visual language as the Upper/Lower/Core list), not literal side-by-side columns. Safer for the
+    narrow list width; the multi-side muscle appearances are all present. Reversible to columns if wanted.
+  • PRE-EXISTING DEBT (not this piece): gymPage.css is 741 lines (well over ~250). It was already ~710;
+    I added ~30. Splitting a large shared stylesheet mid-feature is risky — flagging for a dedicated
+    future split, not done here.
+
+NEXT — PIECE 20: docs close — the genuine FINAL piece of the whole Gym V2 arc (covers Pieces 9–19).
