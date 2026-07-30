@@ -1,0 +1,56 @@
+/* ── TRAINING PROGRESS (Piece 3 tabs + trend; Piece 14: chart fills its half) ────── */
+/* Training grows to fill the space between Consistency and Balance. */
+.gym-training {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* Everything keeps its natural height EXCEPT the chart wrapper, which grows to absorb the
+   column's slack and centres the chart — so the top half reads full (no dead space above
+   Balance) without stretching/distorting the chart, and the quiet footer pins to the bottom. */
+.gym-training > *:not(.gym-combo-wrap) {
+  flex: 0 0 auto;
+}
+.gym-training .gym-combo-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+}
+.gym-tabs {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  align-self: flex-start;
+}
+.gym-tab {
+  background: var(--paper);
+  border: none;
+  border-left: 1px solid var(--rule);
+  padding: 5px 16px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+.gym-tab:first-child { border-left: none; }
+.gym-tab:hover { color: var(--accent); }
+.gym-tab.is-active { background: var(--ink); color: var(--paper); }
+.gym-tab.is-active:hover { color: var(--paper); }
+.gym-training .gym-over-stats { margin-top: 6px; }
+
+/* Screen-2 card delta (reused by GymExerciseGrid's top-6 cards). The old flat lift-table and its
+   volume chart — which first defined the .gym-vol* / .gym-lift-table / .gym-lt-row/name/best classes —
+   were removed in Piece 20's cleanup (GymVolChart + GymLiftTable were left orphaned by the Piece-12
+   drill-down). Colour-coding kept: a GAIN or first-time "new" reads terracotta (a real improvement is
+   the signal); ±0/flat and a regression stay muted grey (calm, not alarming). */
+.gym-lt-delta {
+  min-width: 58px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.gym-lt-delta--gain { color: var(--accent); }
+.gym-lt-delta--down,
+.gym-lt-delta--flat,
+.gym-lt-delta--none { color: var(--ink-muted); }

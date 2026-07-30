@@ -1,0 +1,146 @@
+/* ── TRAINING DRILL-DOWN (Piece 12: chart → top-6 grid → single-exercise detail) ── */
+/* The combo chart is the hero of Screen 1. Its wrapper is the positioning context for the
+   quiet "More →" prompt that fades in on hover and drills to the grid. */
+.gym-combo-wrap { position: relative; }
+.gym-more-hint {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 2px 9px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms ease, color 120ms ease;
+}
+.gym-combo-wrap:hover .gym-more-hint,
+.gym-more-hint:focus-visible { opacity: 1; }
+.gym-more-hint:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Quiet footer — keeps the workout history + records pages reachable (owner's call: the
+   drill-down replaced the old prominent links, but a discreet path stays). */
+.gym-quiet-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.gym-quiet-links button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.gym-quiet-links button:hover { color: var(--accent); }
+
+/* Breadcrumb trail — back-links on the grid + detail screens. */
+.gym-trail {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+.gym-trail button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.gym-trail button:hover { color: var(--accent); }
+.gym-trail-sep { color: var(--rule); }
+.gym-trail-here { color: var(--ink); }
+
+/* Piece 14: Screen 2's consolidated ONE-ROW header — two zones split by a hairline:
+   LEFT = back-link + title (context), RIGHT = routine tabs + Volume/Reps toggle (controls). */
+.gym-grid-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.gym-grid-head-z { display: flex; align-items: center; gap: 12px; }
+.gym-grid-head-r {
+  margin-left: auto;          /* push controls to the right */
+  padding-left: 16px;
+  border-left: 1px solid var(--rule-faint); /* the hairline dividing context | controls */
+}
+.gym-trail-back {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.gym-trail-back:hover { color: var(--accent); }
+
+/* Top-6 exercise grid (Screen 2). Two calm columns of cards; scrolls internally on a tall
+   window so the page stays zero-scroll. */
+.gym-grid-zone { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+.gym-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+.gym-grid::-webkit-scrollbar { width: 6px; }
+.gym-grid::-webkit-scrollbar-track { background: transparent; }
+.gym-grid::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+.gym-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+.gym-card:hover { border-color: var(--accent); }
+.gym-card-name {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gym-card-best {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.gym-card-best-w { font-size: 14px; color: var(--ink); }
+.gym-card .gym-lt-delta { min-width: 0; }
+.gym-card-sub {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gym-card-dot { color: var(--rule); }

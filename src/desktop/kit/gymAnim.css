@@ -1,0 +1,25 @@
+/* ── ANIMATION KEYFRAMES (Piece 6) ────────────────────────────────────────────── */
+@keyframes gym-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes gym-cell-in {
+  from { opacity: 0; transform: scale(0.55); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes gym-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+/* Radar shape grows outward from centre (transform-origin set inline to the radar centre). */
+@keyframes gym-radar-grow {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+/* Respect reduced-motion: no auto-playing animation (hover interactions stay). */
+@media (prefers-reduced-motion: reduce) {
+  .gym-consist-num,
+  .gym-cell,
+  .gym-streak-dot,
+  .gym-radar-poly { animation: none; }
+}

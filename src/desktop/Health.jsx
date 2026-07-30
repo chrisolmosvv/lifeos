@@ -20,7 +20,16 @@ import { routineBalance } from '../spine/logic/gymRoutineBalance'
 import { recentSessions } from '../spine/logic/gymSessions'
 import './health/healthChrome.css'
 import './kit/formGuide.css'
-import './kit/gymPage.css'
+// Gym page styles — split from the old 700-line gymPage.css in Piece 20. Imported IN ORDER so the
+// cascade matches the original single file exactly (shell → consistency → training → balance →
+// activity → keyframes → drill-down).
+import './kit/gymShell.css'
+import './kit/gymConsistency.css'
+import './kit/gymTraining.css'
+import './kit/gymBalance.css'
+import './kit/gymActivity.css'
+import './kit/gymAnim.css'
+import './kit/gymDrilldown.css'
 
 // Health — the Gym front page (Health Hub → Gym), V2 TWO-COLUMN (Piece 1). Replaces the P4
 // 2×2 grid. A Gym-LOCAL time control (Today / 3mo / 6mo / 1yr + paging, its own state) sits

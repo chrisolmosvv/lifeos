@@ -1,0 +1,59 @@
+/* LifeOS — Gym V2 (Piece 1): the TWO-COLUMN shell + zone styles. Broadsheet tokens
+   (theme.css): paper/ink, Fraunces for big numbers, Inter for labels, terracotta reserved
+   for affordances/movement only. Consumes the shared chrome/fit model (healthChrome.css:
+   .health-chrome, .health-fit, .health-fade) and reuses the surviving gym-* atoms from
+   formGuide.css (.gym-kicker, .gym-over-stats, .gym-volline, .gym-balance, .gym-more). The
+   .gym-body is the flex-grow child that fills the fold with no scroll. */
+
+/* ── THE TWO COLUMNS: main (grows) | side (fixed), hairline between ───────────── */
+.health-fit .gym-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.gym-body {
+  display: flex;
+  gap: 32px;
+}
+.gym-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow: hidden;
+}
+.gym-side {
+  flex: 0 0 300px;
+  min-height: 0;
+  border-left: 1px solid var(--rule);
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow: hidden;
+}
+
+/* Every zone stacks its kicker label above its body. flex:0 0 auto so a zone keeps its
+   natural height and never SHRINKS under column pressure (shrinking made the Consistency
+   grid overflow into Training) — only .gym-training opts back into growing + scrolling. */
+.gym-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  flex: 0 0 auto;
+}
+
+/* Piece 9: TOP section of the main column — Consistency (natural/narrow, .gym-zone's flex:0 0
+   auto) + Training (grows wider via its own flex:1 1 auto) side by side. .gym-top fills the space
+   above Balance; Training stretches to its height and its lift table scrolls. Balance stays a
+   direct .gym-main child below, full width. */
+/* Piece 15 follow-up: the top half (Consistency + Training) and the bottom half (Balance) split the
+   main column 50/50 — flex:1 1 0 on BOTH so each genuinely claims half (was: top grew, Balance natural). */
+.gym-top {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  gap: 28px;
+}
+
