@@ -1,0 +1,189 @@
+/* LifeOS — Health Hub: GYM section (full-width top half). Broadsheet: paper/ink,
+   hairlines + whitespace, NO card/box/shadow. PPL + heatmap colours are approved
+   design overrides (fixed hex), not theme-driven. */
+
+.hgym {
+  --ppl-push: #C8643D;
+  --ppl-pull: #8B6F52;
+  --ppl-legs: #4A3F34;
+
+  display: grid;
+  grid-template-columns: 1fr 1px 1.15fr;
+  gap: 0 28px;
+  width: 100%;
+  align-items: start;
+  position: relative;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 4px 2px 2px;
+}
+/* the vertical hairline between the two columns (the 1px grid track) */
+.hgym::after {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  width: 1px;
+  background: rgba(28, 25, 22, 0.14);
+}
+.hgym-col { min-width: 0; }
+.hgym-right { grid-column: 3; }
+
+.hgym-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hgym-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--ink-muted);
+}
+
+/* Sets / Volume toggle */
+.hgym-toggle { display: inline-flex; gap: 2px; }
+.hgym-toggle-opt {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.hgym-toggle-opt.is-on {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+/* Hero session count */
+.hgym-hero { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+.hgym-hero-num {
+  font-family: var(--font-serif);
+  font-size: 46px;
+  line-height: 1;
+  color: var(--ink);
+}
+.hgym-hero-cap {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.hgym-sub {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+/* Heatmap */
+.hgym-heat { margin-top: 14px; }
+.hgym-heat-dow,
+.hgym-heat-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  max-width: 220px;
+}
+.hgym-heat-dow {
+  margin-bottom: 4px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--ink-muted);
+  text-align: center;
+}
+.hgym-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  background: #E7DECB; /* cream = rest (grade 0) */
+}
+.hgym-cell.g1 { background: rgba(200, 100, 61, 0.32); }
+.hgym-cell.g2 { background: rgba(200, 100, 61, 0.60); }
+.hgym-cell.g3 { background: #C8643D; }
+.hgym-cell.is-future { background: transparent; box-shadow: inset 0 0 0 1px var(--rule-faint); }
+.hgym-cell.is-today { box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+/* Push:Pull:Legs split bar */
+.hgym-split {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  margin-top: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.hgym-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+.hgym-seg-num {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: #F6F5F1;
+}
+.hgym-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.hgym-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.hgym-dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+/* Muscle bars */
+.hgym-muscles { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.hgym-mrow { display: flex; align-items: center; gap: 10px; }
+.hgym-mname {
+  flex: 0 0 84px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink);
+  text-align: right;
+}
+.hgym-mtrack {
+  flex: 1 1 auto;
+  height: 8px;
+  background: var(--rule-faint);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hgym-mfill { display: block; height: 100%; border-radius: 4px; }
+.hgym-mmult {
+  flex: 0 0 34px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hgym-empty {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-top: 14px;
+}
+
+/* the quiet tap affordance, shared look with the other sections */
+.hub-detail-cue {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.hgym:hover .hub-detail-cue,
+.hgym:focus-visible .hub-detail-cue { opacity: 1; }
