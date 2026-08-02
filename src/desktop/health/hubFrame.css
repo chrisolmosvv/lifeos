@@ -1,0 +1,52 @@
+/* LifeOS — Health Hub: the 2×2 SECTION FRAME. Gym spans the full top; Sleep (bottom-
+   left) + Body (bottom-right) split the bottom. Separated by HAIRLINES + whitespace
+   only — no cards, no boxes, no shadows, no rounded container corners. Sized to fit one
+   13" laptop viewport without scrolling (the sections are compact by design). */
+
+.hub-frame {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+
+/* Gym — full-width top half; a hairline rule separates it from the bottom row. */
+.hub-frame > .hgym {
+  grid-column: 1 / -1;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(28, 25, 22, 0.14);
+}
+
+/* Sleep — bottom-left; a vertical hairline separates it from Body. */
+.hub-frame > .hslp {
+  grid-column: 1;
+  padding: 16px 30px 0 0;
+  border-right: 1px solid rgba(28, 25, 22, 0.14);
+}
+
+/* Body — bottom-right. */
+.hub-frame > .hbody {
+  grid-column: 2;
+  padding: 16px 0 0 30px;
+}
+
+/* Shared section label (Sleep + Body use this; Gym uses .hgym-label with the same look). */
+.hub-sec-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--ink-muted);
+}
+
+/* Stack to a single column only on genuinely narrow viewports (keeps desktop 2×2). */
+@media (max-width: 720px) {
+  .hub-frame { grid-template-columns: 1fr; }
+  .hub-frame > .hgym { grid-column: 1; }
+  .hub-frame > .hslp {
+    grid-column: 1;
+    border-right: none;
+    border-bottom: 1px solid rgba(28, 25, 22, 0.14);
+    padding: 16px 0;
+  }
+  .hub-frame > .hbody { grid-column: 1; padding: 16px 0 0; }
+}

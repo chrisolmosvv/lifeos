@@ -2,27 +2,28 @@ import { useEffect, useState } from "react";
 import Health from "../Health";
 import SleepPage from "./SleepPage";
 import BodyPage from "./BodyPage";
-import HubSleepCard from "./HubSleepCard";
-import HubBodyCard from "./HubBodyCard";
-import HubGymCard from "./HubGymCard";
+import HubGymSection from "./HubGymSection";
+import HubSleepSection from "./HubSleepSection";
+import HubBodySection from "./HubBodySection";
 import { dateLine, asOf } from "../../spine/logic/healthFormat";
 import { amsTodayYMD } from "../../spine/logic/gymDates";
 import { fetchSleep, fetchBody, fetchGoals } from "../../spine/data/healthLoad";
 import { resolveGoals } from "../../spine/logic/healthGoals";
 import { sleepView } from "../../spine/logic/healthSleep";
-import { metricView as bodyView, BODY_METRICS } from "../../spine/logic/healthBody";
+import { BODY_METRICS } from "../../spine/logic/healthBody";
 import { loadGymData } from "../../spine/data/gymLoad";
-import { buildWorkouts, boxScore } from "../../spine/logic/gymCalc";
-import { recentSessions } from "../../spine/logic/gymSessions";
+import { buildWorkouts } from "../../spine/logic/gymCalc";
 import "../kit/healthHub.css";
+import "./hubFrame.css";
 
-const START = "2026-01-01"; // backfill start — covers a stale latest reading too
+const START = "2026-01-01"; // backfill start — covers 30- and 90-day windows plus a stale reading
 
-// HealthHub — the Health section's landing screen. Loads sleep/body/gym FRESH on
-// every open (compute-on-read), runs the S5 calc layer + gym calc, and renders the
-// three cards over a quiet dateline + an "as of" freshness line. It wraps the
-// existing Gym front page (Health.jsx) UNCHANGED behind a "← Health" back link;
-// Sleep/Body open "coming soon" stubs (S6/S7 replace those).
+// HealthHub — the Health section's landing screen. Loads sleep/body/gym FRESH on every
+// open (compute-on-read), then hands the RAW rows to three rich sections laid out in a
+// 2×2 frame (Gym spans the top; Sleep bottom-left; Body bottom-right). Each section owns
+// its own calc (via the shared calc layer, so numbers match the detail pages) and taps
+// through to its detail page — Gym → Health.jsx, Sleep → SleepPage, Body → BodyPage —
+// via local `sub` state (unchanged). The mobile Health page is a separate file.
 export default function HealthHub() {
   const [sub, setSub] = useState("hub"); // 'hub' | 'gym' | 'sleep' | 'body'
   const [state, setState] = useState({ loading: true });
@@ -43,38 +44,26 @@ export default function HealthHub() {
 
       const goalMap = resolveGoals(goals);
       const sv = sleepView(sleep, goalMap, now);
-      const body = {};
-      BODY_METRICS.forEach((m, i) => {
-        body[m] = bodyView(m, bodyRows[i], goalMap.get(m), now);
-      });
-
       const built = buildWorkouts(gym.workouts, gym.exercises, gym.sets, gym.templatesById);
-      const box = boxScore(built, 7, now);
-      const sessions = recentSessions(built);
-      const last = built[0] || null;
-      const gymCard = {
-        volume: box.volume,
-        sessions: box.sessions,
-        lastWorkoutAt: last?.started_at || null,
-        lastMinutes: sessions[0]?.minutes ?? null,
-      };
+      const byMetric = {};
+      BODY_METRICS.forEach((m, i) => { byMetric[m] = bodyRows[i]; });
 
-      // "As of" = the most recent UNDERLYING reading timestamp across the metrics
+      // "As of" = the most recent UNDERLYING reading timestamp across everything loaded
       // (when data was last received), not when this calc ran.
-      const stamps = [
-        sv.lastNight?.wokeAt,
-        last?.ended_at || last?.started_at,
-        ...BODY_METRICS.map((m) => body[m].latestRaw?.at),
-      ].filter(Boolean);
+      const last = built[0] || null;
+      const bodyLatest = bodyRows
+        .flat()
+        .map((r) => r?.reading_at)
+        .filter(Boolean)
+        .reduce((a, b) => (a && new Date(a) >= new Date(b) ? a : b), null);
+      const stamps = [sv.lastNight?.wokeAt, last?.ended_at || last?.started_at, bodyLatest].filter(Boolean);
       const asOfTs = stamps.length
         ? stamps.reduce((a, b) => (new Date(a).getTime() >= new Date(b).getTime() ? a : b))
         : null;
 
-      if (alive) setState({ loading: false, now, sv, body, gym: gymCard, asOfTs });
+      if (alive) setState({ loading: false, now, sv, sleepRows: sleep, built, byMetric, goalMap, asOfTs });
     })().catch((e) => alive && setState({ loading: false, error: e.message || String(e) }));
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [sub]); // recompute each time we land back on the hub (fresh on open)
 
   if (sub === "gym") return <Health onBack={() => setSub("hub")} />;
@@ -94,10 +83,16 @@ export default function HealthHub() {
       ) : (
         <>
           <div className="hub-asof">{state.asOfTs ? `as of ${asOf(state.asOfTs)}` : "no data yet"}</div>
-          <div className="hub-cards">
-            <HubSleepCard sleep={state.sv} onClick={() => setSub("sleep")} />
-            <HubBodyCard body={state.body} now={state.now} onClick={() => setSub("body")} />
-            <HubGymCard gym={state.gym} now={state.now} onClick={() => setSub("gym")} />
+          <div className="hub-frame">
+            <HubGymSection built={state.built} now={state.now} onOpen={() => setSub("gym")} />
+            <HubSleepSection sv={state.sv} rows={state.sleepRows} now={state.now} onOpen={() => setSub("sleep")} />
+            <HubBodySection
+              weightRows={state.byMetric.weight}
+              bodyFatRows={state.byMetric.body_fat}
+              goalMap={state.goalMap}
+              now={state.now}
+              onOpen={() => setSub("body")}
+            />
           </div>
         </>
       )}

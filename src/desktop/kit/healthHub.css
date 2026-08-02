@@ -1,10 +1,11 @@
-/* LifeOS — Health Hub. The calm "section front": a quiet dateline over a row of
-   three equal cards. Broadsheet tokens only (theme.css): paper/ink, Fraunces for
-   the big data numbers, Inter for labels, terracotta sparingly (hover + trends). */
+/* LifeOS — Health Hub shell: the calm "section front" — a quiet dateline + freshness
+   line over the 2×2 section frame (frame layout lives in hubFrame.css). Broadsheet
+   tokens only (theme.css): paper/ink, Fraunces for data, Inter for labels, terracotta
+   sparingly. The old three-card layout was replaced by the rich sections. */
 
 .hub {
-  padding: 28px 24px 40px;
-  max-width: 1100px;
+  padding: 20px 24px 24px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 
@@ -13,157 +14,15 @@
   font-family: var(--font-sans);
   font-size: 15px;
   color: var(--ink-muted);
-  margin: 4px 0 4px;
+  margin: 2px 0;
 }
 
-/* "As of" freshness line (wired in piece 2). */
+/* "As of" freshness line. */
 .hub-asof {
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--ink-muted);
-  margin: 0 0 22px;
-}
-
-/* Three equal cards, left to right; stacks naturally when narrow. */
-.hub-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-top: 18px;
-}
-@media (max-width: 720px) {
-  .hub-cards {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* The card shell — whole card is the tap target. Calm by default; terracotta only
-   on hover (the affordance). Reset the <button> so it reads as paper, not a UI
-   control. */
-.hub-card {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 22px 22px 24px;
-  cursor: pointer;
-  font: inherit;
-  color: var(--ink);
-  min-height: 180px;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
-}
-.hub-card:hover,
-.hub-card:focus-visible {
-  border-color: var(--accent);
-  box-shadow: 0 1px 0 var(--accent);
-  outline: none;
-}
-
-.hub-card-label {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  color: var(--ink-muted);
-  margin-bottom: 10px;
-}
-
-.hub-card-headline {
-  font-family: var(--font-serif);
-  font-size: 40px;
-  line-height: 1.05;
-  color: var(--ink);
-}
-
-/* Body headline: weight + body-fat side by side. */
-.hub-pair {
-  display: flex;
-  gap: 22px;
-  align-items: baseline;
-}
-.hub-pair-val {
-  white-space: nowrap;
-}
-.hub-unit {
-  font-family: var(--font-sans);
-  font-size: 15px;
-  color: var(--ink-muted);
-  margin-left: 4px;
-}
-
-/* Sleep stage split — small, under the duration headline. */
-.hub-stages {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-  margin-top: 10px;
-}
-
-/* A quiet support line (7-day avg, sessions-this-week, last-session summary). */
-.hub-support {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink);
-  margin-top: 10px;
-}
-.hub-support--quiet {
-  color: var(--ink-muted);
-  margin-top: 4px;
-}
-
-/* Sleep goal progress bar — only rendered when a goal exists. */
-.hub-goalbar {
-  margin-top: 14px;
-  height: 6px;
-  background: var(--rule-faint);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.hub-goalbar-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 3px;
-}
-
-/* Body trend marks — terracotta only for real movement; flat stays ink. */
-.hub-trends {
-  display: flex;
-  gap: 16px;
-  margin-top: 12px;
-  min-height: 18px;
-}
-.hub-trend {
-  font-family: var(--font-sans);
-  font-size: 13px;
-}
-.hub-trend--move {
-  color: var(--accent);
-}
-.hub-trend--flat {
-  color: var(--ink-muted);
-}
-
-/* Body mini row — three secondary stats. */
-.hub-mini {
-  display: flex;
-  gap: 22px;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--rule-faint);
-}
-.hub-mini-num {
-  font-family: var(--font-serif);
-  font-size: 18px;
-  color: var(--ink);
-}
-.hub-mini-label {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  letter-spacing: 0.03em;
-  color: var(--ink-muted);
-  margin-top: 2px;
+  margin: 0 0 12px;
 }
 
 /* Loading + error. */
@@ -185,50 +44,11 @@
   animation: hub-spin 0.8s linear infinite;
 }
 @keyframes hub-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 .hub-error {
   font-family: var(--font-sans);
   font-size: 14px;
   color: var(--overdue);
   padding: 24px 0;
-}
-
-/* The thin wrapper around the unchanged Gym front page + the stub back link. */
-.hub-wrap {
-  padding-top: 8px;
-}
-.hub-back {
-  display: inline-block;
-  background: none;
-  border: none;
-  padding: 8px 24px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--ink-muted);
-  cursor: pointer;
-}
-.hub-back:hover {
-  color: var(--accent);
-}
-
-/* Coming-soon stub. */
-.hub-stub {
-  padding: 16px 24px 40px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-.hub-stub-title {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 34px;
-  color: var(--ink);
-  margin: 16px 0 8px;
-}
-.hub-stub-soon {
-  font-family: var(--font-sans);
-  font-size: 15px;
-  color: var(--ink-muted);
 }
