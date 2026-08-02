@@ -3,6 +3,7 @@ import SleepStageTimeline from "../kit/SleepStageTimeline";
 import SleepClockColumns from "../kit/SleepClockColumns";
 import SleepClockDial from "../kit/SleepClockDial";
 import { parseSegments, proportionBand } from "../../spine/logic/hypnogram";
+import { restorative } from "./hubCalc";
 import { hm, clockTime, clockFromMin } from "../../spine/logic/healthFormat";
 import { NIGHT_DEADBAND } from "../../spine/logic/healthStats";
 
@@ -126,16 +127,9 @@ export default function SleepNight({
       : null;
   const durMoving = durDelta != null && Math.abs(durDelta) > DUR_BAND;
 
-  // Restorative = deep + REM. No getter combines them (checked), and none is needed: both
-  // minutes are already on `detail`, so this is a two-field sum — derived, never stored.
-  // % is of time ASLEEP, matching how the stage readout below computes every other %.
-  const deepMin = detail.stages.deep.min;
-  const remMin = detail.stages.rem.min;
-  const restMin = Number.isFinite(deepMin) && Number.isFinite(remMin) ? deepMin + remMin : null;
-  const restPct =
-    restMin != null && Number.isFinite(detail.asleepMinutes) && detail.asleepMinutes > 0
-      ? Math.round((restMin / detail.asleepMinutes) * 100)
-      : null;
+  // Restorative = deep + REM (% of time ASLEEP). Shared getter — the SAME definition
+  // the Hub's sleep section uses, so the two never disagree (hubCalc.restorative).
+  const { min: restMin, pct: restPct } = restorative(detail.stages, detail.asleepMinutes);
   const restText = restMin != null ? `${restMin} min${restPct != null ? ` · ${restPct}%` : ""}` : "—";
 
   const streakText = Number.isFinite(streak?.streak)
