@@ -1,0 +1,131 @@
+/* LifeOS — Health Hub: SLEEP section (bottom-left quarter). Hairlines + whitespace,
+   no box. Stage colours are the approved sleep palette (fixed hex). */
+
+.hslp {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
+.hslp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hslp-dur {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  line-height: 1;
+  color: var(--accent);
+}
+
+/* Ribbon */
+.hslp-ribbon { margin-top: 12px; }
+.hslp-svg {
+  width: 100%;
+  height: 64px;
+  display: block;
+}
+.hslp-ribbon-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+.hslp-band-note { font-style: italic; }
+
+/* Fallback proportional band (nights without a timeline) */
+.hslp-ribbon--band .hslp-band {
+  display: flex;
+  width: 100%;
+  height: 22px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+.hslp-band-seg { min-width: 0; }
+
+/* Stage legend — min + % of night */
+.hslp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.hslp-leg-item { display: inline-flex; align-items: center; gap: 6px; }
+.hslp-leg-dot { width: 9px; height: 9px; border-radius: 2px; }
+.hslp-deep { background: #1E1A16; }
+.hslp-core { background: #4A3F34; }
+.hslp-rem { background: #8C7C64; }
+.hslp-awake { background: #C9BEA6; }
+
+/* Stat row — 3 divided cells */
+.hslp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 14px;
+  border-top: 1px solid var(--rule-faint);
+  padding-top: 10px;
+}
+.hslp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px;
+  border-left: 1px solid var(--rule-faint);
+}
+.hslp-stat:first-child { border-left: none; padding-left: 0; }
+.hslp-stat-val {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--ink);
+}
+.hslp-stat-lab {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--ink-muted);
+}
+.hslp-stat-delta {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+.hslp-stat-delta.up { color: var(--accent); }
+.hslp-stat-delta.down { color: var(--accent); }
+
+.hslp-none {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-top: 16px;
+}
+
+/* tap affordance */
+.hslp .hub-detail-cue {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.hslp:hover .hub-detail-cue,
+.hslp:focus-visible .hub-detail-cue { opacity: 1; }
