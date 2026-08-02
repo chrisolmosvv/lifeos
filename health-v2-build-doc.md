@@ -938,6 +938,12 @@ built from `GymTodayCard`, `GymOverTimeCard`, `WalkingTodayCard`, `WalkingOverTi
 SEPARATE codebase and was NOT touched.
 
 ## E4. Time control — Today / 3mo / 6mo / 1yr + paging (Gym-local)
+> **(corrected 2026-07-30 — see PART F2/F5.)** Two claims below are now STALE: "Today = trailing **14
+> days**" became a rolling **30 days** (Piece 17), and the "**FIXED vs PAGED** split — Consistency +
+> Body-Part Balance DO NOT page" no longer holds: Balance pages with the window (Piece 8) and
+> Consistency's Today grid is the rolling-30 range (Piece 17). The switcher levels + Gym-local state
+> below remain accurate.
+
 The old Week / Month / 90-day training switcher is RETIRED. New model (`GymTimeControl`):
 - **Today** (paged zones use a trailing 14 days) / **3 Months** (90) / **6 Months** (180) / **1 Year** (365),
   with **prev/next paging arrows** (windowed views only), a **date-range label** ("Apr–Jul 2026", cross-
@@ -967,6 +973,12 @@ is DERIVED at read time by a case-insensitive **prefix** match (`classifyRoutine
   mixed with Legs, the complaint that started this piece) + a per-lift table (E6).
 
 ## E6. Per-lift "current best" is WINDOW-SCOPED (not all-time)
+> **(corrected 2026-07-30 — see PART F4.)** The flat per-lift TABLE described here was REPLACED by the
+> Training Progress drill-down (Piece 12): the same window-scoped best/delta logic now lives in Screen 2's
+> top-6 exercise cards (`GymExerciseGrid`, still using `.gym-lt-delta` colour-coding). `GymLiftTable.jsx`
+> was deleted in Piece 20. The window-scoped-best PRINCIPLE below still holds; the flat-table PRESENTATION
+> is gone.
+
 For each lift in the selected routine + time window, the table shows **current best = heaviest working
 weight IN the selected window** (e.g. last 14 / 90 days), and **delta = that minus the best BEFORE the
 window** (same routine). ★ **This is the owner's explicit choice and is counter-intuitive at a glance:**
@@ -1002,6 +1014,8 @@ page stays zero-scroll.
   energy bars stay DAILY** — a cross-surface inconsistency. 60 was shipped as a placeholder (owner-
   approved at the time under the "no precedent" premise); reconciling 60-vs-90 is banked as OPEN debt
   (roadmap) for the owner to decide — this build does NOT silently change it.
+  > **(corrected 2026-07-30 — see PART F7.)** RESOLVED: reconciled to **`STEPS_COLLAPSE_ABOVE_DAYS = 90`**,
+  > so the 3-Month view now stays DAILY, matching Body's Energy + Sleep. The 60-vs-90 debt is closed.
 - **Shallow-data caveat:** real steps history is only ~19 days (2026-06-24 → 2026-07-17), so the collapse
   rarely triggers with meaningful data yet and long windows are mostly honest "–" rows. Expected.
 
@@ -1016,3 +1030,141 @@ rewritten `Health.jsx` shell — all under ~250 lines. `lastNWeeksSessions` is n
 front page (Consistency uses `consistencyGrid`); left in place (still used elsewhere / prove-dead) — a
 cleanup call (roadmap). Dead CSS from the retired P4 cards remains in `formGuide.css` (one class name,
 `.gym-grid`, is SHARED with mobile — needs a targeted scoped sweep, not a blind delete; roadmap).
+
+# PART F — GYM V2 REDESIGN, ROUND 2 (as-built, Pieces 9–19, 2026-07-27 → 2026-07-30)
+
+> **AUTHORITATIVE for the current Gym UI — read this before PART E for anything below.** PART E (Pieces
+> 1–8) is the first-generation Gym V2; this round rebuilt most of it. Where they conflict, PART F wins —
+> specifically it SUPERSEDES E4's "Today = trailing 14 days" and its "Consistency + Balance are FIXED,
+> don't page" split, E6's flat per-lift table (replaced by the drill-down), and adjusts E8's collapse
+> threshold. Src-only throughout; no schema, no Checker. Per-piece steps in 04-handoff-log.md
+> (2026-07-27 → -30); decisions in 03-decisions.md (same dates).
+
+## F1. LAYOUT — a genuine 50/50 main column, radar sized to fill
+The main column is split into two halves of ENFORCED-EQUAL height (not "no visible gap" — real
+`flex:1 1 0` on both):
+- **TOP half** = Consistency (pinned 300px wide) + Training Progress (fills the rest), side by side.
+- **BOTTOM half** = Body-Part Balance, full width, claiming its own 50%.
+Because Balance now owns half the column, its **radar scales up to fill that height** (`height:100%` +
+`aspect-ratio:240/216`, capped `max-height:300px`) — far bigger than the old fixed 178×162. The
+Consistency calendar likewise **fills its (shorter) top-half box**: `grid-auto-rows:1fr` + square cells
+(`aspect-ratio:1`, sized to the smaller grid track) so nothing overflows into Balance.
+- **Calendar tile columns auto-size** at the tiled (3/6/12mo) views by a **`ceil(√months)` rule**:
+  3mo→2 cols (2-over-1, not a squashed single row), 6mo→3, 1yr→4. (KNOWN GAP: at 1yr the 12 tiles leave
+  ~5px cells — legible but tiny; inherent to a year in half a column.)
+The side column (Activity + Steps) is unchanged in width (fixed 300px, hairline divider). Zero-scroll
+under `.health-fit` everywhere.
+
+## F2. TIME WINDOW — "Today" is a rolling last-30-days, uniform across the whole page
+"Today" is a **rolling last-30-days window** feeding Consistency, Training, Activity, Steps AND Balance
+— all reading ONE shared `WINDOW_DAYS.today` value in Health.jsx (3/6/12mo stay 90/180/365).
+- ★ **Decision archaeology (two reversals):** the original was a **14-day** trailing window (E4, a
+  flagged made-call). A **calendar-month-to-date** idea was then explored and **ABANDONED** for two
+  concrete reasons: (a) early in a month the Training zone was nearly blank (a 1st-of-month view showed
+  ~zero sessions), and (b) Activity's "vs typical" compares against an equal-length prior window, which
+  a variable month-length made a floating, awkward comparison. A **fixed rolling 30 days** solves BOTH
+  at once (always full, always equal-length) — so 30-vs-30 comparisons are always clean.
+- **Consistency's grid keeps its exact visual shape** (Monday-first, weeks-as-rows, real calendar-grid
+  look) but shows a **rolling range** — header reads "30 Jun – 29 Jul", hero "N sessions · last 30 days"
+  — via an additive `rangeGrid()` builder. `monthGrid()` is untouched, so the **3/6/12-month tiled
+  views remain calendar-month-aligned** ("Jul 2026" labels + count badges) exactly as before. The
+  change is Today-only.
+- The **week-based STREAK is unaffected** by any of this — see F3.
+
+## F3. CONSISTENCY — routine-scoped calendar, rolling-30 Today, weekly streak
+- The grid is **real calendar months**, Monday-first. **Routine-scoped** to Training's selected tab
+  (lifted to Health.jsx, shared): "All" = binary (any training day terracotta); a specific routine =
+  THREE-STATE cells (selected routine full terracotta, a DIFFERENT routine a light tint, none grey).
+  Today's cell is ringed. At Today = one rolling-30-day grid (F2); at 3/6/12mo = a tiled row of
+  mini-months with count badges.
+- The **hero number + caption reframe** per window/routine (`heroInfo`): Today → "N [Routine ]sessions ·
+  last 30 days"; 3/6/12mo → "N · avg X/month · last N months".
+- ★ **The STREAK stays WEEK-BASED** (unchanged unit through the whole arc — reconfirmed repeatedly): a
+  separate `consistencyGrid` path (13-week) that never touches the month/range grid. Rolling-30 did NOT
+  sweep in a streak-unit change. The self-referential rule + known quirk from E7 still stand.
+
+## F4. TRAINING PROGRESS — a three-screen drill-down, nav state that survives rebuilds
+Training is now a drill-down INSIDE one section: **Screen 1 CHART** (the routine's volume+reps combo
+chart; stat row = KG · SETS · REPS for the period) → **Screen 2 GRID** (the routine's top-6 exercises,
+ranked by a Volume/Reps toggle, cards showing best+delta, reps, avg-kg/rep, sets) → **Screen 3 DETAIL**
+(one exercise's own chart). The quiet "history › / records ›" footer still reaches the Archive + Records
++ single-session report pages (kept deliberately — dropping the links would orphan those pages).
+- ★ **Navigation state (screen / picked exercise / grid-sort metric) is LIFTED to Health.jsx**, NOT
+  local to Training. Reason, recorded so it isn't "simplified" back: a window change re-keys Health's
+  `.health-fade` wrapper, which REMOUNTS the Training subtree and would wipe any local state back to
+  Screen 1. Living above that wrapper is the only way switching the routine tab OR the time window keeps
+  you on the same screen. Screen-3 FALLBACK: switching to a routine where the picked exercise has no
+  data drops to the grid (not an empty detail chart), guarded by a prev-routine ref so it fires only on
+  a real routine change.
+- **Screen 3 bars** = that day's heaviest working-set weight (`prWeight`); **ink by default, TERRACOTTA
+  on a new all-time PR** (strictly-greater, warm-ups excluded, ties stay ink). A **volume line**
+  (terracotta) overlays; reps are hover-only.
+  - ★ **ADAPTIVE bar-label colour (deliberate deviation from a literal single-colour spec — do NOT
+    "fix" back):** the weight is printed INSIDE each bar. The normal bars are a calm 16%-opacity ink
+    HAZE (from Piece 15), on which paper text would vanish — so the label is **ink on normal bars, paper
+    on the saturated terracotta PR bars**, which is what actually satisfies "legible against both". A
+    height + horizontal-collision guard thins labels at dense windows (1yr) so numbers never overprint.
+- **Screen 3 tooltip** shows the day summary (volume, reps, top set ±PR, kg/rep) PLUS a **per-set table**
+  (Set # | Weight × Reps) of the real individual sets, warm-ups muted — from `exerciseDetailSeries`,
+  which now emits each day's `sets`.
+
+## F5. BODY-PART BALANCE — a Routine/Region toggle; Routine is SESSION-BASED
+Balance is a radar + a breakdown list, driven by a **Sets/Volume** tab AND a **second, orthogonal
+Routine/Region** toggle (inline "⇄" at the end of a one-line ratio header). Four coherent combinations.
+- **REGION** (unchanged from E/Piece 8): muscles grouped **Upper / Lower / Core** via the static
+  `REGION` map, %s + trend arrows. Now sits under an "Upper : Lower : Core" ratio header.
+- **ROUTINE** (new, default): a **Push : Pull : Legs** ratio + a per-side muscle breakdown, each muscle
+  with a **× deviation-from-even** multiplier (`actualShareWithinSide × groupCountWithinSide`; 1.0× =
+  fair share).
+  - ★ **SESSION-BASED, not a static muscle→PPL map** (owner-confirmed fork). Reuses `classifyRoutine`
+    (Piece 3 / E5) — the same title-prefix rule every routine feature uses. Two reasons a static map was
+    REJECTED, recorded because they were measured on real data: (a) a static map **drops Abdominals
+    entirely** (it has no natural PPL home), and abs is the ~3rd-largest muscle by working sets; (b) a
+    static map **misrepresents real cross-day training** — e.g. it forces all shoulder work onto Push,
+    but a large share happens as rear-delt work on Pull day. Session-based vs static genuinely DIVERGE
+    (measured: Pull read 36% session-based vs 29% static; ranking of Pull vs Legs even flipped).
+  - ★ **A muscle can legitimately appear under MULTIPLE routine columns** — e.g. Shoulders under BOTH
+    Push and Pull — each instance showing only that side's own set-count/volume and its own
+    independently-scoped × multiplier. This is a deliberate, DB-verified property, NOT a bug. (Live
+    example: Shoulders = Push 29 sets 1.4× AND Pull 7 sets 0.6×; Glutes under Pull + Legs.)
+  - ★ **"Other"-tagged sessions are NEVER folded into the 3-way ratio's percentages** (which normalise
+    to Push+Pull+Legs only). They show as an honest **footnote** ("+ N sets in uncategorised sessions").
+- **The radar is UNAFFECTED by the Routine/Region toggle** — it always reads top-7-muscles-by-metric
+  (it re-ranks only on Sets↔Volume). Its own **hover tooltip is a rich bordered CARD** (title · number ·
+  % of total · trend arrow) that floats and repositions near the hovered point — fixing an earlier bug
+  where an SVG label overlapped the axis text.
+
+## F6. ACTIVITY — dense stat strip (unchanged from Piece 7, window now 30 days)
+The side-column Activity block is a terse three-row stat strip — **Flights / Stand / Walk HR** — each =
+its window average + a **"vs typical"** delta against the immediately-prior equal-length window (a
+window with no prior data shows the value with NO fabricated delta). ★ **Walk HR's colour convention is
+deliberately INVERTED** from Flights/Stand: for flights/stand UP reads terracotta (more is the win); for
+Walk HR **DOWN reads terracotta**, since a lower walking heart-rate at similar effort is the
+fitness-positive direction. The arrow always shows the real numeric direction; only the colour is
+gain-aware. (No calc change this round — it already read window-length dynamically, so the 14→30 window
+bump "just worked".)
+
+## F7. STEPS — true-to-value linear bars, 90-day collapse
+The side-column steps list (reverse-chronological, most-recent-at-top, one row per day) uses
+**true-to-value LINEAR scaling** (value ÷ max) — a REVERSAL of an earlier √-compression fix: the owner
+chose honest proportion (a 30-step day SHOULD look tiny next to a 974-step day). Each row is a number
+cell — day label in a fixed left gutter, a solid terracotta fill grown left→right, the number pinned
+fixed-right (with a paper-coloured clipped copy showing through where the fill reaches under it). A
+no-data day is an honest "–"; a real 0-step day shows "0". ⚠️ **The daily→weekly COLLAPSE threshold was
+reconciled to `STEPS_COLLAPSE_ABOVE_DAYS = 90`** (from the placeholder 60 in E8) so the 3-Month view
+stays DAILY everywhere, consistent with Body's Energy (90) and Sleep (90).
+
+## F8. Footprint (Pieces 9–19) — calc, components, CSS
+- **NEW pure calc:** `gymCalendar.js` (`monthGrid`, `rangeGrid`, `monthsInWindow`, `heroInfo`,
+  `sessionDayMap`, `TODAY_WINDOW_DAYS`), `gymProgress.js` (`comboSeries`, `exerciseDetailSeries` incl.
+  per-set `sets`, `periodTotals`, `exerciseRanking`), `gymRoutineBalance.js` (`routineBalance`,
+  `routineView`, `ROUTINE_SIDES`). Extended: `gymBalanceGroups.js` (`balanceView` radar now carries
+  `trend`), `gymCalc` (`sumReps`).
+- **NEW / rebuilt UI:** `GymConsistency` + `GymMonth` (calendar), `GymTraining` (controlled drill-down),
+  `GymComboChart` + `GymExerciseChart` + `GymExerciseGrid` (the three screens), `GymRadar` (hover card),
+  `GymBalance` (Routine/Region), `GymStepsChart`. All under ~250 lines.
+- **RETIRED (Piece 20 cleanup):** `GymVolChart.jsx` + `GymLiftTable.jsx` (orphaned by the Piece-12
+  drill-down) deleted, with their dead CSS. `.gym-lt-delta*` KEPT — reused by `GymExerciseGrid`'s cards.
+- **CSS split (Piece 20):** the 741-line `gymPage.css` became seven section sheets — `gymShell`,
+  `gymConsistency`, `gymTraining`, `gymBalance`, `gymActivity`, `gymAnim`, `gymDrilldown` — imported IN
+  ORDER in Health.jsx so the cascade is byte-identical. All sheets < 250 lines.

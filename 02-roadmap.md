@@ -2735,3 +2735,23 @@ NO fabricated delta; 3/6/12mo tiled views unchanged (badges May 10/Jun 17/Jul 14
 reverts to "avg 13.7/month · last 3 months"); zero-scroll at all four windows; no console errors.
   ▸ NEXT (queued separately, owner's two new update requests): (a) Training Top-6 (Screen 2) screen-state
     preservation; (b) max-set-weight-per-session display. Both are their own recon+build pieces.
+
+### 2026-07-30 · Gym V2 · Piece 20 ✅ — docs close + cleanup (the FINAL piece of the arc, covers 9–19)
+CLEANUP (commit aa8bafd, src-only): `gymPage.css` (741 lines, flagged in Piece 19) SPLIT into seven
+section sheets — gymShell / gymConsistency / gymTraining / gymBalance / gymActivity / gymAnim /
+gymDrilldown — imported IN ORDER in Health.jsx so the cascade is byte-identical (all sheets < 250).
+Verified pixel-identical live. Deleted the two orphans `GymVolChart.jsx` + `GymLiftTable.jsx` (unused
+since the Piece-12 drill-down; the "Piece-13 cleanup" debt noted back then is now CLOSED) + their dead
+CSS; kept `.gym-lt-delta*` (reused by Screen-2 cards). Full production build clean.
+DOCS (own commit): health-v2-build-doc.md gains PART F (comprehensive as-built for Pieces 9–19);
+03-decisions.md gains the Pieces 18–20 decisions + a REVERSAL LEDGER; drift corrected in place in
+PART E4/E6/E8 (tagged 2026-07-30).
+  ▸ POINTER (out of scope, for later): the **rolling last-30-days "Today" window is now the app-wide GYM
+    default** (Consistency/Training/Activity/Steps/Balance all read one `WINDOW_DAYS.today = 30`). The
+    BODY page still uses its own **14-day** "Today" (`EnergySection.jsx` / `BodyPage.jsx`) — deliberately
+    left untouched this arc. If cross-surface "Today" consistency is wanted later, that's the Body-side
+    change to make. ⬜
+  ▸ REMAINING GYM DEBT (unchanged, pre-existing): pre-arc dead CSS in formGuide.css
+    (`.gym-today-lifts`/`.gym-lift*`) left for a general sweep; the E7 streak-quirk + the Screen-3
+    bar-label made-calls stay owner-tunable (see decisions). The whole Gym V2 arc (Pieces 9–20) is now
+    CLOSED.

@@ -3533,6 +3533,9 @@ Per "FLAG, don't quietly decide": these were built to stay unblocked, NOT decide
      The switcher's other levels map to 90/180/365 days; "Today" has no natural number,
      so I mirrored Body Piece 9's 14-day "today". Reversible — one constant (WINDOW_DAYS.today
      in Health.jsx). Owner's call whether 14 / 7 / something else reads right.
+     **(SUPERSEDED 2026-07-30 — Piece 17: became a rolling 30 days, applied to ALL five zones, after a
+     calendar-month-to-date alternative was explored and rejected. See the Piece-17 entry + reversal
+     ledger below.)**
   2. **Kept "more ›"/"records ›" drill-in links** under Training Progress. The Piece-1
      spec listed four zones and no drill-in links; dropping them would orphan the Form-
      Guide Archive/Records/SessionReport sub-app. Preserved access as the safe default.
@@ -3694,3 +3697,66 @@ As-built truth lives in health-v2-build-doc.md PART E. The key calls, each with 
     "revert" — the shipped code never left the fixed-length design.)
   • STREAK stays WEEKLY, untouched — it reads a separate function (consistencyGrid, 13-week) that never
     touches the month/range grid. This change did NOT sweep in a streak-unit change (guarded per CLAUDE.md).
+
+### 2026-07-29 · Gym V2 Piece 18 — nav persistence, radar card, Screen-3 labels (made-calls)
+  • **Training nav state LIFTED to Health.jsx** (screen / picked exercise / grid metric). Not a
+    preference — a necessity: a window change re-keys the `.health-fade` wrapper and REMOUNTS Training,
+    which would reset local state to Screen 1. Living above the wrapper is the only way switching routine
+    OR window keeps your place. ★ Recorded so it isn't "simplified" back into Training's local state.
+  • **Screen-3 bar-label colour is ADAPTIVE** (ink on the calm 16%-opacity normal bars, paper on the
+    terracotta PR bars) — a DELIBERATE deviation from the prompt's literal "paper" single-colour, because
+    paper text vanishes on the faint normal bars. Satisfies the real requirement ("legible against
+    both"). ★ Do NOT "fix" to a single colour. Reversible.
+  • **Bar labels thin at dense windows** (a height + horizontal-collision guard omits labels that would
+    overprint) — a legibility guard, not "label every bar". Owner may prefer a different rule (e.g. PR
+    bars always labelled); flagged, small follow-up.
+
+### 2026-07-30 · Gym V2 Piece 19 — Balance Routine/Region toggle: SESSION-BASED (the real fork)
+  • ★ **THE FORK: Push:Pull:Legs is SESSION-BASED, not a static muscle→PPL map.** Owner-confirmed after
+    the divergence was MEASURED on real data (not assumed equivalent): session-based vs static gave
+    Pull 36% vs 29%, and the Pull-vs-Legs ranking flipped. Two concrete reasons static was rejected:
+    (a) a static map DROPS Abdominals entirely (no natural PPL home; it's ~3rd-largest by working sets);
+    (b) a static map misrepresents real cross-day training (forces all shoulder work onto Push, but a
+    big share is rear-delt work on Pull day). Session-based reuses `classifyRoutine` (Piece 3) — the
+    same rule every routine feature uses.
+  • **A muscle may appear under MULTIPLE routine columns** (e.g. Shoulders under both Push and Pull),
+    each with its own set-count and independently-scoped × multiplier. Deliberate, DB-verified property.
+  • **"Other" sessions are a FOOTNOTE, never folded into the 3-way ratio %s.** Wording chosen: "+ N sets
+    in uncategorised sessions" / "+ N kg …" (British spelling). Not pixel-specified — reword freely.
+  • **× multiplier = actualShareWithinSide × groupCountWithinSide** (even share = 1 ÷ #muscles in that
+    side). Confirmed within-side, not across the whole page.
+  • **Made-calls flagged (owner's call, reversible):** default mode = Routine (the new headline);
+    Region ratio header shown 3-way "Upper:Lower:Core" (the prompt's example sketched a 2-way
+    "Upper:Lower" that omitted Core — kept 3-way to match the unchanged grouping below it); per-side
+    breakdown rendered as stacked GROUPS (not literal side-by-side columns) for the narrow width.
+
+### 2026-07-30 · Gym V2 Piece 20 — docs close + cleanup
+  • **Split `gymPage.css` (741 lines) into 7 section sheets**, imported in order in Health.jsx →
+    byte-identical cascade, every sheet < 250. Pure reorg (commit aa8bafd).
+  • **Deleted `GymVolChart.jsx` + `GymLiftTable.jsx`** (orphaned by the Piece-12 drill-down, 0 imports)
+    + their dead CSS. KEPT `.gym-lt-delta*` — still used by `GymExerciseGrid`'s Screen-2 cards.
+  • **Left pre-arc dead CSS in formGuide.css** (`.gym-today-lifts`/`.gym-lift*`, an old "today's lifts"
+    list) UNTOUCHED — out of this arc's scope + a shared file; flagged for a general future sweep.
+
+### 2026-07-30 · Gym V2 arc — REVERSAL LEDGER (the decisions that changed mid-arc, spelled out)
+This arc had an unusual number of genuine reversals. Preserved individually so none reads as a straight
+line:
+  1. **"Today" window: 14 days → (month-to-date, explored + ABANDONED) → rolling 30 days.** 14 was a
+     Piece-1 made-call mirroring Body. A calendar-month-to-date view was then designed and rejected —
+     it left the Training zone near-blank at the start of a month AND gave Activity's equal-length "vs
+     typical" a floating comparison length. Fixed 30-day rolling solved both; now app-wide across all
+     five Gym zones (Piece 17).
+  2. **Main-column "50/50": partial fill → genuine enforced 50/50.** Piece 14 first read "literal 50/50
+     is wrong, just fill the top" (Balance looked short). The owner REVERSED that: they DO want a real
+     equal split with Balance (radar included) claiming half. Redone with `flex:1 1 0` on both halves +
+     the radar scaled up to fill (Piece 15 follow-up). The Piece-14 "not literal 50/50" call is
+     SUPERSEDED.
+  3. **Steps scaling: √-compression → true-to-value linear.** Piece 6 compressed with a √ scale (+ a
+     min-width floor); Piece 11 REVERSED it to honest linear proportion (owner's call: a 30-step day
+     SHOULD look tiny next to a 974-step day).
+  4. **Steps collapse threshold: 60 (placeholder) → 90 (reconciled).** The Piece-4 "no Body precedent"
+     premise was factually wrong; reconciled to 90 so the 3-Month view stays daily like Body + Sleep.
+  5. **PR tie-break (Screen 3, Piece 15): strictly-greater only — TIES STAY INK.** A day that only
+     EQUALS the all-time best is not a PR (no terracotta); warm-ups excluded from the comparison.
+  6. **Balance Routine attribution: session-based vs static-map fork — SESSION-BASED chosen** (see the
+     Piece-19 entry above; the decisive one).
