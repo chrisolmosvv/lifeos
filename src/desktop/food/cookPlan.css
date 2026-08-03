@@ -79,9 +79,26 @@
 .cp-step-text { margin: 0.4rem 0 0; font-size: 0.95rem; line-height: 1.5; color: var(--ink); }
 
 .cp-step-ings { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
-.cp-step-ing { display: flex; gap: 0.5rem; font-size: 0.8rem; color: var(--ink-muted); }
+.cp-step-ing { font-size: 0.8rem; }
+.cp-step-ing-btn { display: flex; gap: 0.5rem; width: 100%; background: none; border: none; padding: 0.05rem 0; text-align: left; cursor: pointer; color: var(--ink-muted); font-family: var(--font-sans); font-size: 0.8rem; }
 .cp-step-ing-amt { min-width: 3.5rem; text-align: right; color: var(--ink); flex: none; }
 .cp-step-ing-text { flex: 1; }
+.cp-step-ing.is-used .cp-step-ing-btn { text-decoration: line-through; opacity: 0.55; }
+
+/* ── 3b LIVE: per-step timer + state (terracotta/brick are sanctioned live/now marks) ────────── */
+.cp-cooking { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.cp-step.is-active { border-left: 2px solid var(--accent); padding-left: 0.7rem; margin-left: -0.72rem; }
+.cp-step.is-done .cp-step-num, .cp-step.is-done .cp-step-text { opacity: 0.5; }
+
+.cp-step-timer { display: flex; align-items: center; gap: 0.7rem; margin-top: 0.45rem; }
+.cp-timer-start, .cp-timer-btn {
+  background: none; border: 1px solid var(--rule); color: var(--ink);
+  font-family: var(--font-sans); font-size: 0.78rem; padding: 0.2rem 0.6rem; cursor: pointer;
+}
+.cp-timer-start:hover, .cp-timer-btn:hover { border-color: var(--ink); }
+.cp-timer-live { font-size: 1.1rem; color: var(--ink); min-width: 4.5rem; }
+.cp-timer-live.is-paused { color: var(--ink-muted); }
+.cp-timer-live.is-over { color: #A85C44; } /* brick — overrun, per the house law (not the accent) */
 
 /* ── Ingredients panel (collapsible) ──────────────────────────────────────── */
 .cp-ings { margin-top: 1.2rem; }

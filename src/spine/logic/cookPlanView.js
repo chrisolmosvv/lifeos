@@ -27,6 +27,15 @@ export function fmtDur(secs) {
   return mm ? `${h} h ${String(mm).padStart(2, "0")}` : `${h} h`;
 }
 
+// A live countdown for the cook (3b). >=0 → "12:34"; NEGATIVE (overrun) → "+2:14 over" — it keeps
+// counting up past zero, never freezes.
+export function fmtRemaining(sec) {
+  const s = Math.round(Number(sec) || 0);
+  const abs = Math.abs(s);
+  const disp = `${Math.floor(abs / 60)}:${String(abs % 60).padStart(2, "0")}`;
+  return s < 0 ? `+${disp} over` : disp;
+}
+
 // A servings-scaled amount for one ingredient. Prefer the confirmed grams (2a), else the stored
 // amount+unit (which the import already resolved). null when neither exists (show the raw line only).
 export function scaledAmount(ing, scale) {
