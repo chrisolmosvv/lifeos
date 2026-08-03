@@ -37,24 +37,24 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 FINDING (owner, live DB): after deleting all recipes, recipes/steps/ingredients/cook_session all read
 0, but cook_event still held 187 rows — every one pointing at a session that no longer exists
-(pointing_at_a_dead_session = 187, orphaned_no_session = 0), spanning 2026-07-05 → today. So
-cook_event.session_id is NOT cascading in the live DB. NOTHING was changed in response — this is a
-docs note; any fix is Checker-gated. Investigated read-only:
+(pointing_at_a_dead_session = 187, orphaned_no_session = 0), spanning 2026-07-05 → today. NOTHING was
+changed in response — this is a docs note; any fix is Checker-gated. Investigated read-only, and the
+constraint query below was RUN by the owner and settles it:
 
-1. SCHEMA vs LIVE — which is wrong? **The migration is NOT wrong on paper.** db/39 (line 86) declares
-   `session_id ... references public.cook_session (id) on delete cascade`, and the only later touches
-   (db/41, db/47) alter the event_type CHECK constraint ONLY — neither goes near the FK. So db/39
-   as-written WOULD create the cascade. The live constraint disagrees, which means the live cook_event
-   table was NOT produced by db/39 as-written. Most likely cause: `create table if not exists` — if a
-   cook_event table already existed (an earlier/hand-run) when db/39 was applied, the statement is a
-   silent no-op and left a pre-existing non-cascade FK in place. (Second possibility: the table was
-   hand-applied without the cascade and db/39 never ran here.) TO PIN IT DOWN the owner can run this
-   read-only query and read confdeltype — 'c' = cascade (matches db/39), 'a'/other = no cascade (the
-   live bug):
-     select conname, confdeltype
-       from pg_constraint
+1. SCHEMA vs LIVE — the LIVE TRUTH (this is what the docs must record, not db/39's intent). The query
+     select conname, confdeltype from pg_constraint
       where conrelid = 'public.cook_event'::regclass and contype = 'f';
-   Expected if correct: the session_id FK shows confdeltype = 'c'. The finding predicts it does not.
+   returned exactly ONE row: `cook_event_user_id_fkey  c`. So **cook_event has a single foreign key,
+   on user_id. There is NO foreign key on session_id at all** — not a non-cascading one, NONE. It is a
+   plain uuid column with no referential integrity. db/39 as-written says
+   `session_id ... references public.cook_session (id) on delete cascade`, and the later touches (db/41,
+   db/47) change only the event_type CHECK — so the MIGRATION'S INTENT is a cascading FK, but the LIVE
+   TABLE has nothing. The `create table if not exists` theory holds in shape: an earlier cook_event
+   already existed WITHOUT the session_id constraint, so db/39 silently did nothing and the constraint
+   was never created.
+   ★ This is slightly WORSE than a missing cascade: with no FK at all, nothing prevents an event from
+   pointing at a session id that never existed — there is no referential integrity on session_id
+   whatsoever, not just no delete-time cleanup.
 
 2. ACCUMULATION — real. useCookEvents appends one row per action across 11 action types (timer
    start/stop/resume/adjust, estimate adjust, amount change, omit, tick, use, step mark, finish) — so
@@ -68,10 +68,14 @@ docs note; any fix is Checker-gated. Investigated read-only:
    nothing ever fetches them. So this is storage clutter + a broken-cascade correctness gap in the
    SCHEMA, not a replay/behaviour bug. Safe to leave until a Checker-gated fix.
 
-IF/WHEN FIXED (Checker-gated, later): (a) correct the live FK — drop + re-add session_id with
-`on delete cascade` (and confirm the same for any recipe-side path); (b) one-off cleanup of the
-existing 187 orphans, ZZTEST-style precision (delete cook_event where session_id not in (select id
-from cook_session)); (c) DB commit alone, never with src.
+IF/WHEN FIXED (Checker-gated, later) — a DB-only commit, never with src. ★ ORDER MATTERS: clean
+FIRST, then constrain, or the ALTER fails. (a) delete the orphans —
+`delete from public.cook_event where session_id not in (select id from public.cook_session);`
+(b) THEN add the missing FK —
+`alter table public.cook_event add constraint cook_event_session_id_fkey
+   foreign key (session_id) references public.cook_session (id) on delete cascade;`
+The FK cannot be added while any row violates it, hence clean-then-constrain. (There is nothing to
+"drop and re-add" — the constraint simply does not exist; it is an ADD.)
 
 ---
 
