@@ -33,6 +33,49 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 2a + 2b — IMPORT UPGRADE (text/URL/photo). ⚠️ VERIFICATION PENDING.
+
+**PIECE 2a — two-pass extraction + the new fields flowing end-to-end (4 commits):**
+- `0e0b3e2` edge: recipe-import split into index/schema/normalise/enrich; **Pass 1** (title/servings/
+  times/cuisine, multi_recipe flag, ingredients, steps as terse rewrite + verbatim original,
+  merge-don't-split) + **Pass 2** (a duration/tag/station/hold_tolerance on EVERY step + generated
+  prep steps spliced in deterministically). Accuracy layer lifted wholesale.
+- `d9c2cde` src: recipeWrite/recipeLoad carry the new columns (**Amendment A16** — frozen = signatures,
+  not files; additive column adds allowed).
+- `6ec2881` src: importClient carries the fields into the draft (+per-field confidence, not persisted).
+- `b662c64` src: the import EDITORS (RecipeEditor desktop, MobileImport) carry the fields through save
+  (**Amendment A17** — a scope exclusion covers new construction, not the plumbing that stops the old
+  editor destroying this piece's output). Carry-through only, no UI. RecipeEditor now 254 lines — NOT
+  split (retired at Session 12).
+
+**PIECE 2b — photo import (2 commits):**
+- `3b99932` edge: `vision.ts` OCRs a printed-recipe photo → faithful text → the SAME Pass 1 → Pass 2
+  (no separate pipeline; clean NO_RECIPE fail; new `ocr_fail`). `gemini.ts` gains additive
+  `callGeminiVision`. **No image is ever stored.**
+- `01a0ab4` src: ImportScreen gains a photo input + in-browser downscale (longest edge 1600px, JPEG
+  q0.8 — well under the ~10MB-class body limit); importClient forwards `{ image }` and surfaces
+  ocr_fail/multi_recipe.
+
+FILES: supabase/functions/recipe-import/{index,schema,normalise,enrich,vision}.ts,
+_shared/gemini.ts (**deployed to Frankfurt — off-repo**); src/spine/data/{importClient,recipeWrite,
+recipeLoad}.js; src/desktop/food/{ImportScreen,RecipeEditor}.jsx; src/mobile/MobileImport.jsx. DB: db/47 (Piece 1).
+
+HOW VERIFIED (so far): app build passes; edge bundles clean (esbuild). **2a edge real-call PASSED**
+(pasted ragù → 6 cook + 2 merged prep steps, every step fully tagged, durations 53min vs stated 60,
+terse+original present, multi_recipe refused, OPTIONS 200, verify_jwt=true). 2a edge deployed live.
+
+⚠️ KNOWN GAPS / NOT YET PROVEN:
+- **2a's real-ROW round-trip was NEVER run** — no one has confirmed end-to-end that an app import
+  SAVES every new field to the database. The plumbing is built + each commit verified in its own
+  scope, but persistence is unproven. A photo-import-then-row-check (below) closes BOTH 2a and 2b.
+- **2b is not yet deployed or tested** — owner must deploy recipe-import and run the real-photo tests.
+- HEIC risk: browsers may not decode iPhone HEIC in <canvas> → photo_fail; use JPEG/PNG. Verify.
+- Photo path = 3 AI calls (OCR + Pass 1 + Pass 2) — confirm end-to-end time is acceptable.
+
+NEXT: deploy 2b + run the real-call/real-photo/real-row verification; then **Recon #3 — the cook engine.**
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 1 — THE SCHEMA. Schema-only. Checker approved. LIVE.
 
 WHAT CHANGED (schema only — nothing visible in the app yet):
