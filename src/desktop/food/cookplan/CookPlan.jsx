@@ -75,10 +75,30 @@ export default function CookPlan({ recipeId, onBack }) {
 
   const fitSig = `${recipeId}:${cookServings}:${steps.length}:${Object.keys(cook.state?.estimates || {}).length}`;
   const fit = useFitToHole(boardScrollRef, boardContentRef, fitSig);
+  // 3h: one mount-only key listener reading live state through refs (so it never goes stale and never
+  // re-subscribes). +/− size the board; SPACE is the counter-side "next" key — struck with a knuckle,
+  // it closes the longest-overrun timer or else starts the next ready step. Never fires while typing.
+  const fitRef = useRef(fit); fitRef.current = fit;
+  const spaceRef = useRef({ blocked: true, overrun: [], ready: [] });
   useEffect(() => {
-    const h = (e) => { if (e.target.tagName === "INPUT") return; if (e.key === "-") fit.dec(); else if (e.key === "+" || e.key === "=") fit.inc(); };
-    window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
-  }, [fit]);
+    const h = (e) => {
+      const el = e.target;
+      const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (e.key === "-") { if (!typing) fitRef.current.dec(); return; }
+      if (e.key === "+" || e.key === "=") { if (!typing) fitRef.current.inc(); return; }
+      if (e.code === "Space" || e.key === " ") {
+        if (typing) return;          // a space in a text field must type a space
+        e.preventDefault();          // never let the page scroll on space
+        const s = spaceRef.current;
+        if (s.blocked) return;       // a dialog / popover owns the keyboard
+        if (s.overrun.length) s.stop(s.overrun[0].index);
+        else if (s.ready.length) s.start(s.ready[0].index);
+        // nothing ready → nothing happens, quietly
+      }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
 
   if (!data || cookServings == null || !cook.ready) {
     return <div className="food-loading"><span className="food-spinner" aria-hidden="true" /><span>Reading recipe…</span></div>;
@@ -121,6 +141,15 @@ export default function CookPlan({ recipeId, onBack }) {
   const running = order.filter((i) => timerByRef[String(i)]?.running).map((i) => ({ index: i, step: steps[i], timer: timerByRef[String(i)], linked: linkedFor(i) }));
   const ready = order.filter((i) => !timerByRef[String(i)] && (steps[i].depends_on || []).every((p) => stateOf(p) === "done")).slice(0, 4).map((i) => ({ index: i, step: steps[i] }));
 
+  // 3h: feed the space-bar listener. Overrun = running timers past zero, longest-overrun first
+  // (most-negative remaining). Blocked while any dialog/popover is up so space can't start a step underneath.
+  const overrun = running.filter((r) => r.timer && r.timer.remaining <= 0).sort((a, b) => a.timer.remaining - b.timer.remaining);
+  spaceRef.current = {
+    blocked: !!(editChip || reviewing || confirmLeave), overrun, ready,
+    start: (i) => { initAudioContext(); cook.startTimer(i, durOf(i)); },
+    stop: (i) => cook.stopTimer(i),
+  };
+
   const boardRows = order.map((i) => {
     const started = !!timerByRef[String(i)];
     return {
@@ -161,7 +190,8 @@ export default function CookPlan({ recipeId, onBack }) {
       <CookMasthead
         title={recipe.title} cuisine={recipe.cuisine}
         metricLabel={cookStartMs ? "elapsed" : "total planned"} metricValue={cookStartMs ? elapsedStr(nowMs - cookStartMs) : fmtDur(finish)}
-        serveVal={serveAtMs ? fmtClockTime(serveAtMs) : ""} onServe={onServe} serveDrift={serveDrift} serveState={serveState}
+        projVal={fmtClockTime(projFinishMs)} targetVal={serveAtMs ? fmtClockTime(serveAtMs) : ""}
+        onSetTarget={onServe} onClearTarget={() => cook.setServeTime(null)} serveDrift={serveDrift} serveState={serveState}
         servings={cookServings} baseServ={recipe.servings || 1} onDec={() => setCookServings((s) => Math.max(1, s - 1))} onInc={() => setCookServings((s) => s + 1)}
         onBack={handleBack} onIngredients={() => setShowIngs((v) => !v)}
       />

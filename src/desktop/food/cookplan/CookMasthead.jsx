@@ -1,14 +1,17 @@
-// LifeOS — Food → cook plan MASTHEAD (3d, mock Q). One tight strip: back · title · Ingredients ·
-// then a hairline-divided metric row: total planned (or elapsed once cooking) · ON THE TABLE (the
-// serve time, click to set, drift readout beneath) · servings stepper.
+// LifeOS — Food → cook plan MASTHEAD (3d · 3h). One tight strip: back · title · Ingredients ·
+// then a hairline-divided metric row: total planned (or elapsed once cooking) · ON THE TABLE · servings.
+// ON THE TABLE (3h): with NO target it shows the live PROJECTION ("if you start now" → moves as things
+// drift), muted, with a "tap to set a target" hint. With a target set it shows that target in terracotta,
+// the on-time / late / early drift beneath, and a "clear" — a projection and a target never look alike.
 
-const two = (n) => String(n).padStart(2, "0");
+import { useState } from "react";
 
 export default function CookMasthead({
   title, cuisine, metricLabel, metricValue,
-  serveVal, onServe, serveDrift, serveState,
+  projVal, targetVal, onSetTarget, onClearTarget, serveDrift, serveState,
   servings, baseServ, onDec, onInc, onBack, onIngredients,
 }) {
+  const [editing, setEditing] = useState(false);
   return (
     <div className="cpq-mast">
       <div className="cpq-mast-top">
@@ -24,8 +27,24 @@ export default function CookMasthead({
         </div>
         <div className="cpq-metric cpq-metric--serve">
           <label className="cpq-metric-lbl cpq-serve-lbl">On the table</label>
-          <input type="time" className="cpq-serve-in tnum" value={serveVal} onChange={(e) => onServe(e.target.value)} />
-          {serveDrift && <span className={`cpq-serve-drift cpq-serve-drift--${serveState}`}>{serveDrift}</span>}
+          {editing ? (
+            <input type="time" className="cpq-serve-in tnum" autoFocus defaultValue={targetVal || projVal}
+              onChange={(e) => e.target.value && onSetTarget(e.target.value)}
+              onBlur={() => setEditing(false)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") e.currentTarget.blur(); }} />
+          ) : (
+            <button type="button" className={`cpq-serve-time tnum ${targetVal ? "is-target" : "is-proj"}`} onClick={() => setEditing(true)}>
+              {targetVal || projVal || "—"}
+            </button>
+          )}
+          {targetVal ? (
+            <span className="cpq-serve-sub">
+              {serveDrift && <span className={`cpq-serve-drift cpq-serve-drift--${serveState}`}>{serveDrift}</span>}
+              <button type="button" className="cpq-serve-clear" onClick={() => { onClearTarget(); setEditing(false); }}>clear</button>
+            </span>
+          ) : (
+            <span className="cpq-serve-sub cpq-serve-proj-lbl">projected · tap to set a target</span>
+          )}
         </div>
         <div className="cpq-metric cpq-metric--serv">
           <div className="cpq-serv-row">

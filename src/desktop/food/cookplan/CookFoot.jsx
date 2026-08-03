@@ -42,6 +42,7 @@ export default function CookFoot({ perServing, unestimated, fitPct, isManual, on
           <button type="button" className="cpq-size-btn" onClick={onInc} aria-label="Larger">A+</button>
           <span className="cpq-size-pct tnum">{fitPct}%</span>
         </div>
+        <span className="cpq-space-hint">space<em> · next step / clear an overrun</em></span>
         {hasSession && <button type="button" className="cpq-finish" onClick={onFinish}>Finish cook</button>}
       </div>
     </div>
