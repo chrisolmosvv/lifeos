@@ -140,6 +140,23 @@
 .iv-back:hover { color: var(--ink); }
 .iv-next { font-size: 9.6px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 9px 24px; background: var(--ink); color: var(--paper); cursor: pointer; border: none; }
 
+/* Delete (Piece 7) — quiet trigger on the left, well away from Save; muted ink, never terracotta. */
+.iv-lft { display: flex; align-items: center; gap: 18px; }
+.iv-del-recipe { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; background: none; border: none; color: var(--ink-muted); cursor: pointer; padding: 7px 0; }
+.iv-del-recipe:hover { color: var(--ink); }
+
+/* Delete confirm — a calm broadsheet page-takeover (hairline panel, no box/shadow/rounded). */
+.iv-del-scrim { position: fixed; inset: 0; background: rgba(28, 25, 22, 0.35); display: flex; align-items: center; justify-content: center; z-index: 60; }
+.iv-del-panel { background: var(--paper); border: 1px solid var(--rule); width: min(30rem, 92vw); padding: 1.5rem 1.6rem; }
+.iv-del-msg { font-family: var(--font-serif); font-size: 1.25rem; margin: 0 0 0.6rem; color: var(--ink); }
+.iv-del-note { font-size: 0.85rem; line-height: 1.55; color: var(--ink-muted); margin: 0 0 1.3rem; }
+.iv-del-foot { display: flex; justify-content: flex-end; gap: 1.1rem; align-items: center; }
+.iv-del-keep { background: none; border: none; color: var(--ink-muted); font-size: 0.86rem; cursor: pointer; }
+.iv-del-keep:hover { color: var(--ink); }
+.iv-del-go { background: none; border: 1px solid var(--accent); color: var(--accent); font-size: 0.86rem; padding: 0.4rem 1.05rem; cursor: pointer; }
+.iv-del-go:hover { background: var(--accent); color: var(--paper); }
+.iv-del-go:disabled, .iv-del-keep:disabled { opacity: 0.4; cursor: default; }
+
 /* Finder popover */
 .iv-scrim { position: fixed; inset: 0; background: rgba(28, 25, 22, .14); z-index: 39; }
 .iv-pop { position: fixed; z-index: 40; background: var(--paper); border: 1.5px solid var(--ink); padding: 12px 14px; width: 356px; max-height: 78vh; overflow-y: auto; }

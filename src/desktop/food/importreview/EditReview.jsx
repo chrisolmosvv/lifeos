@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { fetchRecipe } from "../../../spine/data/recipeLoad";
 import ImportReview from "./ImportReview";
 
-export default function EditReview({ recipeId, onBack, onSaved }) {
+export default function EditReview({ recipeId, onBack, onSaved, onDeleted }) {
   const [loaded, setLoaded] = useState(null); // null | { draft, itemsById, reviewed }
 
   useEffect(() => {
@@ -37,6 +37,6 @@ export default function EditReview({ recipeId, onBack, onSaved }) {
 
   return (
     <ImportReview draft={loaded.draft} itemsById={loaded.itemsById} editId={recipeId} reviewed={loaded.reviewed}
-      onBack={onBack} onSaved={onSaved} />
+      onBack={onBack} onSaved={onSaved} onDeleted={onDeleted} />
   );
 }

@@ -15,7 +15,8 @@ import { buildReview } from "../../../spine/logic/importReviewLogic";
 import { methodTotals, deleteStep } from "../../../spine/logic/methodReviewLogic";
 import { importGate } from "../../../spine/logic/importGate";
 import { cookSchedule } from "../../../spine/logic/cookSchedule";
-import { createRecipe, updateRecipe, ensureFoodItem } from "../../../spine/data/recipeWrite";
+import { createRecipe, updateRecipe, deleteRecipe, ensureFoodItem } from "../../../spine/data/recipeWrite";
+import { fetchActiveSession } from "../../../spine/data/cookEventStore";
 import { supabase } from "../../../spine/data/supabaseClient";
 import { useFitToHole } from "../cookplan/useFitToHole";
 import SizeControls from "../cookplan/SizeControls";
@@ -25,9 +26,10 @@ import IngredientsPass from "./IngredientsPass";
 import MethodPass from "./MethodPass";
 import PlanPass from "./PlanPass";
 import FinderPopover from "./FinderPopover";
+import DeleteConfirm from "./DeleteConfirm";
 import "./importReview.css";
 
-export default function ImportReview({ draft, itemsById, onBack, onSaved, editId = null, reviewed = false }) {
+export default function ImportReview({ draft, itemsById, onBack, onSaved, onDeleted, editId = null, reviewed = false }) {
   // scaffold = the import-only chrome (source-line diff, impact flags, prep-step approval). ON for a
   // fresh import and for an unreviewed draft; OFF when editing an already-reviewed recipe.
   const scaffold = !reviewed;
@@ -43,6 +45,7 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, editId
   const [resolved, setResolved] = useState(new Set());
   const [finder, setFinder] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [delState, setDelState] = useState(null); // null | 'checking' | 'confirm' | 'blocked' | 'deleting'
 
   const scrollRef = useRef(null), contentRef = useRef(null), rootRef = useRef(null);
   const [pageH, setPageH] = useState(null);
@@ -107,6 +110,19 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, editId
     } catch { setSaving(false); }
   };
 
+  // Delete (edit mode only). Refuse if a cook is live for this recipe — cook_session.recipe_id is a
+  // NOT NULL cascade, so deleting mid-cook would destroy the running session. Check first, then confirm.
+  const askDelete = async () => {
+    setDelState("checking");
+    try { setDelState((await fetchActiveSession(editId)) ? "blocked" : "confirm"); }
+    catch { setDelState("confirm"); } // check failed → still let them confirm; the delete itself is the backstop
+  };
+  const doDelete = async () => {
+    setDelState("deleting");
+    try { await deleteRecipe(editId); (onDeleted || onBack)(); } // children CASCADE; food_log_entries.recipe_id SET NULL
+    catch { setDelState("confirm"); }
+  };
+
   const nextLabel = pass === 1 ? "Method →" : pass === 2 ? "The plan →" : "Save recipe";
   const nextDisabled = pass === 3 ? (!gate.canSave || saving) : false;
 
@@ -123,7 +139,10 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, editId
         scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale} />}
 
       <div className="iv-ft">
-        <SizeControls pct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onSet={fit.set} />
+        <div className="iv-lft">
+          <SizeControls pct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onSet={fit.set} />
+          {editId && <button type="button" className="iv-del-recipe" onClick={askDelete}>Delete recipe</button>}
+        </div>
         <div className="iv-rgt">
           {pass > 1 && <button type="button" className="iv-back" onClick={() => setPass(pass - 1)}>‹ back</button>}
           {scaffold && pass < 3 && <button type="button" className={`iv-approve${(pass === 1 ? !unresolvedFlags : !unapproved) ? " off" : ""}`} onClick={approveAll}>{pass === 1 ? "Approve all" : "Approve added steps"}</button>}
@@ -133,6 +152,11 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, editId
 
       {finder && <FinderPopover ing={ings[finder.i]} itemsById={itemsRef.current} anchor={finder.anchor}
         onPatch={patch} onResolve={resolveOne} onNoMacros={noMacros} onRemove={removeOne} onClose={closeFinder} />}
+
+      {(delState === "confirm" || delState === "blocked" || delState === "deleting") && (
+        <DeleteConfirm title={title} blocked={delState === "blocked"} deleting={delState === "deleting"}
+          onCancel={() => setDelState(null)} onConfirm={doDelete} />
+      )}
     </div>
   );
 }
