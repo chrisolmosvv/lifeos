@@ -33,6 +33,38 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 2c — EXTRACTION FIXES. Edge-only, 1 commit. ⚠️ DEPLOY + VERIFY PENDING.
+
+WHAT CHANGED (the first real import, Chicken stroganoff, came back structurally wrong three ways):
+- **Sequential dependencies (Problem 1):** cooking steps only depended on the PREP they consumed,
+  never on each other → three disconnected chains → the scheduler placed step 5 before step 4.
+  Now enrich.ts wires each cooking step to the PREVIOUS cooking step (final index (i-1)+P) IN
+  ADDITION to its prep, in CODE — unless Pass 2 marks the step `independent` (a new optional flag
+  for a side that cooks alongside). The existing repairDeps runs over the assembled list.
+- **Tag quality (Problem 2):** tightened the Pass 2 tag rule — a step with multiple sequential
+  actions (fry→stir→pour→add) is NEVER hands_free regardless of duration; continuous involvement
+  is the test; when in doubt pick the tag that occupies the hands. (A wrong hands_free corrupts
+  the one-pair-of-hands plan; a wrong hands_on is merely conservative.)
+- **Cuisine null (Problem 3):** CAUSE — cuisine was a property in the Pass 1 responseSchema but NOT
+  in `required`, and the prompt was soft, so the model nulled it (pipeline + normalisation were
+  intact). FIX — cuisine is now `required` (still nullable) + a stronger instruction.
+
+FILES: supabase/functions/recipe-import/{schema.ts, enrich.ts} — committed, NOT yet deployed
+(off-repo function needs the owner's deploy). No Pass 1 structure / accuracy layer / prep gen /
+photo path / src touched. esbuild clean; both files <250.
+
+HOW VERIFIED: code-level + esbuild only so far. Live diagnostic curl hit parse_fail with no reason
+— attributed to the Builder's own free-tier rate-limiting (a dozen calls in minutes), not a bug
+(the owner imported this recipe fine earlier). REAL verify is owner-run (deploy + re-import + row).
+
+KNOWN GAPS: needs the owner to deploy + re-import the stroganoff and a genuinely-parallel recipe
+(to prove the sequential default didn't wrongly chain an independent side). Tag/cuisine are model
+quality — improved, not guaranteed; the row check is the proof.
+
+NEXT: **3b — the replay rework.**
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3a — THE DORMANT PLAN. Src-only, 1 commit. First VISIBLE piece.
 
 WHAT CHANGED: a new **cook plan page** replaces CookCompanion as the destination when you open a
