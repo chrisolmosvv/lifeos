@@ -4,7 +4,17 @@
    countdowns, the now-line, the serve readout. Overrun is brick #A85C44; "sets the clock" is wine
    #874E58. The page is a fixed-height flex column; ONLY the board scrolls. */
 
-.cpq { height: 100%; display: flex; flex-direction: column; min-height: 0; color: var(--ink); font-family: var(--font-sans); padding: 0 1.25rem; }
+/* Full-width escape — the cook page breaks out of .food-page's 760px reading column, mirroring the
+   old .cm2 rule (the escape was lost when 3a renamed .cm2 → .cpq — a regression, not a design choice;
+   the 760px cap itself is a genuine reading column and stays). Same 100vw technique as .cm2 / .bs /
+   .flog-day. Horizontal only — it does NOT touch getBoundingClientRect().top, so 3d's measured-height
+   fix is undisturbed. On macOS overlay scrollbars 100vw === client width, so no horizontal scrollbar. */
+.food-page:has(.cpq) { padding: 0; }
+.cpq {
+  width: 100vw; max-width: none; margin-left: calc(-50vw + 50%);
+  height: 100%; display: flex; flex-direction: column; min-height: 0;
+  color: var(--ink); font-family: var(--font-sans); padding: 0 2.5rem; box-sizing: border-box;
+}
 
 /* ── Masthead ─────────────────────────────────────────────────────────────── */
 .cpq-mast { flex: none; padding-top: 0.75rem; border-bottom: 1px solid var(--rule); }

@@ -540,8 +540,9 @@
 .red-rename:hover { color: var(--accent); opacity: 1; }
 .red-rename-input { border: none; border-bottom: 1px solid var(--accent); background: none; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink); padding: 1px 2px; outline: none; width: 16ch; }
 
-/* Import screen. */
-.imp { max-width: 600px; margin: 0 auto; }
+/* Import screen. Full-width escape out of .food-page's 760px column (same 100vw technique as the
+   cook page / .flog-day) — the owner flagged the old 600px cap as cramped. Rebuilt in Piece 4. */
+.imp { width: 100vw; max-width: none; margin-left: calc(-50vw + 50%); padding: 0 2.5rem; box-sizing: border-box; }
 .imp-loading { padding: 12vh 0; }
 .imp-h {
   font-family: var(--font-serif);
