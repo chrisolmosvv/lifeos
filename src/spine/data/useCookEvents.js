@@ -2,6 +2,11 @@
 // events, replays them into derived state, provides action dispatchers that INSERT events
 // and optimistically append to the local list. A 1-second tick updates timer remaining.
 // Resume is FREE: on mount, fetch events + replay = identical to a fresh render.
+//
+// 3b changes (additive): startTimer is the ONLY session-creating action (the cook begins on the
+// first timer); ingredient/stop/resume actions never create a session. Optimistic events are
+// RECONCILED to the server row once persisted (clock-skew fix — see commit()). markStep is kept
+// as a BRIDGE for the still-live MobileCook and still creates a session on first mark.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { replayCookEvents } from "../logic/cookReplay.js";
@@ -15,6 +20,7 @@ import {
   useIngredient as useAction,
   startTimer as startTimerAction,
   stopTimer as stopTimerAction,
+  resumeTimer as resumeTimerAction,
 } from "./cookEventStore.js";
 
 export function useCookEvents(recipeId) {
@@ -23,6 +29,7 @@ export function useCookEvents(recipeId) {
   const [ready, setReady] = useState(false);
   const [now, setNow] = useState(Date.now());
   const tickRef = useRef(null);
+  const localIdRef = useRef(0);
 
   // 1-second tick for timer countdowns — wall-clock math, not a decrementing counter
   useEffect(() => {
@@ -54,12 +61,26 @@ export function useCookEvents(recipeId) {
   // Derive state from events — the core replay, recomputed on every event change + tick
   const state = replayCookEvents(events, now);
 
-  // Optimistic append: add event to local list immediately, then persist
-  const appendEvent = useCallback((evt) => {
-    setEvents((cur) => [...cur, evt]);
+  // Optimistic append with a local id, so the persisted row can replace it later.
+  const appendOptimistic = useCallback((evt) => {
+    const _localId = ++localIdRef.current;
+    setEvents((cur) => [...cur, { ...evt, _localId }]);
+    return _localId;
   }, []);
 
-  // Lazy-start: create a session on first action if none exists
+  // Clock-skew fix (3b): once a row persists, swap the optimistic event (CLIENT created_at) for the
+  // server row (authoritative created_at + id), then re-sort so replay ordering matches the server.
+  // This makes a live timer read identically before and after a reload — the make-or-break case.
+  const commit = useCallback((localId, row) => {
+    if (!row) return;
+    setEvents((cur) => {
+      const next = cur.map((e) => (e._localId === localId ? { ...row } : e));
+      next.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      return next;
+    });
+  }, []);
+
+  // Lazy-start: create a session on first TIMER start (or first mark, via the mobile bridge).
   const ensureSession = useCallback(async () => {
     if (session) return session.id;
     const s = await startSession(recipeId);
@@ -67,66 +88,67 @@ export function useCookEvents(recipeId) {
     return s.id;
   }, [session, recipeId]);
 
+  const nowIso = () => new Date().toISOString();
+
   // ── Action dispatchers ──────────────────────────────────────────────────────
 
+  // BRIDGE (mobile only): still creates a session on first mark + drives step_marked.
   const markStep = useCallback(async (stepIndex, newStatus) => {
     const sid = await ensureSession();
-    const optimistic = { event_type: "step_marked", target_ref: String(stepIndex), payload: { status: newStatus }, created_at: new Date().toISOString() };
-    appendEvent(optimistic);
-    try { await markStepAction(sid, stepIndex, newStatus); }
-    catch { /* optimistic stays; reload reveals truth */ }
-  }, [ensureSession, appendEvent]);
+    const lid = appendOptimistic({ event_type: "step_marked", target_ref: String(stepIndex), payload: { status: newStatus }, created_at: nowIso() });
+    try { commit(lid, await markStepAction(sid, stepIndex, newStatus)); } catch { /* optimistic stays */ }
+  }, [ensureSession, appendOptimistic, commit]);
 
+  // 3b: ingredient actions must NOT create a session — no-op until a timer has started one.
   const tickIngredient = useCallback(async (ingredientRef) => {
-    const sid = await ensureSession();
-    const optimistic = { event_type: "ingredient_ticked", target_ref: String(ingredientRef), payload: null, created_at: new Date().toISOString() };
-    appendEvent(optimistic);
-    try { await tickAction(sid, ingredientRef); }
-    catch { /* optimistic stays */ }
-  }, [ensureSession, appendEvent]);
+    if (!session) return;
+    const lid = appendOptimistic({ event_type: "ingredient_ticked", target_ref: String(ingredientRef), payload: null, created_at: nowIso() });
+    try { commit(lid, await tickAction(session.id, ingredientRef)); } catch { /* */ }
+  }, [session, appendOptimistic, commit]);
 
   const useIngredient = useCallback(async (ingredientRef) => {
-    const sid = await ensureSession();
-    const optimistic = { event_type: "ingredient_used", target_ref: String(ingredientRef), payload: null, created_at: new Date().toISOString() };
-    appendEvent(optimistic);
-    try { await useAction(sid, ingredientRef); }
-    catch { /* optimistic stays */ }
-  }, [ensureSession, appendEvent]);
+    if (!session) return;
+    const lid = appendOptimistic({ event_type: "ingredient_used", target_ref: String(ingredientRef), payload: null, created_at: nowIso() });
+    try { commit(lid, await useAction(session.id, ingredientRef)); } catch { /* */ }
+  }, [session, appendOptimistic, commit]);
 
+  // 3b: the cook BEGINS here — the only session-creating action on the desktop plan.
   const startTimer = useCallback(async (stepIndex, durationSeconds) => {
     const sid = await ensureSession();
-    const optimistic = { event_type: "timer_started", target_ref: String(stepIndex), payload: { duration_seconds: durationSeconds }, created_at: new Date().toISOString() };
-    appendEvent(optimistic);
-    try { await startTimerAction(sid, stepIndex, durationSeconds); }
-    catch { /* optimistic stays */ }
-  }, [ensureSession, appendEvent]);
+    const lid = appendOptimistic({ event_type: "timer_started", target_ref: String(stepIndex), payload: { duration_seconds: durationSeconds }, created_at: nowIso() });
+    try { commit(lid, await startTimerAction(sid, stepIndex, durationSeconds)); } catch { /* */ }
+  }, [ensureSession, appendOptimistic, commit]);
 
   const stopTimer = useCallback(async (stepIndex) => {
     if (!session) return;
-    const optimistic = { event_type: "timer_stopped", target_ref: String(stepIndex), payload: null, created_at: new Date().toISOString() };
-    appendEvent(optimistic);
-    try { await stopTimerAction(session.id, stepIndex); }
-    catch { /* optimistic stays */ }
-  }, [session, appendEvent]);
+    const lid = appendOptimistic({ event_type: "timer_stopped", target_ref: String(stepIndex), payload: null, created_at: nowIso() });
+    try { commit(lid, await stopTimerAction(session.id, stepIndex)); } catch { /* */ }
+  }, [session, appendOptimistic, commit]);
+
+  // 3b: resume a stopped timer — continue from accumulated elapsed (segment-summed in replay).
+  const resumeTimer = useCallback(async (stepIndex) => {
+    if (!session) return;
+    const lid = appendOptimistic({ event_type: "timer_resumed", target_ref: String(stepIndex), payload: null, created_at: nowIso() });
+    try { commit(lid, await resumeTimerAction(session.id, stepIndex)); } catch { /* */ }
+  }, [session, appendOptimistic, commit]);
 
   const finish = useCallback(async () => {
     if (!session) return;
-    const optimistic = { event_type: "finished", target_ref: null, payload: null, created_at: new Date().toISOString() };
-    appendEvent(optimistic);
-    try { await finishSession(session.id); }
-    catch { /* optimistic stays */ }
-  }, [session, appendEvent]);
+    appendOptimistic({ event_type: "finished", target_ref: null, payload: null, created_at: nowIso() });
+    try { await finishSession(session.id); } catch { /* */ }
+  }, [session, appendOptimistic]);
 
   return {
     session,
     ready,
-    state,               // { stepStates, tickedIngredients, usedIngredients, timers, finished }
+    state,               // { stepStates, tickedIngredients, usedIngredients, timers, finished, liveStates, liveTimers }
     hasSession: !!session,
-    markStep,
+    markStep,            // BRIDGE (mobile)
     tickIngredient,
     useIngredient,
     startTimer,
     stopTimer,
+    resumeTimer,
     finish,
   };
 }

@@ -146,3 +146,9 @@ export function startTimer(sessionId, stepIndex, durationSeconds) {
 export function stopTimer(sessionId, stepIndex) {
   return insertEvent(sessionId, "timer_stopped", String(stepIndex), null);
 }
+
+// Resume a stopped timer (3b): CONTINUE from accumulated elapsed, distinct from timer_started
+// which begins fresh. No payload — the duration is already known from the original start.
+export function resumeTimer(sessionId, stepIndex) {
+  return insertEvent(sessionId, "timer_resumed", String(stepIndex), null);
+}

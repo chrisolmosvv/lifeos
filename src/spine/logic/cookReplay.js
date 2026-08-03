@@ -1,27 +1,25 @@
 // cookReplay — PURE function: cook_event rows (ordered by created_at) → derived live state.
 // No fetch, no writes, no Date.now — the caller passes `now` so this is a testable map.
-// This is the core of the event-sourced cook: every piece of visible state is computed here.
+//
+// ★ TWO MODELS live here right now (Cookbook 3b, Amendment A22 — ADDITIVE):
+//   • OLD outputs (stepStates, timers[].done, clamped remaining) — a TEMPORARY BRIDGE, kept
+//     EXACTLY as they were so the still-live MobileCook.jsx keeps working unchanged. Marked
+//     "BRIDGE" below. Remove when the mobile cook is reworked or retired.
+//   • NEW outputs (liveStates, liveTimers with SIGNED remaining + reachedZero + segment-summed
+//     elapsed) — what the desktop cook plan (3b) reads. Position derives from TIMERS ONLY;
+//     step_marked is ignored here.
 
-/**
- * replayCookEvents(events, now)
- *
- * @param {Array} events — cook_event rows, ordered by created_at ASC
- * @param {number} now — current wall-clock time (ms since epoch)
- * @returns {{
- *   stepStates: Object<string, 'waiting'|'active'|'done'>,
- *   tickedIngredients: Set<string>,
- *   usedIngredients: Set<string>,
- *   timers: Array<{ targetRef: string, durationSeconds: number, startedAt: number, remaining: number, done: boolean }>,
- *   finished: boolean
- * }}
- */
 export function replayCookEvents(events, now) {
-  const stepStates = {};        // targetRef → last status
-  const ingredientTicks = {};   // targetRef → true/false (last toggle wins — shopping)
-  const ingredientUsed = {};    // targetRef → true/false (last toggle wins — cooking)
-  const timerStarts = {};       // targetRef → { durationSeconds, startedAt }
-  const timerStops = new Set(); // targetRef values that have been stopped
+  // ── BRIDGE (mobile): last-write-wins step marks + last-start-wins timers, clamped remaining ──
+  const stepStates = {};        // BRIDGE — targetRef → status, from step_marked (mobile only)
+  const ingredientTicks = {};   // targetRef → bool (shopping)
+  const ingredientUsed = {};    // targetRef → bool (cooking)
+  const timerStarts = {};       // BRIDGE — targetRef → { durationSeconds, startedAt }
+  const timerStops = new Set();  // BRIDGE — refs stopped
   let finished = false;
+
+  // ── NEW (desktop 3b): per-step timer SEGMENTS for signed remaining + timer-derived state ──
+  const seg = {};               // targetRef → { duration, accumulated (sec), runningSince (ts|null) }
 
   for (const e of events || []) {
     const ref = e.target_ref;
@@ -29,59 +27,68 @@ export function replayCookEvents(events, now) {
     const ts = new Date(e.created_at).getTime();
 
     switch (e.event_type) {
-      case "step_marked":
+      case "step_marked": // BRIDGE only — the NEW model ignores this entirely.
         stepStates[ref] = payload.status || "waiting";
         break;
-
       case "ingredient_ticked":
-        // Toggle: if already ticked, untick; if not, tick (shopping)
         ingredientTicks[ref] = !ingredientTicks[ref];
         break;
-
       case "ingredient_used":
-        // Toggle: mark used / un-used (cooking)
         ingredientUsed[ref] = !ingredientUsed[ref];
         break;
-
       case "timer_started":
-        timerStarts[ref] = { durationSeconds: payload.duration_seconds || 0, startedAt: ts };
-        timerStops.delete(ref); // a new start clears any previous stop
+        timerStarts[ref] = { durationSeconds: payload.duration_seconds || 0, startedAt: ts }; // BRIDGE
+        timerStops.delete(ref); // BRIDGE
+        // NEW: a fresh start resets the segment accumulator and runs from here.
+        seg[ref] = { duration: payload.duration_seconds || 0, accumulated: 0, runningSince: ts };
         break;
-
+      case "timer_resumed": {
+        // NEW only (db/47): CONTINUE — keep accumulated elapsed + duration, run again from here.
+        const c = seg[ref];
+        if (c) c.runningSince = ts;
+        else seg[ref] = { duration: payload.duration_seconds || 0, accumulated: 0, runningSince: ts };
+        break;
+      }
       case "timer_stopped":
-        timerStops.add(ref);
+        timerStops.add(ref); // BRIDGE
+        // NEW: close the live segment into the accumulator.
+        if (seg[ref] && seg[ref].runningSince != null) {
+          seg[ref].accumulated += (ts - seg[ref].runningSince) / 1000;
+          seg[ref].runningSince = null;
+        }
         break;
-
       case "finished":
         finished = true;
         break;
     }
   }
 
-  // Derive running timers: started and not stopped
+  // ── BRIDGE: derive old-shape running timers (clamped remaining + done) ──
   const timers = [];
   for (const [ref, t] of Object.entries(timerStarts)) {
     if (timerStops.has(ref)) continue;
     const elapsed = (now - t.startedAt) / 1000;
     const remaining = Math.max(0, t.durationSeconds - elapsed);
-    timers.push({
-      targetRef: ref,
-      durationSeconds: t.durationSeconds,
-      startedAt: t.startedAt,
-      remaining: Math.round(remaining),
-      done: remaining <= 0,
-    });
+    timers.push({ targetRef: ref, durationSeconds: t.durationSeconds, startedAt: t.startedAt, remaining: Math.round(remaining), done: remaining <= 0 });
   }
 
-  // Derive ticked sets (independent: shopping vs cooking)
+  // ── NEW: signed remaining, reachedZero, segment-summed elapsed, timer-derived step state ──
+  const liveTimers = [];
+  const liveStates = {}; // targetRef → 'active' | 'done' (steps with NO timer are absent → 'waiting')
+  for (const [ref, c] of Object.entries(seg)) {
+    const running = c.runningSince != null;
+    const elapsed = c.accumulated + (running ? (now - c.runningSince) / 1000 : 0);
+    const remaining = Math.round(c.duration - elapsed); // SIGNED — negative = overrun, keeps counting
+    const reachedZero = remaining <= 0;
+    liveTimers.push({ targetRef: ref, durationSeconds: c.duration, elapsed: Math.round(elapsed), remaining, running, reachedZero });
+    // running & within → active; stopped, or running past zero → done. No timer → waiting (absent).
+    liveStates[ref] = running && !reachedZero ? "active" : "done";
+  }
+
   const tickedIngredients = new Set();
-  for (const [ref, ticked] of Object.entries(ingredientTicks)) {
-    if (ticked) tickedIngredients.add(ref);
-  }
+  for (const [ref, ticked] of Object.entries(ingredientTicks)) if (ticked) tickedIngredients.add(ref);
   const usedIngredients = new Set();
-  for (const [ref, used] of Object.entries(ingredientUsed)) {
-    if (used) usedIngredients.add(ref);
-  }
+  for (const [ref, used] of Object.entries(ingredientUsed)) if (used) usedIngredients.add(ref);
 
-  return { stepStates, tickedIngredients, usedIngredients, timers, finished };
+  return { stepStates, tickedIngredients, usedIngredients, timers, finished, liveStates, liveTimers };
 }
