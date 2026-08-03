@@ -33,6 +33,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 1 — THE SCHEMA. Schema-only. Checker approved. LIVE.
+
+WHAT CHANGED (schema only — nothing visible in the app yet):
+- Added **8 additive columns** across 4 Food tables: `recipe_steps` gains `hold_tolerance`
+  (immediate/short/indefinite), `station` (bench/hob/oven/rest, colour-code only), `is_prep`
+  (bool, default false); `recipe_ingredients` gains `grams` (confirmed edible weight — an owner
+  INPUT, not a derived number); `recipes` gains `cuisine`, `reviewed_at` (null = draft import),
+  `default_servings` (`servings` still = what the SOURCE makes); `cook_session` gains
+  `target_serve_at`.
+- **Widened** `cook_event.event_type` — strict superset, mirrors db/41's drop/re-add. Kept all
+  6 current values (incl. now-unused `step_marked`), added 5: `timer_adjusted`,
+  `estimate_adjusted`, `amount_changed`, `ingredient_omitted`, `timer_resumed` (11 total).
+- **One index**: `recipes (user_id, cuisine)` — the only new filter column.
+- Additive-only · no new tables · no new FK · no new RLS (columns inherit each table's
+  owner-only policies) · spine untouched.
+
+FILE TOUCHED: `db/47_cookbook_rebuild.sql` (committed alone, two-track).
+
+HOW VERIFIED (real proof, not the screen):
+- Checker approved cold (exact words).
+- Run by hand in the Frankfurt SQL editor (cntlptuacsujbdtwvbis); PostgREST cache reloaded
+  (`notify pgrst, 'reload schema'`).
+- **Real throwaway write** from the owner's account set EVERY new column, read back, then
+  deleted. Returned: cuisine=Test cuisine · has_reviewed_at=true · default_servings=2 ·
+  hold_tolerance=short · station=oven · is_prep=true · grams=480 · has_serve_target=true ·
+  new_event_types=5.
+- Existing recipes unaffected (every new column nullable/defaulted; CHECK widening is a
+  superset, so no existing row invalidated).
+
+KNOWN GAPS / GOTCHA: the SQL editor runs as the `postgres` role, so `auth.uid()` is NULL there.
+Any future verify/seed script must take the owner's user id as a **literal**, not call
+`auth.uid()`.
+
+FOR THE CHECKER: approved (2026-08-03). No further checker action for Piece 1.
+
+NEXT: **Piece 2 — extraction (edge-function track).** The AI import parser that fills these
+columns. NOT started — stop here.
+
+---
+
 ### 2026-07-18 — Body V3 PIECE 10 — DOCS CLOSE. DOCS-ONLY. 1 COMMIT. No src, no schema, no Checker.
 
 WHAT CHANGED (docs only):
