@@ -64,7 +64,7 @@ export default function CookPlan({ recipeId, onBack }) {
   const baseServ = recipe.servings || 1;
   const scale = cookServings / baseServ;
 
-  const { schedule, finish, workSeconds } = cookSchedule(steps.map((s) => ({ durationSeconds: s.timer_seconds || 0, deps: s.depends_on, hold: s.hold_tolerance })));
+  const { schedule, finish, workSeconds } = cookSchedule(steps.map((s) => ({ durationSeconds: s.timer_seconds || 0, deps: s.depends_on, hold: s.hold_tolerance, tag: s.tag })));
   // 3c-i: read in SCHEDULED-START order (the plan reorders work) — the 3a position stopgap is gone.
   const order = steps.map((_, i) => i).sort((a, b) => (schedule[a].effectiveStart - schedule[b].effectiveStart) || (a - b));
   const linkedFor = (i) => ingredients.map((ing, idx) => ({ ing, idx })).filter(({ ing }) => ing.step_position === i);
