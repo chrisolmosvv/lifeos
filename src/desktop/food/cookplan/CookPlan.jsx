@@ -36,6 +36,7 @@ export default function CookPlan({ recipeId, onBack }) {
   const [showIngs, setShowIngs] = useState(false);
   const [reviewing, setReviewing] = useState(null); // null | changes object
   const [saving, setSaving] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const cook = useCookEvents(recipeId);
   const cl = useCookLog();
   useWakeLock(cook.hasSession);
@@ -128,7 +129,10 @@ export default function CookPlan({ recipeId, onBack }) {
     const snap = {}; for (const k of NUTRIENTS) snap[k] = (macros.perServing[k] || 0) * cookServings;
     cl.logSnapshot({ entry_date: amsTodayYMD(Date.now()), meal_slot: slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60)), food_item_id: null, recipe_id: recipeId, amount: cookServings, unit: "serving", ...snap, entry_source: "recipe_cook", is_alcohol: false }, {});
   };
-  const handleBack = async () => { if (cook.hasSession) await cook.abandon(); onBack(); }; // BACK = silent abandon
+  // Navigating away from a LIVE cook is unintentional → confirm (data loss wearing a design
+  // principle otherwise). An explicit abandon stays silent. Nothing prompts when nothing's running.
+  const handleBack = () => { if (cook.hasSession) setConfirmLeave(true); else onBack(); };
+  const leaveAndLose = async () => { await cook.abandon(); onBack(); };
   const openReview = () => setReviewing(computeChanges(data.steps, data.ingredients, cook.state));
   const onReviewSave = async (keptKeys, alsoLog) => {
     setSaving(true);
@@ -158,6 +162,17 @@ export default function CookPlan({ recipeId, onBack }) {
       <CookBoard scrollRef={boardScrollRef} contentRef={boardContentRef} onScroll={fit.onScroll} scale={fit.scale} rows={boardRows} />
       <CookFoot perServing={macros.perServing} unestimated={macros.unestimatedCount} fitPct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onFinish={openReview} hasSession={cook.hasSession} />
       {reviewing && <CookReview changes={reviewing} kcalPerServing={macros.perServing.kcal} servings={cookServings} onSave={onReviewSave} onCancel={() => setReviewing(null)} saving={saving} />}
+      {confirmLeave && (
+        <div className="cpq-review-scrim" role="dialog" aria-modal="true">
+          <div className="cpq-confirm">
+            <p className="cpq-confirm-msg">This cook is still running — leave and lose it?</p>
+            <div className="cpq-confirm-foot">
+              <button type="button" className="cpq-review-cancel" onClick={() => setConfirmLeave(false)}>Keep cooking</button>
+              <button type="button" className="cpq-confirm-leave" onClick={leaveAndLose}>Leave &amp; lose it</button>
+            </div>
+          </div>
+        </div>
+      )}
       {cl.toast && <Toast text={cl.toast.text} onUndo={cl.toast.undo} onDismiss={cl.dismiss} />}
     </div>
   );

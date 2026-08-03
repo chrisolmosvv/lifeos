@@ -127,6 +127,12 @@
 .cpq-review-cancel { background: none; border: 1px solid var(--rule); color: var(--ink-muted); font-size: 0.85rem; padding: 0.35rem 0.9rem; cursor: pointer; }
 .cpq-review-save { background: none; border: 1px solid var(--accent); color: var(--accent); font-size: 0.85rem; padding: 0.35rem 1rem; cursor: pointer; }
 
+/* 3e: leave-a-live-cook confirm (navigating is unintentional; brick on the destructive choice) */
+.cpq-confirm { background: var(--paper); border: 1px solid var(--rule); width: min(24rem, 90vw); padding: 1.25rem 1.4rem; }
+.cpq-confirm-msg { font-family: var(--font-serif); font-size: 1.1rem; margin: 0 0 1rem; }
+.cpq-confirm-foot { display: flex; justify-content: flex-end; gap: 0.75rem; }
+.cpq-confirm-leave { background: none; border: 1px solid #A85C44; color: #A85C44; font-size: 0.85rem; padding: 0.35rem 0.9rem; cursor: pointer; }
+
 /* 3e in-cook ingredient editing */
 .cp-ings-item.is-omit { opacity: 0.5; text-decoration: line-through; }
 .cp-ings-edit { display: inline-flex; gap: 0.3rem; margin-left: auto; }
