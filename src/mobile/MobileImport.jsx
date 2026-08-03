@@ -45,7 +45,7 @@ export default function MobileImport({ onBack, onSaved }) {
     setSaving(true)
     try {
       const id = await createRecipe(
-        { title: draft.title, servings: draft.servings, prep_minutes: draft.prep_minutes, cook_minutes: draft.cook_minutes, source_url: draft.source_url },
+        { title: draft.title, servings: draft.servings, prep_minutes: draft.prep_minutes, cook_minutes: draft.cook_minutes, source_url: draft.source_url, cuisine: draft.cuisine },
         draft.ingredients, draft.steps
       )
       onSaved?.(id)

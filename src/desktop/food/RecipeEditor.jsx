@@ -43,6 +43,9 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
   const [steps, setSteps] = useState(() => keySteps(initialDraft?.steps || [], keyRef));
   const [itemsById, setItemsById] = useState(initialItemsById || {});
   const [sourceUrl, setSourceUrl] = useState(initialDraft?.source_url ?? null);
+  // 2a carry-through ONLY (no UI — this editor is retired at Session 12): the AI cuisine label
+  // rides invisibly from draft/load to save so it persists instead of being dropped.
+  const cuisineRef = useRef(initialDraft?.cuisine ?? null);
   const [finderAt, setFinderAt] = useState(null); // null | { index: number|null, query }
   const [manualAt, setManualAt] = useState(null); // null | index — the [manual] macros rescue
   const [renameAt, setRenameAt] = useState(null); // null | { foodItemId, value }
@@ -60,10 +63,13 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
         setPrep(r.recipe.prep_minutes ?? "");
         setCook(r.recipe.cook_minutes ?? "");
         setSourceUrl(r.recipe.source_url ?? null);
-        const rawSteps = (r.steps || []).map((s) => ({ text: typeof s.text === "string" ? s.text : String(s.text ?? ""), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null }));
+        cuisineRef.current = r.recipe.cuisine ?? null;
+        // 2a carry-through: keep station/hold_tolerance/is_prep/original on steps and grams on
+        // ingredients so re-saving an edited recipe doesn't wipe the enrichment (no UI added).
+        const rawSteps = (r.steps || []).map((s) => ({ text: typeof s.text === "string" ? s.text : String(s.text ?? ""), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null, station: s.station ?? null, hold_tolerance: s.hold_tolerance ?? null, is_prep: !!s.is_prep, original: s.original ?? null }));
         const ks = keySteps(rawSteps, keyRef);
         setSteps(ks);
-        const rawIngs = r.ingredients.map((i) => ({ food_item_id: i.food_item_id, raw_text: i.raw_text, amount: i.amount, unit: i.unit, no_macros: i.no_macros, manual_macros: i.manual_macros, step_position: i.step_position ?? null }));
+        const rawIngs = r.ingredients.map((i) => ({ food_item_id: i.food_item_id, raw_text: i.raw_text, amount: i.amount, unit: i.unit, no_macros: i.no_macros, manual_macros: i.manual_macros, step_position: i.step_position ?? null, grams: i.grams ?? null }));
         setIngredients(keyIngredients(rawIngs, ks));
         setItemsById(r.itemsById || {});
         setLoading(false);
@@ -146,11 +152,11 @@ export default function RecipeEditor({ recipeId, initialDraft, initialItemsById,
     const saved = steps.filter((s) => String(s.text ?? "").trim() !== "");
     const keyToPos = {}; saved.forEach((s, i) => { keyToPos[s._key] = i; });
     onSave(
-      { title: title.trim(), servings: servings === "" ? null : Number(servings), prep_minutes: prep === "" ? null : Number(prep), cook_minutes: cook === "" ? null : Number(cook), source_url: sourceUrl },
-      ingredients.map((i) => ({ food_item_id: i.food_item_id ?? null, raw_text: i.raw_text ?? null, amount: i.amount ?? null, unit: i.unit ?? null, manual_macros: i.manual_macros ?? null, no_macros: !!i.no_macros, step_position: i.step_position != null && keyToPos[i.step_position] != null ? keyToPos[i.step_position] : null })),
+      { title: title.trim(), servings: servings === "" ? null : Number(servings), prep_minutes: prep === "" ? null : Number(prep), cook_minutes: cook === "" ? null : Number(cook), source_url: sourceUrl, cuisine: cuisineRef.current },
+      ingredients.map((i) => ({ food_item_id: i.food_item_id ?? null, raw_text: i.raw_text ?? null, amount: i.amount ?? null, unit: i.unit ?? null, manual_macros: i.manual_macros ?? null, no_macros: !!i.no_macros, step_position: i.step_position != null && keyToPos[i.step_position] != null ? keyToPos[i.step_position] : null, grams: i.grams ?? null })),
       saved.map((s) => {
         const deps = Array.isArray(s.depends_on) ? s.depends_on.map((k) => keyToPos[k]).filter((p) => p != null) : null;
-        return { text: String(s.text ?? "").trim(), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: deps && deps.length > 0 ? deps : null };
+        return { text: String(s.text ?? "").trim(), timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: deps && deps.length > 0 ? deps : null, station: s.station ?? null, hold_tolerance: s.hold_tolerance ?? null, is_prep: !!s.is_prep, original: s.original ?? null };
       }),
     );
   };
