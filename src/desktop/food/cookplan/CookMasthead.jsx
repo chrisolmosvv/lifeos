@@ -9,7 +9,7 @@ import { useState } from "react";
 export default function CookMasthead({
   title, cuisine, metricLabel, metricValue,
   projVal, targetVal, onSetTarget, onClearTarget, serveDrift, serveState,
-  servings, baseServ, onDec, onInc, onBack, onIngredients,
+  servings, baseServ, onDec, onInc, onBack, onIngredients, onEdit,
 }) {
   const [editing, setEditing] = useState(false);
   return (
@@ -17,6 +17,7 @@ export default function CookMasthead({
       <div className="cpq-mast-top">
         <button type="button" className="cpq-back" onClick={onBack}>‹ Cookbook</button>
         <h1 className="cpq-title">{title}{cuisine ? <span className="cpq-cuisine"> · {cuisine}</span> : null}</h1>
+        {onEdit && <button type="button" className="cpq-ings-btn" onClick={onEdit}>Edit</button>}
         <button type="button" className="cpq-ings-btn" onClick={onIngredients}>Ingredients</button>
       </div>
 

@@ -14,6 +14,17 @@ import "./recipeEditor.css";
 // RecipeEditor — create + edit + import review. Step 7 P5: the REMAP — steps carry a stable _key
 // so depends_on + step_position references follow their target through reorder/add/delete. At save,
 // _keys are converted back to position numbers.
+//
+// ★ WHY THIS FILE SURVIVED THE PIECE-6 EDITOR RETIREMENT (Planner ruling, kept ON PURPOSE — do not
+// prove-dead and delete it). Editing a recipe now opens the three-pass review screen (EditReview →
+// ImportReview edit mode), NOT this editor. But this editor is still the ONLY path for "+ NEW" —
+// writing a recipe from a BLANK PAGE by hand — because the review screen has no "add an ingredient
+// from nothing" flow: it reviews/edits an EXISTING ingredient set, it can't build one from scratch.
+// The rebuild's plan ("the editor dissolves into the review plus a quick-edit") never asked what
+// happens to hand-authoring; that was a gap in the plan. Removing "+ NEW" just to delete this file
+// would trade a working capability for a tidier tree — the wrong trade. Cookbook.jsx routes ONLY the
+// "+ NEW" button here; the Edit button never reaches this file. DEBT (02-roadmap): give the review an
+// "add ingredient" flow so it can create from scratch, after which this editor can finally retire.
 
 // Position ↔ _key helpers. Each step gets a _key on load; depends_on + step_position are stored as
 // _keys in editor state, converted back to positions only at save.

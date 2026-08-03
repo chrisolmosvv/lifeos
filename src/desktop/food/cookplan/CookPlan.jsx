@@ -32,7 +32,7 @@ import "../importreview/importReview.css"; // 3f: the popover's iv-* styles (pre
 
 const elapsedStr = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 3600) ? Math.floor(s / 3600) + "h " : ""}${Math.floor((s % 3600) / 60)}m`; };
 
-export default function CookPlan({ recipeId, onBack }) {
+export default function CookPlan({ recipeId, onBack, onEdit }) {
   const [data, setData] = useState(null);
   const [cookServings, setCookServings] = useState(null);
   const [showIngs, setShowIngs] = useState(false);
@@ -194,6 +194,7 @@ export default function CookPlan({ recipeId, onBack }) {
         onSetTarget={onServe} onClearTarget={() => cook.setServeTime(null)} serveDrift={serveDrift} serveState={serveState}
         servings={cookServings} baseServ={recipe.servings || 1} onDec={() => setCookServings((s) => Math.max(1, s - 1))} onInc={() => setCookServings((s) => s + 1)}
         onBack={handleBack} onIngredients={() => setShowIngs((v) => !v)}
+        onEdit={!cook.hasSession && onEdit ? () => onEdit(recipeId) : null}
       />
       {showIngs && <div className="cpq-ings-panel"><CookIngredients ingredients={ingredients.map((ing, i) => (amountsOv[String(i)] ? { ...ing, ...amountsOv[String(i)] } : ing))} itemsById={data.itemsById} srcServings={recipe.servings || 1} serv={cookServings} usedSet={cook.state.usedIngredients} omittedSet={omittedOv} onEdit={(idx, e) => setEditChip({ idx, anchor: e.currentTarget.getBoundingClientRect() })} /></div>}
       <CookBand steps={steps} schedule={schedule} finish={finish} timerByRef={timerByRef} cookStartMs={cookStartMs} nowMs={nowMs} />
