@@ -33,6 +33,47 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3a — THE DORMANT PLAN. Src-only, 1 commit. First VISIBLE piece.
+
+WHAT CHANGED: a new **cook plan page** replaces CookCompanion as the destination when you open a
+recipe. It shows the WHOLE plan, dormant — no timers run, no start button, nothing live:
+- Masthead: title · cuisine · total planned time · servings stepper · back link.
+- A to-scale **band** (one row per station) built from cookSchedule's EXISTING output (no new
+  scheduling logic).
+- Every step: number · full method text (never clipped) · duration (a plain time, not a
+  countdown) · station COLOUR (A14: bench/hob/oven/rest) · tag · a quiet "prep" marker · the
+  ingredients it uses, scaled to servings.
+- A collapsible **ingredients** panel, amounts scaled to servings (grams where present).
+- Servings scaling is compute-on-read (stores nothing).
+
+FILES (src only): NEW src/desktop/food/cookplan/{CookPlan,CookPlanStep,CookBand,CookIngredients}.jsx,
+src/desktop/food/cookPlan.css, src/spine/logic/cookPlanView.js; EDIT src/desktop/food/Cookbook.jsx
+(route flip). CookCompanion/CookHero/CookRail/RecipeOverview left ON DISK, unrouted (the fallback
+until a later demolition). No data written; nothing deployed. Build passes; every file <250.
+
+HOW TO VERIFY (owner, 13" MacBook): Cookbook → tap a recipe → the new plan opens (not the old
+Cooking/Recipe tabs). Every step's full text shows; each shows duration + station colour + tag; the
+band shows the cook to scale; change servings → ingredient amounts scale and nothing else moves;
+nothing counts down and there's no start button; open the ingredients panel → every ingredient with
+a scaled amount; back → Cookbook normal; the header live-cook marker stays absent (no session made).
+★ Test a recipe imported since 2a AND an older pre-2a recipe (nulls: no station/tag/hold) — it must
+degrade quietly (no band when there are no durations; no chip when no station), not break.
+
+KNOWN GAPS / FLAGS:
+- **default_servings not honoured** — recipeLoad doesn't select it and 3a may not touch recipeLoad,
+  so the stepper defaults to `servings`. Code already prefers default_servings if it's ever loaded
+  (a one-column additive add to recipeLoad). Planner's call.
+- **No auto-scale / internal scroll** (that's 3d) — a long recipe WILL overflow the screen; expected
+  at this stage.
+- Rests on 2a persistence, still unproven by row check — a since-2a recipe only shows station/tag/
+  hold if the import actually saved them. Running that row check is still outstanding.
+- Not yet clicked-through on the Mac by the Builder — owner QA needed.
+
+NEXT: **3b — the replay rework** (the riskiest sub-piece: signed overrun, resume-from-stopped,
+position-from-timers, session-on-first-timer).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 2a + 2b — IMPORT UPGRADE (text/URL/photo). ⚠️ VERIFICATION PENDING.
 
 **PIECE 2a — two-pass extraction + the new fields flowing end-to-end (4 commits):**
