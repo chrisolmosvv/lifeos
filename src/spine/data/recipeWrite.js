@@ -19,6 +19,7 @@ const recipeRow = (r) => ({
   prep_minutes: r.prep_minutes ?? null,
   cook_minutes: r.cook_minutes ?? null,
   source_url: r.source_url ?? null, // imported recipes keep their provenance link
+  cuisine: r.cuisine ?? null,       // Cookbook rebuild 2a: the AI-inferred cuisine label
 });
 
 // Insert the recipe's ingredient + step rows (positions from array order). user_id defaults to
@@ -35,12 +36,14 @@ async function writeChildren(recipeId, ingredients, steps) {
       no_macros: !!ing.no_macros,
       position: i,
       step_position: ing.step_position ?? null,
+      grams: ing.grams ?? null, // Cookbook rebuild 2a: confirmed edible weight (owner input; null = derive on read)
     }));
     const { error } = await supabase.from("recipe_ingredients").insert(rows);
     if (error) throw new Error(error.message);
   }
   if (steps?.length) {
-    const rows = steps.map((s, i) => ({ recipe_id: recipeId, position: i, text: s.text, timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null }));
+    // Cookbook rebuild 2a: station/hold_tolerance/is_prep join the existing step columns.
+    const rows = steps.map((s, i) => ({ recipe_id: recipeId, position: i, text: s.text, timer_seconds: s.timer_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null, station: s.station ?? null, hold_tolerance: s.hold_tolerance ?? null, is_prep: !!s.is_prep }));
     const { error } = await supabase.from("recipe_steps").insert(rows);
     if (error) throw new Error(error.message);
   }
