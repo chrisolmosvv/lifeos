@@ -19,6 +19,7 @@
 
 import { callGemini } from "../_shared/gemini.ts";
 import { fetchRecipeText } from "./extract.ts";
+import { ocrRecipePhoto } from "./vision.ts";
 import { PASS1_SYSTEM, PASS1_SCHEMA } from "./schema.ts";
 import { normalisePass1, isUsable, parseJson, repairDeps, assignStepPositions } from "./normalise.ts";
 import { enrich } from "./enrich.ts";
@@ -36,13 +37,17 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
 
-  let body: { text?: unknown; url?: unknown };
+  let body: { text?: unknown; url?: unknown; image?: unknown; imageMime?: unknown };
   try { body = await req.json(); } catch { return json({ ok: false, error: "bad_json" }, 400); }
 
   const pasted = typeof body.text === "string" ? body.text.trim() : "";
   const url = typeof body.url === "string" ? body.url.trim() : "";
+  const image = typeof body.image === "string" ? body.image : "";
+  const imageMime = typeof body.imageMime === "string" ? body.imageMime : "image/jpeg";
 
-  // Paste wins when both are present. A URL is fetched server-side; a fetch failure is DISTINCT.
+  // Precedence: pasted text, then a fetched URL, then a photo OCR'd to text. Each just produces
+  // `input` — the SAME text the existing Pass 1 → Pass 2 pipeline consumes. Distinct failures so
+  // the UI shows the right message.
   let input = pasted;
   let sourceUrl: string | null = null;
   if (!input && url) {
@@ -52,6 +57,12 @@ Deno.serve(async (req) => {
     } catch {
       return json({ ok: false, error: "fetch_fail" });
     }
+  }
+  if (!input && image) {
+    // Photo → recipe text (OCR pre-pass). No image is ever stored — it is read here and discarded.
+    const ocr = await ocrRecipePhoto(image, imageMime);
+    if (!ocr.ok) return json({ ok: false, error: "ocr_fail" });
+    input = ocr.text;
   }
   if (!input) return json({ ok: false, error: "parse_fail" });
 

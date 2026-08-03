@@ -103,3 +103,27 @@ export async function transcribeAudio(base64: string, mimeType: string): Promise
     generationConfig: { temperature: 0 },
   });
 }
+
+// Call Gemini with a system instruction + a text prompt + one inline image (Cookbook 2b vision
+// OCR). Same key/model/endpoint/retry as the text path — the model is multimodal — just an image
+// part alongside the prompt. Only a recipe PHOTO leaves the app (free-key boundary intact). Never
+// throws. The caller (recipe-import/vision.ts) owns the OCR prompt + its failure handling.
+export async function callGeminiVision(opts: {
+  system: string;
+  prompt: string;
+  base64: string;
+  mimeType: string;
+  generationConfig?: Record<string, unknown>;
+}): Promise<GeminiResult> {
+  return post({
+    systemInstruction: { parts: [{ text: opts.system }] },
+    contents: [{
+      role: "user",
+      parts: [
+        { text: opts.prompt },
+        { inlineData: { mimeType: opts.mimeType, data: opts.base64 } },
+      ],
+    }],
+    generationConfig: opts.generationConfig ?? {},
+  });
+}
