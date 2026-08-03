@@ -321,6 +321,58 @@ db/28_food_tables.sql            — the 5 tables                       [F1]
 
 ---
 
+## Cookbook rebuild — AS SHIPPED (2026-08-03)
+
+> ★ This section supersedes the Cookbook parts of "current truth (2026-07-05)" below. The **Surfaces**
+> and **Key files** subsections there describe the old **Hero + Rail cook companion**, which was
+> **demolished 2026-08-03** — read them as history, not as the app. Schema for this rebuild = `db/47`
+> (additive; full list in `01-architecture.md`). Decisions + the reasons that look wrong cold live in
+> `03-decisions.md` (2026-08-03). Paths below are the **real** ones: `src/desktop/food/` and
+> `src/spine/` — the old `src/food/` in this doc is drift.
+
+### THE COOK PAGE — one page, two states (a dormant plan and a live cook)
+No separate read view; the Cooking/Recipe tab pair is gone. **No start button — the FIRST TIMER START
+begins the cook and creates the session.** Position is reported by which timers you've started; there
+is **no mark-done**. Every step has a duration and a timer; **every timer alarms; the owner starts each
+one by hand.** Overruns **count UP past zero.** Reopening a closed step **RESUMES** from where it
+stopped. The plan **re-times silently** around what actually happened. It shows slack and the critical
+path ("sets the clock"), latest-start deadlines as clock times, blocked-by reasons, a live serve-time
+readout, and just-in-time placement from hold tolerance. **One pair of hands:** `hands_on` and
+`active_heat` cannot overlap; `hands_free` runs freely alongside anything. **Fit-to-hole** type scaling
+with manual controls and internal scroll **in the step table only.** A **live macro ledger.** An
+**itemised end-of-cook save review** (Keep/Drop each change → written to whole objects); **abandoning
+discards silently.**
+- Files: `src/desktop/food/cookplan/` (`CookPlan`, `CookMasthead`, `CookBand`, `CookOnNow`, `CookBoard`,
+  `CookBoardRow`, `CookFoot`, `CookIngredients`, `CookReview`, `SizeControls`, `useFitToHole`),
+  `cookPlan.css`. Engine + schedule in `src/spine/`: `cookSchedule`, `cookLanes`, `cookDeadlines`,
+  `cookChanges`, `cookPlanView`, `cookReplay`, `cookEventStore`, `useCookEvents`, `useWakeLock`,
+  `cookAlarm` (the React-free two-tone Web-Audio beep + wake lock; the **full-screen blocking alarm
+  overlay was deliberately dropped** — twelve full-screen interrupts a cook is unbearable).
+
+### THE IMPORT REVIEW — three sequential passes with a progress rail
+**Ingredients → method → the plan.** A **DIFF the owner approves:** what the source wrote → what will be
+stored. **Buy-form vs eat-form.** **Impact-weighted flagging** (flag only where being wrong moves a
+total). The **Finder** as the single resolution surface. **Merged steps** with a terse/original toggle.
+**Generated prep steps.** **Three totals compared** (site claim · sum of our steps · the real scheduled
+span). **Drag re-parents a step; the scheduler re-solves.** A **three-check save gate** (every
+ingredient resolved · every step timed · plan valid — no cycle).
+- Files: `src/desktop/food/importreview/` (`ImportReview`, `ImportMasthead`, `ImportRail`,
+  `IngredientsPass`, `MethodPass`, `PlanPass`, `StepRow`, `FinderPopover`), `importReview.css`; logic in
+  `src/spine/logic/` (`importReviewLogic`, `methodReviewLogic`, `importGate`). Entry point:
+  `ImportScreen.jsx`. **`RecipeEditor.jsx` + `EditorSteps.jsx` survived** — still routed for EDITING an
+  existing recipe/draft (the quick-edit that was meant to replace them was never built; see roadmap).
+
+### THE IMPORTER — two passes: body, then enrichment
+**Pass 1** = title/servings/times/cuisine, multi-recipe detection, ingredients, steps as a **terse
+rewrite keeping the original**, **merge-don't-split**. **Pass 2** = a duration/tag/station/hold on every
+step + **prep-step generation** (spliced in deterministically; sequential dependencies wired **in code**,
+not by the model). **Photo input** via a **vision OCR pre-pass** into the same two passes; no image is
+stored.
+- Files (edge, off-repo, deployed to Frankfurt): `supabase/functions/recipe-import/`
+  (`index`, `schema`, `normalise`, `enrich`, `vision`), `_shared/gemini.ts`. Client: `src/spine/data/importClient.js`.
+
+---
+
 ## Food Rebuild — current truth (2026-07-05)
 
 ### Schema changes (three; five core tables kept unchanged)
@@ -335,7 +387,7 @@ db/28_food_tables.sql            — the 5 tables                       [F1]
   Added `ingredient_used` to the allowed values (strict superset — no existing data invalidated).
   Splits cooking mark-used from shopping-tick (`ingredient_ticked`). Module table only.
 
-### Surfaces (current — corrected 2026-07-07)
+### Surfaces (⚠️ SUPERSEDED 2026-08-03 — the Hero+Rail cook companion was demolished; see "Cookbook rebuild — AS SHIPPED" above. The Cookbook library register + broadsheet day/week/month views still stand.)
 - **Cook companion "Hero + Rail"** (CookCompanion.jsx + CookHero + CookRail + CookTimer +
   AlarmOverlay + RecipeOverview + cook.css + cookOverview.css). One big Fraunces directive (the
   Hero = the active step) + a rail (Parked = passive steps with live countdowns; Not yet =
@@ -374,9 +426,9 @@ Weight resolution and food matching were improved across four slices. Current tr
   most queries skip the ranker).
 - **Label cleanup:** `cleanLabel()` strips malformed punctuation from raw_text only.
 
-### Key files (corrected 2026-07-07)
-- Cook companion: `CookCompanion.jsx`, `CookHero.jsx`, `CookRail.jsx`, `CookTimer.jsx`,
-  `AlarmOverlay.jsx`, `RecipeOverview.jsx`, `cook.css`, `cookOverview.css`, `cookAlarm.js`.
+### Key files (⚠️ SUPERSEDED 2026-08-03 — the cook-companion + old-recipe-view files below were DELETED in the demolition; current files are in "Cookbook rebuild — AS SHIPPED" above. Paths here also carry the old `src/food/` drift — the real tree is `src/desktop/food/` + `src/spine/`.)
+- Cook companion (DELETED 2026-08-03): `CookCompanion.jsx`, `CookHero.jsx`, `CookRail.jsx`, `CookTimer.jsx`,
+  `AlarmOverlay.jsx`, `RecipeOverview.jsx`, `cook.css`, `cookOverview.css`. **KEPT: `cookAlarm.js`** (still the beep engine).
 - Cook engine: `cookReplay.js`, `cookEventStore.js`, `useCookEvents.js`.
 - Scheduler (WIRED, corrected 2026-07-07 — was dormant): `cookLanes.js`, `cookSchedule.js`.
   Imported by RecipeOverview for the parallel timing strip. Computes lanes + critical-path offsets.

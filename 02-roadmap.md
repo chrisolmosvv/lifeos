@@ -9,6 +9,52 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-08-03 — Cookbook rebuild COMPLETE + demolition + docs close ✅
+The whole Food → Cookbook was rebuilt and the old surfaces retired. What shipped: **one cook page**
+(a dormant plan + a live cook — no read view, no start button; the first timer starts the cook; every
+step timed and hand-started; overruns count up; the plan re-times silently around a **one-pair-of-hands**
+schedule with critical path, deadlines, blocked-by reasons, live serve time, JIT from hold tolerance;
+fit-to-hole scaling; a live macro ledger; an itemised end-of-cook save review). A **three-pass import
+review** (ingredients → method → plan, a DIFF the owner approves, buy-form vs eat-form, impact-weighted
+flags, the Finder as the one resolution surface, drag-to-re-parent, a three-check save gate). A **two-pass
+importer** (body + enrichment, photo OCR pre-pass, merge-don't-split, generated prep steps, deps wired in
+code). Schema = `db/47` (additive; checker-approved, live). Then **DEMOLITION** (2026-08-03): the old
+Hero+Rail cook companion (`CookCompanion`/`CookHero`/`CookRail`/`CookTimer`/`AlarmOverlay`/`RecipeOverview`
++ `cook.css`/`cookOverview.css`) was proven dead and deleted; `cookbook.css` (691 lines, mostly dead) was
+retired and its live styles split into `recipeEditor.css` + `importScreen.css`. All src-only, separate
+commits. As-built in `11-food-nutrition.md` ("Cookbook rebuild — AS SHIPPED"); decisions in
+`03-decisions.md` (2026-08-03); schema truth in `01-architecture.md`; per-piece steps in
+`04-handoff-log.md` (2026-08-03).
+
+**Carried debt / follow-ups (Cookbook-rebuild pile):**
+- ⬜ **MOBILE is the next piece** — the mobile cook, editor, delete, favourite toggle, and a **dead
+  "Log this meal" button** all need finishing. ⚠️ **`cookReplay` carries BRIDGE OUTPUTS solely so
+  `MobileCook` keeps working** — they look unused from the desktop side and **MUST NOT be removed.**
+  **`MobileCook` is UNVERIFIED since the replay rework** — nobody has clicked it. The mobile piece must
+  **re-verify, not assume.**
+- ⬜ **Editing is unfinished, not decided.** The old **`RecipeEditor` SURVIVED demolition** — still
+  routed for editing existing recipes. The requirements said the editor dissolves into the review screen
+  plus a **quick-edit on the recipe page**; the quick-edit was **never built.**
+- ⬜ **Library filtering (cuisine / time / ingredients)** was specified and **deliberately deferred** —
+  it solves a problem that doesn't exist at low recipe counts. `cuisine` is populated and ready when it's
+  wanted.
+- ⬜ **Progressive import reveal is TIME-BASED, not a real stream** (it looks live; it isn't).
+- ⬜ **`portions.js` gaps:** no whole-item entries for common vegetables (e.g. aubergine) and **no
+  "handful" measure**; it **ignores `food_items.serving_grams`**; **`ml` is treated as `g`.**
+- ⬜ **Performance:** the **1-second cook tick re-renders the whole plan** — not optimised. **Fit-to-hole
+  validated only to ~22 steps.**
+- ⬜ **`recipeEditor.css` is 308 lines** — a touch over the ~250 house guideline, **kept whole
+  deliberately** (splitting would duplicate shared step/heading styles that then drift). `foodModal.css`
+  (369) and `foodGoals.css` (276) are also over but belong to the logger, out of scope. `foodLog.css`
+  (706) likewise.
+- ⬜ **No lint step is configured in this project — the build is the only gate.**
+- ⬜ **DB follow-up (Checker-gated, DB-only):** `cook_event.session_id` has **no foreign key** — orphaned
+  events accumulate (inert; replay never reads them). Fix ORDER: **clean orphans FIRST, then ADD** the
+  constraint (it's an ADD, not a drop-and-re-add). Full detail in `01-architecture.md` + the handoff log.
+- ⬜ **Eyeball check:** confirm older **parked items are still listed** after the changes.
+
+---
+
 ## Session note — 2026-07-18 — Body V3 redesign close (Pieces 1–9 + docs) ✅
 The Body page is fully rebuilt: the "Scale Ticket" table is retired for a chart-led page — a full-width
 composition trend chart (smoothed weight line + raw dots + spread band + body-fat on its own terracotta

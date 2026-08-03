@@ -56,6 +56,16 @@ archive · calendar · health · food · finance · people · settings`. The nav
 eight (Planning is reached from Today; Archive from Settings). Health holds a hub +
 three faces (Gym "Form Guide", Sleep, Body).
 
+**Width convention — the reading-column cap and its per-page escape (recorded 2026-08-03).**
+`.food-page` caps the Food pillar at **760px** as a deliberate **reading column** (the Log is
+genuinely a column of text + numbers and stays one). **Dense screens escape it per-page with the
+100vw pattern** — `width:100vw; max-width:none; margin-left:calc(-50vw + 50%)` — used by `.cpq`
+(the cook page), `.imp` (import review/screen), `.bs` and `.flog-day`. **Both halves must be
+written down together:** `06-design.md` states no rationale for the 760px cap, and that gap is
+exactly how the cook page's intended full-width was silently lost once — a class was renamed and
+the escape went with it. If you see the cap, it is intentional; if a dense Food screen needs full
+width, it opts out with the 100vw pattern, it does not raise the cap.
+
 > **Sign-in (Phase 7 AUTH).** Email + password (with "Forgot password?" → an in-app
 > reset page). Single-user, **public sign-up disabled**. Magic link removed from the
 > UI (the email provider stays enabled as a recovery backstop). See the decisions doc.
@@ -148,14 +158,36 @@ active row per `goal_type` wins — **also holds the nutrition + focus goals**),
 `segments` jsonb (intervals), SOFT task/category references + snapshots
 (delete-proof), rating, note, `source` (`timer`/`manual`/`hermes`).
 
-**Food (F-track, `db/28`, `db/31`–`db/35`, `db/38`–`db/42`)** — `food_items` (the
+**Food (F-track, `db/28`, `db/31`–`db/35`, `db/38`–`db/42`, `db/47`)** — `food_items` (the
 library/cache, per-100g macros, `display_name`), `food_log_entries` (one row per
 logged item with the frozen 7-number **macro snapshot**; `entry_source` in
 manual/search/recipe_cook/**hermes**; `is_alcohol` = the lite drink log), `recipes`,
-`recipe_ingredients`, `recipe_steps` (+ step enrichment: `tag`, `depends_on`,
-`step_position`). Cook layer is **event-sourced** (`db/39`): `cook_session` (thin
-header) + `cook_event` (append-only, immutable — state derived by replay, timers
-survive reload).
+`recipe_ingredients`, `recipe_steps`. Cook layer is **event-sourced** (`db/39`):
+`cook_session` (thin header) + `cook_event` (append-only, immutable — state derived by
+replay, timers survive reload).
+- **Cookbook-rebuild additions (`db/47`, additive-only, 2026-08-03)** — `recipe_steps`
+  gains `hold_tolerance` (text enum immediate/short/indefinite), `station`
+  (bench/hob/oven/rest — **colour-code only, constrains nothing**), `is_prep` (bool);
+  `recipe_ingredients` gains `grams` (**a confirmed edible-weight INPUT, not a derived
+  number** — the one sanctioned brush past compute-on-read; null → converted at runtime);
+  `recipes` gains `cuisine`, `reviewed_at` (null = unreviewed draft import),
+  `default_servings` (what the owner COOKS; `servings` still = what the source MAKES);
+  `cook_session` gains `target_serve_at`; `cook_event.event_type` widened by 5 values
+  (timer_adjusted, estimate_adjusted, amount_changed, ingredient_omitted, timer_resumed —
+  11 total). **One index** on `recipes (user_id, cuisine)`. **No new tables, no new FK, no
+  new RLS.**
+- **⚠️ LIVE TRUTH about `cook_event.session_id` — it has NO foreign key at all.** `db/39`
+  *declares* a cascading FK on `session_id`, but the live table has none — almost certainly
+  because a `CREATE TABLE IF NOT EXISTS` silently did nothing over a pre-existing `cook_event`,
+  so the constraint was never created. Only `cook_event_user_id_fkey` exists. Consequence:
+  orphaned events accumulate (abandon/delete a cook, its events stay), and nothing enforces
+  that `session_id` points at a real session. **Functionally INERT** — replay only ever queries
+  `.eq("session_id", <active session id>)`, so orphans are never read. **The eventual fix is
+  DB-only and Checker-gated, and ORDER MATTERS: CLEAN THE ORPHANS FIRST, THEN ADD the constraint**
+  (`delete from cook_event where session_id not in (select id from cook_session);` then
+  `alter table cook_event add constraint … references cook_session(id) on delete cascade;`).
+  It is an **ADD, not a drop-and-re-add** — nothing exists to drop; record that or the migration
+  fails.
 
 **People / Rolodex (R-track, `db/43`)** — eight tables: `people`, `people_circles`,
 `people_circle_members`, `people_connections`, `people_groups`,

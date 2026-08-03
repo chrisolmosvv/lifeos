@@ -9,7 +9,118 @@
 
 ---
 
-## Body V3 redesign — decisions banked (2026-07-18)
+## Cookbook rebuild — decisions banked (2026-08-03)
+
+> The whole Food → Cookbook was rebuilt: one cook page (a dormant plan + a live cook), a three-pass
+> import review, and a two-pass importer. Schema = `db/47` (additive). As-built in
+> `11-food-nutrition.md`; per-piece steps in `04-handoff-log.md` (2026-08-03 entries). Every ruling
+> below with its one-line why. **Several look like mistakes to a cold reader — that is exactly why
+> they are written down. Do not "correct" them without re-reading the why.**
+
+**The cook page & the schedule**
+- **[The cook page is ONE page with two states — a dormant plan and a live cook]** — no separate
+  read view, no Cooking/Recipe tab pair (both retired). **Why:** a recipe you're about to cook and
+  one you're cooking are the same object at two moments; a second surface was drift. **Trade-off:**
+  the old typographic recipe-overview read view is gone.
+- **[There is NO start button — the FIRST TIMER START begins the cook and creates the session]**;
+  position is reported by which timers you've started, and there is **no mark-done**. **Why:** the
+  cook tells you where it is by what's running; a "done" tap was a second bookkeeping act nobody
+  did. **Trade-off:** you can't mark a no-timer step complete — but every step now has a timer.
+- **[Every step has a duration and a timer; every timer alarms; you start each one by hand]**.
+  Overruns **count UP past zero**; reopening a closed step **resumes** from where it stopped. **Why:**
+  one honest model — the cook drives the clock, the plan follows. **Trade-off:** more taps than an
+  auto-advancing wizard; deliberate (you, not the app, decide when a step really starts).
+- **[`timer_seconds` is the SINGLE per-step duration — no separate estimate column]**. **Why:** now
+  that every step has a timer, one number is the estimate and the countdown both. **Trade-off:** none.
+- **[The plan re-times SILENTLY around what actually happened]** — slack + critical path ("sets the
+  clock"), latest-start deadlines as clock times, blocked-by reasons, a live serve-time readout, and
+  just-in-time placement from hold tolerance. **Why:** the plan is a servant, not a scold; it moves
+  to fit reality without nagging. **Trade-off:** none.
+- **[Concurrency = ONE PAIR OF HANDS — models the cook, not the kitchen]**. `hands_on`, `active_heat`
+  and **untagged** all occupy the hands and cannot overlap; `hands_free` runs freely alongside
+  anything. **Equipment capacity was explicitly REJECTED by the owner.** **Why:** the real constraint
+  is your two hands, not how many pans exist; modelling equipment adds truth nobody feels. **Trade-off:**
+  a recipe that genuinely needs two ovens isn't modelled — accepted.
+- **[`active_heat` OCCUPIES the hands; an untagged step defaults to hands-on]**. **Why:** frying/
+  searing needs you there; when a tag is missing, assume attention is needed (the safe default that
+  never double-books you). **Trade-off:** an untagged truly-passive step is scheduled tighter than it
+  needs — harmless.
+- **[Navigating away from a LIVE cook gets a guard; an explicit Abandon stays SILENT]**. **Why:**
+  abandoning is intentional, navigating away usually isn't — one is data-loss dressed as a design
+  principle, the other is a choice. **Trade-off:** one extra confirm when you really did mean to leave.
+
+**Stations, hold, servings**
+- **[Stations are COLOUR-ONLY and constrain nothing]** (`bench`/`hob`/`oven`/`rest`). **Why:** the
+  colour helps you read the plan at a glance; making stations a scheduling constraint would re-introduce
+  the equipment model we rejected. **Trade-off:** none.
+- **[★ DESIGN-LAW OVERRIDE — station colour-coding AND the macro bar are SANCTIONED in this module,
+  against 06-design.md's ban on colour-coding]** (cross-ref 06-design.md; joins the Gym/Sleep
+  overrides O1). **Why:** a cook reads the plan and the day's macros faster in colour than in
+  hairlines; approved for at-a-glance reading. **Trade-off:** a design audit will see colour here and
+  must NOT revert it — that is the whole reason this is written down.
+- **[`hold_tolerance` is a THREE-VALUE TEXT ENUM, not seconds]** (`immediate`/`short`/`indefinite`).
+  **Why:** three words can be reviewed at a glance; "1800 seconds" can't, and the exact number was
+  never real. **Trade-off:** coarser than a precise hold window — which we never had anyway.
+- **[`default_servings` is separate from `servings`]** — what the owner COOKS vs what the recipe
+  MAKES. **Why:** you rarely cook exactly what the source yields; both facts are true and different.
+  **Trade-off:** two numbers to carry; the review sets `default_servings` from `servings` by default.
+
+**The import review & importer**
+- **[★ THE MERGE RULE REVERSES the earlier "split at every action" decision — a step splits ONLY when
+  the split changes the plan]**. **Why:** most action-level splits produced identical timing and just
+  made the plan longer to read; a split earns its place by changing the schedule. **Trade-off:**
+  coarser timing granularity — accepted. ★ **This reverses a prior ruling; do not "restore" split-at-
+  every-action without re-reading this.**
+- **[Source-step grouping was REMOVED]** — it was chrome once step counts dropped after the merge
+  rule. **Why:** with fewer, meatier steps the grouping added visual weight for no navigation gain.
+  **Trade-off:** none.
+- **[Extraction is TWO PASSES; sequential dependencies are wired IN CODE, not by the model]**. Pass 1
+  = title/servings/times/cuisine + ingredients + merged terse-rewrite steps (keeping the original);
+  Pass 2 = a duration/tag/station/hold on every step + generated prep steps. **Why:** index arithmetic
+  (which step waits for which) is exactly where AI output goes wrong; code does it deterministically.
+  **Trade-off:** two model calls, not one.
+- **[Prep-step generation UNDER-generates by design]**. **Why:** a missing prep step costs minutes of
+  drift; an invented one costs trust. **Trade-off:** you may add a prep step the importer skipped.
+- **[Flags are IMPACT-weighted, not confidence-weighted; approve-all is the default action]** — an
+  ingredient is flagged only where being wrong actually moves the totals. **Why:** flagging every
+  low-confidence guess trains you to ignore flags; flag what matters. **Trade-off:** a wrong-but-low-
+  impact match can pass unflagged (its error is, by definition, small).
+- **[The import review presents a DIFF the owner approves]** — source wrote → what will be stored,
+  buy-form vs eat-form, three totals compared, a three-check save gate (every ingredient resolved ·
+  every step timed · plan valid). Drag re-parents a step and the scheduler re-solves. **Why:** never
+  save blind; the owner confirms the machine's reading before it becomes a recipe. **Trade-off:** a
+  few minutes' review per import.
+- **[Confidence scores and prep-step approval need NO columns — client draft only]**. **Why:** they
+  are transient review state, not facts about the recipe; only `is_prep` persists. **Trade-off:** none.
+
+**Data-model & contract rulings (the ones that look wrong cold)**
+- **[Deleting a recipe is SAFE for history]** — `food_log_entries.recipe_id` is `ON DELETE SET NULL`
+  and the 7 macro numbers are stored at log time, so every past meal and every day/week/month total
+  survives a recipe delete; only the link back to the deleted recipe is cleared. **Why:** history is
+  sacred; a recipe is a template, not the record of what you ate. **Trade-off:** a deleted recipe
+  can't be re-opened from an old log entry.
+- **[★ `grams` on `recipe_ingredients` BRUSHES the compute-on-read rule and is PERMITTED]** — a
+  confirmed edible weight is an INPUT, not a derivative: it cannot be computed from the other columns
+  (buy-form "2 tins" → edible grams needs a human/AI judgement). When `grams` is null, the runtime
+  conversion still runs. **Why:** store-raw-compute-on-read bans stored *derivatives*, not stored
+  *inputs*; this is an input. **Trade-off:** looks like a violation to a cold reader — it isn't; hence
+  this note.
+- **[`reviewed_at` REPLACES the old derived draft state; `recipeCalc.recipeKind` changed in lockstep]**
+  — null `reviewed_at` = an unreviewed draft import. **Why:** "is this a finished recipe?" is a fact
+  worth storing once, not re-deriving from column-emptiness every read. **Trade-off:** one more column;
+  the derivation logic moved, so both must stay in step.
+- **[★ THE FROZEN CONTRACT covers exported SIGNATURES and RETURN SHAPES, not whole files]** (Amendment
+  A16). Additive column-list edits to the writers/loaders are permitted; changing a signature or return
+  shape is not. **Why:** the logger and cook page depend on those shapes — the freeze protects the
+  interface, not the file's line count. **Trade-off:** none; it clarifies, not restricts.
+- **[★ "Desktop only" scopes the SURFACE, not the SPINE]** — shared logic a LIVE mobile surface depends
+  on may be extended ADDITIVELY, never changed in place. **Why:** a "desktop-only" piece must not break
+  the live mobile cook that leans on the same spine helpers. **Trade-off:** you carry mobile's needs
+  even in a desktop piece (see `cookReplay` bridge outputs).
+- **[A piece's scope exclusion covers NEW CONSTRUCTION, not the minimal plumbing an existing surface
+  needs to stop destroying that piece's output]** (Amendment A17). **Why:** "don't build X" must not
+  mean "let the old editor keep nulling the new columns"; the minimal carry-through is in scope. **Trade-
+  off:** a little plumbing bleeds into an otherwise-excluded surface — deliberately.
 
 > Pieces 1–9, src-only. As-built detail in `health-v2-build-doc.md` PART D; per-piece steps in
 > 04-handoff-log.md (2026-07-16 → -18). Grouped below; each with its one-line why.

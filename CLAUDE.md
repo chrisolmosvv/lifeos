@@ -94,6 +94,20 @@ fork — stop and flag it, don't decide alone."*
   LifeOS."** Until it's found and paused, keep pieces small and committable —
   a refactor caught half-done is a broken app pushed to main.
 
+### More scar tissue (added 2026-08-03, from the Cookbook rebuild)
+- **VERIFY THROUGH THE PATH THE OWNER TAKES.** A regression check run via `curl`
+  passed while the browser failed — `curl` has no client timeout, no CORS, no
+  save-shaping. A green curl is NOT a green app; drive the real surface.
+- **`CREATE TABLE IF NOT EXISTS` silently does nothing over a pre-existing table.**
+  A migration can "pass" and change nothing — which is how `cook_event.session_id`
+  ended up with no foreign key despite `db/39` declaring one. Verify the LIVE table,
+  not the migration's intent.
+- **An OPTIONAL field in a structured AI-response schema may simply be skipped.**
+  If the model must return it, make it REQUIRED — don't hope.
+- **Wire index arithmetic in code, not in a prompt.** "Which step waits for which"
+  (and any 1-indexed/0-indexed shifting) is exactly where AI output goes wrong; do
+  it deterministically in code.
+
 ## The brain is the source of truth
 If anything here conflicts with a request, say so and ask. If the brain docs
 are out of date, update them — don't work around them silently.

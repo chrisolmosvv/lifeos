@@ -205,12 +205,37 @@
 - **Constellation** — the "whole web" map view on the Rolodex front page.
   All people shown as a map, clustered by circle. Quiet at rest (no lines);
   hover a person to reveal only their ties. The mess-defeater.
-- **Hero + Rail** — the cook companion's layout: one big calm directive (the Hero =
-  the step you're actively doing) beside a rail showing what's cooking on its own
-  (Parked) and what's next (Not yet).
-- **Parked** — a step that's running unattended (simmer, bake, rest) with a live
-  countdown. It lives in the rail while you work on the hero. When its timer hits
-  zero, a dismiss-required alarm fires.
+- **Hero + Rail** — ~~the cook companion's layout: one big directive (the Hero) beside a rail
+  of what's cooking on its own (Parked) and what's next.~~ **⚠️ RETIRED 2026-08-03 — the whole
+  Hero + Rail cook companion was demolished in the Cookbook rebuild.** The cook is now one
+  plan/live page (see "the cook page" below); this term describes a screen that no longer exists.
+- **Parked** — ~~a step running unattended with a live countdown, living in the rail.~~
+  **⚠️ RETIRED 2026-08-03 with Hero + Rail.** On the new cook page there is no rail — every step
+  is a row in one board; a running unattended step is simply a `hands_free` step with a live timer.
+
+*(Added 2026-08-03 — the Cookbook rebuild's house words.)*
+
+- **The cook page** — the single Food → Cookbook cooking screen, in two states: a **dormant plan**
+  (before you start) and a **live cook** (once a timer runs). No separate read view. The first timer
+  you start begins the cook.
+- **Buy-form** — how you BUY an ingredient, kept as-written: "3 tbsp", "2 tins", "1 onion". Stored in
+  `amount`/`unit`.
+- **Eat-form** — the actual **edible weight in grams** of that ingredient, which is what macros are
+  computed from. Stored in `grams`. (Buy-form is what you shop for; eat-form is what goes in the pan.)
+- **One pair of hands** — the cook page's core rule: it plans around YOUR two hands, not the kitchen's
+  equipment. Two hands-on jobs can't overlap; a hands-free job (simmer, bake) runs alongside anything.
+- **Sets the clock** — the **critical path**: the chain of steps whose length decides when dinner is
+  ready. A step "on the critical path" has no slack — slip it and the whole meal slips.
+- **Hold tolerance** — how long a finished step can sit before it matters: **immediate** (serve/use at
+  once), **short**, or **indefinite**. Drives just-in-time placement so things land together, still hot.
+- **Prep step** — a preparation step (chop, measure, bring to room temp) the importer generates and
+  splices in. It arrives marked "added by the importer — approve". The importer deliberately makes too
+  FEW, not too many.
+- **The diff** — the import review's central idea: it shows **what the source wrote → what will be
+  stored**, side by side, for you to approve before it becomes a recipe. Never saves blind.
+- **Flagged-until-confirmed** — an ingredient the importer isn't sure about is **flagged only where
+  being wrong would actually move the totals** (impact-weighted, not every guess), and stays flagged
+  until you confirm or fix it. "Approve all" clears them at once.
 
 *(Added 2026-07-15 — the vocabularies the glossary was missing.)*
 
