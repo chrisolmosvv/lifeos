@@ -33,6 +33,30 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — BUY-FORM / EAT-FORM MODEL FIX (Option A). Src-only, 1 commit. ⚠️ UNVERIFIED.
+
+WHAT CHANGED: matchOne stopped overwriting `amount` with grams — `amount`/`unit` now hold the
+parsed BUY-FORM ("3 tbsp", "2 tins"), `grams` the edible weight; both persist (what db/47's grams
+column was for). ingredientMacros computes from `grams` WHEN PRESENT, falls back to resolving from
+`amount`/`unit` when grams is null (keeps every pre-2a recipe identical). recipeMacros' signature +
+return shape UNCHANGED (frozen contract intact — internal derivation only, per A16). scaledAmount
+shows the buy-form (falls back to grams).
+
+FILES: src/spine/data/importClient.js, src/spine/logic/recipeCalc.js, src/spine/logic/cookPlanView.js.
+
+⚠️ UNVERIFIED — the owner skipped the live checks. Node proved 5/5 (grams-present, pre-2a fallback
+unchanged, unresolvable→unestimated, shape unchanged, per-serving scaling). But NOT run live:
+- **★ THE NUTRITION LOGGER CHECK.** recipeMacros now derives grams from a DIFFERENT column and
+  writes calorie numbers into the owner's food history — a wrong number there is SILENT. Whoever
+  picks this up MUST run Food→Log (favourite recipes as quick-add · one-tap re-log writes the
+  correct kcal · save-as-meal) and confirm the numbers, and must NOT assume it's proven.
+- Real-row (amount/unit = buy-form, grams = edible), cook-page display, and a pre-2a recipe's
+  macros are also unrun. Verify queries are in the prior handoff message / session log.
+
+NEXT: Piece 4a (built on top of this).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3e — THE END-OF-COOK SAVE REVIEW. Src-only, 1 commit. PIECE 3 COMPLETE.
 
 WHAT CHANGED — a cook can now edit its recipe, gated by an explicit review:
