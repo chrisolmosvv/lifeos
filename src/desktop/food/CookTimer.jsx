@@ -1,5 +1,5 @@
 // CookTimer — the big countdown display for the hero step.
-// Static for step 1 (no real clock). The ± buttons are present but inert.
+// The ± buttons are wired: each calls onAdjust to change the remaining time.
 
 function fmtBig(secs) {
   if (secs == null || secs <= 0) return "0:00";
