@@ -33,6 +33,45 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — THE DATA RESET. Data-only (owner runs SQL), no code.
+
+WHAT THIS IS: a delivered SQL script to wipe every recipe and start clean now the rebuild is
+complete. NOT run by the Builder — the CLI can't auth from here and the SQL editor runs as postgres
+(auth.uid() is NULL). The owner runs it in the Supabase SQL editor (Frankfurt only). Script lives at
+scratchpad/cookbook_data_reset.sql (also pasted into chat).
+
+WHAT IT DOES (4 parts): PART 0 shows the account (confirm the email). PART 1 (read-only) previews the
+scale — recipe/step/ingredient/session/event counts + an ACTIVE-cook flag — and the current nutrition
+totals. PART 2 (destructive, ONE atomic DO block) re-checks for an active cook and ABORTS if any
+(deletes nothing), captures before-totals, deletes all recipes for the owner, re-reads totals, and
+ASSERTS every total is identical — rolling itself back if not — then confirms the tables are empty.
+PART 3 re-confirms empty in a grid.
+
+WHAT'S SAFE (restated so nobody panics): food_log_entries.recipe_id is ON DELETE SET NULL and the
+seven macro columns (kcal/protein/carbs/fat/fibre/sugar/sodium) are stored at log time — so every
+logged meal and every day/week/month total survives. Only the link from a past meal to a deleted
+recipe is cleared. WHAT CASCADES (intended, intra-module only): each recipe's recipe_ingredients,
+recipe_steps, cook_session and cook_event. Verified against db/28, db/34, db/39 — nothing reaches the
+spine.
+
+HOW VERIFIED: the script self-proves it — before/after nutrition totals (all-time macros + today +
+7-day + this-month kcal) are shown and asserted equal inside the transaction; a mismatch rolls the
+whole delete back. The owner's eyes on the two NOTICE lines are the gate.
+
+PRECONDITIONS the owner must confirm before PART 2: (1) any hand-made recipe worth keeping is
+exported — a NULL source_url recipe cannot be re-imported and is gone for good; (2) no cook is active
+(PART 1 shows this, and PART 2 guards it); (3) they accept it's irreversible.
+
+KNOWN GAPS / RISKS: NOT yet run — "delivered" ≠ "done"; the owner running it and seeing HISTORY INTACT
+is the gate. The script scopes by email lookup (safer than a hand-pasted UUID) — if the email differs
+from PART 0, they fix the one string. Still unrun elsewhere: the buy-form Nutrition-logger check.
+
+NEXT: after the reset, import three or four real recipes through the new review screen and confirm
+each saves with every field populated. Then the Planner rules on DEMOLITION (old editor + mobile
+bridge) and the deferred verification backlog.
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3i — THE SIZING CONTROLS. Src-only, 1 commit.
 ### ★ This CLOSES the owner's cook-through list (3f–3i all done).
 
