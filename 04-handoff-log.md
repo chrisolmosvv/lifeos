@@ -33,6 +33,51 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3c-i — DEADLINES, FLOAT & THE SERVE ANCHOR. Src-only, 1 commit.
+
+WHAT CHANGED:
+- **cookSchedule EXTENDED** (not replaced): now surfaces per step earliest/latest start+end, **float**
+  (latest−earliest, clamped ≥0), **critical** (float 0 = "sets the clock"), and **effectiveStart**
+  (JIT from hold_tolerance: 'indefinite' → earliest, else latest). `startOffset` kept as an alias so
+  CookBand/RecipeOverview still work. Also returns `workSeconds` (sum) alongside `finish` (span).
+- **New pure cookDeadlines.js** — anchors the schedule to clock time (serve set → backward from it;
+  else the cook's start; else now), giving per-step "**start by HH:MM**" deadlines, end-clocks for
+  blocked-by, and the serve **drift** (on time / N late / N early). `deadlineUrgency` = overdue / urgent
+  (≤10 min) / null — a readout, no alarm.
+- **Serve anchor**: cook_session.target_serve_at is now used — set on the page, persisted (held
+  locally + flushed on session create so setting it never begins the cook). cookEventStore/
+  useCookEvents gained serveAt + setServeTime; fetchActiveSession now selects target_serve_at.
+- **Both 3a stopgaps REVERSED**: steps sort by **scheduled start** (not source position); masthead
+  shows **both totals** — "runs {span}" and "{sum} of work". Stopgap comments removed.
+- Per-step UI (minimal): deadline, "sets the clock"/float, and a blocked-by line ("waiting on 3, 5 ·
+  frees up 20:41"). Design: wine #874E58 for "sets the clock"; terracotta only on serve readout +
+  urgent deadline; brick on overdue/overrun.
+
+FILES (src only): src/spine/logic/{cookSchedule,cookDeadlines,cookPlanView}.js, src/spine/data/
+{useCookEvents,cookEventStore}.js, src/desktop/food/cookplan/{CookPlan,CookPlanStep}.jsx,
+src/desktop/food/cookPlan.css. No deploy. Build green; every file <250.
+
+HOW VERIFIED: **Node-tested the maths** (owner not verifying between sub-pieces): sequential → all
+zero float/critical; parallel branch → branch float>0, main line 0; 'immediate' → latest slot;
+'indefinite' → earliest; cyclic deps → guard holds, no hang, no NaN; float never negative; serve-
+anchored clock times sane. Ox Cheek fixture: **span 270 min vs work 310 min**; critical path
+sear→braise→rest→wrap→bake→rest; **pastry 200 min float**, jus 65, chop-veg 5. All pass.
+
+⚠️ KNOWN GAPS / FLAGS (for the Planner — flagged, not assumed):
+- **Serve drift is a PLANNED projection** (cook start + span); it does NOT yet react to live
+  overruns — it can read "on time" while you're running over. Overrun-adjusted projection needs
+  mapping live progress onto the critical path (follow-on).
+- **Span ignores one-pair-of-hands** (that's 3c-ii) — "runs 270m" still assumes hands-free
+  parallelism the resource model will later constrain, so the real span will grow.
+- Serve time input assumes TODAY at HH:MM (a past time reads as late; no next-day handling).
+- Blocked-by "frees up" uses the planned end-clock for not-started predecessors (now+remaining for
+  running ones).
+
+NEXT: **3c-ii — one-pair-of-hands resource scheduling** (the new pass that serialises hands-busy
+steps; the biggest algorithmic addition and the last thing before the span is trustworthy).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3b — THE REPLAY REWORK (cook goes LIVE). Src-only, 2 commits.
 
 WHAT CHANGED — the plan page from 3a is now a live cook:
