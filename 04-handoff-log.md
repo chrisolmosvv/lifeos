@@ -33,6 +33,56 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3b — THE REPLAY REWORK (cook goes LIVE). Src-only, 2 commits.
+
+WHAT CHANGED — the plan page from 3a is now a live cook:
+- **Signed overrun:** timers count DOWN then keep counting UP past zero ("+2:14 over" in brick);
+  the alarm fires ONCE on the zero-crossing (a brief cookAlarm burst, no full-screen overlay).
+- **Resume from where it stopped:** replay walks every start/stop segment and SUMS the elapsed;
+  a new `timer_resumed` event means "continue" vs `timer_started` = "begin fresh". Stopping then
+  starting again resumes (keeps counting up if it had overrun).
+- **Position from timers only:** each step's state (waiting/active/done) is derived from its
+  timers; `step_marked` is ignored by the new path; there is NO "mark done" control.
+- **Cook begins on first TIMER start:** ensureSession is gated to startTimer; ticking an
+  ingredient never creates a session.
+- **Clock skew:** optimistic events are reconciled to the server row once persisted, so a live
+  timer reads identically before and after a reload.
+
+★ ADDITIVE / A22: cookReplay RETAINS its old outputs (stepStates from step_marked, timers[].done,
+clamped remaining) verbatim as a marked BRIDGE for the still-live MobileCook — nothing shared was
+changed in place. Verified statically that MobileCook's consumed fields are unchanged.
+
+FILES (src only): src/spine/logic/{cookReplay,cookPlanView}.js, src/spine/data/{useCookEvents,
+cookEventStore}.js, src/desktop/food/cookplan/{CookPlan,CookPlanStep}.jsx, src/desktop/food/cookPlan.css.
+No deploy. Build green; every file <250. **Replay Node-tested: 8/8 assertions** (overrun, resume-
+sums-segments, timer-derived state, waiting default, and the mobile bridge).
+
+HOW TO VERIFY (owner, Mac — the reload check is make-or-break):
+1. Open a recipe → dormant plan, nothing running, no global start button.
+2. Tick an ingredient → NO session (header marker stays absent).
+3. Start a step's timer → cook begins, header live-cook marker appears.
+4. Let it run past zero → counts UP "+0:30 over", alarm fires once, does not freeze.
+5. Stop part-way then Start again → RESUMES from where it stopped, not full.
+6. Do steps out of order → no complaints.
+7. ★ Reload mid-cook → every timer exactly where it should be, incl. an overrun.
+8. Several timers at once → all count; report any jank.
+9. No "Mark done" anywhere.
+★ Test with the OX CHEEK WELLINGTONS (9 steps, 4 stations, 3-hour braise, parallel work).
+
+KNOWN GAPS / DEBT:
+- **cookReplay now serves TWO models** (new desktop + old mobile bridge) until the mobile cook is
+  reworked or retired — a scoped follow-on. **MobileCook is UNVERIFIED after this change** (nobody
+  clicked it); the later mobile piece must RE-VERIFY, not assume.
+- The 1s tick re-renders the whole plan subtree; not optimised (measure-before-optimise). If a
+  9-step cook with several timers is janky on the Mac, isolating the countdowns is the next step.
+- The two 3a stopgaps (order-by-position, total-as-sum) are still in place — 3c reverses them.
+- Alarm is a ~4s burst per crossing (minimum-viable quiet cue).
+
+NEXT: **3c-i — deadlines & float** (latest-start clock times, slack/critical-path, blocked-by,
+serve-time anchor), which also reverses the two 3a stopgaps.
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — IMPORT TIMEOUT + PROGRESS. Src-only, 1 commit (no deploy).
 
 WHAT CHANGED: URL import was failing at ~25s with "Couldn't reach the import service". Cause:
