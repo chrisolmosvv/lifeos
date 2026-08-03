@@ -125,24 +125,26 @@ function extractBracketGrams(rawText, parsedAmount) {
 }
 
 async function matchOne(ing, itemsById) {
-  const base = { parsedName: ing.name || ing.raw_text || "", raw_text: ing.raw_text || ing.name || "", no_macros: false, step_position: ing.step_number ?? null, grams: null };
+  // 4a model fix (Option A): amount/unit KEEP the parsed BUY-FORM ("3 tbsp", "2 tins", "6 thighs");
+  // grams holds the resolved EDIBLE weight. Both persist — macros compute from grams, the buy-form
+  // is what's shown at the counter. (Previously amount was overwritten with grams — the old collapse
+  // that db/47's grams column was added to end.)
+  const grams = resolvePortion(ing.name, ing.amount, ing.unit) ?? extractBracketGrams(ing.raw_text, ing.amount);
+  const base = { parsedName: ing.name || ing.raw_text || "", raw_text: ing.raw_text || ing.name || "", no_macros: false, step_position: ing.step_number ?? null, amount: ing.amount ?? null, unit: ing.unit ?? null, grams: grams ?? null };
   try {
     const res = await searchFoods(ing.name || ing.raw_text || "");
     const results = res.results || [];
     // The reranker's top pick when available; otherwise the top candidate by fixed priority
-    // (Basics → saved → OFF → USDA). Never strand an ingredient as "needs a match" when
-    // candidates exist — a best-guess the owner can see beats a blank flag they must hunt.
+    // (Basics → saved → OFF → USDA). Never strand an ingredient as "needs a match" when candidates
+    // exist — a best-guess the owner can see beats a blank flag they must hunt.
     const hit = Array.isArray(res.top3) && res.top3.length
       ? results[res.top3[0]]
       : results.length ? results[0] : null;
-    if (!hit) return { ...base, food_item_id: null, amount: null, unit: null };
+    if (!hit) return { ...base, food_item_id: null };
     const item = await ensureFoodItem(hit);
     itemsById[item.id] = { ...hit, food_item_id: item.id };
-    const grams = resolvePortion(ing.name, ing.amount, ing.unit) ?? extractBracketGrams(ing.raw_text, ing.amount);
-    // 2a: also carry grams as its own draft field — the starting-guess edible weight the owner
-    // confirms/corrects on the review screen (persists to recipe_ingredients.grams).
-    return { ...base, food_item_id: item.id, amount: grams, unit: grams != null ? "g" : null, grams };
+    return { ...base, food_item_id: item.id };
   } catch {
-    return { ...base, food_item_id: null, amount: null, unit: null };
+    return { ...base, food_item_id: null };
   }
 }

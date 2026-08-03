@@ -93,7 +93,14 @@ function ingredientMacros(ing, itemsById) {
       m[k] = typeof v === "number" && Number.isFinite(v) ? Math.max(0, v) : null;
     }
   } else if (ing.food_item_id != null && itemsById?.[ing.food_item_id]) {
-    m = entryMacros(itemsById[ing.food_item_id], ing.amount, ing.unit || "g");
+    // 4a model fix (Option A): the edible weight (grams) WINS when present; else fall back to
+    // resolving from the buy-form amount/unit — which keeps every pre-2a recipe (no grams)
+    // computing EXACTLY as before. recipeMacros' signature + return shape are unchanged (frozen
+    // contract intact — only this internal derivation moved).
+    const g = Number(ing.grams);
+    m = Number.isFinite(g) && g > 0
+      ? entryMacros(itemsById[ing.food_item_id], g, "g")
+      : entryMacros(itemsById[ing.food_item_id], ing.amount, ing.unit || "g");
   }
 
   return m && Number.isFinite(m.kcal) ? m : null;

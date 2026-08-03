@@ -60,13 +60,16 @@ export function fmtRemaining(sec) {
 // A servings-scaled amount for one ingredient. Prefer the confirmed grams (2a), else the stored
 // amount+unit (which the import already resolved). null when neither exists (show the raw line only).
 export function scaledAmount(ing, scale) {
-  const g = Number(ing?.grams);
-  if (Number.isFinite(g) && g > 0) return { qty: Math.round(g * scale), unit: "g" };
+  // 4a: show the BUY-FORM (amount/unit — "3 tbsp", "2 tins") scaled, which is what's useful at the
+  // counter; fall back to the edible grams. (Pre-2a rows have amount = grams / unit "g", so they
+  // read exactly as before.)
   const a = Number(ing?.amount);
   if (Number.isFinite(a) && a > 0) {
     const q = a * scale;
     return { qty: Math.round(q * 10) / 10, unit: ing.unit || "" };
   }
+  const g = Number(ing?.grams);
+  if (Number.isFinite(g) && g > 0) return { qty: Math.round(g * scale), unit: "g" };
   return null;
 }
 
