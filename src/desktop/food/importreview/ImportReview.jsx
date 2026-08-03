@@ -12,6 +12,7 @@ import { cookSchedule } from "../../../spine/logic/cookSchedule";
 import { createRecipe, ensureFoodItem } from "../../../spine/data/recipeWrite";
 import { supabase } from "../../../spine/data/supabaseClient";
 import { useFitToHole } from "../cookplan/useFitToHole";
+import SizeControls from "../cookplan/SizeControls";
 import ImportMasthead from "./ImportMasthead";
 import ImportRail from "./ImportRail";
 import IngredientsPass from "./IngredientsPass";
@@ -103,10 +104,7 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved }) {
         scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale} />}
 
       <div className="iv-ft">
-        <div className="iv-zoom">
-          <button type="button" onClick={fit.dec}>A−</button><span className="pc">{fit.pct}%</span>
-          <button type="button" onClick={fit.inc}>A+</button><button type="button" onClick={fit.fit} style={{ width: "auto", padding: "0 6px" }}>Fit</button>
-        </div>
+        <SizeControls pct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onSet={fit.set} />
         <div className="iv-rgt">
           {pass > 1 && <button type="button" className="iv-back" onClick={() => setPass(pass - 1)}>‹ back</button>}
           {pass < 3 && <button type="button" className={`iv-approve${(pass === 1 ? !unresolvedFlags : !unapproved) ? " off" : ""}`} onClick={approveAll}>{pass === 1 ? "Approve all" : "Approve added steps"}</button>}

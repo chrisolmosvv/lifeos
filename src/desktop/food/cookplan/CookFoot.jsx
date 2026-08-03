@@ -4,8 +4,9 @@
 // bar + station colours are the sanctioned A14 fills; everything else stays hairline.
 
 import { STATION, STATION_ORDER, MACRO } from "../../../spine/logic/cookPlanView";
+import SizeControls from "./SizeControls";
 
-export default function CookFoot({ perServing, unestimated, fitPct, isManual, onDec, onInc, onFit, onFinish, hasSession }) {
+export default function CookFoot({ perServing, unestimated, fitPct, isManual, onDec, onInc, onFit, onSet, onFinish, hasSession }) {
   const g = (k) => Math.round(perServing?.[k] || 0);
   const parts = ["protein", "carbs", "fat"];
   const totalG = parts.reduce((a, k) => a + g(k), 0) || 1;
@@ -36,12 +37,7 @@ export default function CookFoot({ perServing, unestimated, fitPct, isManual, on
       </div>
 
       <div className="cpq-foot-ctl">
-        <div className="cpq-size">
-          <button type="button" className="cpq-size-btn" onClick={onDec} aria-label="Smaller">A−</button>
-          <button type="button" className={`cpq-size-btn${isManual ? "" : " is-auto"}`} onClick={onFit}>Fit</button>
-          <button type="button" className="cpq-size-btn" onClick={onInc} aria-label="Larger">A+</button>
-          <span className="cpq-size-pct tnum">{fitPct}%</span>
-        </div>
+        <SizeControls pct={fitPct} isManual={isManual} onDec={onDec} onInc={onInc} onFit={onFit} onSet={onSet} />
         <span className="cpq-space-hint">space<em> · next step / clear an overrun</em></span>
         {hasSession && <button type="button" className="cpq-finish" onClick={onFinish}>Finish cook</button>}
       </div>

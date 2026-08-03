@@ -55,6 +55,7 @@ export function useFitToHole(scrollRef, contentRef, signature) {
     onScroll,
     dec: () => setManual((m) => clamp((m ?? auto) - STEP)),
     inc: () => setManual((m) => clamp((m ?? auto) + STEP)),
+    set: (pct) => setManual(clamp((Number(pct) || 0) / 100)), // 3i: type a % → manual, clamped silently
     fit: () => setManual(null),
   };
 }

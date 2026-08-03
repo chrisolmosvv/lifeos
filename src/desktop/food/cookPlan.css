@@ -119,9 +119,17 @@
 .cpq-legend-item { display: inline-flex; align-items: center; }
 .cpq-foot-ctl { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
 .cpq-size { display: flex; align-items: center; gap: 0.35rem; }
-.cpq-size-btn { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.72rem; padding: 0.1rem 0.4rem; cursor: pointer; }
-.cpq-size-btn.is-auto { border-color: var(--ink); }
-.cpq-size-pct { font-size: 0.72rem; color: var(--ink-muted); min-width: 2.5rem; }
+.cpq-size-btn { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.72rem; padding: 0.1rem 0.45rem; cursor: pointer; }
+.cpq-size-btn:hover { border-color: var(--ink); }
+/* 3i: "Fit recipe to size" carries the auto/manual signal — solid ink border while fit is deciding. */
+.cpq-size-fit { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.72rem; padding: 0.1rem 0.5rem; cursor: pointer; }
+.cpq-size-fit:hover { border-color: var(--ink); }
+.cpq-size-fit.is-auto { border-color: var(--ink); font-weight: 600; }
+.cpq-size-field { display: inline-flex; align-items: baseline; gap: 0.08rem; margin-left: 0.15rem; }
+.cpq-size-pct { width: 2.3rem; text-align: right; background: none; border: none; border-bottom: 1px solid var(--rule); color: var(--ink-muted); font-size: 0.72rem; padding: 0; }
+.cpq-size-pct:focus { outline: none; border-bottom-color: var(--ink); color: var(--ink); }
+.cpq-size-pct.is-manual { color: var(--ink); }  /* the number is the owner's, not fit's */
+.cpq-size-sign { font-size: 0.72rem; color: var(--ink-muted); }
 .cpq-finish { background: none; border: 1px solid var(--accent); color: var(--accent); font-size: 0.8rem; padding: 0.25rem 0.8rem; cursor: pointer; }
 
 /* ── 3e: end-of-cook review modal ──────────────────────────────────────────── */

@@ -199,7 +199,7 @@ export default function CookPlan({ recipeId, onBack }) {
       <CookBand steps={steps} schedule={schedule} finish={finish} timerByRef={timerByRef} cookStartMs={cookStartMs} nowMs={nowMs} />
       <CookOnNow running={running} ready={ready} onAdjust={(i, d) => cook.adjustTimer(i, d)} onStop={(i) => cook.stopTimer(i)} onStart={(i) => { initAudioContext(); cook.startTimer(i, durOf(i)); }} usedSet={cook.state.usedIngredients} onEditChip={(idx, e) => setEditChip({ idx, anchor: e.currentTarget.getBoundingClientRect() })} />
       <CookBoard scrollRef={boardScrollRef} contentRef={boardContentRef} onScroll={fit.onScroll} scale={fit.scale} rows={boardRows} />
-      <CookFoot perServing={macros.perServing} unestimated={macros.unestimatedCount} fitPct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onFinish={openReview} hasSession={cook.hasSession} />
+      <CookFoot perServing={macros.perServing} unestimated={macros.unestimatedCount} fitPct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onSet={fit.set} onFinish={openReview} hasSession={cook.hasSession} />
       {reviewing && <CookReview changes={reviewing} kcalPerServing={macros.perServing.kcal} servings={cookServings} onSave={onReviewSave} onCancel={() => setReviewing(null)} saving={saving} />}
       {editChip && (
         <FinderPopover variant="cook" ing={effIngredient(editChip.idx)} itemsById={data.itemsById} anchor={editChip.anchor}
