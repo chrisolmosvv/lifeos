@@ -3760,3 +3760,45 @@ line:
      EQUALS the all-time best is not a PR (no terracotta); warm-ups excluded from the comparison.
   6. **Balance Routine attribution: session-based vs static-map fork — SESSION-BASED chosen** (see the
      Piece-19 entry above; the decisive one).
+
+### 2026-08-03 · Health Hub remodel — six locked decisions, two mid-build reversals, two design-law overrides
+The desktop Health Hub was rebuilt from three thin cards into a rich 2×2 overview (Gym top; Sleep bottom-
+left; Body bottom-right). Recon confirmed NO schema change. The choices below are owner-locked; the
+reversals OVERRODE the original build spec (do NOT restore the old behaviour); the overrides are approved
+deviations from the design law (do NOT "fix" them in a design audit).
+
+SIX LOCKED DECISIONS
+  1. ★ **Sleep legend % = % OF NIGHT** (each stage's minutes ÷ total time in bed; the four numbers sum to
+     ~100). DELIBERATELY DIFFERS from the Sleep detail page, which shows % of *asleep* — so the same night
+     can read a slightly different stage % on the two surfaces (e.g. Core 60% on the Hub vs 61% on detail).
+     Intended. Do NOT "reconcile" them.
+  2. **Body goal = a single goal LINE** at the target weight (not the detail page's shaded target *zone*).
+  3. **Gym streak = the existing WEEKLY streak** (computeStreak, 13-week). No day-streak — a daily streak
+     was deliberately rejected earlier ("rest days aren't failure").
+  4. **Gym heatmap frame = a rolling ~5-week calendar, Monday-first**, today outlined.
+  5. **Gym Push/Pull/Legs split = by session TITLE** (routineView / classifyRoutine), matching the detail
+     page's Balance. The Hub shows the split as counts; the detail shows the same ratio as percentages
+     (e.g. Hub 99:67:29 sets == detail 51:34:15%).
+  6. ★ **Gym muscle-bar × = a GLOBAL balanced baseline:** 1.0× = the mean working-set (or volume) across
+     ALL worked muscles in the window; a muscle's × = its value ÷ that mean. DIFFERS from the detail page's
+     within-side even-share × (Piece-19) — so a muscle's × on the Hub ≠ its × on the detail routine view.
+     Intended (a different question: "vs the whole body", not "vs its own side").
+
+TWO REVERSALS (polish pass — these OVERRODE the original build spec)
+  R1. **Gym heatmap is BINARY, not graded.** The first build shipped a 4-shade intensity heatmap (terciles
+      of daily sets/volume). The polish pass REMOVED grading: a day is simply trained (terracotta, ≥1
+      working set) or rest (cream); today outlined. Binary matches the detail-page calendar. The tercile
+      logic was deleted from hubCalc.js. Do NOT restore grading.
+  R2. **The Sets/Volume toggle MOVED off the heatmap onto the Push·Pull·Legs header.** It no longer touches
+      the heatmap (which is now binary and metric-independent); it switches BOTH the PPL split bar AND the
+      muscle × bars together (default Sets). Volume mode uses routineView(R,'volume') + muscleBalance
+      volume — the same source as the detail page's volume balance.
+
+TWO DELIBERATE DESIGN-LAW OVERRIDES (approved — a design audit must NOT revert these; cross-ref 06-design.md)
+  O1. **The Gym section breaks the terracotta-only / no-fills / no-colour-coding rule.** Push/Pull/Legs use
+      three colours (push #C8643D / pull #8B6F52 / legs #4A3F34) and the muscle bars are filled by category.
+      Approved for at-a-glance balance reading. (The Sleep stage colours + the binary-heatmap terracotta are
+      the other section-specific colours, likewise approved.)
+  O2. **Body chart window = 90 days, else earliest-reading → today.** When fewer than 90 days of readings
+      exist it spans the actual available range so the lines fill with no empty left gutter (currently ~40
+      days from a 25 Jun start). The axis start label + the net deltas reflect whatever window is shown.

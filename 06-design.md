@@ -121,6 +121,13 @@ little colour earns its place.
   the default and the priority. A dark mode — soft charcoal, never true black,
   off-white text, the accent brightened just enough to still glow — is a
   direction to tune later, with the owner, once light mode feels right.
+- **Health Hub — GYM section (recorded exception).** The Gym section of the
+  desktop Health Hub deliberately breaks the terracotta-only / no-fills /
+  no-colour-coding rule: **Push / Pull / Legs use three distinct colours**
+  (push `#C8643D` / pull `#8B6F52` / legs `#4A3F34`) and the **muscle bars are
+  filled by category**. An owner-approved exception for at-a-glance training
+  balance — see decision **O1** (2026-08-03) in `03-decisions.md`. (No other
+  design rule changes.)
 
 Exact tones are starting points, not gospel. We tune them against real screens,
 together.

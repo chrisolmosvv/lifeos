@@ -13236,3 +13236,51 @@ KNOWN GAPS / RISKS — flagged made-calls (owner's call, all reversible)
     future split, not done here.
 
 NEXT — PIECE 20: docs close — the genuine FINAL piece of the whole Gym V2 arc (covers Pieces 9–19).
+
+────────────────────────────────────────────────────────────────────────────────
+## 2026-08-03 — Health Hub remodel + polish pass (shipped + DEPLOYED)
+
+WHAT — the desktop Health HOME ("the Hub", the landing page when you tap Health) was rebuilt from three
+thin summary cards into a rich 2×2 at-a-glance overview: GYM spans the full top half; SLEEP (bottom-left)
++ BODY (bottom-right) split the bottom. Each section taps through to its existing detail page (Gym →
+Health.jsx, Sleep → SleepPage, Body → BodyPage) via the same local `sub` state. Recon-first: confirmed NO
+schema / table / column needed — every number was already stored. Sections compute-on-read via the SAME
+calc functions the detail pages use, so the Hub never disagrees with a detail page.
+
+BUILT IN 6 PIECES + A POLISH PASS
+  • A — new pure calc helpers (hubCalc.js): binary heatmap, muscle × baseline, body net-delta, sleep
+    "% of night", restorative getter (extracted from SleepNight so it's shared).
+  • B — Gym section (consistency + heatmap + PPL split + muscle bars).
+  • C — Sleep section (new flowing-ribbon hypnogram + legend + 30-day stat row).
+  • D — Body section (90-day dual smoothed lines + goal line + net deltas).
+  • E — assembled the 2×2 frame; retired the three old cards.
+  • Polish pass — fill the viewport (full width to the masthead gutter + full height, zero-scroll at 1440);
+    heatmap made BINARY + bigger; Sets/Volume toggle moved onto the PPL header (drives split + muscle bars);
+    body window = 90d-or-max-available; column divider removed; consistency stats collapsed to one line.
+
+FILES
+  • NEW: HubGymSection.jsx, HubSleepSection.jsx, SleepRibbon.jsx, HubBodySection.jsx, hubCalc.js, and the
+    hub CSS (hubGym.css, hubSleep.css, hubBody.css, hubFrame.css).
+  • REWRITTEN: HealthHub.jsx (distributes raw rows to the three sections; tap-through unchanged);
+    healthHub.css (stripped of the old card CSS). SleepNight.jsx edited to share the restorative getter.
+  • DELETED (proven dead): HubGymCard.jsx, HubSleepCard.jsx, HubBodyCard.jsx, kit/HubCard.jsx.
+  • UNTOUCHED: the Gym detail page src/desktop/Health.jsx (the naming trap) and all of src/mobile/. Every
+    Hub file < 250 lines.
+
+COMMITS (src-only)
+  • 2b9450e / 535c568 / 0671472 / 89b1b7b / 4df3cd3 — build Pieces A–E.
+  • 97f4cf5 (gym) / 4765ef3 (body) / a9865d9 (layout) — polish pass.
+  • (this docs commit) — close-out.
+
+HOW TO VERIFY (Builder-verified live-local on the owner's session, 1440×900)
+  • Zero-scroll at true innerWidth 1440 (pageScrolls:false; every section overflow 0 even at a squeezed
+    687px-tall test viewport — a real 13" ~790px+ has margin). Fills the width to the masthead gutters.
+  • Numbers reconcile with the detail pages: Gym sets split 99/67/29 == detail's 51/34/15%; last-night
+    stage minutes 40/330/169/14 identical (Sleep); Body 84.6kg/17.5% == detail's 7-day-avg smoothed value;
+    goal 80kg identical.
+  • The Sets/Volume toggle stays on the Hub (stopPropagation) and switches BOTH the split bar and the
+    muscle bars; the heatmap is unaffected. Tap-through to all three detail pages works.
+
+DECISIONS — the six locked decisions, two reversals (R1 binary heatmap, R2 toggle-on-PPL) and two design-
+law overrides (O1 gym colours, O2 body window) are recorded in 03-decisions.md (2026-08-03). Deployed to
+production this session.

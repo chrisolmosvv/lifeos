@@ -2755,3 +2755,25 @@ PART E4/E6/E8 (tagged 2026-07-30).
     (`.gym-today-lifts`/`.gym-lift*`) left for a general sweep; the E7 streak-quirk + the Screen-3
     bar-label made-calls stay owner-tunable (see decisions). The whole Gym V2 arc (Pieces 9–20) is now
     CLOSED.
+
+### 2026-08-03 · Health Hub remodel ✅ (shipped + deployed) — the desktop Health landing page, rebuilt
+The desktop Health HOME ("the Hub" — the landing screen when you tap Health) replaced its three thin
+summary cards with a rich 2×2 at-a-glance overview: GYM spans the full top half; SLEEP (bottom-left) +
+BODY (bottom-right) split the bottom. Each section taps through to its existing detail page (Gym →
+Health.jsx, Sleep → SleepPage, Body → BodyPage) via the same local `sub` state — no routing change. Built
+recon-first: confirmed NO schema / table / column needed (every number was already stored). The sections
+compute-on-read via the SAME calc the detail pages use, so numbers never disagree between Hub and detail.
+  • GYM (30-day rolling): a compact consistency line (sessions · avg/week · weekly streak) over a big
+    BINARY calendar heatmap (trained = terracotta, rest = cream, today outlined); a Push·Pull·Legs split
+    bar + muscle-vs-baseline × bars, with one Sets/Volume toggle driving both.
+  • SLEEP: a flowing ribbon hypnogram of last night (real ordered stage segments; proportion-band fallback
+    for older segment-less nights) + stage legend (% of night) + a stat row (asleep ±30-day avg · bed→wake
+    ±avg · restorative %).
+  • BODY: a 90-day (or earliest-reading→today) dual-line chart — smoothed weight + body-fat — with a goal
+    LINE at target and each line's net delta over the window.
+Built in 6 pieces (A calc helpers → E frame) + a polish pass (fill the viewport; binary heatmap; toggle
+moved onto the PPL header; body window = 90d-or-max-available; divider removed). Deleted the three old
+cards + kit/HubCard. Src-only; live-verified on the 13" (1440×900, zero-scroll), numbers reconciled against
+the detail pages. Deployed to production this session.
+  ▸ Decisions/reversals/design-law overrides recorded in 03-decisions.md (2026-08-03); handoff in
+    04-handoff-log.md; the Gym design-law exception noted in 06-design.md.
