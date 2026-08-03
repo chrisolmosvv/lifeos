@@ -21,7 +21,7 @@ Schema:
   "ingredients": [ { "raw_text": string, "name": string, "amount": number|null, "unit": string|null, "step_number": number|null } ],
   "steps": [ { "text": string, "original": string, "depends_on": number[]|null } ] }
 Rules:
-- "cuisine" = a SHORT free-text label for the dish's cuisine (e.g. "Thai", "North African", "Italian"). Null if genuinely unclear. "cuisine_confidence" = your confidence in that label.
+- "cuisine" = a SHORT free-text label for the dish's cuisine (e.g. "Thai", "North African", "Italian", "Eastern European"). ALWAYS set it — infer it from the dish name and ingredients; almost every recipe has an identifiable cuisine, so give your best guess. Use null ONLY if it is genuinely impossible to tell. "cuisine_confidence" = your confidence in that label.
 - "multi_recipe" = true ONLY if the text contains MORE THAN ONE distinct, separately-titled recipe (e.g. a page with "Main" and also "Dessert" as full recipes). A single recipe with sub-components (a sauce, a garnish) is NOT multi_recipe — that is one recipe. When multi_recipe is true, still fill title/ingredients/steps with your best single guess, but set the flag.
 - "raw_text" = the original ingredient line (e.g. "2 tbsp melted butter").
 - "name" = the core food for database matching: lowercase, no quantity or prep words (e.g. "butter").
@@ -81,22 +81,26 @@ export const PASS1_SCHEMA = {
       },
     },
   },
-  required: ["title", "multi_recipe", "ingredients", "steps"],
+  // cuisine is REQUIRED so Gemini must emit it (2c fix: it was optional and the model nulled it).
+  // Still nullable, so a genuinely-unknowable cuisine can be null rather than fabricated.
+  required: ["title", "cuisine", "multi_recipe", "ingredients", "steps"],
 };
 
 // ── PASS 2: enrichment ────────────────────────────────────────────────────────
 export const PASS2_SYSTEM = `You are the scheduling brain for a cookbook app. You are given a recipe's INGREDIENTS and its numbered STEPS (0-indexed). Return STRICT JSON only — no prose, no fences.
 Schema:
-{ "steps": [ { "duration_seconds": number, "tag": "hands_on"|"hands_free"|"active_heat", "station": "bench"|"hob"|"oven"|"rest", "hold_tolerance": "immediate"|"short"|"indefinite", "confidence": { "duration": "low"|"medium"|"high", "tag": "...", "station": "...", "hold_tolerance": "..." } } ],
+{ "steps": [ { "duration_seconds": number, "tag": "hands_on"|"hands_free"|"active_heat", "station": "bench"|"hob"|"oven"|"rest", "hold_tolerance": "immediate"|"short"|"indefinite", "independent": boolean, "confidence": { "duration": "low"|"medium"|"high", "tag": "...", "station": "...", "hold_tolerance": "..." } } ],
   "prep_steps": [ { "text": string, "feeds_step": number, "duration_seconds": number, "tag": "hands_on"|"hands_free"|"active_heat", "station": "bench"|"hob"|"oven"|"rest", "hold_tolerance": "immediate"|"short"|"indefinite", "confidence": { ... } } ] }
 CRITICAL: "steps" MUST have EXACTLY ONE entry per input step, in the SAME ORDER. Do not add, drop, reorder, or renumber the input steps — prep goes in "prep_steps" only.
 For every input step:
 - "duration_seconds" = how long it takes, in seconds. REQUIRED on EVERY step, even ones with no timer ("chop the onion" still takes time). For a range like "8–10 minutes" use the LOWER bound (480). Make a sensible estimate; never leave it out.
 - "tag" = exactly one of:
-  • "hands_on" — you must actively stir/chop/assemble/tend it.
-  • "hands_free" — you can genuinely walk away: simmering, braising, resting, proofing, baking unattended.
-  • "active_heat" — high heat needing constant attention (searing, stir-frying, deep-frying). This does NOT free your hands.
+  • "hands_free" — you can WALK AWAY and do something else entirely; the pan needs NOTHING from you for the duration. ONLY: simmering COVERED, braising, baking unattended, resting, dough proving, rice steaming off the heat.
+  • "active_heat" — it is on heat and needs watching, stirring, turning, or adding to.
+  • "hands_on" — you are working with your hands (chopping, assembling, mixing).
+  ★ If a step contains MULTIPLE actions in sequence (fry, then stir in, then pour in, then add), it is NOT hands_free — no matter its total duration. Continuous involvement is the test, not length. When in doubt, choose the tag that OCCUPIES THE HANDS: a wrong "hands_free" corrupts the plan (other work gets scheduled on top of it); a wrong "hands_on" is merely slightly conservative.
   This is load-bearing — the cook page uses it to decide what can overlap. Never omit it.
+- "independent" = boolean. Set TRUE only if this step uses NO output of the PREVIOUS step and could honestly be done at any time (a side salad, a garnish, rice cooked alongside the main). Otherwise leave it false — steps normally follow the one before them, and the app chains them in order.
 - "station" = exactly one of "bench" (prep surface/counter), "hob" (stovetop), "oven", "rest" (cooling/resting/plating). Best guess; colour-coding only. Never omit it.
 - "hold_tolerance" = how long this step's OUTPUT can sit before it degrades:
   • "immediate" — must be used/eaten straight away (plating, a finished risotto, anything fried crisp).
@@ -132,6 +136,7 @@ export const PASS2_SCHEMA = {
           tag: ENUM_TAG,
           station: ENUM_STATION,
           hold_tolerance: ENUM_HOLD,
+          independent: { type: "BOOLEAN", nullable: true },
           confidence: CONF_OBJ,
         },
         required: ["duration_seconds", "tag", "station", "hold_tolerance"],

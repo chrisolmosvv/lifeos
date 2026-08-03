@@ -27,6 +27,7 @@ import {
   holdOrNull,
   confOrNull,
   cleanLabel,
+  repairDeps,
 } from "./normalise.ts";
 
 export type Confidence = { duration: string | null; tag: string | null; station: string | null; hold_tolerance: string | null } | null;
@@ -130,12 +131,16 @@ export async function enrich(body: Pass1Body): Promise<EnrichResult> {
   // Prep steps first (indices 0..P-1), each depending on nothing. Drop the internal `feeds` field.
   const finalPreps: FinalStep[] = preps.map(({ feeds: _f, ...rest }) => rest);
 
-  // Base steps shift back by P; add the feeding prep's index to the step it feeds.
+  // Base steps shift back by P; add the feeding prep's index, AND the sequential link (2c).
   const finalBase: FinalStep[] = body.steps.map((s, i) => {
     const meta = metaSteps[i] || {};
     const shifted = (s.depends_on || []).map((d) => d + P);
     const feeders = preps.map((p, idx) => (p.feeds === i ? idx : -1)).filter((x) => x >= 0);
-    const deps = uniq([...shifted, ...feeders]);
+    // ★ 2c sequential default: each cooking step depends on the PREVIOUS cooking step (final index
+    // (i-1)+P) IN ADDITION to its prep — UNLESS the model marked it independent (a side that cooks
+    // alongside). Wired in CODE, not trusted to the model's indices, exactly like prep splicing.
+    const seq = i > 0 && meta.independent !== true ? [(i - 1) + P] : [];
+    const deps = uniq([...shifted, ...feeders, ...seq]);
     return {
       text: s.text,
       original: s.original,
@@ -149,5 +154,8 @@ export async function enrich(body: Pass1Body): Promise<EnrichResult> {
     };
   });
 
-  return { steps: [...finalPreps, ...finalBase], enriched: true, prepCount: P, prepTexts: preps.map((p) => p.text) };
+  // Adding sequential links to a backward chain cannot create a cycle, but run the EXISTING
+  // repairDeps over the assembled list anyway (range-check + dedupe; any forward/self ref dropped).
+  const steps = repairDeps([...finalPreps, ...finalBase]);
+  return { steps, enriched: true, prepCount: P, prepTexts: preps.map((p) => p.text) };
 }
