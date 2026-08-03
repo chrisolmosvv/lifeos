@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { importRecipe } from "../../spine/data/importClient";
-import "./cookbook.css";
+import "./importScreen.css";
 
 // A sign of life during the (up to ~90s) import so the owner can tell working from hung. The
 // labels advance on a ROUGH TIME SCHEDULE per input kind — NOT a real stream (that's a later

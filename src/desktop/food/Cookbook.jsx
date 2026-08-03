@@ -9,7 +9,6 @@ import RecipeEditor from "./RecipeEditor";
 import ImportReview from "./importreview/ImportReview"; // 4a: the new import review (RecipeEditor stays for edits)
 import ImportScreen from "./ImportScreen";
 import Toast from "../kit/Toast";
-import "./cookbook.css";
 import "./register.css";
 
 // Cookbook — the library orchestrator. Hosts the register (library view), recipe page,

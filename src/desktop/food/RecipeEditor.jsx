@@ -9,7 +9,7 @@ import Finder from "./finder/Finder";
 import { recipeFinderConfig } from "../../spine/logic/finderConfig";
 import ManualMacrosPanel from "./ManualMacrosPanel";
 import EditorSteps from "./EditorSteps";
-import "./cookbook.css";
+import "./recipeEditor.css";
 
 // RecipeEditor — create + edit + import review. Step 7 P5: the REMAP — steps carry a stable _key
 // so depends_on + step_position references follow their target through reorder/add/delete. At save,

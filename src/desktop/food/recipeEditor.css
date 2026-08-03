@@ -1,0 +1,308 @@
+/* LifeOS — Food → the Recipe Editor (the .red-* surface). Split out of cookbook.css in the Cookbook
+   demolition: the old library grid, recipe page, log-meal panel and done-cook card that shared that
+   file were proven dead (superseded by CookbookRegister + register.css and the CookPlan page) and
+   removed. This file styles RecipeEditor.jsx + EditorSteps.jsx only. Vars from theme.css. */
+
+/* Recipe editor. */
+.red {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.red-back {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.red-back:hover {
+  color: var(--ink);
+}
+.red-title {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  padding: 8px 2px;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--ink);
+  outline: none;
+  margin: 6px 0 12px;
+}
+.red-meta {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-bottom: 14px;
+}
+.red-meta label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.red-meta input {
+  width: 64px;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  padding: 4px 2px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.red-h {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 16px 0 6px;
+}
+.red-ings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.red-ing {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule-faint);
+  padding: 7px 0;
+}
+.red-ing-text {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+.red-mark {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+.red-x {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.red-x:hover {
+  color: var(--accent);
+}
+.red-add {
+  background: none;
+  border: 1px dashed var(--rule);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  margin-top: 8px;
+}
+.red-add:hover {
+  color: var(--ink);
+  border-color: var(--ink-muted);
+}
+.red-steps {
+  margin: 0;
+  padding-left: 1.2em;
+}
+.red-step {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.red-step textarea {
+  flex: 1;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: none;
+  padding: 7px 9px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--ink);
+  outline: none;
+  resize: vertical;
+}
+.red-step-ctl {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.red-step-ctl button {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.red-step-ctl button:hover {
+  color: var(--ink);
+}
+.red-macros {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  border-top: 1px solid var(--rule);
+  margin-top: 18px;
+  padding-top: 12px;
+}
+.red-approx {
+  color: var(--ink-muted);
+}
+.red-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.red-spacer {
+  flex: 1;
+}
+.red-cancel,
+.red-delete {
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 8px 10px;
+}
+.red-delete {
+  color: var(--accent);
+}
+.red-save {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.red-save:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.red-confirm {
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.red-confirm button {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  padding: 4px 12px;
+  cursor: pointer;
+  color: var(--ink-muted);
+}
+.red-danger {
+  color: var(--accent);
+}
+
+/* Editor — imported source line + the per-ingredient match row. */
+.red-source {
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  color: var(--ink-muted);
+  font-style: italic;
+  margin: 2px 0 0;
+}
+.red-ing-match {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+.red-ing-flag {
+  color: var(--accent);
+  font-size: 0.82rem;
+}
+.red-ing-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.red-ing-ctl button {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.red-ing-ctl button:hover { color: var(--ink); }
+.red-rename { background: none; border: none; color: var(--ink-muted); font-size: 0.72rem; cursor: pointer; padding: 0 3px; opacity: 0.5; vertical-align: middle; }
+.red-rename:hover { color: var(--accent); opacity: 1; }
+.red-rename-input { border: none; border-bottom: 1px solid var(--accent); background: none; font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink); padding: 1px 2px; outline: none; width: 16ch; }
+
+/* ── V2 P6 — editor two-column (ingredients+macros | steps) ──────────────────── */
+.red-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.red-col { min-width: 0; }
+@media (max-width: 640px) { .red-cols { grid-template-columns: 1fr; gap: 16px; } }
+
+/* ── Step 7 P5 — confirm surface (plan view in the editor steps column) ────── */
+.red-step--plan { flex-direction: column; align-items: stretch; }
+.red-step-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.red-step-num { font-family: var(--font-sans); font-size: 0.65rem; font-weight: 600; color: var(--ink-muted); min-width: 1.2em; }
+.red-step-tag { font-family: var(--font-sans); font-size: 0.6rem; color: var(--ink-muted); font-style: italic; }
+.red-step-spacer { flex: 1; }
+.red-step-after {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  margin-top: 4px; font-family: var(--font-sans); font-size: 0.62rem; color: var(--ink-muted);
+}
+.red-after-label { font-style: italic; }
+.red-after-val { font-style: italic; }
+.red-dep-token {
+  display: inline-flex; align-items: center; gap: 2px;
+  border-bottom: 1px solid var(--rule-faint); padding: 1px 0;
+}
+.red-dep-token button {
+  background: none; border: none; font-size: 0.55rem; color: var(--rule); cursor: pointer; padding: 0 2px;
+}
+.red-dep-token button:hover { color: var(--ink); }
+.red-dep-add {
+  background: none; border: 1px solid var(--rule-faint); font-family: var(--font-sans);
+  font-size: 0.58rem; color: var(--ink-muted); cursor: pointer; padding: 1px 4px; border-radius: 2px;
+}
+.red-step-ings {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+}
+.red-ing-token {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-family: var(--font-sans); font-size: 0.6rem; color: var(--ink-muted);
+  border-bottom: 1px solid var(--rule-faint); padding: 1px 0;
+}
+.red-ing-token button {
+  background: none; border: none; font-size: 0.5rem; color: var(--rule); cursor: pointer; padding: 0 2px;
+}
+.red-ing-token button:hover { color: var(--ink); }
+.red-general { margin-top: 12px; }
+.red-general-h {
+  font-family: var(--font-sans); font-size: 0.62rem; color: var(--rule);
+  font-style: italic; display: block; margin-bottom: 4px;
+}
+.red-general-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.red-ing-token--general { gap: 2px; }
+.red-ing-assign {
+  background: none; border: 1px solid var(--rule-faint); font-family: var(--font-sans);
+  font-size: 0.52rem; color: var(--ink-muted); cursor: pointer; padding: 0 3px; border-radius: 2px;
+}
