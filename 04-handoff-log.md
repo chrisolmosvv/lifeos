@@ -33,6 +33,58 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3h — SERVE TIME + THE SPACE BAR. Src-only, 1 commit.
+
+WHAT CHANGED: two separable behaviours on the cook page.
+- **The serve time auto-populates.** "On the table" was blank until you set one. It now shows the
+  live PROJECTION — the answer to "if I start now, when do I eat?" — muted/italic, with a "tap to set
+  a target" hint. Before a cook it's now + the plan's span; once cooking it's the projected finish
+  from where you actually are.
+- **It re-times as things drift** — the substance. The projection re-runs the schedule on the
+  REMAINING time of each timer, anchored to a clock that ticks every second. So a step that overruns,
+  or a late start, slides the serve time LATER, live. (This machinery is 3d's `liveFinish` /
+  `projFinishMs`; 3h surfaces it when no target is set rather than inventing new maths.)
+- **A projection is not a target.** No target → a moving projection, ink, no judgement. A target set
+  → that time in terracotta, the on-time / N late / N early drift beneath, deadlines anchor backward
+  from it, and a "clear". They deliberately look different (colour + italic + label).
+- **The space bar** (specified in Piece 3, never built): closes the longest-overrun timer, else
+  starts the next ready step, else does nothing. Guarded — a space typed in a text field or amount
+  input types a space; it never scrolls the page. Quiet hint added to the foot.
+
+FILES TOUCHED: CookPlan.jsx (projection props + space-bar listener), CookMasthead.jsx (serve readout
+restructure), CookFoot.jsx (hint), cookPlan.css. Nothing in the DO-NOT-TOUCH list changed.
+
+HOW TO VERIFY (Mac):
+1. Open a recipe → "on the table" shows a real time (not "--:--"), the "if I start now" answer.
+2. Start a timer → the time updates from where you actually are.
+3. ★ Let a step overrun by several minutes → the serve time MOVES LATER. This is the check.
+4. Set a target (tap the time, pick one) → it turns terracotta, the on-time/late/early readout
+   appears, deadlines anchor to it. Tap "clear" → back to a plain projection.
+5. SPACE with nothing running → the next ready step starts.
+6. SPACE with a timer overrunning → that timer closes out.
+7. SPACE while typing in an amount (open a chip editor) → a space is typed, nothing starts/stops.
+8. SPACE with nothing ready → nothing happens, no error. The page never scrolls on space.
+
+KNOWN GAPS / RISKS:
+- Live-ness verified by CODE TRACE, not a live click-through (no browser session up; the
+  window-collapse trap). The trace: `projFinishMs = nowMs + liveFinish`, `liveFinish` re-runs the
+  scheduler on remaining durations, `nowMs` refreshes on the ungated 1-second tick — so an overrun
+  contributes 0 while the clock advances, sliding serve later each second. Step 3 above is the owner's
+  real gate.
+- "Oldest overrunning" for the space bar = MOST overrun (most-negative remaining) — the timer that's
+  been sitting done longest. If two are equally over, index order breaks the tie. Reversible.
+- A serve target past midnight (late start + long span) anchors to today's HH:MM, so it can land in
+  the past — an edge case, not handled. Out of the cook-through's normal range.
+- Still unrun: the buy-form model-fix Nutrition-logger check (oldest deferred item).
+
+NEXT: 3i — the sizing controls.
+
+FOR THE CHECKER: confirm (a) the serve time visibly MOVES when a step overruns (not frozen on the
+plan), (b) a projection and a target read as clearly different states, and (c) the space bar never
+fires while a text field or amount input has focus.
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3g — THE INGREDIENTS PANEL. Src-only, 1 commit.
 
 WHAT CHANGED: the ingredients panel on the cook page — was two clicks to reach and read-only:
