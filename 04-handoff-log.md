@@ -1025,7 +1025,15 @@ NEXT: **3b — the replay rework.**
 
 ---
 
-### 2026-08-03 — Cookbook rebuild — PIECE 2c — EXTRACTION FIXES. Edge-only, 1 commit. ⚠️ DEPLOY + VERIFY PENDING.
+### 2026-08-03 — Cookbook rebuild — PIECE 2c — EXTRACTION FIXES. Edge-only, 1 commit. ✅ DEPLOYED + VERIFIED (correction below).
+
+> ✅ **CORRECTED 2026-08-03 (owner) — THIS WAS DEPLOYED + VERIFIED.** After resolving a Supabase
+> account issue, the owner deployed `recipe-import` by hand from their terminal and confirmed it with a
+> re-import: the dependency chain came back corrected and cuisine populated. The "DEPLOY + VERIFY
+> PENDING" below was the state at WRITE time only; the deploy happened but was never recorded here,
+> which later led a deploy-check session to infer (reasonably, but wrongly) that the live function was
+> behind the code. The live `recipe-import` on Frankfurt IS the 2c version. **Lesson banked in
+> CLAUDE.md: an off-repo deploy MUST be logged in the handoff at the time it happens.**
 
 WHAT CHANGED (the first real import, Chicken stroganoff, came back structurally wrong three ways):
 - **Sequential dependencies (Problem 1):** cooking steps only depended on the PREP they consumed,

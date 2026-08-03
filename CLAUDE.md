@@ -87,6 +87,11 @@ fork — stop and flag it, don't decide alone."*
   functions.
 - **"Deployed" ≠ "done."** A cron or pipe only proves itself by firing; the
   owner seeing it work is the gate.
+- **RECORD every edge-function deploy in the handoff, AT THE TIME it happens.**
+  Edge functions live OUTSIDE the repo — a `git push` never redeploys them, and
+  git shows only what's committed, not what's live. If a hand-deploy isn't logged,
+  a later session cannot tell "deployed" from merely "committed" and will
+  mis-report the live state. The commit is not the deploy; write the deploy down.
 - **Test writes are ZZTEST-tagged and deleted by exact id** after verifying —
   never "the most recent N rows."
 - **Any secret pasted into a chat gets rotated** at session close.
