@@ -33,6 +33,62 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 4c — PLAN PASS, DRAG & SAVE GATE. Src-only, 1 commit. ★ PIECE 4 COMPLETE — saving imports works again.
+
+WHAT CHANGED:
+- **Pass ③** — the real one-pair-of-hands plan via the **reused CookBand** (shown larger; drag
+  added as an OPTIONAL prop, so the cook page is untouched). A **drag re-parents** a step (drop →
+  "waits for whatever finishes just before"); the scheduler re-solves placement (constraints, not
+  positions — no clock-pinning). A **plain-words dependency fallback** (waits-for chips + add) is
+  fully functional on its own — the insurance for the untestable gesture.
+- **Save gate**: three checks — every ingredient resolved · every step timed · plan valid (no
+  cycle) — shown as a checklist that explains a blocked Save. Unconfirmed flags WARN, don't block.
+- **Save** composes the EXISTING createRecipe with **WHOLE** step/ingredient objects (the trap:
+  passing partial objects nulls station/hold/is_prep/grams — avoided), caches Finder-picked foods
+  via ensureFoodItem, and sets **default_servings + reviewed_at** via a follow-up update
+  (recipeRow doesn't cover those). After save → straight to the recipe page (dormant plan).
+
+FILES (src): NEW src/spine/logic/importGate.js, src/desktop/food/importreview/PlanPass.jsx; EDIT
+ImportReview.jsx, FinderPopover.jsx, cookplan/CookBand.jsx (optional drag), Cookbook.jsx (onSaved).
+No deploy. Build green; every file <250.
+
+HOW VERIFIED — Node: gate 5/5 incl. cycle detection (0→1→2→0 blocks). ★ THE REAL-ROW CHECK IS
+OWNER-RUN (writes to the DB). Import a recipe → review all 3 passes → drag one step → Save → in the
+Frankfurt SQL editor (select by title, postgres role so no auth.uid()):
+  select position, timer_seconds, tag, station, hold_tolerance, is_prep from recipe_steps
+    where recipe_id=(select id from recipes where title ilike '%<t>%' order by created_at desc limit 1) order by position;
+  select position, raw_text, amount, unit, grams from recipe_ingredients where recipe_id=(…) order by position;
+  select title, cuisine, default_servings, reviewed_at, servings from recipes where title ilike '%<t>%' order by created_at desc limit 1;
+  → steps: NO nulls in timer_seconds/tag/station/hold_tolerance; is_prep true on prep steps;
+    ingredients: amount/unit = BUY-FORM, grams = edible weight, distinct; cuisine + default_servings
+    set; **reviewed_at SET**; depends_on reflects the drag.
+
+HOW TO VERIFY — THE WHOLE OF PIECE 4 (owner, 13" Mac):
+1. Import a 16-ingredient recipe → the review opens on pass ①.
+2. ①: source→stored(buy-form)→match→grams→macros; ~2 flagged not ten (margin bar, not through
+   text); click one → Finder with live search + unit switch; Approve all clears flags; "I usually
+   cook" rescales; A−/A+/Fit, only the table scrolls.
+3. ②: step boxes GROW as you type, never clip; duration/tag/station editable; show-original toggles;
+   prep steps marked until approved; add/delete a step; the three totals diverge sensibly.
+4. ③: the band shows the real plan; the plain-words "waits for" chips add/remove deps; drag a block
+   to re-parent; the checklist shows the three gate checks; Save is blocked until all pass.
+5. Save → lands on the recipe page, dormant plan showing, ready to cook. Run the SQL above.
+
+⚠️ KNOWN GAPS / FLAGS:
+- Built on the still-UNVERIFIED buy-form model fix (esp. the logger check).
+- **The drag CAN create a cycle** (drop A after something that waits for A) — the gate catches it
+  ("circular dependency", Save blocked) and the plain-words fallback fixes it; the scheduler's cycle
+  guard means no hang. The drag itself is UNTESTED (headless) — the fallback is the guarantee.
+- The gate checks resolved/timed/valid — it can't judge a *wrong-but-plausible* match (valid macros
+  on the wrong food); that's the owner's review job (flags warn).
+- reviewed_at/default_servings are set by a follow-up UPDATE after createRecipe (recipeRow, frozen,
+  doesn't write them) — if that update fails the recipe still saves but as an unreviewed draft.
+
+NEXT: **Piece 5 (library filtering) OR the deferred verification backlog** — Planner's call. The
+biggest outstanding risk remains the UNRUN Nutrition-logger check on the buy-form model fix.
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 4b — IMPORT REVIEW: METHOD & TIMINGS PASS (mock U). Src-only, 1 commit.
 
 WHAT CHANGED: pass ② built in full — a flat numbered step list (no source grouping) with:
