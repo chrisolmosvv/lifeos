@@ -33,6 +33,35 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PAGE WIDTH FIX (Option B). Src-only, 1 commit. Regression from 3a.
+
+WHAT CHANGED: the cook page and import screen sat inside `.food-page`'s **760px reading column**
+(foodPage.css), leaving dead space either side on the 13". The old cook page (`.cm2`) deliberately
+broke out to full width; that escape was **lost when 3a renamed the class to `.cpq`** — a
+regression, not a design choice. Restored it:
+- `.food-page:has(.cpq) { padding: 0 }` + the 100vw escape on `.cpq` (width:100vw · max-width:none ·
+  margin-left: calc(-50vw + 50%)), mirroring `.cm2` exactly (same pattern as `.bs` / `.flog-day`).
+- Same escape applied to the cramped `.imp` import screen (was max-width:600px).
+- The **760px cap itself is untouched** — the Log is a genuine reading column and stays one.
+Horizontal only, so 3d's measured-height fix (reads getBoundingClientRect top) is undisturbed;
+zeroing the parent padding under `.cpq` also removes a possible bottom overflow.
+
+FILES: src/desktop/food/cookPlan.css, src/desktop/food/cookbook.css. Build green.
+
+VERIFY (Mac): cook page fills the width, no dead space, NO horizontal scrollbar; board still
+scrolls vertically and holds scroll while a timer runs; import screen fills the width; the Log is
+UNCHANGED (still its 760px column); the Cookbook grid unchanged.
+
+★ FOR THE DOCS CLOSE: **06-design.md has NO stated rationale for the 760px Food column** — it's an
+undocumented code convention, which is exactly how the cook page's full-width intent got silently
+dropped in the 3a rename. The docs pass MUST record both (a) the 760px reading-column cap and (b)
+the per-page 100vw escape pattern (used by .cpq / .imp / .bs / .flog-day) so a future session can't
+drop it again.
+
+NEXT: **3e — the end-of-cook save review** (unchanged by this fix).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3d — THE VISUAL PASS (mock Q). Src-only, 1 commit. Owner clicks 3a–3d now.
 
 WHAT CHANGED: the plan page is composed to the locked mock "Q", split by surface:
