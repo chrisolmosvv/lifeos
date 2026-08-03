@@ -80,6 +80,31 @@
 .iv-tot .n, .iv-tot .kc { font-family: var(--font-serif); font-size: calc(15px * var(--s, 1)); font-weight: 600; text-align: right; }
 .iv-tot .kc { font-size: calc(17px * var(--s, 1)); }
 
+/* ② method — flat, growing step editor */
+.iv-st { display: grid; grid-template-columns: 4px calc(28px * var(--s, 1)) 1fr calc(150px * var(--s, 1)) calc(16px * var(--s, 1)); gap: calc(13px * var(--s, 1)); padding: calc(8px * var(--s, 1)) 0; border-bottom: 1px solid var(--rule-faint); align-items: start; }
+.iv-sbar { align-self: stretch; min-height: calc(24px * var(--s, 1)); opacity: .6; }
+.iv-sno { font-family: var(--font-serif); font-size: calc(14px * var(--s, 1)); font-weight: 600; color: var(--ink-muted); line-height: 1.15; }
+.iv-stx { font-size: calc(13.6px * var(--s, 1)); line-height: 1.45; border: none; background: none; color: var(--ink); width: 100%; resize: none; font-family: var(--font-sans); outline: none; overflow: hidden; padding: 0; display: block; }
+.iv-stx:focus { border-bottom: 1px solid var(--accent); }
+.iv-sub2 { display: flex; gap: 11px; align-items: center; margin-top: calc(5px * var(--s, 1)); flex-wrap: wrap; }
+.iv-restore { font-size: calc(9px * var(--s, 1)); font-weight: 600; color: var(--ink-muted); cursor: pointer; border: none; background: none; border-bottom: 1px dotted var(--rule); padding: 0; }
+.iv-restore:hover { color: var(--ink); border-color: var(--ink); }
+.iv-invent { font-size: calc(8.6px * var(--s, 1)); font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--accent); border: 1px solid var(--accent); padding: 1px 7px; cursor: pointer; background: none; }
+.iv-invent.ok { color: #41705A; border-color: #41705A; }
+.iv-sright { display: flex; flex-direction: column; align-items: flex-end; gap: calc(5px * var(--s, 1)); }
+.iv-tmin { font-family: var(--font-serif); font-size: calc(16px * var(--s, 1)); font-weight: 600; letter-spacing: -.02em; border: none; background: none; color: var(--ink); width: calc(44px * var(--s, 1)); text-align: right; outline: none; padding: 0; }
+.iv-tmin:focus { border-bottom: 1.5px solid var(--accent); }
+.iv-tunit { font-size: calc(9px * var(--s, 1)); color: var(--ink-muted); font-weight: 600; }
+.iv-tagsel { font-size: calc(8.6px * var(--s, 1)); font-weight: 700; text-transform: uppercase; letter-spacing: .07em; border: 1px solid var(--rule-faint); background: none; color: var(--ink-muted); cursor: pointer; padding: 2px 5px; font-family: var(--font-sans); outline: none; }
+.iv-tagsel:hover { border-color: var(--ink); color: var(--ink); }
+.iv-quiet { display: flex; gap: 4px; }
+.iv-stnsel, .iv-holdsel { font-size: calc(8px * var(--s, 1)); border: none; background: none; color: var(--ink-muted); cursor: pointer; font-family: var(--font-sans); outline: none; }
+.iv-stnsel:hover, .iv-holdsel:hover { color: var(--ink); }
+.iv-del { font-size: calc(13px * var(--s, 1)); color: var(--rule); cursor: pointer; text-align: right; line-height: 1.2; background: none; border: none; padding: 0; }
+.iv-del:hover { color: var(--accent); }
+.iv-addstep { margin-top: calc(9px * var(--s, 1)); width: 100%; font-size: calc(9.4px * var(--s, 1)); font-weight: 700; letter-spacing: .11em; text-transform: uppercase; color: var(--ink-muted); border: 1px dashed var(--rule); padding: calc(8px * var(--s, 1)) 0; text-align: center; cursor: pointer; background: none; }
+.iv-addstep:hover { border-color: var(--ink); color: var(--ink); }
+
 /* Foot */
 .iv-ft { display: flex; justify-content: space-between; align-items: center; padding: 9px 0 14px; border-top: 1px solid var(--rule); flex: none; }
 .iv-zoom { display: flex; align-items: center; gap: 5px; }
