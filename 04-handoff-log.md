@@ -33,6 +33,65 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — DEMOLITION — retired the old Cookbook surfaces (3 commits, src-only)
+
+WHAT CHANGED: removed the old cook screens that had been left on disk (unrouted) as a fallback
+since the Cookbook rebuild. Proved each one dead by grepping the whole codebase first — nothing
+guessed, nothing that was still in use was touched. Three separate, separately-revertible commits.
+
+- Commit 1 (alarm audio) was a NO-OP by design: the beep engine (cookAlarm.js) and the wake lock
+  already live on their own and the new cook page uses them directly — nothing to lift, so nothing
+  was changed. Said so rather than manufacture work.
+- Commit 2 (f35b015): deleted 8 proven-dead files.
+- Commit 3 (75762be): retired cookbook.css (691 lines, mostly dead) and split its still-used styles
+  into two small per-surface files.
+
+FILES REMOVED (8, all proven dead by whole-codebase grep):
+  CookCompanion.jsx · CookHero.jsx · CookRail.jsx · RecipeOverview.jsx · AlarmOverlay.jsx ·
+  CookTimer.jsx (only ever used by CookHero) · cook.css · cookOverview.css · and cookbook.css.
+
+WHAT WAS KEPT AND WHY (honest "still used" results — the point of prove-dead):
+- RecipeEditor.jsx + EditorSteps.jsx — STILL LIVE. Cookbook.jsx opens them to edit a recipe/draft.
+- cookAlarm.js, useWakeLock, cookReplay.js (its "extra" outputs feed MobileCook), cookSchedule/
+  cookLanes/cookEventStore/useCookEvents, recipeLoad/recipeWrite/recipeCalc, ImportScreen.jsx,
+  everything under src/mobile/ — all untouched.
+- cookbook.css's live styles were split, not deleted: new recipeEditor.css (.red-*, for the editor)
+  and importScreen.css (.imp-*, for the import screen). The dead 97 classes (old library grid, old
+  recipe page, log-meal panel, done-cook card — all superseded by CookbookRegister/register.css and
+  the CookPlan page) were removed rather than reorganised.
+
+HOW TO VERIFY (13" MacBook, in the app you actually use):
+  1. Food → Cookbook opens; click a recipe → the new plan page opens.
+  2. Start a step timer, let it run past zero → the alarm still beeps and the screen stays usable
+     (no full-screen takeover — that was the old AlarmOverlay, deliberately gone).
+  3. Reload the page mid-cook → the cook restores (timers, steps, edits).
+  4. Import a recipe (paste a URL or text) → all three review passes work; Save writes it.
+  5. Open a DRAFT recipe / hit Edit on a recipe → the editor opens and looks right; Save works.
+  6. Food → Log: favourites show as quick-add meals, one-tap re-log works, save-as-meal works.
+  7. Every other pillar loads normally: Today, Focus, Calendar, Health, Finance, Rolodex.
+
+SCREENS A REMOVED STYLESHEET COULD HAVE TOUCHED (so you know what to eyeball): the recipe editor
+and the import screen (their styles moved to the two new files — check they look unchanged), plus
+the Cookbook library grid/list (styled by register.css, which I did NOT touch — should be identical).
+
+KNOWN GAPS / RISKS:
+- recipeEditor.css is 308 lines — a little over our ~250 house guideline. I kept the editor as one
+  file on purpose; cutting it in two would duplicate the shared step/heading styles (a drift risk).
+  Your call if you'd rather I split it anyway — flagging, not deciding.
+- foodModal.css (369) and foodGoals.css (276) are also over ~250, but they belong to the Nutrition
+  logger, not the Cookbook — out of scope this session, left alone. foodLog.css (706) likewise.
+- The old cook surfaces are still named in several BRAIN DOCS (roadmap, food-nutrition doc, recon
+  notes) as historical record — code is clean, docs are just history.
+
+NEXT: owner runs the 7-step click-through above on the Mac. If all green, the demolition is closed.
+
+FOR THE CHECKER: confirm (a) the prove-dead calls are right — especially that RecipeEditor/
+EditorSteps ARE still used (Cookbook.jsx line ~45) and were correctly KEPT; (b) no live component
+lost styling when cookbook.css was removed (the dead-class analysis excluded register.css's .creg-*
+library, which is what actually styles the grid now).
+
+---
+
 ### 2026-08-03 — KNOWN GAP (found during the data reset) — ORPHANED cook_event ROWS. Investigate, do not fix.
 
 FINDING (owner, live DB): after deleting all recipes, recipes/steps/ingredients/cook_session all read
