@@ -33,6 +33,87 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — PIECE 8 — ADD AN INGREDIENT + BLANK RECIPE, and RETIRE THE OLD EDITOR. Src-only, 2 commits.
+
+WHAT CHANGED: the review screen can now build a recipe from nothing, so "+ NEW" opens IT — and the
+old two-column editor is finally deleted. The loose thread from Piece 6 (the editor survived only
+because the review couldn't create from scratch) is closed.
+- Commit `d919262` — ADD + BLANK.
+  · **Add an ingredient** (all three modes): a "+ add an ingredient" action on the ingredients pass
+    appends a blank row and opens the SAME Finder popover (search → pick a food → amount/unit/live
+    macros). No second search built. A hand-added row has NO source line (the diff's left side stays
+    honestly empty — no fabricated raw_text); backing out of the Finder without picking discards the
+    empty row. Deleting an ingredient is the popover's existing "Remove".
+  · **Blank mode**: "+ NEW" opens the review on an empty recipe. Import scaffolding stays OFF (no
+    source diff, no flags, no prep approval — nothing was guessed). "Recipe makes" becomes an
+    editable stepper (there's no source to set it). Steps use the existing "+ add a step" defaults
+    (5 min · hands-on · bench), all editable.
+  · **Save gate** extended with the essentials a blank recipe can lack — a title, ≥1 ingredient, ≥1
+    step — shown in the plan checklist ONLY when missing (import/edit always have them). A truly
+    empty recipe can't be saved and the checklist says why.
+- Commit `78c2b59` — RETIRE THE OLD EDITOR (prove-dead, then delete).
+
+★ THE THREE MODES, AND HOW THEY'RE KEPT APART:
+  · IMPORT — editId null, blank false → scaffold ON (diff/flags/approval); saves via createRecipe.
+  · EDIT — editId SET → scaffold OFF (reviewed) or ON (unreviewed draft); saves via updateRecipe.
+  · BLANK — editId null, blank TRUE → scaffold OFF, editable "recipe makes"; saves via createRecipe.
+  ★ SAVE picks create-vs-update purely on **editId**: null → createRecipe (import AND blank), set →
+  updateRecipe (edit). Blank has no editId, so it can never create a duplicate or overwrite.
+
+FILES: EDITED src/desktop/food/importreview/{ImportReview,IngredientsPass,FinderPopover,ImportMasthead,
+PlanPass}.jsx + Cookbook.jsx (blank route, "+ NEW", removed editor route/import/onSave) + importScreen.css
+(stale-comment fix). DELETED (proven dead): RecipeEditor.jsx, EditorSteps.jsx, recipeEditor.css, and
+ManualMacrosPanel.jsx (an editor-exclusive helper — beyond the three named files but genuinely orphaned;
+flagged). No schema, no deploy, no mobile, no touch of the frozen data layer. Build passes; files < 250.
+
+PROVE-DEAD — what STAYED and why (honest results): finder/Finder + finderConfig.js (LogPage the
+nutrition logger + mobile import both use them), recipeFinderConfig (MobileImport), Toast,
+useRecipeWrites (still the delete path via Cookbook.onDelete), cookReplay bridge outputs (MobileCook).
+ImportScreen's .red-back button keeps working — its rule has its own copy in importScreen.css, so
+deleting recipeEditor.css didn't unstyle it.
+
+HOW TO VERIFY (owner, 13" Mac — I verified by build + code-trace; the row-check is YOURS):
+1. "+ NEW" → the review opens EMPTY, a title to fill in, no import flags.
+2. "+ add an ingredient" ×3 → search each, pick a food, set amount + unit → live macros appear.
+3. Add two steps → each takes a duration, a tag and a station (defaults 5 min / hands-on / bench).
+4. Pass ③ shows a plan for what you wrote.
+5. Save → the recipe appears in the Cookbook. ONE recipe, not two.
+6. Open a SAVED recipe → Edit → "+ add an ingredient" there too → Save → the addition is present AND
+   query it: station / hold_tolerance / is_prep / grams STILL populated on every row:
+     select count(*) from recipes where title ilike '%<title>%';   -- 1, not 2
+     select position, timer_seconds, tag, station, hold_tolerance, is_prep from recipe_steps
+       where recipe_id=(select id from recipes where title ilike '%<title>%' order by created_at desc limit 1) order by position;
+     select position, raw_text, amount, unit, grams, step_position from recipe_ingredients
+       where recipe_id=(select id from recipes where title ilike '%<title>%' order by created_at desc limit 1) order by position;
+7. Try to Save a blank recipe with nothing in it → the gate blocks; the checklist says "Needs a title
+   / Needs an ingredient / Needs a method".
+8. Import a recipe → the import path is unchanged (flags + approval + save).
+9. Cook a recipe → unaffected. Food → Log → unaffected.
+10. The old editor is unreachable from anywhere ("+ NEW" now opens the review).
+
+KNOWN GAPS / FLAGS:
+- Verified by build + code-trace, NOT a live click (driving real saves mutates real data — the
+  row-check is the gate). If the cookbook is empty, "+ NEW" or import one first.
+- ManualMacrosPanel (hand-enter an ingredient's macros) went with the editor. The new review has
+  "No macros" but no "enter macros by hand" for an unmatched ingredient — a pre-existing gap in the
+  new review, not new here. If hand-entered macros are wanted, that's a small future add to the Finder.
+- A blank-mode ingredient picked but left without an amount saves with 0 macros (food_item_id set, so
+  the gate passes) — same as the import path; the owner sets the amount.
+
+★ ROADMAP NOTE (for the next docs pass — NOT edited this session): the "+ NEW" / add-ingredient debt
+from Piece 6 is now CLOSED, and **the old RecipeEditor is retired** (RecipeEditor.jsx, EditorSteps.jsx,
+recipeEditor.css, ManualMacrosPanel.jsx deleted). The review screen is now the single recipe editor for
+import, edit AND create-from-scratch.
+
+NEXT: owner runs the verify steps. No further recipe-CRUD work queued.
+
+FOR THE CHECKER: confirm (a) "+ NEW" creates exactly one recipe (createRecipe, no duplicate); (b) an
+added ingredient on a SAVED recipe saves with station/hold/is_prep/grams intact; (c) a blank recipe is
+gate-blocked with a clear reason; (d) the import path is unchanged; (e) nothing anywhere reaches the
+deleted editor.
+
+---
+
 ### 2026-08-03 — PIECE 7 — DELETE A RECIPE (from the review screen, edit mode only). Src-only, 1 commit.
 
 WHAT CHANGED: you can delete a recipe from the app again — demolition removed the old recipe menu
