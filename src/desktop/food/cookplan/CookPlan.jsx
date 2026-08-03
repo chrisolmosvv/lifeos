@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { fetchRecipe } from "../../../spine/data/recipeLoad";
 import { cookSchedule } from "../../../spine/logic/cookSchedule";
-import { planOrder, fmtDur } from "../../../spine/logic/cookPlanView";
+import { fmtDur } from "../../../spine/logic/cookPlanView";
 import CookBand from "./CookBand";
 import CookPlanStep from "./CookPlanStep";
 import CookIngredients from "./CookIngredients";
@@ -43,9 +43,18 @@ export default function CookPlan({ recipeId, onBack }) {
   const baseServ = recipe.servings || 1;          // amounts were stored for this many servings
   const scale = cookServings / baseServ;
 
+  // The band uses the schedule for to-scale positioning. Reading order is the recipe's OWN step
+  // order (position): the importer emits steps in doing order (prep first, then method in source
+  // order). We deliberately do NOT sort the reading list by the schedule's startOffset —
+  // cookSchedule returns LATEST (just-in-time) starts, and sorting a reading list by those
+  // scrambles doing order (3a fix, Problem 1).
   const { schedule, finish } = cookSchedule(steps.map((s) => ({ durationSeconds: s.timer_seconds || 0, deps: s.depends_on })));
-  const order = planOrder(steps, schedule);
-  const totalTime = fmtDur(finish) || fmtDur(((recipe.prep_minutes || 0) + (recipe.cook_minutes || 0)) * 60);
+  const order = steps.map((_, i) => i);
+  // Total = the honest SUM of step durations. cookSchedule.finish is the critical-path (parallel)
+  // time, which can't be trusted until depends_on is fixed and the scheduler is real (3c); for a
+  // dormant plan the sum of durations is the stable, believable number (3a fix, Problem 3).
+  const sumSecs = steps.reduce((t, s) => t + (Number(s.timer_seconds) || 0), 0);
+  const totalTime = fmtDur(sumSecs) || fmtDur(((recipe.prep_minutes || 0) + (recipe.cook_minutes || 0)) * 60);
   const linkedFor = (i) => ingredients.map((ing, idx) => ({ ing, idx })).filter(({ ing }) => ing.step_position === i);
 
   return (

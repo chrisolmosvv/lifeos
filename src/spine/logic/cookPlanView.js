@@ -40,14 +40,6 @@ export function scaledAmount(ing, scale) {
   return null;
 }
 
-// The order steps appear in the plan: by scheduled start, then by original index. `schedule` is
-// cookSchedule's output (indexed by step index). Falls back to natural order if absent.
-export function planOrder(steps, schedule) {
-  const idx = (steps || []).map((_, i) => i);
-  const startOf = (i) => (schedule && schedule[i] ? schedule[i].startOffset : i);
-  return idx.sort((a, b) => (startOf(a) - startOf(b)) || (a - b));
-}
-
 // The band's rows: one per station that actually appears (in STATION_ORDER), plus a final
 // unlabelled row for steps with no station. Each block carries its %-left and %-width from the
 // schedule. Steps with zero duration are skipped (nothing to draw to scale).
