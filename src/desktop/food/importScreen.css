@@ -1,7 +1,7 @@
 /* LifeOS — Food → the Import Screen (the .imp-* surface). Split out of cookbook.css in the Cookbook
    demolition. Styles ImportScreen.jsx only. Vars from theme.css.
-   NOTE: ImportScreen reuses the editor's .red-back button, so a self-contained copy of that one rule
-   lives here too (the editor's own copy is in recipeEditor.css). */
+   NOTE: ImportScreen uses a .red-back button; this file carries the only copy of that rule now (the
+   old recipe editor + recipeEditor.css were retired in Piece 8). */
 
 /* Import screen. Full-width escape out of .food-page's 760px column (same 100vw technique as the
    cook page / .flog-day) — the owner flagged the old 600px cap as cramped. Rebuilt in Piece 4. */
@@ -70,7 +70,7 @@
 .imp-go:disabled { opacity: 0.4; cursor: default; }
 .imp-go--block { margin-top: 10px; }
 
-/* Shared back button — ImportScreen reuses the editor's .red-back (see recipeEditor.css). */
+/* Back button — the only .red-back definition since the old editor was retired (Piece 8). */
 .red-back {
   background: none;
   border: none;
