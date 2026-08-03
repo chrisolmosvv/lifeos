@@ -4,37 +4,67 @@ import { consistencyGrid } from "../../spine/logic/gymConsistency";
 import { routineBalance, routineView } from "../../spine/logic/gymRoutineBalance";
 import { heatmapGrade, muscleBaseline } from "./hubCalc";
 import { prettyMuscle } from "../../spine/logic/gymFormat";
+import { whole } from "../../spine/logic/healthFormat";
 import "./hubGym.css";
 
-// HubGymSection — the Hub's full-width TOP HALF. LEFT = consistency (30-day sessions +
-// a graded calendar heatmap with a Sets/Volume toggle). RIGHT = a Push:Pull:Legs split
-// bar (by session title, SETS) + the top muscles vs a balanced baseline (×). Every
-// number is compute-on-read from the SAME calc the Gym detail page uses (no drift), and
-// the whole section taps through to that detail page. `built` = buildWorkouts output.
+// HubGymSection — the Hub's full-width TOP HALF. LEFT = a compact consistency line over
+// a big BINARY calendar heatmap (trained = terracotta, rest = cream, today outlined).
+// RIGHT = a Push:Pull:Legs split bar + muscle-vs-baseline bars, with a single Sets/Volume
+// toggle on the PPL header that switches BOTH together (the heatmap is unaffected). Every
+// number is compute-on-read from the SAME calc the Gym detail page uses. `built` =
+// buildWorkouts output; the whole section taps through to that detail page.
 
 const DOW = ["M", "T", "W", "T", "F", "S", "S"];
 
+// Segment big-number: sets → count; volume → compact kg ("18.2k").
+const segNum = (v, metric) =>
+  metric === "volume" ? (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(Math.round(v))) : String(v);
+
 export default function HubGymSection({ built, now, onOpen }) {
-  const [metric, setMetric] = useState("sets"); // heatmap grading metric
+  const [metric, setMetric] = useState("sets"); // drives the PPL split + muscle bars
 
   const m = useMemo(() => {
     const box = boxScore(built, 30, now);
     const cg = consistencyGrid(built, { weeks: 13, now });
     const heat = heatmapGrade(built, { now });
-    const ppl = routineView(routineBalance(built, { days: 30, now }), "sets");
-    const mb = muscleBaseline(built, { days: 30, now });
+    const ppl = routineView(routineBalance(built, { days: 30, now }), metric);
+    const mb = muscleBaseline(built, { days: 30, now, metric });
     return { box, cg, heat, ppl, mb };
-  }, [built, now]);
+  }, [built, now, metric]);
 
-  const gradeKey = metric === "volume" ? "gradeVolume" : "gradeSets";
   const pplColor = { push: "var(--ppl-push)", pull: "var(--ppl-pull)", legs: "var(--ppl-legs)" };
+  const legendVal = (v) => (metric === "volume" ? `${whole(v)} kg` : `${v} set${v === 1 ? "" : "s"}`);
 
   return (
     <button type="button" className="hgym" onClick={onOpen}>
       <div className="hgym-col hgym-left">
+        <div className="hgym-topline">
+          <span className="hgym-topnum">{m.box.sessions}</span>
+          <span className="hgym-topcap">
+            sessions · last 30 days · avg {m.cg.average.toFixed(1)}/week · {m.cg.streak}-week streak
+          </span>
+        </div>
+
+        <div className="hgym-heat">
+          <div className="hgym-heat-dow">
+            {DOW.map((d, i) => <span key={i}>{d}</span>)}
+          </div>
+          <div className="hgym-heat-grid" aria-label="Training days, last 5 weeks">
+            {m.heat.days.map((d) => (
+              <span
+                key={d.ymd}
+                className={`hgym-cell ${d.trained ? "is-trained" : ""} ${d.isToday ? "is-today" : ""} ${d.isFuture ? "is-future" : ""}`}
+                title={`${d.ymd}${d.trained ? " · trained" : d.isFuture ? "" : " · rest"}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="hgym-col hgym-right">
         <div className="hgym-head">
-          <span className="hgym-label">Consistency</span>
-          <span className="hgym-toggle" role="group" aria-label="Heatmap metric">
+          <span className="hgym-label">Push · Pull · Legs balance</span>
+          <span className="hgym-toggle" role="group" aria-label="Balance metric">
             {["sets", "volume"].map((k) => (
               <span
                 key={k}
@@ -47,46 +77,13 @@ export default function HubGymSection({ built, now, onOpen }) {
           </span>
         </div>
 
-        <div className="hgym-hero">
-          <span className="hgym-hero-num">{m.box.sessions}</span>
-          <span className="hgym-hero-cap">
-            session{m.box.sessions === 1 ? "" : "s"} · last 30 days
-          </span>
-        </div>
-        <div className="hgym-sub">
-          avg {m.cg.average.toFixed(1)}/week · {m.cg.streak}-week streak
-        </div>
-
-        <div className="hgym-heat">
-          <div className="hgym-heat-dow">
-            {DOW.map((d, i) => <span key={i}>{d}</span>)}
-          </div>
-          <div className="hgym-heat-grid" aria-label="Training intensity, last 5 weeks">
-            {m.heat.days.map((d) => (
-              <span
-                key={d.ymd}
-                className={`hgym-cell g${d[gradeKey]} ${d.isToday ? "is-today" : ""} ${d.isFuture ? "is-future" : ""}`}
-                title={`${d.ymd} · ${d.sets} sets`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="hgym-col hgym-right">
-        <span className="hgym-label">Push · Pull · Legs balance</span>
-
         {m.ppl.hasPPL ? (
           <>
-            <div className="hgym-split" aria-label="Push Pull Legs set split">
+            <div className="hgym-split" aria-label="Push Pull Legs split">
               {m.ppl.ratio.map((r) => (
                 r.pct > 0 ? (
-                  <span
-                    key={r.id}
-                    className="hgym-seg"
-                    style={{ width: `${r.pct}%`, background: pplColor[r.id] }}
-                  >
-                    <span className="hgym-seg-num">{r.value}</span>
+                  <span key={r.id} className="hgym-seg" style={{ width: `${r.pct}%`, background: pplColor[r.id] }}>
+                    <span className="hgym-seg-num">{segNum(r.value, metric)}</span>
                   </span>
                 ) : null
               ))}
@@ -95,7 +92,7 @@ export default function HubGymSection({ built, now, onOpen }) {
               {m.ppl.ratio.map((r) => (
                 <span className="hgym-legend-item" key={r.id}>
                   <span className="hgym-dot" style={{ background: pplColor[r.id] }} />
-                  {r.label} {r.value} set{r.value === 1 ? "" : "s"}
+                  {r.label} {legendVal(r.value)}
                 </span>
               ))}
             </div>
@@ -107,10 +104,7 @@ export default function HubGymSection({ built, now, onOpen }) {
                   <span className="hgym-mtrack">
                     <span
                       className="hgym-mfill"
-                      style={{
-                        width: `${m.mb.maxMult ? (b.mult / m.mb.maxMult) * 100 : 0}%`,
-                        background: pplColor[b.ppl],
-                      }}
+                      style={{ width: `${m.mb.maxMult ? (b.mult / m.mb.maxMult) * 100 : 0}%`, background: pplColor[b.ppl] }}
                     />
                   </span>
                   <span className="hgym-mmult">{b.mult.toFixed(1)}×</span>

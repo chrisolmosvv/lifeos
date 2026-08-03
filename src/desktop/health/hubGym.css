@@ -1,6 +1,6 @@
 /* LifeOS — Health Hub: GYM section (full-width top half). Broadsheet: paper/ink,
-   hairlines + whitespace, NO card/box/shadow. PPL + heatmap colours are approved
-   design overrides (fixed hex), not theme-driven. */
+   whitespace only (NO divider between the two columns, NO card/box/shadow). PPL +
+   heatmap colours are approved design overrides. Fills its grid cell top-to-bottom. */
 
 .hgym {
   --ppl-push: #C8643D;
@@ -8,10 +8,12 @@
   --ppl-legs: #4A3F34;
 
   display: grid;
-  grid-template-columns: 1fr 1px 1.15fr;
-  gap: 0 28px;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 0 44px;
   width: 100%;
-  align-items: start;
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
   position: relative;
   background: none;
   border: none;
@@ -19,20 +21,61 @@
   font: inherit;
   color: var(--ink);
   cursor: pointer;
-  padding: 4px 2px 2px;
+  padding: 2px 2px 4px;
+  box-sizing: border-box;
 }
-/* the vertical hairline between the two columns (the 1px grid track) */
-.hgym::after {
-  content: "";
-  grid-column: 2;
-  grid-row: 1;
-  align-self: stretch;
-  width: 1px;
-  background: rgba(28, 25, 22, 0.14);
-}
-.hgym-col { min-width: 0; }
-.hgym-right { grid-column: 3; }
+.hgym-col { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 
+/* LEFT — compact consistency line over a big binary heatmap. */
+.hgym-topline { display: flex; align-items: baseline; gap: 10px; }
+.hgym-topnum {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--ink);
+}
+.hgym-topcap {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.hgym-heat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+.hgym-heat-dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 7px;
+  margin-bottom: 6px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--ink-muted);
+  text-align: center;
+}
+.hgym-heat-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 7px;
+}
+.hgym-cell {
+  border-radius: 4px;
+  background: #E7DECB; /* cream = rest */
+  min-height: 0;
+}
+.hgym-cell.is-trained { background: var(--accent); } /* single terracotta fill = trained */
+.hgym-cell.is-future { background: transparent; box-shadow: inset 0 0 0 1px var(--rule-faint); }
+.hgym-cell.is-today { box-shadow: inset 0 0 0 2px var(--ink); }
+
+/* RIGHT — PPL split + muscle bars, distributed to fill the height. */
+.hgym-right { justify-content: flex-start; }
 .hgym-head {
   display: flex;
   align-items: baseline;
@@ -47,93 +90,34 @@
   color: var(--ink-muted);
 }
 
-/* Sets / Volume toggle */
+/* Sets / Volume toggle (now on the PPL header) */
 .hgym-toggle { display: inline-flex; gap: 2px; }
 .hgym-toggle-opt {
   font-family: var(--font-sans);
   font-size: 11px;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 999px;
   color: var(--ink-muted);
   cursor: pointer;
 }
-.hgym-toggle-opt.is-on {
-  color: var(--paper);
-  background: var(--ink);
-}
+.hgym-toggle-opt.is-on { color: var(--paper); background: var(--ink); }
 
-/* Hero session count */
-.hgym-hero { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
-.hgym-hero-num {
-  font-family: var(--font-serif);
-  font-size: 46px;
-  line-height: 1;
-  color: var(--ink);
-}
-.hgym-hero-cap {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-.hgym-sub {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--ink-muted);
-  margin-top: 4px;
-}
-
-/* Heatmap */
-.hgym-heat { margin-top: 14px; }
-.hgym-heat-dow,
-.hgym-heat-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  max-width: 220px;
-}
-.hgym-heat-dow {
-  margin-bottom: 4px;
-  font-family: var(--font-sans);
-  font-size: 10px;
-  color: var(--ink-muted);
-  text-align: center;
-}
-.hgym-cell {
-  aspect-ratio: 1 / 1;
-  border-radius: 3px;
-  background: #E7DECB; /* cream = rest (grade 0) */
-}
-.hgym-cell.g1 { background: rgba(200, 100, 61, 0.32); }
-.hgym-cell.g2 { background: rgba(200, 100, 61, 0.60); }
-.hgym-cell.g3 { background: #C8643D; }
-.hgym-cell.is-future { background: transparent; box-shadow: inset 0 0 0 1px var(--rule-faint); }
-.hgym-cell.is-today { box-shadow: inset 0 0 0 1.5px var(--ink); }
-
-/* Push:Pull:Legs split bar */
 .hgym-split {
   display: flex;
   width: 100%;
   height: 40px;
   margin-top: 10px;
-  border-radius: 5px;
+  border-radius: 6px;
   overflow: hidden;
 }
-.hgym-seg {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-}
-.hgym-seg-num {
-  font-family: var(--font-serif);
-  font-size: 20px;
-  color: #F6F5F1;
-}
+.hgym-seg { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.hgym-seg-num { font-family: var(--font-serif); font-size: 22px; color: #F6F5F1; }
+
 .hgym-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 8px;
+  gap: 8px 16px;
+  margin-top: 10px;
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--ink-muted);
@@ -141,28 +125,36 @@
 .hgym-legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .hgym-dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
 
-/* Muscle bars */
-.hgym-muscles { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+/* Muscle bars — grow to fill the remaining height of the right column. */
+.hgym-muscles {
+  flex: 1;
+  min-height: 0;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 5px;
+}
 .hgym-mrow { display: flex; align-items: center; gap: 10px; }
 .hgym-mname {
-  flex: 0 0 84px;
+  flex: 0 0 88px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--ink);
   text-align: right;
 }
 .hgym-mtrack {
   flex: 1 1 auto;
-  height: 8px;
+  height: 9px;
   background: var(--rule-faint);
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
 }
-.hgym-mfill { display: block; height: 100%; border-radius: 4px; }
+.hgym-mfill { display: block; height: 100%; border-radius: 5px; }
 .hgym-mmult {
-  flex: 0 0 34px;
+  flex: 0 0 36px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -174,10 +166,10 @@
   margin-top: 14px;
 }
 
-/* the quiet tap affordance, shared look with the other sections */
+/* quiet tap affordance */
 .hub-detail-cue {
   position: absolute;
-  top: 2px;
+  top: 0;
   right: 2px;
   font-family: var(--font-sans);
   font-size: 11px;

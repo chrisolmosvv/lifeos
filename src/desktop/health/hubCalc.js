@@ -15,47 +15,29 @@
 //     deliberately different from the detail page's %-of-asleep.
 
 import { amsTodayYMD, shiftYMD, amsYMD } from "../../spine/logic/gymDates.js";
-import { isWorking, workoutVolume } from "../../spine/logic/gymCalc.js";
+import { isWorking } from "../../spine/logic/gymCalc.js";
 import { muscleBalance } from "../../spine/logic/gymBalance.js";
 import { REGION } from "../../spine/logic/gymBalanceGroups.js";
 import { smoothedSeries } from "../../spine/logic/bodyComposition.js";
 
-// ── GYM: graded calendar heatmap ─────────────────────────────────────────────
+// ── GYM: binary calendar heatmap ─────────────────────────────────────────────
 // Weekday of an Amsterdam ymd as Mon=0 … Sun=6 (noon-UTC never crosses midnight).
 function weekdayMon(ymd) {
   return (new Date(`${ymd}T12:00:00Z`).getUTCDay() + 6) % 7;
 }
 
-// Tercile cutoffs of a list of non-zero values → [c1, c2] (the 1/3 and 2/3 quantiles).
-// A day's value v grades: 0 if v<=0, else 1 (<=c1), 2 (<=c2), 3 (>c2). With few
-// distinct values the terciles collapse gracefully (still a valid 1..3 split).
-function tercileCutoffs(values) {
-  const xs = values.filter((v) => v > 0).sort((a, b) => a - b);
-  if (xs.length === 0) return [0, 0];
-  const q = (p) => xs[Math.min(xs.length - 1, Math.floor(p * xs.length))];
-  return [q(1 / 3), q(2 / 3)];
-}
-function gradeOf(v, [c1, c2]) {
-  if (!(v > 0)) return 0;
-  if (v <= c1) return 1;
-  if (v <= c2) return 2;
-  return 3;
-}
-
 // heatmapGrade(workouts, { now, weeks }) → a Monday-first grid of `weeks`×7 day cells
 // (oldest→newest, ending with the current partial week). Each cell:
-//   { ymd, weekday(0..6), sets, volume, gradeSets, gradeVolume, isToday, isFuture }
-// Grades are terciles of the grid window's NON-ZERO daily values, per metric, so the
-// shading self-scales. Days after today carry isFuture (rendered as empty, not rest).
+//   { ymd, weekday(0..6), trained, isToday, isFuture }
+// BINARY: a day is `trained` when it has ≥1 WORKING set (warm-ups don't count) — no
+// intensity grading. Days after today carry isFuture (rendered empty, not rest).
 export function heatmapGrade(workouts, { now = Date.now(), weeks = 5 } = {}) {
   const today = amsTodayYMD(now);
   const curMonday = shiftYMD(today, -weekdayMon(today));
   const firstMonday = shiftYMD(curMonday, -7 * (weeks - 1));
 
-  // Per-day working-set count + per-day volume (weight×reps, all sets — matching
-  // dailyVolumeSeries), in ONE pass over the workouts.
+  // Per-day working-set count in ONE pass; a day is trained if that count > 0.
   const setsByDay = new Map();
-  const volByDay = new Map();
   for (const w of workouts || []) {
     const ymd = amsYMD(w.started_at);
     if (!ymd) continue;
@@ -64,7 +46,6 @@ export function heatmapGrade(workouts, { now = Date.now(), weeks = 5 } = {}) {
       for (const s of ex.sets || []) if (isWorking(s)) working += 1;
     }
     setsByDay.set(ymd, (setsByDay.get(ymd) || 0) + working);
-    volByDay.set(ymd, (volByDay.get(ymd) || 0) + workoutVolume(w));
   }
 
   const days = [];
@@ -74,18 +55,10 @@ export function heatmapGrade(workouts, { now = Date.now(), weeks = 5 } = {}) {
     days.push({
       ymd,
       weekday: weekdayMon(ymd),
-      sets: isFuture ? 0 : setsByDay.get(ymd) || 0,
-      volume: isFuture ? 0 : volByDay.get(ymd) || 0,
+      trained: !isFuture && (setsByDay.get(ymd) || 0) > 0,
       isToday: ymd === today,
       isFuture,
     });
-  }
-
-  const setCuts = tercileCutoffs(days.map((d) => d.sets));
-  const volCuts = tercileCutoffs(days.map((d) => d.volume));
-  for (const d of days) {
-    d.gradeSets = d.isFuture ? 0 : gradeOf(d.sets, setCuts);
-    d.gradeVolume = d.isFuture ? 0 : gradeOf(d.volume, volCuts);
   }
   return { days, weeks };
 }
@@ -102,28 +75,34 @@ export const MUSCLE_PPL = {
   abductors: "legs", adductors: "legs",
 };
 
-// muscleBaseline(workouts, { days, now, top }) → { bars, mean, maxMult }.
-//   mean  = average working-set count across ALL real muscles worked (REGION-mapped),
-//           the "balanced baseline" 1.0× (owner decision 6).
-//   bars  = the top `top` PPL-mapped muscles by sets, each { name, sets, mult, ppl }.
+// muscleBaseline(workouts, { days, now, top, metric }) → { bars, mean, maxMult, metric }.
+//   metric = 'sets' | 'volume' — which measure the × baseline is computed on.
+//   mean  = average of that measure across ALL real muscles worked (REGION-mapped),
+//           the "balanced baseline" 1.0× (owner decision 6). Recomputes per metric.
+//   bars  = the top `top` PPL-mapped muscles by that measure, each
+//           { name, sets, volume, value, mult, ppl }.
 //   maxMult = the largest × among bars (for scaling the bar track widths).
-export function muscleBaseline(workouts, { days = 30, now = Date.now(), top = 6 } = {}) {
+export function muscleBaseline(workouts, { days = 30, now = Date.now(), top = 6, metric = "sets" } = {}) {
   const { ranked } = muscleBalance(workouts, { days, now });
+  const val = (g) => (metric === "volume" ? g.volume : g.sets) || 0;
   const real = ranked.filter((g) => REGION[g.muscle]); // real muscles only (drops cardio/other/unknown)
-  const totalSets = real.reduce((t, g) => t + g.sets, 0);
-  const mean = real.length ? totalSets / real.length : 0;
+  const totalVal = real.reduce((t, g) => t + val(g), 0);
+  const mean = real.length ? totalVal / real.length : 0;
 
   const bars = ranked
     .filter((g) => MUSCLE_PPL[g.muscle])
-    .slice(0, top)
     .map((g) => ({
       name: g.muscle,
       sets: g.sets,
-      mult: mean > 0 ? g.sets / mean : 0,
+      volume: g.volume,
+      value: val(g),
+      mult: mean > 0 ? val(g) / mean : 0,
       ppl: MUSCLE_PPL[g.muscle],
-    }));
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, top);
   const maxMult = bars.reduce((m, b) => Math.max(m, b.mult), 0);
-  return { bars, mean, maxMult };
+  return { bars, mean, maxMult, metric };
 }
 
 // ── BODY: net change over a window ───────────────────────────────────────────
