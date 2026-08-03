@@ -6,6 +6,7 @@ import { useRecipeWrites } from "../../spine/data/useRecipeWrites";
 import CookbookRegister from "./CookbookRegister";
 import CookPlan from "./cookplan/CookPlan"; // 3a: the dormant plan page (replaces CookCompanion as the recipe destination)
 import RecipeEditor from "./RecipeEditor";
+import ImportReview from "./importreview/ImportReview"; // 4a: the new import review (RecipeEditor stays for edits)
 import ImportScreen from "./ImportScreen";
 import Toast from "../kit/Toast";
 import "./cookbook.css";
@@ -37,7 +38,8 @@ export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onCons
   const onSave = async (recipe, ingredients, steps) => { const res = await rw.save(view.id ?? null, recipe, ingredients, steps); if (res.ok) { await load(); setView({ kind: "recipe", id: res.id }); } };
   const onDelete = async (id) => { const res = await rw.remove(id); if (res.ok) { await load(); setView({ kind: "grid" }); } };
 
-  if (view.kind === "import") return <ImportScreen onImported={(draft, itemsById) => setView({ kind: "editor", id: null, draft, itemsById })} onCancel={() => setView({ kind: "grid" })} />;
+  if (view.kind === "import") return <ImportScreen onImported={(draft, itemsById) => setView({ kind: "review", draft, itemsById })} onCancel={() => setView({ kind: "grid" })} />;
+  if (view.kind === "review") return <ImportReview draft={view.draft} itemsById={view.itemsById} onBack={backToGrid} />;
   if (view.kind === "editor") return (
     <>
       <RecipeEditor recipeId={view.id ?? null} initialDraft={view.draft} initialItemsById={view.itemsById} saving={rw.busy} onSave={onSave} onCancel={() => setView(view.id ? { kind: "recipe", id: view.id } : { kind: "grid" })} onDelete={() => onDelete(view.id)} />
