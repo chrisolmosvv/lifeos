@@ -15,15 +15,32 @@ import "./hubBody.css";
 
 const FAT_AXIS_MIN_SPAN = 4; // floor on the body-fat axis span (matches the detail chart)
 
+// The earliest metric_date across the given row-sets, as "YYYY-MM-DD" (null if none).
+function earliestReading(rowSets) {
+  let min = null;
+  for (const rows of rowSets) {
+    for (const r of rows || []) {
+      const d = r?.metric_date;
+      if (d && (min == null || d < min)) min = d;
+    }
+  }
+  return min;
+}
+
 export default function HubBodySection({ weightRows, bodyFatRows, goalMap, now, onOpen }) {
   const view = useMemo(() => {
     const today = amsTodayYMD(now);
-    const start = shiftYMD(today, -89);
+    const ninety = shiftYMD(today, -89);
+    // Window = last 90 days, BUT if fewer than 90 days of readings exist, start at the
+    // earliest actual reading so the lines fill the chart (no empty left gutter).
+    const earliest = earliestReading([weightRows, bodyFatRows]);
+    const start = earliest && earliest > ninety ? earliest : ninety;
     const weight = smoothedSeries(weightRows, { start, end: today, smooth: 7, withBand: true });
     const fat = smoothedSeries(bodyFatRows, { start, end: today, smooth: 7, withBand: false });
     const goal = goalMap?.get?.("weight")?.target_value ?? null;
+    const daysShown = Math.round((Date.parse(today) - Date.parse(start)) / 86400000) + 1;
     return {
-      today, start, weight, fat, goal,
+      today, start, weight, fat, goal, daysShown,
       wDelta: bodyNetDelta(weightRows, { start, end: today }),
       fDelta: bodyNetDelta(bodyFatRows, { start, end: today }),
     };
@@ -52,7 +69,7 @@ export default function HubBodySection({ weightRows, bodyFatRows, goalMap, now, 
   return (
     <button type="button" className="hbody" onClick={onOpen}>
       <div className="hbody-head">
-        <span className="hub-sec-label">Body · 90 days</span>
+        <span className="hub-sec-label">Body · {view.daysShown >= 90 ? "90 days" : `${view.daysShown} days`}</span>
         <span className="hbody-hero">
           <span className="hbody-hero-kg">{wLast ? wLast.smoothed.toFixed(1) : "—"}<span className="hbody-u">kg</span></span>
           <span className="hbody-hero-fat">{fLast ? fLast.smoothed.toFixed(1) : "—"}<span className="hbody-u">%</span></span>
