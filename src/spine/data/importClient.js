@@ -56,11 +56,26 @@ export async function importRecipe({ text, url }) {
       prep_minutes: r.prep_minutes ?? null,
       cook_minutes: r.cook_minutes ?? null,
       source_url: data.source_url ?? null,
+      cuisine: r.cuisine ?? null,
+      // Not persisted (no columns) — carried so a later review screen can flag AI guesses.
+      cuisine_confidence: r.cuisine_confidence ?? null,
+      enriched: r.enriched ?? null,
       ingredients,
       steps: (r.steps || []).map((s) => {
-        if (typeof s === "string") return { text: s };
+        if (typeof s === "string") return { text: s, original: s };
         const text = typeof s.text === "string" ? s.text : String(s.text ?? "");
-        return { text, timer_seconds: s.duration_seconds ?? null, tag: s.tag ?? null, depends_on: s.depends_on ?? null };
+        const original = typeof s.original === "string" && s.original ? s.original : text;
+        return {
+          text,
+          original,
+          timer_seconds: s.duration_seconds ?? null, // 2a: a duration on EVERY step → the existing timer_seconds column
+          tag: s.tag ?? null,
+          station: s.station ?? null,
+          hold_tolerance: s.hold_tolerance ?? null,
+          is_prep: !!s.is_prep,
+          depends_on: s.depends_on ?? null,
+          confidence: s.confidence ?? null, // not persisted — review-screen guess flags
+        };
       }),
     },
     itemsById,
@@ -101,7 +116,7 @@ function extractBracketGrams(rawText, parsedAmount) {
 }
 
 async function matchOne(ing, itemsById) {
-  const base = { parsedName: ing.name || ing.raw_text || "", raw_text: ing.raw_text || ing.name || "", no_macros: false, step_position: ing.step_number ?? null };
+  const base = { parsedName: ing.name || ing.raw_text || "", raw_text: ing.raw_text || ing.name || "", no_macros: false, step_position: ing.step_number ?? null, grams: null };
   try {
     const res = await searchFoods(ing.name || ing.raw_text || "");
     const results = res.results || [];
@@ -115,7 +130,9 @@ async function matchOne(ing, itemsById) {
     const item = await ensureFoodItem(hit);
     itemsById[item.id] = { ...hit, food_item_id: item.id };
     const grams = resolvePortion(ing.name, ing.amount, ing.unit) ?? extractBracketGrams(ing.raw_text, ing.amount);
-    return { ...base, food_item_id: item.id, amount: grams, unit: grams != null ? "g" : null };
+    // 2a: also carry grams as its own draft field — the starting-guess edible weight the owner
+    // confirms/corrects on the review screen (persists to recipe_ingredients.grams).
+    return { ...base, food_item_id: item.id, amount: grams, unit: grams != null ? "g" : null, grams };
   } catch {
     return { ...base, food_item_id: null, amount: null, unit: null };
   }
