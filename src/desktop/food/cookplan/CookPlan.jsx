@@ -25,8 +25,10 @@ import CookBoard from "./CookBoard";
 import CookFoot from "./CookFoot";
 import CookIngredients from "./CookIngredients";
 import CookReview from "./CookReview";
+import FinderPopover from "../importreview/FinderPopover"; // 3f: reused (cook variant) for mid-cook chip edits
 import Toast from "../../kit/Toast";
 import "../cookPlan.css";
+import "../importreview/importReview.css"; // 3f: the popover's iv-* styles (prefixed; no collision with cpq-*)
 
 const elapsedStr = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 3600) ? Math.floor(s / 3600) + "h " : ""}${Math.floor((s % 3600) / 60)}m`; };
 
@@ -37,6 +39,7 @@ export default function CookPlan({ recipeId, onBack }) {
   const [reviewing, setReviewing] = useState(null); // null | changes object
   const [saving, setSaving] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [editChip, setEditChip] = useState(null); // 3f: { idx, anchor } | null
   const cook = useCookEvents(recipeId);
   const cl = useCookLog();
   useWakeLock(cook.hasSession);
@@ -106,7 +109,13 @@ export default function CookPlan({ recipeId, onBack }) {
     return { nums: preds.map((p) => p + 1), freesUp: fmtClockTime(freesUpMs) };
   };
 
-  const macros = recipeMacros(ingredients, cookServings, data.itemsById);
+  // 3f: the live ledger reflects mid-cook proposals — apply amount_changed / ingredient_omitted from
+  // replay before computing macros, so changing an amount or omitting an ingredient moves it at once.
+  const amountsOv = cook.state.amounts || {};
+  const omittedOv = cook.state.omitted || new Set();
+  const effIngredient = (i) => (amountsOv[String(i)] ? { ...ingredients[i], ...amountsOv[String(i)] } : ingredients[i]);
+  const effIngs = ingredients.map((_, i) => (omittedOv.has(String(i)) ? null : effIngredient(i))).filter(Boolean);
+  const macros = recipeMacros(effIngs, cookServings, data.itemsById);
   const onServe = (v) => { if (!v) return; const [hh, mm] = v.split(":").map(Number); const d = new Date(); d.setHours(hh, mm, 0, 0); cook.setServeTime(d.toISOString()); };
 
   const running = order.filter((i) => timerByRef[String(i)]?.running).map((i) => ({ index: i, step: steps[i], timer: timerByRef[String(i)], linked: linkedFor(i) }));
@@ -158,10 +167,18 @@ export default function CookPlan({ recipeId, onBack }) {
       />
       {showIngs && <div className="cpq-ings-panel"><CookIngredients ingredients={ingredients} scale={cookServings / (recipe.servings || 1)} editable={cook.hasSession} omitted={cook.state.omitted} amounts={cook.state.amounts} onOmit={cook.omitIngredient} onAmount={cook.changeAmount} /></div>}
       <CookBand steps={steps} schedule={schedule} finish={finish} timerByRef={timerByRef} cookStartMs={cookStartMs} nowMs={nowMs} />
-      <CookOnNow running={running} ready={ready} onAdjust={(i, d) => cook.adjustTimer(i, d)} onStart={(i) => { initAudioContext(); cook.startTimer(i, durOf(i)); }} usedSet={cook.state.usedIngredients} onTick={(idx) => cook.useIngredient(idx)} />
+      <CookOnNow running={running} ready={ready} onAdjust={(i, d) => cook.adjustTimer(i, d)} onStop={(i) => cook.stopTimer(i)} onStart={(i) => { initAudioContext(); cook.startTimer(i, durOf(i)); }} usedSet={cook.state.usedIngredients} onEditChip={(idx, e) => setEditChip({ idx, anchor: e.currentTarget.getBoundingClientRect() })} />
       <CookBoard scrollRef={boardScrollRef} contentRef={boardContentRef} onScroll={fit.onScroll} scale={fit.scale} rows={boardRows} />
       <CookFoot perServing={macros.perServing} unestimated={macros.unestimatedCount} fitPct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onFinish={openReview} hasSession={cook.hasSession} />
       {reviewing && <CookReview changes={reviewing} kcalPerServing={macros.perServing.kcal} servings={cookServings} onSave={onReviewSave} onCancel={() => setReviewing(null)} saving={saving} />}
+      {editChip && (
+        <FinderPopover variant="cook" ing={effIngredient(editChip.idx)} itemsById={data.itemsById} anchor={editChip.anchor}
+          onPatch={(p) => { const ci = effIngredient(editChip.idx); cook.changeAmount(editChip.idx, p.amount ?? ci.amount, p.unit ?? ci.unit, p.grams ?? ci.grams); }}
+          isUsed={cook.state.usedIngredients?.has(String(editChip.idx))}
+          onUsed={() => { cook.useIngredient(editChip.idx); setEditChip(null); }}
+          onOmit={() => { cook.omitIngredient(editChip.idx); setEditChip(null); }}
+          onClose={() => setEditChip(null)} />
+      )}
       {confirmLeave && (
         <div className="cpq-review-scrim" role="dialog" aria-modal="true">
           <div className="cpq-confirm">

@@ -53,16 +53,19 @@
 .cpq-onnow--idle { align-items: baseline; gap: 0.5rem; color: var(--ink-muted); font-size: 0.9rem; }
 .cpq-idle-lead { color: var(--ink); }
 .cpq-ready-num { background: none; border: none; color: var(--accent); font-family: var(--font-serif); font-size: 1rem; cursor: pointer; padding: 0; }
-.cpq-card { border-left: 3px solid var(--blk-color); padding: 0.3rem 0.75rem; display: flex; flex-direction: column; gap: 0.2rem; min-width: 9rem; }
+.cpq-card { border-left: 3px solid var(--blk-color); padding: 0.35rem 0.85rem; display: flex; flex-direction: column; gap: 0.35rem; min-width: 15rem; max-width: 24rem; flex: 1 1 15rem; }
 .cpq-card-head { display: flex; gap: 0.5rem; align-items: baseline; font-size: 0.7rem; color: var(--ink-muted); }
 .cpq-card-num { font-family: var(--font-serif); color: var(--ink); }
-.cpq-card-clock { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1; color: var(--accent); }
+.cpq-card-clock { margin-left: auto; font-family: var(--font-serif); font-size: 1.8rem; line-height: 1; color: var(--accent); }
 .cpq-card-clock.is-over { color: #A85C44; }
+.cpq-card-text { margin: 0; font-size: 0.92rem; line-height: 1.42; color: var(--ink); }
 .cpq-card-chips, .cpq-row-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .cpq-chip { background: none; border: 1px solid var(--rule); color: var(--ink-muted); font-size: 0.68rem; padding: 0.02rem 0.35rem; cursor: pointer; }
 .cpq-chip.is-used { text-decoration: line-through; opacity: 0.5; }
 .cpq-card-adj { display: flex; gap: 0.4rem; margin-top: 0.1rem; }
 .cpq-adj { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.7rem; padding: 0.05rem 0.4rem; cursor: pointer; }
+.cpq-adj:hover { border-color: var(--ink); }
+.cpq-adj--stop { border-color: var(--ink); margin-left: auto; }
 
 /* ── Board (the only scrolling zone) ───────────────────────────────────────── */
 .cpq-board { flex: 1; min-height: 0; overflow-y: auto; border-top: 1px solid var(--rule); scrollbar-width: thin; }

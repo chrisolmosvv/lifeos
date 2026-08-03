@@ -10,7 +10,11 @@ import { resolvePortion, unitOptionsFor } from "../../../spine/logic/portions";
 
 const r = (v) => Math.round(v || 0);
 
-export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResolve, onNoMacros, onRemove, onClose }) {
+// variant "import" (4a): full — name, amount+unit, macros, food-search, Confirm/No macros/Remove.
+// variant "cook" (3f): a mid-cook subset — amount+unit (live), macros, and Used / Left out / Close.
+// You don't re-match a food mid-cook; you adjust its amount or drop it, recorded as events.
+export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResolve, onNoMacros, onRemove, onClose, variant = "import", onUsed, onOmit, isUsed }) {
+  const cook = variant === "cook";
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
@@ -50,9 +54,9 @@ export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResol
     <>
       <div className="iv-scrim" onClick={onClose} />
       <div className="iv-pop" style={style}>
-        <div className="iv-po">the source said: “{ing.raw_text}”</div>
-        <label>save it as</label>
-        <input className="iv-nameIn" value={ing.parsedName || ""} onChange={(e) => onPatch({ parsedName: e.target.value })} />
+        <div className="iv-po">{cook ? ing.raw_text : `the source said: “${ing.raw_text}”`}</div>
+        {!cook && <><label>save it as</label>
+        <input className="iv-nameIn" value={ing.parsedName || ""} onChange={(e) => onPatch({ parsedName: e.target.value })} /></>}
         <label>amount</label>
         <div className="iv-amt">
           <input value={ing.amount ?? ""} onChange={(e) => setAmount(e.target.value)} />
@@ -62,20 +66,28 @@ export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResol
           <span>= <b>{r(ing.grams)} g</b></span><span><b>{r(macros.kcal)}</b> kcal</span>
           <span className="iv-mp"><b>{r(macros.protein)}g</b> P</span><span className="iv-mc"><b>{r(macros.carbs)}g</b> C</span><span className="iv-mf"><b>{r(macros.fat)}g</b> F</span>
         </div>
-        <label>matched food</label>
-        <input className="iv-search" placeholder="search foods…" value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
-        <div className="iv-res">
-          {results.map((c, k) => (
-            <button key={c.id || k} type="button" className="iv-rr" onClick={() => pick(c)}>
-              <span className="rn">{c.name}</span><span className="rk">{kcal100(c)} kcal/100g</span>
-            </button>
-          ))}
-        </div>
+        {!cook && <>
+          <label>matched food</label>
+          <input className="iv-search" placeholder="search foods…" value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
+          <div className="iv-res">
+            {results.map((c, k) => (
+              <button key={c.id || k} type="button" className="iv-rr" onClick={() => pick(c)}>
+                <span className="rn">{c.name}</span><span className="rk">{kcal100(c)} kcal/100g</span>
+              </button>
+            ))}
+          </div>
+        </>}
         <div className="iv-pacts">
-          <button type="button" className="pri" onClick={onResolve}>Confirm</button>
-          <button type="button" onClick={onNoMacros}>No macros</button>
-          <button type="button" onClick={onRemove}>Remove</button>
-          <button type="button" onClick={onClose}>Close</button>
+          {cook ? <>
+            <button type="button" className="pri" onClick={onUsed}>{isUsed ? "Un-tick" : "Mark used"}</button>
+            <button type="button" onClick={onOmit}>Left out</button>
+            <button type="button" onClick={onClose}>Close</button>
+          </> : <>
+            <button type="button" className="pri" onClick={onResolve}>Confirm</button>
+            <button type="button" onClick={onNoMacros}>No macros</button>
+            <button type="button" onClick={onRemove}>Remove</button>
+            <button type="button" onClick={onClose}>Close</button>
+          </>}
         </div>
       </div>
     </>
