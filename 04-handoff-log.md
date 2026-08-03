@@ -33,6 +33,56 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3d — THE VISUAL PASS (mock Q). Src-only, 1 commit. Owner clicks 3a–3d now.
+
+WHAT CHANGED: the plan page is composed to the locked mock "Q", split by surface:
+- **Masthead** — back · title · Ingredients · metric strip (total planned / elapsed · **On the
+  table** serve time with a LIVE drift readout · servings stepper).
+- **Band** — PACKED rows (overlapping work stacks, not fixed lanes), station-coloured blocks with a
+  progress fill, dotted float tails, critical steps at full opacity, a terracotta now-line.
+- **On now** — running steps as cards (big terracotta countdown, brick when overrun, −1m/+1m); when
+  idle, a "ready when you are" prompt of startable steps.
+- **Board** — the step table (block+number · text+chips+status line · START BY clock+label · TAKES
+  with hover −/+/Start/Stop/Reopen). The ONLY internally-scrolling zone; sticky header.
+- **Foot** — live macro ledger (recipeMacros, A14 macro bar) · station legend · A−/A+/Fit (+ keys
+  −/+) · Finish.
+- **Fit-to-hole** (useFitToHole): auto-scales the board type to fill the page; A−/A+ override, Fit
+  resets; **scrollTop preserved across the 1s ticks**.
+- **LIVE serve readout**: re-times the schedule with each step's REMAINING duration, so it tracks
+  reality (overruns make it read late) instead of a planned projection.
+
+FILES (src): src/desktop/food/cookplan/{CookPlan,CookMasthead,CookBand,CookOnNow,CookBoard,
+CookBoardRow,CookFoot,useFitToHole}.{jsx,js}, cookPlan.css, cookPlanView.js. CookPlanStep prove-dead
+removed. No deploy. Build green; every file <250.
+
+HOW TO VERIFY — the WHOLE of Piece 3 (owner, 13" MacBook):
+1. Open a recipe → the mock-Q plan renders; steps in scheduled (doing) order, full text, no clipping.
+2. Band shows the cook to scale, station-coloured, packed; critical blocks solid, float steps trail a tail.
+3. Servings stepper scales the ingredient amounts AND the ledger kcal/macros.
+4. Fit-to-hole: a 9-step recipe renders large, a 20-step tightens; A−/A+/Fit and keys −/+ resize;
+   ONLY the board scrolls; ★ scroll position holds while timers run.
+5. Tick an ingredient → NO session (no header marker). Start a timer → cook begins, marker appears,
+   an On-now card shows a big countdown.
+6. Run past zero → "+X over" in brick, alarm once, no freeze. Stop then Start → RESUMES.
+7. ★ Reload mid-cook → every timer exactly where it should be, incl. overrun (make-or-break).
+8. Deadlines "start by HH:MM", "sets the clock"/float, blocked-by "waiting on 03 · frees up 20:41".
+9. Set a serve time → drift readout tracks reality (an overrun makes it read late).
+10. Finish cook ends it. No "Mark done" anywhere.
+★ Judge calm against the OX CHEEK WELLINGTONS, not a toy recipe.
+
+⚠️ KNOWN GAPS / FLAGS (Builder cannot verify visually — owner's eye needed):
+- **Ancestor height:** .food-page/.food-pane set no height, so .cpq uses a MEASURED height
+  (viewport − its top). If the board doesn't fill/scroll, that's the first place to look.
+- **Performance UNMEASURED** — couldn't run it on the Mac; the 1s tick re-renders the whole tree.
+  If a 9-step cook with several timers is janky, isolate the countdowns. MEASURE, then decide.
+- **Visual fidelity to Q** built from the written spec only — spacing/precise look needs the owner.
+- **Estimate −/+ (TAKES) is session-local** — not persisted, resets on reload (edit/save territory).
+- Live serve re-runs cookSchedule each tick (cheap for kitchen sizes).
+
+NEXT: **3e — the end-of-cook save review** (Finish → itemised save of what changed; Abandon → discard).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3c-ii — ONE PAIR OF HANDS. Src-only, 1 commit. Biggest algo piece.
 
 WHAT CHANGED: cookSchedule now models the COOK, not the kitchen. After the dependency CPM it runs a
