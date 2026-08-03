@@ -33,6 +33,42 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3g — THE INGREDIENTS PANEL. Src-only, 1 commit.
+
+WHAT CHANGED: the ingredients panel on the cook page — was two clicks to reach and read-only:
+- **One click, not two.** The panel had its own collapse toggle *inside* the masthead-opened box
+  (a collapsed section inside a shown box). That toggle is gone — the masthead "Ingredients" button
+  now shows the flat list directly.
+- **Macros on every row.** Each row shows the buy-form amount, the ingredient, its edible grams,
+  and full macros (kcal · P · C · F) in the same protein/carb/fat colours as the import screen.
+- **Tap a row to edit** — opens the SAME cook-variant Finder the On-now card uses (3f): change
+  amount/unit (converts live), tick used, or mark left out. Used rows strike through; left-out rows
+  dim and strike. Every edit is a proposal that moves the live ledger and reaches the finish review.
+- Reuses `buildReview` (import logic) for the row macros and the existing `editChip`→`FinderPopover`
+  wiring — no new machinery, no new events.
+
+FILES TOUCHED: CookIngredients.jsx (rewritten, 40 lines), CookPlan.jsx (panel render props), cookPlan.css.
+
+HOW TO VERIFY (Mac): open a recipe → tap **Ingredients** in the masthead → the full list appears in
+ONE click, each row showing amount / grams / kcal / P / C / F. Start a cook. Tap a row → the editor
+opens → change an amount → the row's macros and the live ledger both move → mark another **left out**
+→ it dims and strikes, ledger drops → tick one **used** → it strikes. Finish → both edits appear under
+**Amounts**, keepable/droppable exactly like the On-now card's edits (same events).
+
+KNOWN GAPS / RISKS:
+- The seven-column grid (amount/name/grams/kcal/P/C/F) is tuned by eye headlessly — on a 13" it should
+  fit, but long ingredient names ellipsis-truncate; needs the owner's eye to confirm nothing important
+  is cut. Reversible (column widths only).
+- Still unrun: the buy-form model-fix Nutrition-logger check (oldest deferred item).
+
+NEXT: 3h (serve-time auto-population / space bar) or 3i (sizing controls) — Planner's call.
+
+FOR THE CHECKER: confirm the panel and the On-now card edit the SAME state (edit a chip on the card,
+reopen the panel — the change shows, and vice-versa), and that a panel edit lands under Amounts at
+finish with station/hold/is_prep/grams still populated on the kept row.
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3f — THE ON-NOW CARD. Src-only, 1 commit.
 
 WHAT CHANGED: the running-step card is now a workstation, not just a clock:
