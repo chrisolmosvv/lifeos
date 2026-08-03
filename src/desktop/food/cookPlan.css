@@ -136,19 +136,19 @@
 .cpq-confirm-foot { display: flex; justify-content: flex-end; gap: 0.75rem; }
 .cpq-confirm-leave { background: none; border: 1px solid #A85C44; color: #A85C44; font-size: 0.85rem; padding: 0.35rem 0.9rem; cursor: pointer; }
 
-/* 3e in-cook ingredient editing */
-.cp-ings-item.is-omit { opacity: 0.5; text-decoration: line-through; }
-.cp-ings-edit { display: inline-flex; gap: 0.3rem; margin-left: auto; }
-.cp-nudge { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.72rem; width: 1.3rem; cursor: pointer; }
-.cp-omit { background: none; border: 1px solid var(--rule); color: var(--ink-muted); font-size: 0.68rem; padding: 0.05rem 0.4rem; cursor: pointer; }
-.cp-omit.is-on { border-color: #A85C44; color: #A85C44; }
-
-/* ── Ingredients panel (preserved from 3a — still used) ────────────────────── */
+/* ── Ingredients panel (3g — flat: one click, macros, tap a row to edit) ───── */
 .cp-ings { margin: 0; }
-.cp-ings-toggle { display: flex; align-items: center; gap: 0.45rem; width: 100%; background: none; border: none; padding: 0.2rem 0; font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink); cursor: pointer; text-align: left; }
-.cp-ings-caret { color: var(--ink-muted); font-size: 0.75rem; }
+.cp-ings-head { display: flex; align-items: center; font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink); padding: 0.1rem 0.6rem 0.3rem; }
 .cp-ings-count { margin-left: auto; color: var(--ink-muted); font-size: 0.8rem; }
-.cp-ings-list { list-style: none; margin: 0.4rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.2rem 1.5rem; }
-.cp-ings-item { display: flex; gap: 0.6rem; font-size: 0.85rem; width: 15rem; }
-.cp-ings-amt { min-width: 4rem; text-align: right; color: var(--ink); flex: none; }
-.cp-ings-text { flex: 1; color: var(--ink-muted); }
+.cp-ings-list { list-style: none; margin: 0; padding: 0; }
+.cp-ings-item { font-size: 0.85rem; }
+.cp-ings-btn { display: grid; grid-template-columns: 4.5rem 1fr 3.2rem 3rem 2.4rem 2.4rem 2.4rem; align-items: baseline; gap: 0.5rem; width: 100%; background: none; border: none; border-top: 1px solid var(--rule); padding: 0.32rem 0.6rem; font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
+.cp-ings-btn:hover { background: rgba(0, 0, 0, 0.03); }
+.cp-ings-amt { text-align: right; color: var(--ink); }
+.cp-ings-text { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-ings-g { text-align: right; color: var(--ink-muted); }
+.cp-ings-kc { text-align: right; color: var(--ink); }
+.cp-ings-mm { text-align: right; }
+.cp-ings-item.is-used .cp-ings-text { text-decoration: line-through; color: var(--ink-muted); }
+.cp-ings-item.is-omit { opacity: 0.5; }
+.cp-ings-item.is-omit .cp-ings-text { text-decoration: line-through; }

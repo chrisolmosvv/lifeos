@@ -1,56 +1,40 @@
-// LifeOS — Food → cook plan INGREDIENTS panel (3a display · 3e in-cook editing). Collapsible list
-// of every ingredient with its servings-scaled amount. During a cook (editable) each row also gets
-// −/+ amount nudges and an "omit" toggle — recorded as events (amount_changed / ingredient_omitted)
-// so they survive a reload and surface in the end-of-cook review. Editing operates on the recipe's
-// BASE amount (what gets saved), not the scaled display.
+// LifeOS — Food → cook plan INGREDIENTS panel (3a display · 3f/3g editing). FLAT — one click from the
+// masthead shows the list (the old nested toggle is gone). Each row shows the buy-form amount, the
+// ingredient, its edible grams and full macros; a tick strikes a used ingredient; tapping a row opens
+// the SAME cook-variant Finder (change amount/unit, mark left out, tick used) the On-now card uses —
+// every edit a proposal that moves the live ledger and reaches the finish review. Reuses buildReview.
 
-import { useState } from "react";
-import { scaledAmount } from "../../../spine/logic/cookPlanView";
+import { buildReview } from "../../../spine/logic/importReviewLogic";
+import "../importreview/importReview.css"; // 3g: shared macro colours (iv-mp/iv-mc/iv-mf)
 
-export default function CookIngredients({ ingredients, scale, editable, omitted, amounts, onOmit, onAmount }) {
-  const [open, setOpen] = useState(false);
+export default function CookIngredients({ ingredients, itemsById, srcServings, serv, usedSet, omittedSet, onEdit }) {
   const list = ingredients || [];
   if (list.length === 0) return null;
-  const ov = amounts || {};
-  const isOmit = (i) => omitted?.has(String(i));
+  const { rows } = buildReview(list, itemsById, srcServings, serv);
 
   return (
     <section className="cp-ings">
-      <button type="button" className="cp-ings-toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        <span className="cp-ings-caret" aria-hidden="true">{open ? "▾" : "▸"}</span>
-        Ingredients
-        <span className="cp-ings-count tnum">{list.length}</span>
-      </button>
-      {open && (
-        <ul className="cp-ings-list">
-          {list.map((ing, i) => {
-            if (editable) {
-              const amt = ov[String(i)]?.amount ?? ing.amount;
-              const unit = ov[String(i)]?.unit ?? ing.unit;
-              const step = unit === "g" ? 25 : 1;
-              const nudge = (d) => onAmount?.(i, (Number(amt) || 0) + d * step, unit ?? null, ov[String(i)]?.grams ?? ing.grams ?? null);
-              return (
-                <li key={i} className={`cp-ings-item${isOmit(i) ? " is-omit" : ""}`}>
-                  <span className="cp-ings-amt tnum">{amt != null ? `${amt}${unit ? ` ${unit}` : ""}` : "—"}</span>
-                  <span className="cp-ings-text">{ing.raw_text}</span>
-                  <span className="cp-ings-edit">
-                    <button type="button" className="cp-nudge" onClick={() => nudge(-1)} disabled={isOmit(i)}>−</button>
-                    <button type="button" className="cp-nudge" onClick={() => nudge(1)} disabled={isOmit(i)}>+</button>
-                    <button type="button" className={`cp-omit${isOmit(i) ? " is-on" : ""}`} onClick={() => onOmit?.(i)}>{isOmit(i) ? "left out" : "omit"}</button>
-                  </span>
-                </li>
-              );
-            }
-            const amt = scaledAmount(ing, scale);
-            return (
-              <li key={i} className="cp-ings-item">
-                {amt && <span className="cp-ings-amt tnum">{amt.qty}{amt.unit ? ` ${amt.unit}` : ""}</span>}
-                <span className="cp-ings-text">{ing.raw_text}</span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <div className="cp-ings-head">Ingredients <span className="cp-ings-count tnum">{list.length}</span></div>
+      <ul className="cp-ings-list">
+        {rows.map((row) => {
+          const used = usedSet?.has(String(row.i));
+          const omit = omittedSet?.has(String(row.i));
+          const unit = row.unit && row.unit !== "item" ? ` ${row.unit}` : "";
+          return (
+            <li key={row.i} className={`cp-ings-item${used ? " is-used" : ""}${omit ? " is-omit" : ""}`}>
+              <button type="button" className="cp-ings-btn" onClick={(e) => onEdit(row.i, e)}>
+                <span className="cp-ings-amt tnum">{row.amount != null ? `${row.amount}${unit}` : "—"}</span>
+                <span className="cp-ings-text">{row.orig}{omit ? " · left out" : ""}</span>
+                <span className="cp-ings-g tnum">{row.grams != null ? `${row.grams}g` : ""}</span>
+                <span className="cp-ings-kc tnum">{row.kcal}</span>
+                <span className="cp-ings-mm iv-mp tnum">{row.protein}</span>
+                <span className="cp-ings-mm iv-mc tnum">{row.carbs}</span>
+                <span className="cp-ings-mm iv-mf tnum">{row.fat}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }

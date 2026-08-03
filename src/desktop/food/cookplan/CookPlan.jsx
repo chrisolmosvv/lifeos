@@ -165,7 +165,7 @@ export default function CookPlan({ recipeId, onBack }) {
         servings={cookServings} baseServ={recipe.servings || 1} onDec={() => setCookServings((s) => Math.max(1, s - 1))} onInc={() => setCookServings((s) => s + 1)}
         onBack={handleBack} onIngredients={() => setShowIngs((v) => !v)}
       />
-      {showIngs && <div className="cpq-ings-panel"><CookIngredients ingredients={ingredients} scale={cookServings / (recipe.servings || 1)} editable={cook.hasSession} omitted={cook.state.omitted} amounts={cook.state.amounts} onOmit={cook.omitIngredient} onAmount={cook.changeAmount} /></div>}
+      {showIngs && <div className="cpq-ings-panel"><CookIngredients ingredients={ingredients.map((ing, i) => (amountsOv[String(i)] ? { ...ing, ...amountsOv[String(i)] } : ing))} itemsById={data.itemsById} srcServings={recipe.servings || 1} serv={cookServings} usedSet={cook.state.usedIngredients} omittedSet={omittedOv} onEdit={(idx, e) => setEditChip({ idx, anchor: e.currentTarget.getBoundingClientRect() })} /></div>}
       <CookBand steps={steps} schedule={schedule} finish={finish} timerByRef={timerByRef} cookStartMs={cookStartMs} nowMs={nowMs} />
       <CookOnNow running={running} ready={ready} onAdjust={(i, d) => cook.adjustTimer(i, d)} onStop={(i) => cook.stopTimer(i)} onStart={(i) => { initAudioContext(); cook.startTimer(i, durOf(i)); }} usedSet={cook.state.usedIngredients} onEditChip={(idx, e) => setEditChip({ idx, anchor: e.currentTarget.getBoundingClientRect() })} />
       <CookBoard scrollRef={boardScrollRef} contentRef={boardContentRef} onScroll={fit.onScroll} scale={fit.scale} rows={boardRows} />
