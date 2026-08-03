@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from "react";
 import { searchFoods } from "../../../spine/data/foodLoad";
 import { recipeMacros } from "../../../spine/logic/recipeCalc";
 import { resolvePortion, unitOptionsFor } from "../../../spine/logic/portions";
-import { itemToFood } from "../../../spine/logic/foodShape";
 
 const r = (v) => Math.round(v || 0);
 
@@ -37,9 +36,11 @@ export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResol
   const setUnit = (u) => onPatch({ unit: u, grams: resolvePortion(ing.parsedName || ing.name, ing.amount, u) ?? ing.grams });
   const setAmount = (v) => { const a = parseFloat(v); if (!isNaN(a)) onPatch({ amount: a, grams: resolvePortion(ing.parsedName || ing.name, a, ing.unit) ?? Math.round((ing.grams || 0)) }); };
   const pick = (c) => {
-    const key = c.id || `sel:${c.name}`;
-    const food = itemToFood ? itemToFood({ ...c, id: key }) : c;
-    itemsById[key] = { ...food, food_item_id: key };
+    // Store the RAW candidate (per100g nested) — it computes macros now AND caches to food_items at
+    // save via ensureFoodItem (which reads source/source_ref/per100g). No food_item_id is set, so a
+    // not-yet-cached candidate is cached on the way out rather than trusted as already-stored.
+    const key = c.food_item_id || c.id || `sel:${c.source || "x"}:${c.source_ref || c.name}`;
+    itemsById[key] = { ...c };
     onPatch({ food_item_id: key, no_macros: false, parsedName: ing.parsedName || c.name });
   };
 

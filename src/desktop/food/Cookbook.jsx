@@ -39,7 +39,7 @@ export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onCons
   const onDelete = async (id) => { const res = await rw.remove(id); if (res.ok) { await load(); setView({ kind: "grid" }); } };
 
   if (view.kind === "import") return <ImportScreen onImported={(draft, itemsById) => setView({ kind: "review", draft, itemsById })} onCancel={() => setView({ kind: "grid" })} />;
-  if (view.kind === "review") return <ImportReview draft={view.draft} itemsById={view.itemsById} onBack={backToGrid} />;
+  if (view.kind === "review") return <ImportReview draft={view.draft} itemsById={view.itemsById} onBack={backToGrid} onSaved={async (id) => { await load(); setView({ kind: "recipe", id }); }} />;
   if (view.kind === "editor") return (
     <>
       <RecipeEditor recipeId={view.id ?? null} initialDraft={view.draft} initialItemsById={view.itemsById} saving={rw.busy} onSave={onSave} onCancel={() => setView(view.id ? { kind: "recipe", id: view.id } : { kind: "grid" })} onDelete={() => onDelete(view.id)} />
