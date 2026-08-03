@@ -1,131 +1,111 @@
-/* LifeOS — Food → Cook Plan (Piece 3a, dormant). Broadsheet calm: paper/ink, Fraunces title,
-   Inter body/UI with tabular figures, hairline rules only — no boxes, cards, shadows, rounded
-   corners or fills. The ONE sanctioned exception (Amendment A14) is station COLOUR: the four
-   station hues appear as small dots, coloured labels, and the to-scale band blocks. Terracotta
-   (the live/now accent) does NOT appear here — nothing is live yet. No auto-scale/scroll (that
-   is 3d); a long recipe may overflow, which is expected at this stage. */
+/* LifeOS — Food → Cook Plan, mock "Q" (3d). Broadsheet: paper/ink, Fraunces for headlines + times
+   + hero numerals, Inter for body/UI (tabular figures). Hairlines only — the ONLY fills are the
+   sanctioned (A14) station blocks and the macro bar. Terracotta (--accent) is RARE: running
+   countdowns, the now-line, the serve readout. Overrun is brick #A85C44; "sets the clock" is wine
+   #874E58. The page is a fixed-height flex column; ONLY the board scrolls. */
 
-.cp {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1.5rem 3rem;
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
+.cpq { height: 100%; display: flex; flex-direction: column; min-height: 0; color: var(--ink); font-family: var(--font-sans); padding: 0 1.25rem; }
 
 /* ── Masthead ─────────────────────────────────────────────────────────────── */
-.cp-mast {
-  display: flex;
-  align-items: flex-start;
-  gap: 1.5rem;
-  padding: 1rem 0 0.9rem;
-  border-bottom: 1px solid var(--rule);
-}
-.cp-back {
-  background: none; border: none; padding: 0.15rem 0 0;
-  font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-muted); cursor: pointer;
-  white-space: nowrap;
-}
-.cp-back:hover { color: var(--ink); }
-.cp-mast-main { flex: 1; min-width: 0; }
-.cp-title {
-  font-family: var(--font-serif); font-weight: 500;
-  font-size: 1.9rem; line-height: 1.1; margin: 0; color: var(--ink);
-}
-.cp-mast-meta { margin-top: 0.3rem; display: flex; gap: 0.9rem; align-items: baseline; }
-.cp-cuisine { font-size: 0.82rem; color: var(--ink-muted); }
-.cp-total { font-size: 0.82rem; color: var(--ink-muted); }
+.cpq-mast { flex: none; padding-top: 0.75rem; border-bottom: 1px solid var(--rule); }
+.cpq-mast-top { display: flex; align-items: baseline; gap: 1rem; }
+.cpq-back { background: none; border: none; padding: 0; font-size: 0.82rem; color: var(--ink-muted); cursor: pointer; white-space: nowrap; }
+.cpq-back:hover { color: var(--ink); }
+.cpq-title { flex: 1; margin: 0; font-family: var(--font-serif); font-weight: 500; font-size: 1.5rem; line-height: 1.1; }
+.cpq-cuisine { color: var(--ink-muted); font-size: 1rem; }
+.cpq-ings-btn { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.78rem; padding: 0.2rem 0.6rem; cursor: pointer; }
+.cpq-ings-btn:hover { border-color: var(--ink); }
+.cpq-metrics { display: flex; gap: 1.5rem; padding: 0.6rem 0; }
+.cpq-metric { display: flex; flex-direction: column; padding-right: 1.5rem; border-right: 1px solid var(--rule); }
+.cpq-metric:last-child { border-right: none; padding-right: 0; }
+.cpq-metric-val { font-family: var(--font-serif); font-size: 1.35rem; line-height: 1; }
+.cpq-metric-lbl { font-size: 0.62rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-muted); margin-top: 0.15rem; }
+.cpq-serve-in { font-family: var(--font-serif); font-size: 1.25rem; border: none; border-bottom: 1px solid var(--rule); background: none; color: var(--ink); padding: 0; width: 5.2rem; }
+.cpq-serve-drift { font-size: 0.72rem; color: var(--accent); margin-top: 0.15rem; }
+.cpq-serve-drift--early { color: var(--ink-muted); }
+.cpq-serv-row { display: flex; align-items: center; gap: 0.4rem; }
+.cpq-serv-btn { background: none; border: 1px solid var(--rule); color: var(--ink); width: 1.4rem; height: 1.4rem; line-height: 1; cursor: pointer; }
+.cpq-serv-btn:hover { border-color: var(--ink); }
+.cpq-serv-val { font-family: var(--font-serif); font-size: 1.35rem; min-width: 1.1rem; text-align: center; }
+.cpq-ings-panel { flex: none; padding: 0.5rem 0; border-bottom: 1px solid var(--rule); }
 
-/* Servings stepper */
-.cp-serv { display: flex; align-items: center; gap: 0.5rem; padding-top: 0.2rem; }
-.cp-serv-btn {
-  background: none; border: 1px solid var(--rule); color: var(--ink);
-  width: 1.6rem; height: 1.6rem; line-height: 1; font-size: 1rem; cursor: pointer;
-}
-.cp-serv-btn:hover { border-color: var(--ink); }
-.cp-serv-val { font-size: 1rem; min-width: 1.2rem; text-align: center; }
-.cp-serv-label { font-size: 0.78rem; color: var(--ink-muted); white-space: nowrap; }
+/* ── Band (packed rows, progress fill, float tail, now-line) ────────────────── */
+.cpq-band { flex: none; position: relative; --blk: 1.15rem; height: calc(var(--rows, 1) * (var(--blk) + 3px)); margin: 0.6rem 0; }
+.cpq-block { position: absolute; height: var(--blk); background: var(--blk-color); opacity: 0.5; display: flex; align-items: center; overflow: hidden; }
+.cpq-block.is-critical { opacity: 0.92; }
+.cpq-block-fill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(28, 25, 22, 0.28); }
+.cpq-block-num { position: relative; z-index: 1; color: #F6F5F1; font-size: 0.6rem; padding: 0 0.2rem; }
+.cpq-block-tail { position: absolute; left: 100%; top: 50%; border-top: 1px dotted var(--blk-color); }
+.cpq-nowline { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--accent); }
 
-/* ── Band (whole cook to scale, one row per station) ──────────────────────── */
-.cp-band { margin: 1rem 0 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; }
-.cp-band-row { display: flex; align-items: center; gap: 0.75rem; }
-.cp-band-label {
-  width: 3.2rem; flex: none; text-align: right;
-  font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted);
-}
-.cp-band-track { position: relative; flex: 1; height: 1.25rem; border-bottom: 1px solid var(--rule-faint); }
-.cp-band-block {
-  position: absolute; top: 0; height: 0.85rem;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0.85; min-width: 0.9rem;
-}
-.cp-band-num { font-size: 0.6rem; color: var(--paper); padding: 0 0.15rem; }
+/* ── On now (cards / idle prompt) ──────────────────────────────────────────── */
+.cpq-onnow { flex: none; display: flex; gap: 0.75rem; padding: 0.5rem 0; overflow-x: auto; min-height: 3.2rem; align-items: stretch; }
+.cpq-onnow--idle { align-items: baseline; gap: 0.5rem; color: var(--ink-muted); font-size: 0.9rem; }
+.cpq-idle-lead { color: var(--ink); }
+.cpq-ready-num { background: none; border: none; color: var(--accent); font-family: var(--font-serif); font-size: 1rem; cursor: pointer; padding: 0; }
+.cpq-card { border-left: 3px solid var(--blk-color); padding: 0.3rem 0.75rem; display: flex; flex-direction: column; gap: 0.2rem; min-width: 9rem; }
+.cpq-card-head { display: flex; gap: 0.5rem; align-items: baseline; font-size: 0.7rem; color: var(--ink-muted); }
+.cpq-card-num { font-family: var(--font-serif); color: var(--ink); }
+.cpq-card-clock { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1; color: var(--accent); }
+.cpq-card-clock.is-over { color: #A85C44; }
+.cpq-card-chips, .cpq-row-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.cpq-chip { background: none; border: 1px solid var(--rule); color: var(--ink-muted); font-size: 0.68rem; padding: 0.02rem 0.35rem; cursor: pointer; }
+.cpq-chip.is-used { text-decoration: line-through; opacity: 0.5; }
+.cpq-card-adj { display: flex; gap: 0.4rem; margin-top: 0.1rem; }
+.cpq-adj { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.7rem; padding: 0.05rem 0.4rem; cursor: pointer; }
 
-/* ── The plan (every step, full text) ─────────────────────────────────────── */
-.cp-plan { list-style: none; margin: 1rem 0 0; padding: 0; }
-.cp-step { padding: 0.85rem 0; border-bottom: 1px solid var(--rule); }
-.cp-step-head { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
-.cp-step-num { font-family: var(--font-serif); font-size: 1.05rem; color: var(--ink); min-width: 1.3rem; }
-.cp-step-station { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; }
-.cp-station-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; display: inline-block; }
-.cp-step-tag {
-  font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted);
-}
-.cp-step-prep {
-  font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--ink-muted); border: 1px solid var(--rule); padding: 0.02rem 0.3rem;
-}
-.cp-step-dur { margin-left: auto; font-size: 0.82rem; color: var(--ink-muted); }
-.cp-step-text { margin: 0.4rem 0 0; font-size: 0.95rem; line-height: 1.5; color: var(--ink); }
+/* ── Board (the only scrolling zone) ───────────────────────────────────────── */
+.cpq-board { flex: 1; min-height: 0; overflow-y: auto; border-top: 1px solid var(--rule); scrollbar-width: thin; }
+.cpq-board-inner { font-size: 1em; }
+.cpq-board-head, .cpq-row { display: grid; grid-template-columns: 2.2em 1fr 7em 7em; gap: 0.8em; align-items: start; }
+.cpq-board-head { position: sticky; top: 0; background: var(--paper); z-index: 2; padding: 0.4em 0; border-bottom: 1px solid var(--rule); }
+.cpq-col { font-size: 0.62em; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-muted); }
+.cpq-board-list { list-style: none; margin: 0; padding: 0; }
+.cpq-row { padding: 0.6em 0; border-bottom: 1px solid var(--rule); }
+.cpq-row.is-active { background: linear-gradient(var(--rule-faint), var(--rule-faint)); }
+.cpq-row.is-done .cpq-row-text { opacity: 0.5; }
+.cpq-row-block { height: 1.8em; display: flex; align-items: center; justify-content: center; color: #F6F5F1; font-family: var(--font-serif); font-size: 0.95em; }
+.cpq-row-text { margin: 0; font-size: 0.95em; line-height: 1.45; }
+.cpq-row-chips { margin-top: 0.3em; }
+.cpq-row-sub { display: inline-block; margin-top: 0.3em; font-size: 0.78em; color: var(--ink-muted); font-style: italic; }
+.cpq-sub-clock { color: #874E58; font-style: normal; }
+.cpq-row-startby { text-align: right; }
+.cpq-startby-time { display: block; font-family: var(--font-serif); font-size: 1.15em; }
+.cpq-startby-lbl { font-size: 0.58em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+.cpq-row-takes { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.25em; }
+.cpq-takes-dur { font-size: 0.9em; }
+.cpq-takes-ctl { display: inline-flex; gap: 0.25em; opacity: 0; }
+.cpq-row:hover .cpq-takes-ctl { opacity: 1; }
+.cpq-nudge { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.75em; width: 1.4em; cursor: pointer; }
+.cpq-go { background: none; border: 1px solid var(--ink); color: var(--ink); font-size: 0.72em; padding: 0.1em 0.5em; cursor: pointer; }
+.cpq-reopen { border-color: var(--rule); color: var(--ink-muted); }
 
-.cp-step-ings { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
-.cp-step-ing { font-size: 0.8rem; }
-.cp-step-ing-btn { display: flex; gap: 0.5rem; width: 100%; background: none; border: none; padding: 0.05rem 0; text-align: left; cursor: pointer; color: var(--ink-muted); font-family: var(--font-sans); font-size: 0.8rem; }
-.cp-step-ing-amt { min-width: 3.5rem; text-align: right; color: var(--ink); flex: none; }
-.cp-step-ing-text { flex: 1; }
-.cp-step-ing.is-used .cp-step-ing-btn { text-decoration: line-through; opacity: 0.55; }
+/* ── Foot (ledger · legend · sizing · finish) ─────────────────────────────── */
+.cpq-foot { flex: none; display: flex; align-items: center; gap: 1.5rem; padding: 0.55rem 0; border-top: 1px solid var(--rule); }
+.cpq-ledger { display: flex; align-items: center; gap: 0.9rem; }
+.cpq-ledger-kcal { display: flex; flex-direction: column; }
+.cpq-kcal-num { font-family: var(--font-serif); font-size: 1.4rem; line-height: 1; }
+.cpq-kcal-lbl { font-size: 0.6rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-muted); }
+.cpq-macro { display: flex; flex-direction: column; gap: 0.2rem; min-width: 11rem; }
+.cpq-macro-bar { display: flex; height: 0.5rem; overflow: hidden; }
+.cpq-macro-nums { display: flex; gap: 0.7rem; font-size: 0.72rem; color: var(--ink-muted); }
+.cpq-macro-num em { font-style: normal; }
+.cpq-macro-dot, .cpq-legend-dot { display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.25rem; }
+.cpq-legend { display: flex; gap: 0.9rem; font-size: 0.72rem; color: var(--ink-muted); }
+.cpq-legend-item { display: inline-flex; align-items: center; }
+.cpq-foot-ctl { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
+.cpq-size { display: flex; align-items: center; gap: 0.35rem; }
+.cpq-size-btn { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.72rem; padding: 0.1rem 0.4rem; cursor: pointer; }
+.cpq-size-btn.is-auto { border-color: var(--ink); }
+.cpq-size-pct { font-size: 0.72rem; color: var(--ink-muted); min-width: 2.5rem; }
+.cpq-finish { background: none; border: 1px solid var(--accent); color: var(--accent); font-size: 0.8rem; padding: 0.25rem 0.8rem; cursor: pointer; }
 
-/* ── 3b LIVE: per-step timer + state (terracotta/brick are sanctioned live/now marks) ────────── */
-.cp-cooking { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
-.cp-step.is-active { border-left: 2px solid var(--accent); padding-left: 0.7rem; margin-left: -0.72rem; }
-.cp-step.is-done .cp-step-num, .cp-step.is-done .cp-step-text { opacity: 0.5; }
-
-.cp-step-timer { display: flex; align-items: center; gap: 0.7rem; margin-top: 0.45rem; }
-.cp-timer-start, .cp-timer-btn {
-  background: none; border: 1px solid var(--rule); color: var(--ink);
-  font-family: var(--font-sans); font-size: 0.78rem; padding: 0.2rem 0.6rem; cursor: pointer;
-}
-.cp-timer-start:hover, .cp-timer-btn:hover { border-color: var(--ink); }
-.cp-timer-live { font-size: 1.1rem; color: var(--ink); min-width: 4.5rem; }
-.cp-timer-live.is-paused { color: var(--ink-muted); }
-.cp-timer-live.is-over { color: #A85C44; } /* brick — overrun, per the house law (not the accent) */
-
-/* ── 3c-i: serve anchor · deadlines · float (terracotta rare — serve readout + urgency only) ──── */
-.cp-serve { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem; }
-.cp-serve-label { font-size: 0.72rem; color: var(--ink-muted); }
-.cp-serve-input { font-family: var(--font-sans); font-size: 0.8rem; border: 1px solid var(--rule); background: none; color: var(--ink); padding: 0.1rem 0.35rem; }
-.cp-serve-read { font-size: 0.8rem; color: var(--accent); }         /* terracotta — the serve readout */
-.cp-serve-read--early { color: var(--ink-muted); }
-.cp-total--work { color: var(--ink-muted); }
-
-.cp-step-sched { display: flex; gap: 0.85rem; align-items: baseline; margin-top: 0.25rem; font-size: 0.72rem; }
-.cp-clock-mark { color: #874E58; letter-spacing: 0.04em; }          /* wine — sets the clock (critical path) */
-.cp-slack { color: var(--ink-muted); }
-.cp-deadline { color: var(--ink-muted); }
-.cp-deadline--urgent { color: var(--accent); }                      /* terracotta — within 10 min */
-.cp-deadline--overdue { color: #A85C44; }                           /* brick — past the deadline */
-.cp-blocked { margin: 0.3rem 0 0; font-size: 0.76rem; color: var(--ink-muted); font-style: italic; }
-
-/* ── Ingredients panel (collapsible) ──────────────────────────────────────── */
-.cp-ings { margin-top: 1.2rem; }
-.cp-ings-toggle {
-  display: flex; align-items: center; gap: 0.45rem; width: 100%;
-  background: none; border: none; border-top: 1px solid var(--rule); padding: 0.7rem 0 0;
-  font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink); cursor: pointer; text-align: left;
-}
+/* ── Ingredients panel (preserved from 3a — still used) ────────────────────── */
+.cp-ings { margin: 0; }
+.cp-ings-toggle { display: flex; align-items: center; gap: 0.45rem; width: 100%; background: none; border: none; padding: 0.2rem 0; font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink); cursor: pointer; text-align: left; }
 .cp-ings-caret { color: var(--ink-muted); font-size: 0.75rem; }
 .cp-ings-count { margin-left: auto; color: var(--ink-muted); font-size: 0.8rem; }
-.cp-ings-list { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.2rem; }
-.cp-ings-item { display: flex; gap: 0.6rem; font-size: 0.85rem; }
+.cp-ings-list { list-style: none; margin: 0.4rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.2rem 1.5rem; }
+.cp-ings-item { display: flex; gap: 0.6rem; font-size: 0.85rem; width: 15rem; }
 .cp-ings-amt { min-width: 4rem; text-align: right; color: var(--ink); flex: none; }
 .cp-ings-text { flex: 1; color: var(--ink-muted); }

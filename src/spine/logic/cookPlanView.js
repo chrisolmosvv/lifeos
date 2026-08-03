@@ -16,6 +16,21 @@ export const STATION_ORDER = ["bench", "hob", "oven", "rest"];
 
 export const TAG_LABEL = { hands_on: "Hands-on", hands_free: "Hands-free", active_heat: "Active heat" };
 
+// Sanctioned (A14) macro-bar colours for the live ledger — protein / carbs / fat.
+export const MACRO = {
+  protein: { label: "protein", color: "#41705A" },
+  carbs:   { label: "carbs",   color: "#A87B3A" },
+  fat:     { label: "fat",     color: "#874E58" },
+};
+
+// The small-caps label under a step's START-BY clock time.
+export function startByLabel(deadlineMs, nowMs) {
+  const mins = Math.round((deadlineMs - nowMs) / 60000);
+  if (mins < 0) return "should have started";
+  if (mins <= 30) return `in ${mins} min`;
+  return "latest start";
+}
+
 // seconds → a plain planned time ("12 min", "1 h 05"). null when there's no duration.
 export function fmtDur(secs) {
   const s = Number(secs);
