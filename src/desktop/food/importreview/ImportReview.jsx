@@ -29,13 +29,17 @@ import FinderPopover from "./FinderPopover";
 import DeleteConfirm from "./DeleteConfirm";
 import "./importReview.css";
 
-export default function ImportReview({ draft, itemsById, onBack, onSaved, onDeleted, editId = null, reviewed = false }) {
-  // scaffold = the import-only chrome (source-line diff, impact flags, prep-step approval). ON for a
-  // fresh import and for an unreviewed draft; OFF when editing an already-reviewed recipe.
-  const scaffold = !reviewed;
+export default function ImportReview({ draft, itemsById, onBack, onSaved, onDeleted, editId = null, reviewed = false, blank = false }) {
+  // Three modes: IMPORT (editId null, from extraction) · EDIT (editId set, a saved recipe) · BLANK
+  // (editId null, blank=true, "+ NEW" — written from scratch). scaffold = the import-only chrome
+  // (source-line diff, impact flags, prep-step approval): ON only for a fresh import / unreviewed
+  // draft; OFF when editing a reviewed recipe AND in blank mode (no source, nothing guessed).
+  // At SAVE: editId decides create-vs-update (blank has no editId → createRecipe, never a duplicate).
+  const scaffold = !reviewed && !blank;
   const [title, setTitle] = useState(draft.title || "");
   const [cuisine, setCuisine] = useState(draft.cuisine || "");
-  const srcServings = draft.servings || 1;
+  // srcServings ("recipe makes") is fixed from the source for import/edit; editable in blank mode.
+  const [srcServings, setSrcServings] = useState(draft.servings || 1);
   const [serv, setServ] = useState(draft.default_servings ?? draft.servings ?? 1);
   const [ings, setIngs] = useState(draft.ingredients || []);
   const [steps, setSteps] = useState(() => (draft.steps || []).map((s) => ({ ...s, approved: scaffold ? !s.is_prep : true })));
@@ -61,13 +65,32 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, onDele
   const totals = methodTotals(steps, draft.prep_minutes, draft.cook_minutes);
   const unapproved = scaffold ? steps.filter((s) => s.is_prep && !s.approved).length : 0;
   const { schedule, finish } = cookSchedule(steps.map((s) => ({ durationSeconds: s.timer_seconds || 0, deps: s.depends_on, hold: s.hold_tolerance, tag: s.tag })));
-  const gate = importGate(ings, steps, unresolvedFlags);
+  // The save gate = the import gate (every ingredient resolved · every step timed · plan valid) PLUS
+  // the essentials a hand-written recipe can lack: a title, at least one ingredient, at least one
+  // step. Import/edit always have these; blank mode needs them said, not failed silently.
+  const baseGate = importGate(ings, steps, unresolvedFlags);
+  const hasTitle = title.trim() !== "", hasIngredients = ings.length > 0, hasSteps = steps.length > 0;
+  const gate = { ...baseGate, hasTitle, hasIngredients, hasSteps, canSave: baseGate.canSave && hasTitle && hasIngredients && hasSteps };
 
   const patch = (p) => setIngs((xs) => xs.map((x, j) => (j === finder.i ? { ...x, ...p } : x)));
-  const closeFinder = () => setFinder(null);
-  const resolveOne = () => { setResolved((s) => new Set(s).add(finder.i)); closeFinder(); };
-  const noMacros = () => { patch({ no_macros: true }); setResolved((s) => new Set(s).add(finder.i)); closeFinder(); };
-  const removeOne = () => { const i = finder.i; setIngs((xs) => xs.filter((_, j) => j !== i)); closeFinder(); };
+  // Closing the Finder on a just-ADDED row that's still empty (no food picked, not marked no-macros)
+  // discards it — an add you backed out of shouldn't leave an orphan unresolved row behind.
+  const closeFinder = () => {
+    setFinder((f) => {
+      if (f?.added) { const row = ings[f.i]; if (row && !row.food_item_id && !row.no_macros) setIngs((xs) => xs.filter((_, j) => j !== f.i)); }
+      return null;
+    });
+  };
+  const resolveOne = () => { setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
+  const noMacros = () => { patch({ no_macros: true }); setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
+  const removeOne = () => { const i = finder.i; setIngs((xs) => xs.filter((_, j) => j !== i)); setFinder(null); };
+  // Add an ingredient from nothing (all modes): append a blank row and open the Finder on it. No
+  // raw_text — nothing wrote it, so the diff's left side stays honestly empty.
+  const addIngredient = (e) => {
+    const i = ings.length;
+    setIngs((xs) => [...xs, { food_item_id: null, raw_text: null, parsedName: "", amount: null, unit: null, no_macros: false, grams: null, step_position: null }]);
+    setFinder({ i, anchor: e?.currentTarget?.getBoundingClientRect() || null, added: true });
+  };
 
   const upd = (i, p) => setSteps((xs) => xs.map((s, j) => (j === i ? { ...s, ...p } : s)));
   const H = {
@@ -129,11 +152,12 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, onDele
   return (
     <div className="iv" ref={setRoot} style={{ height: pageH ? `${pageH}px` : "100%" }}>
       <ImportMasthead sourceUrl={draft.source_url} title={title} onTitle={setTitle} cuisine={cuisine} onCuisine={setCuisine}
-        srcServings={srcServings} serv={serv} onDec={() => setServ((s) => Math.max(1, s - 1))} onInc={() => setServ((s) => s + 1)} onBack={onBack} edit={!scaffold} />
+        srcServings={srcServings} serv={serv} onDec={() => setServ((s) => Math.max(1, s - 1))} onInc={() => setServ((s) => s + 1)} onBack={onBack} edit={!scaffold}
+        onSrcDec={blank ? () => setSrcServings((s) => Math.max(1, s - 1)) : null} onSrcInc={blank ? () => setSrcServings((s) => s + 1) : null} />
       <ImportRail pass={pass} subs={subs} onGo={setPass} />
 
       {pass === 1 && <IngredientsPass model={model} resolved={resolved} edit={!scaffold} scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale}
-        onRow={(i, e) => setFinder({ i, anchor: e.currentTarget.getBoundingClientRect() })} />}
+        onRow={(i, e) => setFinder({ i, anchor: e.currentTarget.getBoundingClientRect() })} onAdd={addIngredient} />}
       {pass === 2 && <MethodPass steps={steps} showOrig={showOrig} totals={totals} edit={!scaffold} scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale} h={H} />}
       {pass === 3 && <PlanPass steps={steps} schedule={schedule} finish={finish} gate={gate} ingCount={ings.length} onReparent={reparent} onSetDeps={setDeps}
         scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale} />}

@@ -47,6 +47,11 @@ export default function PlanPass({ steps, schedule, finish, gate, ingCount, onRe
             );
           })}
           <div className="iv-checklist">
+            {/* Piece 8: the essentials a hand-written (blank) recipe can lack — shown only when missing,
+                so import/edit (which always have them) never see these rows. */}
+            {gate.hasTitle === false && <Check ok={false} title="Needs a title" detail="name the recipe up top" />}
+            {gate.hasIngredients === false && <Check ok={false} title="Needs an ingredient" detail="add at least one" />}
+            {gate.hasSteps === false && <Check ok={false} title="Needs a method" detail="add at least one step" />}
             <Check ok={gate.ingredientsResolved} title="Every ingredient resolved" detail={gate.ingredientsResolved ? `all ${ingCount} have macros` : `${gate.ingUnresolved} still to resolve`} />
             <Check ok={gate.stepsTimed} title="Every step timed" detail={gate.stepsTimed ? `all ${steps.length}` : `${gate.stepsUntimed} without a duration`} />
             <Check ok={gate.planValid} title="Plan is valid" detail={gate.planValid ? "no impossible order" : "a circular dependency — remove one link"} />

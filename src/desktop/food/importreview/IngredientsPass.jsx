@@ -14,7 +14,8 @@ function savedLabel(row) {
 
 // `edit` (Piece 6): editing a saved recipe — there is no source to diff against, so show the stored
 // values directly (raw_text stays as quiet provenance) with no arrow and no import flags.
-export default function IngredientsPass({ model, resolved, scrollRef, contentRef, onScroll, scale, onRow, edit = false }) {
+// `onAdd` (Piece 8): add an ingredient from nothing — opens the Finder on a fresh blank row.
+export default function IngredientsPass({ model, resolved, scrollRef, contentRef, onScroll, scale, onRow, onAdd, edit = false }) {
   const ps = model.perServing;
   return (
     <div className="iv-pass">
@@ -54,6 +55,7 @@ export default function IngredientsPass({ model, resolved, scrollRef, contentRef
             <span className="n">—</span><span className="kc">{r(ps.kcal)}</span>
             <span className="n iv-mp">{r(ps.protein)}</span><span className="n iv-mc">{r(ps.carbs)}</span><span className="n iv-mf">{r(ps.fat)}</span>
           </div>
+          {onAdd && <button type="button" className="iv-addstep" onClick={onAdd}>+ add an ingredient</button>}
         </div>
       </div>
     </div>

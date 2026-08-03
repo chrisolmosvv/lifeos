@@ -2,7 +2,7 @@
 // the two servings numbers: "recipe makes" (source's servings, read-only) and "I usually cook"
 // (default_servings, adjustable). No prose — the fields speak.
 
-export default function ImportMasthead({ sourceUrl, title, onTitle, cuisine, onCuisine, srcServings, serv, onDec, onInc, onBack, edit = false }) {
+export default function ImportMasthead({ sourceUrl, title, onTitle, cuisine, onCuisine, srcServings, serv, onDec, onInc, onBack, edit = false, onSrcDec, onSrcInc }) {
   return (
     <div className="iv-hd">
       <div>
@@ -12,7 +12,12 @@ export default function ImportMasthead({ sourceUrl, title, onTitle, cuisine, onC
       </div>
       <div className="iv-hr">
         <div className="iv-mx"><input className="iv-cui" value={cuisine || ""} onChange={(e) => onCuisine(e.target.value)} placeholder="—" /><div className="k">cuisine</div></div>
-        <div className="iv-mx"><div className="v">{srcServings ?? "—"}</div><div className="k">recipe makes</div></div>
+        <div className="iv-mx">
+          {onSrcInc ? (
+            <div className="iv-stp"><button type="button" onClick={onSrcDec} aria-label="Makes fewer">−</button><b>{srcServings}</b><button type="button" onClick={onSrcInc} aria-label="Makes more">+</button></div>
+          ) : (<div className="v">{srcServings ?? "—"}</div>)}
+          <div className="k">recipe makes</div>
+        </div>
         <div className="iv-mx">
           <div className="iv-stp"><button type="button" onClick={onDec} aria-label="Fewer">−</button><b>{serv}</b><button type="button" onClick={onInc} aria-label="More">+</button></div>
           <div className="k">I usually cook</div>

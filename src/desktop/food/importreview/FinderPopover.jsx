@@ -54,7 +54,7 @@ export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResol
     <>
       <div className="iv-scrim" onClick={onClose} />
       <div className="iv-pop" style={style}>
-        <div className="iv-po">{cook ? ing.raw_text : `the source said: “${ing.raw_text}”`}</div>
+        <div className="iv-po">{cook ? ing.raw_text : ing.raw_text ? `the source said: “${ing.raw_text}”` : "a new ingredient"}</div>
         {!cook && <><label>save it as</label>
         <input className="iv-nameIn" value={ing.parsedName || ""} onChange={(e) => onPatch({ parsedName: e.target.value })} /></>}
         <label>amount</label>

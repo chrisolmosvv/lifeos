@@ -14,6 +14,7 @@ import "./register.css";
 
 // Cookbook — the library orchestrator. Hosts the register (library view), recipe page,
 // editor, and import views. The register handles its own sorting/filtering internally.
+const BLANK_DRAFT = { title: "", cuisine: "", servings: 1, ingredients: [], steps: [] }; // Piece 8: "+ NEW" starts here
 export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onConsumeOpen, foodTabs, foodTab, onFoodTab }) {
   const [data, setData] = useState({ recipes: [], ingredientsByRecipe: {}, itemsById: {}, stepCountByRecipe: {}, cookEntries: [] });
   const [view, setView] = useState({ kind: "grid" });
@@ -40,6 +41,8 @@ export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onCons
 
   if (view.kind === "import") return <ImportScreen onImported={(draft, itemsById) => setView({ kind: "review", draft, itemsById })} onCancel={() => setView({ kind: "grid" })} />;
   if (view.kind === "review") return <ImportReview draft={view.draft} itemsById={view.itemsById} onBack={backToGrid} onSaved={async (id) => { await load(); setView({ kind: "recipe", id }); }} />;
+  // Piece 8: "+ NEW" opens the review on a blank recipe (blank mode: no source scaffolding; saves via createRecipe).
+  if (view.kind === "new") return <ImportReview draft={BLANK_DRAFT} itemsById={{}} blank onBack={backToGrid} onSaved={async (id) => { await load(); setView({ kind: "recipe", id }); }} />;
   // Piece 6: Edit re-opens the three-pass review for a saved recipe (draft → full review; reviewed → edit mode).
   if (view.kind === "edit") return <EditReview recipeId={view.id} onBack={() => setView({ kind: "recipe", id: view.id })} onSaved={async (id) => { await load(); setView({ kind: "recipe", id }); }} onDeleted={async () => { await load(); setView({ kind: "grid" }); }} />;
   if (view.kind === "editor") return (
@@ -68,7 +71,7 @@ export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onCons
       onOpenRecipe={openRecipe}
       onToggleFav={toggleFav}
       onImport={() => setView({ kind: "import" })}
-      onNew={() => setView({ kind: "editor", id: null })}
+      onNew={() => setView({ kind: "new" })}
       foodTabs={foodTabs}
       foodTab={foodTab}
       onFoodTab={onFoodTab}
