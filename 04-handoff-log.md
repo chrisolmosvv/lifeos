@@ -33,6 +33,41 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — IMPORT TIMEOUT + PROGRESS. Src-only, 1 commit (no deploy).
+
+WHAT CHANGED: URL import was failing at ~25s with "Couldn't reach the import service". Cause:
+2a's two-pass rework (fetch + TWO Gemini calls, each with retries) occasionally exceeded the
+UNCHANGED 25s client timeout. 2b was exonerated (its diff left the URL/paste request byte-for-byte
+identical). Two fixes:
+- **CLIENT_TIMEOUT_MS 25s → 90s** (importClient.js) — covers the retry tail with headroom.
+- **Staged sign-of-life** (ImportScreen.jsx) — labels advance on a rough time schedule per input
+  kind ("reading the page/recipe" → "working out the timings" → "matching the ingredients"), so a
+  long import reads as progress not hang. Time-based only; NOT a stream (a later piece).
+
+FILES: src/spine/data/importClient.js, src/desktop/food/ImportScreen.jsx. Src-only — no deploy.
+
+MEASURED LATENCY (live function, curl): paste 4.3s · BBC Good Food URL 7.4s · RecipeTineats URL
+6.4s. Healthy path is 4–8s; the owner's 25s was a retry-tail spike. NB both test URLs embed
+schema.org JSON-LD (extract.ts's fast path); a pure-prose blog page (no JSON-LD) would feed Pass 1
+more text and run a little slower, but still bounded. A dedicated speed piece looks LOW priority —
+median is fine; only the transient-503 retry tail is slow, which 90s + progress covers. (Bonus:
+these live calls also confirmed 2c is DEPLOYED — cuisine came back set: "Russian" / "Italian".)
+
+★ LESSON (process): the 2b regression check was run via CURL, which has NO client timeout, so it
+could not have caught this. VERIFY THROUGH THE PATH THE OWNER ACTUALLY TAKES (the browser, with its
+25s race), not the convenient one. A green curl is not a green app.
+
+VERIFY (owner, Mac): import the stroganoff BY URL — it completes, shows changing progress labels
+throughout, and the row check passes (each cooking step depends on the previous cooking step AND
+its prep; the 11-min fry step is NOT hands_free; cuisine set).
+
+KNOWN GAPS: time-based staging can mislabel on a slow AI call (says "matching" while still in Pass
+2) — accepted minimum-viable; a real staged/streamed response is scheduled separately.
+
+NEXT: **3b — the replay rework.**
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 2c — EXTRACTION FIXES. Edge-only, 1 commit. ⚠️ DEPLOY + VERIFY PENDING.
 
 WHAT CHANGED (the first real import, Chicken stroganoff, came back structurally wrong three ways):
