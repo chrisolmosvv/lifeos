@@ -33,6 +33,51 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 4a — IMPORT REVIEW: SHELL + INGREDIENTS PASS (mock U). Src-only, 1 commit.
+
+WHAT CHANGED: a new import review replaces RecipeEditor as the import destination (RecipeEditor
+stays routed for EDITS). Built to mock "U":
+- **Shell**: three-gate rail (Ingredients · Method · Plan — gates switch; 2 & 3 show a stub for
+  4b/4c), editable masthead (title · cuisine · "recipe makes" = source servings · "I usually cook"
+  = default_servings, defaulting to source & adjustable), foot with A−/A+/Fit + advance.
+- **Pass ① in full**: the ingredient DIFF — source line → what we'll store (BUY-FORM) → matched
+  food → grams (eat-form) → kcal/P/C/F — with a per-serving bar and a sticky per-serving totals row.
+- **Flag by impact**: a guessed weight (whole-item count, vague measure, or unresolved) is flagged
+  ONLY where being wrong moves the total (kcal share ≥5% or any macro P/C/F ≥10%). Margin bar, never
+  through the text; a why line; cleared to green on resolve. **Approve all** clears every flag.
+- **Finder** = the single resolution surface (source line · editable name · amount + live unit
+  switch via resolvePortion · macros · the EXISTING searchFoods · Confirm/No macros/Remove).
+- Fit-to-hole + scroll reuse the cook page's useFitToHole (incl. scroll-keep). Nothing persisted.
+
+FILES (src): NEW src/spine/logic/importReviewLogic.js, src/desktop/food/importreview/{ImportReview,
+ImportMasthead,ImportRail,IngredientsPass,FinderPopover}.jsx + importReview.css; EDIT Cookbook.jsx
+(route). No deploy. Build green; every file <250.
+
+HOW VERIFIED — Node 9/9: flag-by-impact on the real 16-ingredient ragù flags EXACTLY 2 (beef shin +
+parmesan), oil/onion/pappardelle correctly clear, scaling halves grams at half servings,
+per-serving is constant. **THRESHOLD: guessed AND (kcal share ≥5% OR any macro share ≥10%).**
+portions.js could NOT resolve: unknown whole items (aubergine — not in ITEM_GRAMS) and vague
+measures ("a good handful") → grams null → those flag as "no weight found — set one".
+
+HOW TO VERIFY (owner, end of Piece 4): import a 16-ingredient recipe → review opens on pass ① →
+every ingredient shows source/stored/match/grams/macros → ~2 flagged not ten → clicking one opens
+the Finder with live search + unit switch → Approve all clears flags → "I usually cook" rescales
+amounts + totals → the flag bar sits in the margin, not over text → A−/A+/Fit resize, only the
+table scrolls.
+
+⚠️ KNOWN GAPS / FLAGS:
+- **Save is 4c** — pass 3's "Save recipe" is a disabled stub; an import can be REVIEWED but not yet
+  saved through the new flow. (RecipeEditor still routed for edits, but not for imports.) So between
+  now and 4c, completing a NEW import isn't possible via this path — flagged.
+- Built ON TOP of the still-UNVERIFIED buy-form model fix (esp. the logger check).
+- Finder "pick a result" sets a client-side match (temp itemsById key); real caching (ensureFoodItem)
+  lands at save (4c).
+- Visual fidelity to mock U built from the file only — needs the owner's eye; can't judge "busy".
+
+NEXT: **4b — the method & timings pass.**
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — BUY-FORM / EAT-FORM MODEL FIX (Option A). Src-only, 1 commit. ⚠️ UNVERIFIED.
 
 WHAT CHANGED: matchOne stopped overwriting `amount` with grams — `amount`/`unit` now hold the
