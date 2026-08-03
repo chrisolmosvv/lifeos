@@ -33,6 +33,46 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 4b — IMPORT REVIEW: METHOD & TIMINGS PASS (mock U). Src-only, 1 commit.
+
+WHAT CHANGED: pass ② built in full — a flat numbered step list (no source grouping) with:
+- **The growing step editor** — full text always visible, the box grows as you type, never clipped
+  (the point of this pass; the owner trims waffle on every import).
+- **Duration** inline (timer_seconds), **tag** visible+editable (load-bearing — decides overlap),
+  **station** editable (colour only), **hold-tolerance** present but QUIET (defaults 'short').
+- **Terse / original toggle** per step — editing the terse text is what saves; original is reference.
+- **Prep steps arrive marked** ("added by the importer — approve"); approval is transient (only
+  is_prep persists).
+- **Add / edit / delete**; delete REPAIRS depends_on (drops refs to the removed step, shifts the rest).
+- **The three totals**: site claim (prep+cook) · our work (Σ steps) · **the real scheduled span**
+  (cookSchedule, one pair of hands) — divergence flags a bad extraction without reading every step.
+
+FILES (src): NEW src/spine/logic/methodReviewLogic.js, src/desktop/food/importreview/{MethodPass,
+StepRow}.jsx; EDIT ImportReview.jsx (pass ② wiring), importReview.css. No deploy. Build green; <250.
+
+HOW VERIFIED — Node: three totals via the REAL scheduler — **ragù 270 / 271 / 259 min** (span < work,
+the pasta overlaps), **ox cheek 270 / 310 / 275 min** (work 40m over the site's claim — a useful
+signal). Delete a mid-chain step → the graph stays valid (refs above shift down, the removed ref is
+dropped, all deps in range).
+
+HOW TO VERIFY (owner, end of Piece 4): import → Method → step boxes grow as you type, never clip ·
+each step shows duration + tag + station, all editable · "show the original wording" toggles ·
+prep steps marked until approved · add/delete a step, the plan (4c) still holds · the three totals
+diverge sensibly · A−/A+/Fit resize, only the list scrolls.
+
+⚠️ KNOWN GAPS / FLAGS:
+- Still no SAVE (4c) — an import can now be reviewed through passes ① and ②, but not saved.
+- Station editor added as two compact selects in the row (the mock's pass ② showed only the tag
+  select + the colour bar; 4b requires station editable, so I added it) — flag if the owner wants
+  it moved to the drag in pass ③ instead.
+- Built on the still-UNVERIFIED buy-form model fix.
+- Visual fidelity / "busy" needs the owner's eye.
+
+NEXT: **4c — the plan pass, the drag, and the SAVE GATE** (completes the flow; makes saving possible
+again).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 4a — IMPORT REVIEW: SHELL + INGREDIENTS PASS (mock U). Src-only, 1 commit.
 
 WHAT CHANGED: a new import review replaces RecipeEditor as the import destination (RecipeEditor
