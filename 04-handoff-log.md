@@ -33,6 +33,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3e — THE END-OF-COOK SAVE REVIEW. Src-only, 1 commit. PIECE 3 COMPLETE.
+
+WHAT CHANGED — a cook can now edit its recipe, gated by an explicit review:
+- **Mid-cook edits are EVENTS now** (db/47 types, survive a reload): estimate −/+ on waiting steps
+  (fixes the 3d session-local flag), −1m/+1m on running timers, ingredient amount edits, and
+  ingredients omitted. cookReplay folds them (estimates/amounts maps, omitted set, timer_adjusted
+  nudges the running duration) — additive; the MobileCook bridge is untouched.
+- **FINISH → the review** (CookReview): every change listed, grouped **Timing** (explicit estimate
+  edits + actual-vs-stored where elapsed differs by >45s) and **Amounts** (edits + omits), each
+  **Keep/Drop, default Keep**, with a count and a "nothing changed" case. An optional "log this
+  cook to today" rides along.
+- **Kept changes persist via the EXISTING updateRecipe** — built from WHOLE loaded objects
+  (cookChanges.applyKept clones every field) so the delete-all-then-reinsert **can't null
+  station/hold_tolerance/is_prep/grams** (the RecipeEditor trap).
+- **BACK = silent ABANDON** — leaving the cook page discards everything, nothing saved. (Reload
+  still RESUMES — a refresh doesn't press Back.)
+- Ingredients panel gains in-cook omit + amount −/+.
+
+FILES (src): NEW src/spine/logic/cookChanges.js, src/desktop/food/cookplan/CookReview.jsx; EDIT
+cookReplay.js, cookEventStore.js, useCookEvents.js, CookPlan.jsx, CookIngredients.jsx, cookPlan.css.
+No deploy. Build green; every file <250.
+
+HOW VERIFIED — Node: changes 10/10 incl. ★ the whole-object trap (station/hold/is_prep/grams/
+food_item_id/step_position preserved through applyKept); replay 3b + mobile bridge unchanged.
+★ THE REAL-ROW CHECK IS OWNER-RUN (writes to the DB): cook a recipe, change a step's timing and an
+ingredient amount, Finish, Keep them, then in the Frankfurt SQL editor:
+  select position, timer_seconds, tag, station, hold_tolerance, is_prep from recipe_steps
+    where recipe_id = (select id from recipes where title ilike '%<recipe>%' order by created_at desc limit 1) order by position;
+  select position, raw_text, amount, unit, grams from recipe_ingredients where recipe_id = (…same…) order by position;
+  → confirm the edited values changed AND station/hold_tolerance/is_prep/grams are NOT null.
+
+⚠️ KNOWN GAPS / FLAGS:
+- **BACK silently abandons the cook** — locked by the Planner, but it's a sharp behaviour (one tap
+  loses an in-progress cook). Flag if the owner wants a guard.
+- The **real-row round-trip is the last unproven link** — code proven, live write not yet run.
+- Amount editing is present but minimal (panel −/+ / omit); no unit change UI.
+- Logging is an opt-in checkbox in the review (reuses logSnapshot).
+
+NEXT: **Piece 4 — the import review screen** (Piece 3 is done).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PAGE WIDTH FIX (Option B). Src-only, 1 commit. Regression from 3a.
 
 WHAT CHANGED: the cook page and import screen sat inside `.food-page`'s **760px reading column**
