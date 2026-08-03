@@ -4,25 +4,30 @@
    sparingly. The old three-card layout was replaced by the rich sections. */
 
 .hub {
-  padding: 20px 24px 24px;
-  max-width: 1180px;
-  margin: 0 auto;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  /* Full content width, aligned to the SAME side gutter as the masthead + nav above. */
+  padding: 12px var(--frame) 16px;
 }
 
 /* Quiet dateline — no wordmark, no masthead. */
 .hub-dateline {
+  flex: none;
   font-family: var(--font-sans);
   font-size: 15px;
   color: var(--ink-muted);
-  margin: 2px 0;
+  margin: 0 0 1px;
 }
 
 /* "As of" freshness line. */
 .hub-asof {
+  flex: none;
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--ink-muted);
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
 /* Loading + error. */

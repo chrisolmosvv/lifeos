@@ -1,17 +1,23 @@
-/* LifeOS — Health Hub: the 2×2 SECTION FRAME. Gym spans the full top; Sleep (bottom-
-   left) + Body (bottom-right) split the bottom. Separated by HAIRLINES + whitespace
-   only — no cards, no boxes, no shadows, no rounded container corners. Sized to fit one
-   13" laptop viewport without scrolling (the sections are compact by design). */
+/* LifeOS — Health Hub: the 2×2 SECTION FRAME. Gym spans the full top half; Sleep
+   (bottom-left) + Body (bottom-right) split the bottom half. Separated by HAIRLINES +
+   whitespace only — no cards, no boxes, no shadows. FILLS the space between the nav and
+   the bottom of the viewport (the parent .hub is height:100%, flex column; this frame
+   flex:1). Sized to one 13" viewport, zero scroll. */
 
 .hub-frame {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  align-items: start;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
 }
 
 /* Gym — full-width top half; a hairline rule separates it from the bottom row. */
 .hub-frame > .hgym {
   grid-column: 1 / -1;
+  grid-row: 1;
+  min-height: 0;
   padding-bottom: 16px;
   border-bottom: 1px solid rgba(28, 25, 22, 0.14);
 }
@@ -19,17 +25,21 @@
 /* Sleep — bottom-left; a vertical hairline separates it from Body. */
 .hub-frame > .hslp {
   grid-column: 1;
-  padding: 16px 30px 0 0;
+  grid-row: 2;
+  min-height: 0;
+  padding: 16px 32px 0 0;
   border-right: 1px solid rgba(28, 25, 22, 0.14);
 }
 
 /* Body — bottom-right. */
 .hub-frame > .hbody {
   grid-column: 2;
-  padding: 16px 0 0 30px;
+  grid-row: 2;
+  min-height: 0;
+  padding: 16px 0 0 32px;
 }
 
-/* Shared section label (Sleep + Body use this; Gym uses .hgym-label with the same look). */
+/* Shared section label (Sleep + Body; Gym uses .hgym-label, same look). */
 .hub-sec-label {
   font-family: var(--font-sans);
   font-size: 12px;
@@ -39,14 +49,18 @@
 }
 
 /* Stack to a single column only on genuinely narrow viewports (keeps desktop 2×2). */
-@media (max-width: 720px) {
-  .hub-frame { grid-template-columns: 1fr; }
-  .hub-frame > .hgym { grid-column: 1; }
+@media (max-width: 860px) {
+  .hub-frame {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  .hub-frame > .hgym { grid-column: 1; grid-row: auto; }
   .hub-frame > .hslp {
     grid-column: 1;
+    grid-row: auto;
     border-right: none;
     border-bottom: 1px solid rgba(28, 25, 22, 0.14);
     padding: 16px 0;
   }
-  .hub-frame > .hbody { grid-column: 1; padding: 16px 0 0; }
+  .hub-frame > .hbody { grid-column: 1; grid-row: auto; padding: 16px 0 0; }
 }
