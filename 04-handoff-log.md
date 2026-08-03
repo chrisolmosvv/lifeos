@@ -33,6 +33,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — KNOWN GAP (found during the data reset) — ORPHANED cook_event ROWS. Investigate, do not fix.
+
+FINDING (owner, live DB): after deleting all recipes, recipes/steps/ingredients/cook_session all read
+0, but cook_event still held 187 rows — every one pointing at a session that no longer exists
+(pointing_at_a_dead_session = 187, orphaned_no_session = 0), spanning 2026-07-05 → today. So
+cook_event.session_id is NOT cascading in the live DB. NOTHING was changed in response — this is a
+docs note; any fix is Checker-gated. Investigated read-only:
+
+1. SCHEMA vs LIVE — which is wrong? **The migration is NOT wrong on paper.** db/39 (line 86) declares
+   `session_id ... references public.cook_session (id) on delete cascade`, and the only later touches
+   (db/41, db/47) alter the event_type CHECK constraint ONLY — neither goes near the FK. So db/39
+   as-written WOULD create the cascade. The live constraint disagrees, which means the live cook_event
+   table was NOT produced by db/39 as-written. Most likely cause: `create table if not exists` — if a
+   cook_event table already existed (an earlier/hand-run) when db/39 was applied, the statement is a
+   silent no-op and left a pre-existing non-cascade FK in place. (Second possibility: the table was
+   hand-applied without the cascade and db/39 never ran here.) TO PIN IT DOWN the owner can run this
+   read-only query and read confdeltype — 'c' = cascade (matches db/39), 'a'/other = no cascade (the
+   live bug):
+     select conname, confdeltype
+       from pg_constraint
+      where conrelid = 'public.cook_event'::regclass and contype = 'f';
+   Expected if correct: the session_id FK shows confdeltype = 'c'. The finding predicts it does not.
+
+2. ACCUMULATION — real. useCookEvents appends one row per action across 11 action types (timer
+   start/stop/resume/adjust, estimate adjust, amount change, omit, tick, use, step mark, finish) — so
+   every timer tap and every mid-cook edit writes an event. With the cascade broken, abandoning or
+   deleting a cook leaves all its events behind; they grow with use, on a free tier. 187 in testing.
+
+3. DOES IT MATTER FUNCTIONALLY? — **No, inert.** Replay reads events ONLY via
+   `.eq("session_id", <active session id>)` (cookEventStore), and the session is fetched by
+   status='active'. Orphans point at deleted (non-active) sessions, so an active-session query can
+   never return them; new sessions get fresh UUIDs, so no collision. RLS keeps them owner-only but
+   nothing ever fetches them. So this is storage clutter + a broken-cascade correctness gap in the
+   SCHEMA, not a replay/behaviour bug. Safe to leave until a Checker-gated fix.
+
+IF/WHEN FIXED (Checker-gated, later): (a) correct the live FK — drop + re-add session_id with
+`on delete cascade` (and confirm the same for any recipe-side path); (b) one-off cleanup of the
+existing 187 orphans, ZZTEST-style precision (delete cook_event where session_id not in (select id
+from cook_session)); (c) DB commit alone, never with src.
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — THE DATA RESET. Data-only (owner runs SQL), no code.
 
 WHAT THIS IS: a delivered SQL script to wipe every recipe and start clean now the rebuild is
