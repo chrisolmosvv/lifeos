@@ -1,21 +1,27 @@
-// LifeOS — Food → recipe-import (F8 + Cookbook V2 Piece 2). Paste text OR a URL → Gemini parses it
-// into the house recipe schema with ENRICHED steps (duration, tag, dependencies) and ingredients
-// (step linkage) → the app pre-fills the editor (the review screen) → the owner spot-checks + saves.
-// ONLY recipe text leaves the app — nothing personal, nothing from logs/health — which is WHY the
-// FREE Gemini key (the shared callGemini seam) is acceptable here. The enrichment asks only for
-// cooking metadata derivable from the recipe text: durations, activity tags, parallel cues, and
-// which step uses which ingredient. No intake/goals/health reasoning — free-key boundary intact.
+// LifeOS — Food → recipe-import (F8 + Cookbook rebuild Piece 2a). Paste text OR a URL → Gemini
+// parses it in TWO passes → the app pre-fills the review screen → the owner spot-checks + saves.
+//   PASS 1 (schema.ts) — the body: title/servings/times/cuisine, a multi_recipe flag, ingredients,
+//     and steps as a terse rewrite + the verbatim original. Merge-don't-split lives in the prompt.
+//   PASS 2 (enrich.ts) — enrichment: a duration/tag/station/hold_tolerance on EVERY step, plus
+//     generated prep steps for the physical work recipes hide in their ingredient lists.
+// The accuracy layer (normalise.ts: repairDeps, assignStepPositions, cleanLabel, the validators)
+// runs on the base step list exactly as before. Only recipe text leaves the app — nothing from
+// logs/health — which is WHY the FREE Gemini key is acceptable here.
 //
 // Called by the app AS THE OWNER (verify_jwt = true, pinned in config.toml; CORS like food-search).
 // DISTINCT outcomes so the UI shows the right message:
-//   { ok:true, recipe, source_url? }   — a usable parse (may be partial: a title OR ingredient OR step)
-//   { ok:false, error:"fetch_fail" }   — the URL couldn't be fetched/extracted → the UI offers paste
-//   { ok:false, error:"parse_fail" }   — Gemini gave nothing usable / not a recipe → honest fail, text kept
+//   { ok:true, recipe, source_url? }        — a usable parse (may be partial; enriched flag inside)
+//   { ok:false, error:"fetch_fail" }        — the URL couldn't be fetched/extracted → UI offers paste
+//   { ok:false, error:"multi_recipe" }      — the page holds more than one recipe → UI asks for one
+//   { ok:false, error:"parse_fail" }        — Gemini gave nothing usable → honest fail, text kept
 //
 // SECRET: GEMINI_API_KEY (already set for Marty), read inside the shared seam.
 
 import { callGemini } from "../_shared/gemini.ts";
 import { fetchRecipeText } from "./extract.ts";
+import { PASS1_SYSTEM, PASS1_SCHEMA } from "./schema.ts";
+import { normalisePass1, isUsable, parseJson, repairDeps, assignStepPositions } from "./normalise.ts";
+import { enrich } from "./enrich.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,191 +30,6 @@ const corsHeaders = {
 };
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-}
-
-const SYSTEM = `You convert a recipe (pasted text or a web page's text) into STRICT JSON for a cookbook app. Output ONLY the JSON object — no prose, no markdown fences.
-Schema:
-{ "title": string, "servings": number|null, "prep_minutes": number|null, "cook_minutes": number|null,
-  "ingredients": [ { "raw_text": string, "name": string, "amount": number|null, "unit": string|null, "step_number": number|null } ],
-  "steps": [ { "text": string, "duration_seconds": number|null, "tag": string|null, "depends_on": number[]|null } ] }
-Rules:
-- "raw_text" = the original ingredient line (e.g. "2 tbsp melted butter").
-- "name" = the core food for database matching: lowercase, no quantity or prep words (e.g. "butter").
-- "amount"/"unit" = the numeric quantity + its unit when clearly present, else null.
-- Steps are 0-INDEXED (the first step is 0, the second is 1, etc.).
-- "duration_seconds" = how long this step takes in seconds. Null if genuinely unknowable (e.g. "salt to taste"). For a range like "8–10 minutes", use the LOWER bound (480).
-- "tag" = exactly one of "hands_on", "hands_free", or "active_heat". Use "hands_on" if you must actively stir/chop/assemble. Use "hands_free" if it simmers, rests, bakes, or proofs unattended. Use "active_heat" if it's high-heat stovetop or grilling needing constant attention. Null if unclear.
-- "depends_on" = array of 0-based step numbers that must FINISH before this step can start. You MUST fill this for every step:
-  • null = this step starts IMMEDIATELY with no prerequisite (only valid for the very first steps).
-  • [N] = this step waits for step N to finish first.
-  • [N, M] = this step waits for BOTH step N and step M.
-  EXAMPLE: if step 0 is "boil water", step 1 is "meanwhile, sauté onion", step 2 is "add garlic" (after onion), step 3 is "cook pasta" (needs boiling water), step 4 is "combine" (needs both pasta and sauce): then depends_on would be null, null, [1], [0], [2, 3].
-  Be AGGRESSIVE: "meanwhile", "while the X…", independent components = PARALLEL (give them null or their true predecessor only). A step that just continues the previous step gets [previous_step_number]. The FINAL step usually depends on multiple threads converging.
-- "step_number" on an ingredient = the 0-based step number that PRIMARILY uses this ingredient. Most ingredients are first introduced in a specific step — assign that step. Null only if genuinely unclear or if the ingredient is used equally across many steps (e.g. "salt" used throughout).
-- If the text is NOT a recipe, return {"title":"","servings":null,"prep_minutes":null,"cook_minutes":null,"ingredients":[],"steps":[]}.`;
-
-const RESPONSE_SCHEMA = {
-  type: "OBJECT",
-  properties: {
-    title: { type: "STRING" },
-    servings: { type: "NUMBER", nullable: true },
-    prep_minutes: { type: "NUMBER", nullable: true },
-    cook_minutes: { type: "NUMBER", nullable: true },
-    ingredients: {
-      type: "ARRAY",
-      items: {
-        type: "OBJECT",
-        properties: {
-          raw_text: { type: "STRING" },
-          name: { type: "STRING" },
-          amount: { type: "NUMBER", nullable: true },
-          unit: { type: "STRING", nullable: true },
-          step_number: { type: "NUMBER", nullable: true },
-        },
-        required: ["raw_text", "name"],
-      },
-    },
-    steps: {
-      type: "ARRAY",
-      items: {
-        type: "OBJECT",
-        properties: {
-          text: { type: "STRING" },
-          duration_seconds: { type: "NUMBER", nullable: true },
-          tag: { type: "STRING", nullable: true },
-          depends_on: { type: "ARRAY", items: { type: "NUMBER" }, nullable: true },
-        },
-        required: ["text"],
-      },
-    },
-  },
-  required: ["title", "ingredients", "steps"],
-};
-
-// Defensive parse: strip stray ``` fences (despite the instruction), JSON.parse in try/catch.
-function parseRecipe(text: string): Record<string, unknown> | null {
-  const raw = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-  try {
-    const obj = JSON.parse(raw);
-    return obj && typeof obj === "object" ? obj : null;
-  } catch {
-    return null;
-  }
-}
-
-const numOrNull = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
-const intOrNull = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
-const strOrNull = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
-
-// Tag safety: only the three allowed values pass; anything else → null (so the DB CHECK never rejects).
-const VALID_TAGS = new Set(["hands_on", "hands_free", "active_heat"]);
-const tagOrNull = (v: unknown) => (typeof v === "string" && VALID_TAGS.has(v) ? v : null);
-
-// Deps safety: must be a clean array of non-negative integers; anything else → null (sequential).
-function depsOrNull(v: unknown): number[] | null {
-  if (!Array.isArray(v) || v.length === 0) return null;
-  const clean = v.filter((d) => typeof d === "number" && Number.isInteger(d) && d >= 0);
-  return clean.length > 0 ? clean : null;
-}
-
-// "Usable" = a title OR any ingredient OR any step (partial-ok); else nothing → parse_fail.
-function isUsable(r: Record<string, unknown> | null): boolean {
-  if (!r) return false;
-  const hasTitle = typeof r.title === "string" && r.title.trim().length > 0;
-  const hasIng = Array.isArray(r.ingredients) && r.ingredients.length > 0;
-  const hasStep = Array.isArray(r.steps) && r.steps.length > 0;
-  return hasTitle || hasIng || hasStep;
-}
-
-// Safe punctuation cleanup for ingredient raw_text. Only removes clearly-malformed artifacts
-// Gemini sometimes leaves (stray "(,", empty "()", doubled spaces). Never rewrites semantically.
-function cleanLabel(s: string): string {
-  let t = s;
-  t = t.replace(/\(\s*,\s*/g, "(");  // "(," or "( ," → "("
-  t = t.replace(/\(\s*\)/g, "");      // empty "()" or "( )"
-  t = t.replace(/\s{2,}/g, " ");      // collapse doubled spaces
-  t = t.trim();
-  return t;
-}
-
-// Normalise to the house shape the app expects (defensive against odd model output).
-function normalise(r: Record<string, unknown>) {
-  const ings = Array.isArray(r.ingredients) ? (r.ingredients as Record<string, unknown>[]) : [];
-  const rawSteps = Array.isArray(r.steps) ? (r.steps as unknown[]) : [];
-  return {
-    title: typeof r.title === "string" ? r.title.trim() : "",
-    servings: numOrNull(r.servings),
-    prep_minutes: numOrNull(r.prep_minutes),
-    cook_minutes: numOrNull(r.cook_minutes),
-    ingredients: ings
-      .filter((i) => i && (strOrNull(i.raw_text) || strOrNull(i.name)))
-      .map((i) => ({
-        raw_text: cleanLabel(strOrNull(i.raw_text) || strOrNull(i.name) || ""),
-        name: strOrNull(i.name) || strOrNull(i.raw_text) || "",
-        amount: numOrNull(i.amount),
-        unit: strOrNull(i.unit),
-        step_number: intOrNull(i.step_number),
-      })),
-    steps: rawSteps
-      .map((s) => {
-        // Backwards compat: if somehow a plain string arrives, wrap it.
-        if (typeof s === "string") return { text: s.trim(), duration_seconds: null, tag: null, depends_on: null };
-        const obj = s as Record<string, unknown>;
-        const text = typeof obj.text === "string" ? obj.text.trim() : "";
-        return {
-          text,
-          duration_seconds: numOrNull(obj.duration_seconds),
-          tag: tagOrNull(obj.tag),
-          depends_on: depsOrNull(obj.depends_on),
-        };
-      })
-      .filter((s) => s.text.length > 0),
-  };
-}
-
-// Repair depends_on: when any step self-references (1-indexed), subtract 1 from all values across
-// the recipe. Cleanup: drop < 0 or >= own position, deduplicate. Correct recipes pass unchanged.
-type StepShape = { text: string; duration_seconds: number | null; tag: string | null; depends_on: number[] | null };
-function repairDeps(steps: StepShape[]): StepShape[] {
-  const is1Indexed = steps.some((s, i) => Array.isArray(s.depends_on) && s.depends_on.includes(i));
-  return steps.map((s, i) => {
-    if (!Array.isArray(s.depends_on) || s.depends_on.length === 0) return s;
-    let fixed = is1Indexed ? s.depends_on.map((d) => d - 1) : [...s.depends_on];
-    fixed = [...new Set(fixed.filter((d) => d >= 0 && d < i))];
-    return { ...s, depends_on: fixed.length > 0 ? fixed : null };
-  });
-}
-
-// Ingredient→step link: score identity words against step text. Head noun (last word) gets +3 bonus
-// so "chicken stock" prefers "stock" step over "chicken" step. Whole-word, plural-tolerant.
-const ING_STRIP = new Set(
-  ("ground dried fresh raw cooked roasted chopped sliced diced minced crushed whole powdered frozen " +
-  "canned smoked hot cold sweet plain organic natural baby flaked toasted blanched peeled pitted " +
-  "unsalted salted boneless skinless shredded grated crumbled melted softened finely roughly thinly " +
-  "lightly deseeded trimmed halved large medium small thin thick extra green red white black yellow " +
-  "clove cloves leaves leaf stalks stalk sprig sprigs wedges wedge pieces piece bunch bunches " +
-  "rashers rasher optional about loosely packed cut into juiced zest cup cups tin tins").split(" "),
-);
-function ingIdentity(name: string): string[] {
-  return name.toLowerCase().replace(/\([^)]*\)/g, " ").split(/[^a-z]+/).filter((w) => w.length >= 3 && !ING_STRIP.has(w));
-}
-type IngShape = { raw_text: string; name: string; amount: number | null; unit: string | null; step_number: number | null };
-function wordPat(w: string): RegExp { return new RegExp(`\\b${w}(?:e?s)?\\b`); }
-function assignStepPositions(ingredients: IngShape[], steps: StepShape[]): IngShape[] {
-  const texts = steps.map((s) => s.text.toLowerCase());
-  return ingredients.map((ing) => {
-    if (ing.step_number != null) return ing;
-    const words = ingIdentity(ing.name);
-    if (words.length === 0) return ing;
-    const pats = words.map(wordPat), headPat = pats[pats.length - 1];
-    let bestIdx = -1, bestScore = 0;
-    texts.forEach((t, i) => {
-      let s = pats.filter((p) => p.test(t)).length;
-      if (s > 0 && headPat.test(t)) s += 3;
-      if (s > bestScore) { bestScore = s; bestIdx = i; }
-    });
-    return bestIdx >= 0 ? { ...ing, step_number: bestIdx } : ing;
-  });
 }
 
 Deno.serve(async (req) => {
@@ -234,17 +55,42 @@ Deno.serve(async (req) => {
   }
   if (!input) return json({ ok: false, error: "parse_fail" });
 
+  // ── PASS 1: the body ──
   const res = await callGemini({
-    system: SYSTEM,
+    system: PASS1_SYSTEM,
     user: input.slice(0, 12000),
-    generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESPONSE_SCHEMA },
+    generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: PASS1_SCHEMA },
   });
   if (!res.ok) return json({ ok: false, error: "parse_fail", reason: res.reason }); // AI busy / error
 
-  const parsed = parseRecipe(res.text);
+  const parsed = parseJson(res.text);
   if (!isUsable(parsed)) return json({ ok: false, error: "parse_fail" });
 
-  const recipe = normalise(parsed as Record<string, unknown>);
-  recipe.steps = repairDeps(recipe.steps); recipe.ingredients = assignStepPositions(recipe.ingredients, recipe.steps);
+  const bodyData = normalisePass1(parsed as Record<string, unknown>);
+  // A page with more than one distinct recipe: refuse cleanly rather than guessing which one.
+  if (bodyData.multi_recipe) return json({ ok: false, error: "multi_recipe" });
+
+  // Accuracy layer on the base step list, unchanged from the single-call era.
+  bodyData.steps = repairDeps(bodyData.steps);
+  bodyData.ingredients = assignStepPositions(bodyData.ingredients, bodyData.steps);
+
+  // ── PASS 2: enrichment (never loses the body on failure) ──
+  const { steps, enriched, prepCount } = await enrich(bodyData);
+
+  // Prep steps take the front, so shift each ingredient's step link back by that count.
+  const ingredients = bodyData.ingredients.map((i) =>
+    i.step_number == null ? i : { ...i, step_number: i.step_number + prepCount });
+
+  const recipe = {
+    title: bodyData.title,
+    servings: bodyData.servings,
+    prep_minutes: bodyData.prep_minutes,
+    cook_minutes: bodyData.cook_minutes,
+    cuisine: bodyData.cuisine,
+    cuisine_confidence: bodyData.cuisine_confidence,
+    enriched,
+    ingredients,
+    steps,
+  };
   return json({ ok: true, recipe, source_url: sourceUrl });
 });
