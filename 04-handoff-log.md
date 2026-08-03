@@ -33,6 +33,57 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3i — THE SIZING CONTROLS. Src-only, 1 commit.
+### ★ This CLOSES the owner's cook-through list (3f–3i all done).
+
+WHAT CHANGED: the type-sizing controls in the cook-page foot (and the import review foot).
+- **Relabelled.** "A−/A+" → plain **−** / **+**; "Fit" → the full phrase **"Fit recipe to size"**,
+  which says what it does rather than naming a mode.
+- **The percentage is now settable.** It was a readout; it's an input. Type a number, press Enter or
+  leave the field, and the page resizes to it. The range is clamped **silently** (65–180%) — a typed
+  400 becomes the maximum, not an error; letters or gibberish revert to the current value.
+- **Auto vs manual still reads at a glance.** Kept 3d's signal — "Fit recipe to size" is highlighted
+  (solid ink border) while fit-to-hole is deciding — and reinforced it on the number: the percentage
+  is muted when auto (fit chose it) and turns solid ink when the owner has overridden it. "Fit recipe
+  to size" returns to automatic.
+- **Space bar stays quiet in the field.** 3h's guard already covers any INPUT; the % field is one, so
+  a space typed there types a space and starts no timer. Verified in code, not assumed.
+
+★ SHARED COMPONENT: the cook page and the import review shared the fit HOOK but each drew its own
+controls markup. To honour "same controls on both, no divergence," the controls are now ONE shared
+`SizeControls` component rendered in both feet. `useFitToHole` gained an additive `set(pct)` (the hook
+is not part of the frozen contract). So this change lands on BOTH screens at once — intended.
+
+FILES TOUCHED: SizeControls.jsx (new, shared), useFitToHole.js (add set), CookFoot.jsx + CookPlan.jsx
+(cook foot), ImportReview.jsx (import foot), cookPlan.css. Nothing else touched.
+
+HOW TO VERIFY (Mac):
+1. Open a recipe → the foot controls read **−  ·  Fit recipe to size  ·  +**.
+2. Click the percentage → type **130** → Enter → the page resizes.
+3. Type something absurd (**400**, or letters) → it clamps to 180 or reverts, no error.
+4. Click **Fit recipe to size** → back to automatic, showing the fitted percentage.
+5. Auto vs manual is obvious — the Fit button is highlighted in auto; the number goes solid ink when
+   you've overridden.
+6. ★ Focus the percentage field and press **space** → a space is typed, no timer starts.
+7. Import a recipe → the review screen's foot shows the **same** controls, working the same way.
+
+KNOWN GAPS / RISKS:
+- The shared control uses the cook page's type scale (~0.72rem). On the import review — a deliberately
+  tighter miniature — it now sits a touch larger than the old 8.4px zoom control. That's the cost of
+  "identical on both," which the ask prioritised; flag for the owner's eye. The old `.iv-zoom` CSS is
+  now dead (left in place; harmless).
+- Clamp range is 65–180% (unchanged from the buttons — the input respects the same bounds).
+- Still unrun: the buy-form model-fix Nutrition-logger check (oldest deferred item).
+
+NEXT: the cook-through list is COMPLETE. The Planner rules the next move between: the deferred
+verification backlog (esp. the Nutrition-logger check), library filtering, the data reset, and
+demolition of the old editor/mobile bridges.
+
+FOR THE CHECKER: confirm (a) a typed % applies and clamps silently, (b) auto/manual is legible at a
+glance, (c) space in the % field types a space, and (d) the import review shows the same controls.
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3h — SERVE TIME + THE SPACE BAR. Src-only, 1 commit.
 
 WHAT CHANGED: two separable behaviours on the cook page.
