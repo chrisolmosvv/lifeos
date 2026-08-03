@@ -33,6 +33,45 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3f — THE ON-NOW CARD. Src-only, 1 commit.
+
+WHAT CHANGED: the running-step card is now a workstation, not just a clock:
+- **Full step text on the card**, beside the large terracotta countdown (brick on overrun) — the
+  cook no longer reads the step from the table below.
+- **A Stop control on the card** (alongside −1m / +1m), so stopping doesn't mean scrolling.
+- **Editable ingredient chips**: tapping a chip opens a **cook variant of 4a's FinderPopover**
+  (EXTENDED with a `variant` prop, not forked) — change amount/unit (converts live), mark **left
+  out**, or **tick used**. Each records an amount_changed / ingredient_omitted event (3e's
+  machinery), moves the **live ledger immediately** (CookPlan now folds replay amounts/omitted into
+  the ingredients before recipeMacros), and rides the existing round-trip into the finish review's
+  **Amounts** — keepable/droppable individually, applied to WHOLE objects on save.
+
+FILES (src): src/desktop/food/importreview/FinderPopover.jsx (+ cook variant), src/desktop/food/
+cookplan/{CookOnNow,CookPlan}.jsx, cookPlan.css. No scheduler/replay change (events already existed);
+mobile bridge untouched. No deploy. Build green; every file <250.
+
+HOW TO VERIFY (owner, Mac): 1) start a step → its card shows the TEXT + countdown. 2) Stop it FROM
+the card. 3) start a step with ingredients → tap a chip → the editor opens. 4) change an amount →
+the ledger kcal + macro bar move at once. 5) mark one left out → the ledger drops. 6) ★ Finish →
+BOTH edits appear under Amounts, keep/drop each (the round trip). 7) keep one, drop the other →
+query the recipe: the kept edit saved, the dropped didn't, and station/hold_tolerance/is_prep/grams
+are STILL populated (the whole-object trap — Node-tested in 3e). 8) two steps running → both cards
+readable with text + chips.
+
+⚠️ KNOWN GAPS / FLAGS:
+- **Reusing 4a's popover needed a VARIANT** (`variant="cook"`) — the cook context hides the food
+  search, name edit, "no macros" and "remove", and swaps in Used / Left out / Close, because you
+  adjust or drop an ingredient mid-cook rather than re-matching a food. Extended, not forked.
+- **Two live cards side by side**: cards are `flex 1 1 15rem`, max 24rem, and wrap; two should fit a
+  13" but may get tight with long text — flagged for the owner's eye (calm is the gate).
+- Tapping a chip now OPENS THE EDITOR (used is inside it) rather than one-tap-tick — per the spec
+  ("must also allow… ticking off"); flag if the owner wants a quick one-tap tick kept.
+- Still rests on the UNVERIFIED buy-form model fix.
+
+NEXT: **3g — the ingredients panel** (the same editing affordances in the full-list panel).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 4c — PLAN PASS, DRAG & SAVE GATE. Src-only, 1 commit. ★ PIECE 4 COMPLETE — saving imports works again.
 
 WHAT CHANGED:
