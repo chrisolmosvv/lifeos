@@ -33,6 +33,48 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — Cookbook rebuild — PIECE 3c-ii — ONE PAIR OF HANDS. Src-only, 1 commit. Biggest algo piece.
+
+WHAT CHANGED: cookSchedule now models the COOK, not the kitchen. After the dependency CPM it runs a
+**gap-filling serial resource pass** on a single "hands" resource:
+- hands_on / active_heat / **untagged** steps occupy the hands and cannot overlap each other;
+  **hands_free** steps run freely alongside anything.
+- Each busy step is placed at the EARLIEST free-hands slot — **filling idle gaps** (so the pastry
+  slots into the 3-hour braise instead of queueing after it), priority **least-float-first** to
+  protect the critical path.
+- The resulting hands order becomes a precedence chain; the CPM is **re-run on deps + chain** so
+  float, latest-start deadlines and the span are all resource-aware (a deadline on the
+  unconstrained schedule would be a lie).
+- Sequential fallback now fires ONLY with no signal (no deps AND no hands_free) → pre-2a recipes
+  keep source order. Cycle-guarded; always terminates.
+
+★ PRIORITY RULE CHOSEN: **least-float-first** (the Planner's lean), tie-break earliest-start then
+index — it gives the hands to clock-setting work first. But the KEY fix was gap-filling, not the
+priority: a rigid least-float *chain* wrongly pushed the pastry to after the braise; gap-filling
+places it in the braise's idle window regardless. Flag if you'd prefer a different priority.
+
+FILES (src): src/spine/logic/cookSchedule.js (extended), src/desktop/food/cookplan/CookPlan.jsx
+(passes tag). No deploy. Build green; both <250.
+
+HOW VERIFIED — Node, 12/12: two hands_on/active_heat/untagged → no overlap; two hands_free →
+overlap; hands_on+hands_free → overlap; braise + several hands_on → they queue among themselves
+but all fit inside the braise; deps+resource both respected; cyclic deps guarded + terminate; float
+never negative. **Ox Cheek before→after: span 270 → 275 min (+1.9%)**; critical path gains chop
+(sear→chop serialise before the braise); **pastry keeps 175 min float — made DURING the braise**;
+jus 15 min. A plan a person could actually cook.
+
+KNOWN GAPS / FLAGS:
+- Least-float is a heuristic (list scheduling), not a proven optimum — fine for kitchen-sized plans;
+  flagged for the Planner to overrule the priority if wanted.
+- Gap-fill priority for a no-deps-WITH-hands_free recipe would reorder busy steps by float — rare
+  (2a recipes carry deps); pre-2a recipes are unaffected (sequential fallback).
+- Serve drift is still the PLANNED projection (3c-i flag) — not yet overrun-aware.
+
+NEXT: **3d — the visual pass** (fit-to-hole, A−/A+, internal scroll, the live ledger, the On-now
+card treatment).
+
+---
+
 ### 2026-08-03 — Cookbook rebuild — PIECE 3c-i — DEADLINES, FLOAT & THE SERVE ANCHOR. Src-only, 1 commit.
 
 WHAT CHANGED:
