@@ -43,16 +43,18 @@ export default function CookPlan({ recipeId, onBack }) {
   const baseServ = recipe.servings || 1;          // amounts were stored for this many servings
   const scale = cookServings / baseServ;
 
-  // The band uses the schedule for to-scale positioning. Reading order is the recipe's OWN step
-  // order (position): the importer emits steps in doing order (prep first, then method in source
-  // order). We deliberately do NOT sort the reading list by the schedule's startOffset —
-  // cookSchedule returns LATEST (just-in-time) starts, and sorting a reading list by those
-  // scrambles doing order (3a fix, Problem 1).
   const { schedule, finish } = cookSchedule(steps.map((s) => ({ durationSeconds: s.timer_seconds || 0, deps: s.depends_on })));
+  // ⚠️ STOPGAP (3a) — MUST be reversed in 3c. Reading order SHOULD be by scheduled start. The plan
+  // deliberately reorders work (prep slotted in, hands-free overlapped, just-in-time pushed late),
+  // so `position` is the SOURCE's order, NOT the plan's — it only looks right today because a
+  // simple recipe's plan happens to match its source order. We hold on position because
+  // cookSchedule currently returns LATEST (just-in-time) starts, which scramble a reading list.
+  // When 3c exposes earliest/scheduled start, RESTORE sort-by-scheduled-start here.
   const order = steps.map((_, i) => i);
-  // Total = the honest SUM of step durations. cookSchedule.finish is the critical-path (parallel)
-  // time, which can't be trusted until depends_on is fixed and the scheduler is real (3c); for a
-  // dormant plan the sum of durations is the stable, believable number (3a fix, Problem 3).
+  // ⚠️ STOPGAP (3a) — MUST be reversed in 3c. "Total time" is shown as the SUM of step durations =
+  // "total work", NOT "how long the cook takes" (the design specifies BOTH). Once hands-free steps
+  // genuinely overlap, a sum OVERSTATES the cook; cookSchedule.finish is the real critical-path
+  // wall-clock but can't be trusted until depends_on is fixed and the scheduler is real. Restore in 3c.
   const sumSecs = steps.reduce((t, s) => t + (Number(s.timer_seconds) || 0), 0);
   const totalTime = fmtDur(sumSecs) || fmtDur(((recipe.prep_minutes || 0) + (recipe.cook_minutes || 0)) * 60);
   const linkedFor = (i) => ingredients.map((ing, idx) => ({ ing, idx })).filter(({ ing }) => ing.step_position === i);

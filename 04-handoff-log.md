@@ -60,6 +60,20 @@ a scaled amount; back → Cookbook normal; the header live-cook marker stays abs
 degrade quietly (no band when there are no durations; no chip when no station), not break.
 
 KNOWN GAPS / FLAGS:
+- ⚠️ **TWO STOPGAPS that 3c MUST reverse** (commented as such in CookPlan.jsx):
+  1. **Reading order = source position, not scheduled start.** The plan should read in scheduled-
+     start (doing) order, but cookSchedule returns LATEST/just-in-time starts, so sorting by that
+     scrambled the list. Holding on `position` is temporary — it only matches because a simple
+     recipe's plan equals its source order. When 3c exposes earliest/scheduled start, restore
+     sort-by-scheduled-start.
+  2. **Total time = sum of step durations, not wall-clock.** That's "total work", not "how long
+     the cook takes" (design wants BOTH). Once hands-free steps overlap, a sum overstates the cook.
+     cookSchedule.finish (critical path) is the real number but untrustworthy until depends_on is
+     fixed + the scheduler is real. Restore in 3c.
+- **Extraction faults found via the stroganoff (NOT page bugs; for the importer, not 3a/3c):**
+  depends_on misses real links (e.g. "add chicken" step didn't depend on the "fry chicken" step),
+  a hands_free mis-tag on a continuous-attention step, and cuisine came back NULL. These make the
+  band + any schedule-based ordering wrong until the importer is fixed.
 - **default_servings not honoured** — recipeLoad doesn't select it and 3a may not touch recipeLoad,
   so the stepper defaults to `servings`. Code already prefers default_servings if it's ever loaded
   (a one-column additive add to recipeLoad). Planner's call.
