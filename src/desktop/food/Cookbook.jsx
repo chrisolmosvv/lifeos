@@ -4,7 +4,7 @@ import { recipeKind } from "../../spine/logic/recipeCalc";
 import { setRecipeFavourite } from "../../spine/data/recipeWrite";
 import { useRecipeWrites } from "../../spine/data/useRecipeWrites";
 import CookbookRegister from "./CookbookRegister";
-import CookCompanion from "./CookCompanion";
+import CookPlan from "./cookplan/CookPlan"; // 3a: the dormant plan page (replaces CookCompanion as the recipe destination)
 import RecipeEditor from "./RecipeEditor";
 import ImportScreen from "./ImportScreen";
 import Toast from "../kit/Toast";
@@ -46,7 +46,7 @@ export default function Cookbook({ openRecipeId, cookOnOpen, stageOnOpen, onCons
   );
   if (view.kind === "recipe") return (
     <>
-      <CookCompanion recipeId={view.id} onBack={backToGrid} onEdit={(id) => setView({ kind: "editor", id })} onDelete={onDelete} />
+      <CookPlan recipeId={view.id} onBack={backToGrid} onEdit={(id) => setView({ kind: "editor", id })} onDelete={onDelete} />
       {rw.toast && <Toast text={rw.toast.text} onDismiss={rw.dismiss} />}
     </>
   );

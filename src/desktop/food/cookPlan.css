@@ -1,0 +1,98 @@
+/* LifeOS — Food → Cook Plan (Piece 3a, dormant). Broadsheet calm: paper/ink, Fraunces title,
+   Inter body/UI with tabular figures, hairline rules only — no boxes, cards, shadows, rounded
+   corners or fills. The ONE sanctioned exception (Amendment A14) is station COLOUR: the four
+   station hues appear as small dots, coloured labels, and the to-scale band blocks. Terracotta
+   (the live/now accent) does NOT appear here — nothing is live yet. No auto-scale/scroll (that
+   is 3d); a long recipe may overflow, which is expected at this stage. */
+
+.cp {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem 3rem;
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* ── Masthead ─────────────────────────────────────────────────────────────── */
+.cp-mast {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1rem 0 0.9rem;
+  border-bottom: 1px solid var(--rule);
+}
+.cp-back {
+  background: none; border: none; padding: 0.15rem 0 0;
+  font-family: var(--font-sans); font-size: 0.82rem; color: var(--ink-muted); cursor: pointer;
+  white-space: nowrap;
+}
+.cp-back:hover { color: var(--ink); }
+.cp-mast-main { flex: 1; min-width: 0; }
+.cp-title {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: 1.9rem; line-height: 1.1; margin: 0; color: var(--ink);
+}
+.cp-mast-meta { margin-top: 0.3rem; display: flex; gap: 0.9rem; align-items: baseline; }
+.cp-cuisine { font-size: 0.82rem; color: var(--ink-muted); }
+.cp-total { font-size: 0.82rem; color: var(--ink-muted); }
+
+/* Servings stepper */
+.cp-serv { display: flex; align-items: center; gap: 0.5rem; padding-top: 0.2rem; }
+.cp-serv-btn {
+  background: none; border: 1px solid var(--rule); color: var(--ink);
+  width: 1.6rem; height: 1.6rem; line-height: 1; font-size: 1rem; cursor: pointer;
+}
+.cp-serv-btn:hover { border-color: var(--ink); }
+.cp-serv-val { font-size: 1rem; min-width: 1.2rem; text-align: center; }
+.cp-serv-label { font-size: 0.78rem; color: var(--ink-muted); white-space: nowrap; }
+
+/* ── Band (whole cook to scale, one row per station) ──────────────────────── */
+.cp-band { margin: 1rem 0 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.cp-band-row { display: flex; align-items: center; gap: 0.75rem; }
+.cp-band-label {
+  width: 3.2rem; flex: none; text-align: right;
+  font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted);
+}
+.cp-band-track { position: relative; flex: 1; height: 1.25rem; border-bottom: 1px solid var(--rule-faint); }
+.cp-band-block {
+  position: absolute; top: 0; height: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.85; min-width: 0.9rem;
+}
+.cp-band-num { font-size: 0.6rem; color: var(--paper); padding: 0 0.15rem; }
+
+/* ── The plan (every step, full text) ─────────────────────────────────────── */
+.cp-plan { list-style: none; margin: 1rem 0 0; padding: 0; }
+.cp-step { padding: 0.85rem 0; border-bottom: 1px solid var(--rule); }
+.cp-step-head { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.cp-step-num { font-family: var(--font-serif); font-size: 1.05rem; color: var(--ink); min-width: 1.3rem; }
+.cp-step-station { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; }
+.cp-station-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; display: inline-block; }
+.cp-step-tag {
+  font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted);
+}
+.cp-step-prep {
+  font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-muted); border: 1px solid var(--rule); padding: 0.02rem 0.3rem;
+}
+.cp-step-dur { margin-left: auto; font-size: 0.82rem; color: var(--ink-muted); }
+.cp-step-text { margin: 0.4rem 0 0; font-size: 0.95rem; line-height: 1.5; color: var(--ink); }
+
+.cp-step-ings { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.cp-step-ing { display: flex; gap: 0.5rem; font-size: 0.8rem; color: var(--ink-muted); }
+.cp-step-ing-amt { min-width: 3.5rem; text-align: right; color: var(--ink); flex: none; }
+.cp-step-ing-text { flex: 1; }
+
+/* ── Ingredients panel (collapsible) ──────────────────────────────────────── */
+.cp-ings { margin-top: 1.2rem; }
+.cp-ings-toggle {
+  display: flex; align-items: center; gap: 0.45rem; width: 100%;
+  background: none; border: none; border-top: 1px solid var(--rule); padding: 0.7rem 0 0;
+  font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink); cursor: pointer; text-align: left;
+}
+.cp-ings-caret { color: var(--ink-muted); font-size: 0.75rem; }
+.cp-ings-count { margin-left: auto; color: var(--ink-muted); font-size: 0.8rem; }
+.cp-ings-list { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+.cp-ings-item { display: flex; gap: 0.6rem; font-size: 0.85rem; }
+.cp-ings-amt { min-width: 4rem; text-align: right; color: var(--ink); flex: none; }
+.cp-ings-text { flex: 1; color: var(--ink-muted); }
