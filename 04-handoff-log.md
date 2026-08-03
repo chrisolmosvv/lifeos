@@ -33,6 +33,66 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — PIECE 7 — DELETE A RECIPE (from the review screen, edit mode only). Src-only, 1 commit.
+
+WHAT CHANGED: you can delete a recipe from the app again — demolition removed the old recipe menu
+that carried Delete, leaving SQL as the only way. It now lives on the review screen in EDIT mode.
+- A quiet **"Delete recipe"** trigger sits in the footer's LEFT, muted, well away from Save. It shows
+  ONLY in edit mode (an already-saved recipe / draft, editId set). A not-yet-saved IMPORT has nothing
+  to delete, so no Delete appears anywhere in the import flow.
+- Clicking it opens a house-style confirm — a calm page-takeover (scrim + hairline panel, no box/
+  shadow/rounded), NOT a browser confirm(). It **names the recipe** and says plainly **what survives**:
+  the nutrition log is untouched (every logged meal and every day/week/month total stays; only the
+  link back to this recipe is cleared). Terracotta (var(--accent) = #C8643D) lands ONLY on the
+  destructive "Delete recipe" button; the trigger and "Keep it" are muted ink.
+- ★ **Refuses if a cook is live for this recipe.** Before confirming, it checks fetchActiveSession —
+  if a session is active it shows a blocked message ("… is cooking right now — finish or abandon the
+  cook first") with no delete button, because cook_session.recipe_id is a NOT NULL cascade and
+  deleting mid-cook would destroy the running session.
+- After deleting → back to the Cookbook grid, the recipe gone from the list (onDeleted reloads +
+  goes to grid).
+
+deleteRecipe (recipeWrite.js) was UNCHANGED and does exactly what its name says: deletes the recipe
+row; its ingredients/steps/cook_session/cook_event CASCADE; food_log_entries.recipe_id is SET NULL so
+logged history + its stored macro snapshot survive. It was still referenced (useRecipeWrites.remove);
+Piece 7 gives it a real UI entry point again.
+
+FILES: src/desktop/food/importreview/{ImportReview.jsx (delete flow + trigger), DeleteConfirm.jsx (new,
+the confirm), EditReview.jsx (thread onDeleted), importReview.css (quiet trigger + confirm styles)};
+src/desktop/food/Cookbook.jsx (onDeleted → reload + grid). No schema, no deploy, no mobile, no touch of
+recipeWrite/recipeLoad/useRecipeWrites/recipeCalc/foodWrite/useCookLog. Build passes; all files < 250.
+
+HOW TO VERIFY (owner, 13" Mac — I verified by build + code-trace; the log-survives check is YOURS):
+1. Open a saved recipe → Edit → a **Delete recipe** action is present (footer left), quiet, not
+   competing with Save.
+2. Import a NEW recipe → NO Delete appears anywhere in the import flow.
+3. Click Delete → a confirm NAMING the recipe, saying plainly the nutrition log is untouched.
+4. Cancel ("Keep it") → nothing happens, still on the review.
+5. Confirm ("Delete recipe") → back to the Cookbook, the recipe gone from the list.
+6. ★ Food → Log: every past entry still there, day/week/month totals UNCHANGED. If the deleted recipe
+   had been logged, that meal survives with its numbers intact (only its recipe link is cleared).
+7. Start a cook for a recipe, then try to delete it → it refuses and says to finish/abandon first.
+
+KNOWN GAPS / FLAGS:
+- Verified by build + code-trace, NOT a live click (driving deletes against your real recipes mutates
+  real data — the log-survives check is the gate).
+- The active-cook check is a live query; if it errored (network), the flow falls through to the normal
+  confirm rather than blocking — deleting mid-cook would still just abandon that session (cascade), no
+  corruption, but the intended answer is "finish/abandon first". Low-risk edge.
+- Reviewed-recipe delete is now reachable via Edit; there is still no delete directly on the cook page
+  itself (out of scope — Delete belongs on the review, per the ruling).
+
+★ ROADMAP NOTE (for the next docs pass — NOT edited this session): the "no way to delete a recipe from
+the app" gap (flagged in Piece 6) is now CLOSED — Delete lives on the review screen in edit mode.
+
+NEXT: owner runs the verify steps. No further recipe-CRUD work queued.
+
+FOR THE CHECKER: confirm (a) Delete never appears on a fresh import; (b) the confirm states what
+survives and only the destructive button is terracotta; (c) an active cook blocks the delete; (d) after
+delete the Log totals are unchanged.
+
+---
+
 ### 2026-08-03 — PIECE 6 — EDIT VIA THE REVIEW SCREEN (the old editor STAYS — Planner ruling). Src-only, 3 commits.
 
 WHAT CHANGED: the Edit button now re-opens the SAME three-pass review screen for that recipe, in an
