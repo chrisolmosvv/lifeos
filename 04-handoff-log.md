@@ -60,17 +60,21 @@ FILES: supabase/functions/recipe-import/{index,schema,normalise,enrich,vision}.t
 _shared/gemini.ts (**deployed to Frankfurt — off-repo**); src/spine/data/{importClient,recipeWrite,
 recipeLoad}.js; src/desktop/food/{ImportScreen,RecipeEditor}.jsx; src/mobile/MobileImport.jsx. DB: db/47 (Piece 1).
 
-HOW VERIFIED (so far): app build passes; edge bundles clean (esbuild). **2a edge real-call PASSED**
-(pasted ragù → 6 cook + 2 merged prep steps, every step fully tagged, durations 53min vs stated 60,
-terse+original present, multi_recipe refused, OPTIONS 200, verify_jwt=true). 2a edge deployed live.
+HOW VERIFIED (so far): app build passes; edge bundles clean (esbuild). **Both 2a + 2b deployed live
+to Frankfurt.** Real edge calls PASSED: (2a) pasted ragù → 6 cook + 2 merged prep steps, every step
+fully tagged, durations 53min vs stated 60, terse+original present, multi_recipe refused; (2b, after
+deploy) text path REGRESSION clean (identical ragù output), and the VISION path proven wired — a
+1×1 non-recipe image returned a clean ocr_fail (Gemini accepts the image; fail-clean works).
+OPTIONS 200, verify_jwt=true throughout.
 
-⚠️ KNOWN GAPS / NOT YET PROVEN:
-- **2a's real-ROW round-trip was NEVER run** — no one has confirmed end-to-end that an app import
-  SAVES every new field to the database. The plumbing is built + each commit verified in its own
-  scope, but persistence is unproven. A photo-import-then-row-check (below) closes BOTH 2a and 2b.
-- **2b is not yet deployed or tested** — owner must deploy recipe-import and run the real-photo tests.
+⚠️ KNOWN GAPS / NOT YET PROVEN (all owner-run — cannot be done from the build session):
+- **The real-ROW round-trip is STILL unrun** — no one has confirmed end-to-end that an app import
+  SAVES every new field to the database. Plumbing built + verified in scope, but persistence unproven.
+  A photo-import-then-row-check closes BOTH 2a and 2b at once.
+- **Real recipe PHOTOS not yet tested** — clear page, angled phone photo, two-recipe page (the
+  non-recipe fail case IS proven). Need OCR fidelity + step count vs source + end-to-end timing.
 - HEIC risk: browsers may not decode iPhone HEIC in <canvas> → photo_fail; use JPEG/PNG. Verify.
-- Photo path = 3 AI calls (OCR + Pass 1 + Pass 2) — confirm end-to-end time is acceptable.
+- Photo path = 3 AI calls (OCR + Pass 1 + Pass 2) — confirm real-page time is acceptable.
 
 NEXT: deploy 2b + run the real-call/real-photo/real-row verification; then **Recon #3 — the cook engine.**
 
