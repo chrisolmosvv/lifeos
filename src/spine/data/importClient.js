@@ -14,7 +14,11 @@ import { searchFoods } from "./foodLoad.js";
 import { ensureFoodItem } from "./recipeWrite.js";
 import { resolvePortion } from "../logic/portions.js";
 
-const CLIENT_TIMEOUT_MS = 25000;
+// 90s (2c): a URL import is the slow path — up to an 8s page fetch plus TWO Gemini calls (2a's
+// two-pass rework), each with retries. Measured healthy runs are 4–8s, but the retry tail can
+// spike past the old 25s, which surfaced as a false "couldn't reach the service". 90s costs
+// nothing on the common path and removes that flaky-failure class.
+const CLIENT_TIMEOUT_MS = 90000;
 const BATCH_SIZE = 6; // ingredients per batch — keeps well under 15 req/min
 const BATCH_GAP_MS = 1200; // pause between batches
 

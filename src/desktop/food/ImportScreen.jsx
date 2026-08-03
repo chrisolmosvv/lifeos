@@ -1,6 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { importRecipe } from "../../spine/data/importClient";
 import "./cookbook.css";
+
+// A sign of life during the (up to ~90s) import so the owner can tell working from hung. The
+// labels advance on a ROUGH TIME SCHEDULE per input kind — NOT a real stream (that's a later
+// piece). The last label holds until the import actually returns.
+const STAGES = {
+  url:   ["Reading the page…", "Reading the recipe…", "Working out the timings…", "Matching the ingredients…"],
+  text:  ["Reading the recipe…", "Working out the timings…", "Matching the ingredients…"],
+  image: ["Reading the photo…", "Reading the recipe…", "Working out the timings…", "Matching the ingredients…"],
+};
+const STAGE_AT_MS = [4000, 10000, 18000]; // advance to stage 1, 2, 3 at these elapsed times
 
 // Downscale a chosen photo in the browser BEFORE upload: a phone photo is several MB and would be
 // rejected by the edge function's body limit. Longest edge 1600px + JPEG q0.8 is plenty for legible
@@ -24,9 +34,22 @@ export default function ImportScreen({ onImported, onCancel }) {
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [kind, setKind] = useState("text"); // 'url' | 'text' | 'image' — which staged labels to show
+  const [stage, setStage] = useState(0);
   const [error, setError] = useState(null); // 'fetch_fail'|'parse_fail'|'ocr_fail'|'multi_recipe'|'photo_fail'|null
 
+  // Walk the staged labels on a rough schedule while loading; reset when idle. Time-based only.
+  useEffect(() => {
+    if (!loading) { setStage(0); return; }
+    const seq = STAGES[kind] || STAGES.text;
+    const timers = STAGE_AT_MS
+      .map((ms, i) => (i + 1 < seq.length ? setTimeout(() => setStage(i + 1), ms) : null))
+      .filter(Boolean);
+    return () => timers.forEach(clearTimeout);
+  }, [loading, kind]);
+
   const run = async (payload) => {
+    setKind(payload.url ? "url" : payload.image ? "image" : "text");
     setLoading(true);
     setError(null);
     const res = await importRecipe(payload);
@@ -39,19 +62,19 @@ export default function ImportScreen({ onImported, onCancel }) {
     const file = e.target.files?.[0];
     e.target.value = ""; // let the owner re-pick the same file after a failure
     if (!file) return;
-    setLoading(true); setError(null);
+    setKind("image"); setLoading(true); setError(null);
     let image;
     try { image = await fileToDownscaledBase64(file); }
     catch { setLoading(false); setError("photo_fail"); return; }
-    setLoading(false);
-    run({ image, imageMime: "image/jpeg" });
+    run({ image, imageMime: "image/jpeg" }); // keeps loading true through the import
   };
 
   if (loading) {
+    const seq = STAGES[kind] || STAGES.text;
     return (
       <div className="imp">
         <button type="button" className="red-back" onClick={onCancel}>‹ Cookbook</button>
-        <div className="food-loading imp-loading"><span className="food-spinner" aria-hidden="true" /><span>Reading the recipe…</span></div>
+        <div className="food-loading imp-loading"><span className="food-spinner" aria-hidden="true" /><span>{seq[Math.min(stage, seq.length - 1)]}</span></div>
       </div>
     );
   }
