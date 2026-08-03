@@ -12,7 +12,9 @@ function savedLabel(row) {
   return <span className="saved"><b>{q}{unit}</b> {row.name}</span>;
 }
 
-export default function IngredientsPass({ model, resolved, scrollRef, contentRef, onScroll, scale, onRow }) {
+// `edit` (Piece 6): editing a saved recipe — there is no source to diff against, so show the stored
+// values directly (raw_text stays as quiet provenance) with no arrow and no import flags.
+export default function IngredientsPass({ model, resolved, scrollRef, contentRef, onScroll, scale, onRow, edit = false }) {
   const ps = model.perServing;
   return (
     <div className="iv-pass">
@@ -26,16 +28,16 @@ export default function IngredientsPass({ model, resolved, scrollRef, contentRef
       <div className="iv-scroll" ref={scrollRef} onScroll={onScroll}>
         <div ref={contentRef} style={{ "--s": scale }}>
           <div className="iv-grid iv-ihd">
-            <span>The source said</span><span></span><span>We'll store</span><span>Matched to</span>
+            <span>{edit ? "In the recipe" : "The source said"}</span><span></span><span>{edit ? "Stored as" : "We'll store"}</span><span>Matched to</span>
             <span>Grams</span><span>Kcal</span><span>P</span><span>C</span><span>F</span>
           </div>
           {model.rows.map((row) => {
-            const flag = row.flagged && !resolved.has(row.i);
-            const done = row.flagged && resolved.has(row.i);
+            const flag = !edit && row.flagged && !resolved.has(row.i);
+            const done = !edit && row.flagged && resolved.has(row.i);
             return (
               <div key={row.i} className={`iv-grid iv-ir${flag ? " flag" : ""}${done ? " done" : ""}`} onClick={(e) => onRow(row.i, e)}>
                 <span className="orig">{row.orig}</span>
-                <span className="ar">→</span>
+                <span className="ar">{edit ? "" : "→"}</span>
                 <span>{savedLabel(row)}</span>
                 <span className="match">{row.match}</span>
                 <span className="n">{row.grams != null ? row.grams : "—"}</span>

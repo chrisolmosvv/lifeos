@@ -1,15 +1,21 @@
 // LifeOS — Food → IMPORT REVIEW (mock U, complete: 4a+4b+4c). Three passes — ① ingredient diff +
 // Finder · ② method editor + three totals · ③ the plan (reused band + drag re-parent + plain-words
-// fallback) — behind a save gate. Save composes the EXISTING createRecipe with WHOLE objects (so the
-// delete-all-reinsert can't null station/hold/is_prep/grams), caches Finder foods, and sets
-// default_servings + reviewed_at. Reuses useFitToHole. After save → straight to the recipe page.
+// fallback) — behind a save gate. Save composes createRecipe (new) OR updateRecipe (Piece 6 edit)
+// with WHOLE objects (so the delete-all-reinsert can't null station/hold/is_prep/grams), caches
+// Finder foods, and sets default_servings + reviewed_at. Reuses useFitToHole. After save → the recipe.
+//
+// Piece 6 — EDIT MODE. Given `editId` this reviews a SAVED recipe (fed as a draft by EditReview) and
+// saves via updateRecipe, not createRecipe. `reviewed` (recipe already reviewed) drives the
+// scaffolding: reviewed → scaffold OFF (no source-diff arrow, no import flags, no prep-approval — the
+// fields just stay editable); an unreviewed draft keeps the full import scaffolding and is MARKED
+// reviewed on save, exactly like a fresh import.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildReview } from "../../../spine/logic/importReviewLogic";
 import { methodTotals, deleteStep } from "../../../spine/logic/methodReviewLogic";
 import { importGate } from "../../../spine/logic/importGate";
 import { cookSchedule } from "../../../spine/logic/cookSchedule";
-import { createRecipe, ensureFoodItem } from "../../../spine/data/recipeWrite";
+import { createRecipe, updateRecipe, ensureFoodItem } from "../../../spine/data/recipeWrite";
 import { supabase } from "../../../spine/data/supabaseClient";
 import { useFitToHole } from "../cookplan/useFitToHole";
 import SizeControls from "../cookplan/SizeControls";
@@ -21,13 +27,16 @@ import PlanPass from "./PlanPass";
 import FinderPopover from "./FinderPopover";
 import "./importReview.css";
 
-export default function ImportReview({ draft, itemsById, onBack, onSaved }) {
+export default function ImportReview({ draft, itemsById, onBack, onSaved, editId = null, reviewed = false }) {
+  // scaffold = the import-only chrome (source-line diff, impact flags, prep-step approval). ON for a
+  // fresh import and for an unreviewed draft; OFF when editing an already-reviewed recipe.
+  const scaffold = !reviewed;
   const [title, setTitle] = useState(draft.title || "");
   const [cuisine, setCuisine] = useState(draft.cuisine || "");
   const srcServings = draft.servings || 1;
   const [serv, setServ] = useState(draft.default_servings ?? draft.servings ?? 1);
   const [ings, setIngs] = useState(draft.ingredients || []);
-  const [steps, setSteps] = useState(() => (draft.steps || []).map((s) => ({ ...s, approved: !s.is_prep })));
+  const [steps, setSteps] = useState(() => (draft.steps || []).map((s) => ({ ...s, approved: scaffold ? !s.is_prep : true })));
   const [showOrig, setShowOrig] = useState(new Set());
   const itemsRef = useRef({ ...(itemsById || {}) });
   const [pass, setPass] = useState(1);
@@ -43,9 +52,11 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved }) {
   const fit = useFitToHole(scrollRef, contentRef, `${pass}:${serv}:${ings.length}:${steps.length}`);
 
   const model = buildReview(ings, itemsRef.current, srcServings, serv);
-  const unresolvedFlags = model.rows.filter((r) => r.flagged && !resolved.has(r.i)).length;
+  // Edit mode (scaffold off): nothing was guessed just now and prep steps were approved long ago —
+  // so no flags to clear and nothing to approve. The SAVE GATE below still applies.
+  const unresolvedFlags = scaffold ? model.rows.filter((r) => r.flagged && !resolved.has(r.i)).length : 0;
   const totals = methodTotals(steps, draft.prep_minutes, draft.cook_minutes);
-  const unapproved = steps.filter((s) => s.is_prep && !s.approved).length;
+  const unapproved = scaffold ? steps.filter((s) => s.is_prep && !s.approved).length : 0;
   const { schedule, finish } = cookSchedule(steps.map((s) => ({ durationSeconds: s.timer_seconds || 0, deps: s.depends_on, hold: s.hold_tolerance, tag: s.tag })));
   const gate = importGate(ings, steps, unresolvedFlags);
 
@@ -81,9 +92,17 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved }) {
         savedIngs.push({ ...ing, food_item_id: fid }); // WHOLE object — every field (grams, step_position, …)
       }
       const recipe = { title, servings: srcServings, prep_minutes: draft.prep_minutes, cook_minutes: draft.cook_minutes, source_url: draft.source_url, cuisine };
-      const id = await createRecipe(recipe, savedIngs, steps); // steps are WHOLE (approved is extra, ignored by writeChildren)
-      // createRecipe/recipeRow doesn't write these two — set them here (reviewing IS the sweep).
-      await supabase.from("recipes").update({ default_servings: serv, reviewed_at: new Date().toISOString() }).eq("id", id);
+      // Piece 6: EDIT saves via updateRecipe (must not create a second recipe); NEW via createRecipe.
+      // Both get WHOLE objects (approved is extra, ignored by writeChildren) so the delete-all-reinsert
+      // can't null station/hold/is_prep/grams/step_position.
+      let id = editId;
+      if (editId) await updateRecipe(editId, recipe, savedIngs, steps);
+      else id = await createRecipe(recipe, savedIngs, steps);
+      // recipeRow doesn't write these two. default_servings always. reviewed_at: set now when the
+      // recipe is not yet reviewed (a fresh import OR an unreviewed draft — reviewing IS the sweep);
+      // leave an already-reviewed recipe's reviewed_at untouched (editing doesn't un-review it).
+      const patch = reviewed ? { default_servings: serv } : { default_servings: serv, reviewed_at: new Date().toISOString() };
+      await supabase.from("recipes").update(patch).eq("id", id);
       onSaved ? onSaved(id) : onBack();
     } catch { setSaving(false); }
   };
@@ -94,12 +113,12 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved }) {
   return (
     <div className="iv" ref={setRoot} style={{ height: pageH ? `${pageH}px` : "100%" }}>
       <ImportMasthead sourceUrl={draft.source_url} title={title} onTitle={setTitle} cuisine={cuisine} onCuisine={setCuisine}
-        srcServings={srcServings} serv={serv} onDec={() => setServ((s) => Math.max(1, s - 1))} onInc={() => setServ((s) => s + 1)} onBack={onBack} />
+        srcServings={srcServings} serv={serv} onDec={() => setServ((s) => Math.max(1, s - 1))} onInc={() => setServ((s) => s + 1)} onBack={onBack} edit={!scaffold} />
       <ImportRail pass={pass} subs={subs} onGo={setPass} />
 
-      {pass === 1 && <IngredientsPass model={model} resolved={resolved} scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale}
+      {pass === 1 && <IngredientsPass model={model} resolved={resolved} edit={!scaffold} scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale}
         onRow={(i, e) => setFinder({ i, anchor: e.currentTarget.getBoundingClientRect() })} />}
-      {pass === 2 && <MethodPass steps={steps} showOrig={showOrig} totals={totals} scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale} h={H} />}
+      {pass === 2 && <MethodPass steps={steps} showOrig={showOrig} totals={totals} edit={!scaffold} scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale} h={H} />}
       {pass === 3 && <PlanPass steps={steps} schedule={schedule} finish={finish} gate={gate} ingCount={ings.length} onReparent={reparent} onSetDeps={setDeps}
         scrollRef={scrollRef} contentRef={contentRef} onScroll={fit.onScroll} scale={fit.scale} />}
 
@@ -107,7 +126,7 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved }) {
         <SizeControls pct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onSet={fit.set} />
         <div className="iv-rgt">
           {pass > 1 && <button type="button" className="iv-back" onClick={() => setPass(pass - 1)}>‹ back</button>}
-          {pass < 3 && <button type="button" className={`iv-approve${(pass === 1 ? !unresolvedFlags : !unapproved) ? " off" : ""}`} onClick={approveAll}>{pass === 1 ? "Approve all" : "Approve added steps"}</button>}
+          {scaffold && pass < 3 && <button type="button" className={`iv-approve${(pass === 1 ? !unresolvedFlags : !unapproved) ? " off" : ""}`} onClick={approveAll}>{pass === 1 ? "Approve all" : "Approve added steps"}</button>}
           <button type="button" className="iv-next" onClick={pass === 3 ? save : () => setPass(pass + 1)} disabled={nextDisabled}>{nextLabel}</button>
         </div>
       </div>

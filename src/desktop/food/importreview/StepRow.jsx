@@ -10,7 +10,7 @@ const TAGS = [["hands_on", "Hands-on"], ["hands_free", "Hands-free"], ["active_h
 const STATIONS = ["bench", "hob", "oven", "rest"];
 const HOLDS = [["immediate", "use at once"], ["short", "keeps a little"], ["indefinite", "keeps"]];
 
-export default function StepRow({ n, step, showOrig, onText, onDur, onTag, onStation, onHold, onApprove, onToggleOrig, onDelete }) {
+export default function StepRow({ n, step, showOrig, onText, onDur, onTag, onStation, onHold, onApprove, onToggleOrig, onDelete, edit = false }) {
   const ta = useRef(null);
   const grow = () => { const el = ta.current; if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } };
   useEffect(grow, [step.text, showOrig]);
@@ -26,7 +26,7 @@ export default function StepRow({ n, step, showOrig, onText, onDur, onTag, onSta
         <textarea ref={ta} className="iv-stx" rows={1} value={showOrig ? (step.original || step.text) : step.text}
           onChange={(e) => { if (!showOrig) onText(e.target.value); }} onInput={grow} readOnly={showOrig} />
         <div className="iv-sub2">
-          {step.is_prep && <button type="button" className={`iv-invent${step.approved ? " ok" : ""}`} onClick={onApprove}>{step.approved ? "✓ added prep step" : "added by the importer — approve"}</button>}
+          {step.is_prep && !edit && <button type="button" className={`iv-invent${step.approved ? " ok" : ""}`} onClick={onApprove}>{step.approved ? "✓ added prep step" : "added by the importer — approve"}</button>}
           {step.original && <button type="button" className="iv-restore" onClick={onToggleOrig}>{showOrig ? "use the terse version" : "show the original wording"}</button>}
         </div>
       </div>

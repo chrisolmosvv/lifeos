@@ -2,11 +2,11 @@
 // the two servings numbers: "recipe makes" (source's servings, read-only) and "I usually cook"
 // (default_servings, adjustable). No prose — the fields speak.
 
-export default function ImportMasthead({ sourceUrl, title, onTitle, cuisine, onCuisine, srcServings, serv, onDec, onInc, onBack }) {
+export default function ImportMasthead({ sourceUrl, title, onTitle, cuisine, onCuisine, srcServings, serv, onDec, onInc, onBack, edit = false }) {
   return (
     <div className="iv-hd">
       <div>
-        <button type="button" className="iv-eyebrow" onClick={onBack}>‹ The Cookbook · reviewing an import</button>
+        <button type="button" className="iv-eyebrow" onClick={onBack}>‹ The Cookbook · {edit ? "editing a recipe" : "reviewing an import"}</button>
         {sourceUrl && <div className="iv-src">imported from {sourceUrl.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</div>}
         <input className="iv-title" value={title} onChange={(e) => onTitle(e.target.value)} placeholder="Untitled recipe" />
       </div>

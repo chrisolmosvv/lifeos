@@ -59,7 +59,7 @@ export async function fetchCookbook() {
 // → { recipe, ingredients, steps, itemsById }.
 export async function fetchRecipe(id) {
   const [recipeRes, ingredients, steps, cookEntries] = await Promise.all([
-    supabase.from("recipes").select("id,title,servings,prep_minutes,cook_minutes,source_url,cuisine,is_favourite,created_at,updated_at").eq("id", id).single(),
+    supabase.from("recipes").select("id,title,servings,default_servings,prep_minutes,cook_minutes,source_url,cuisine,reviewed_at,is_favourite,created_at,updated_at").eq("id", id).single(),
     fetchAll("recipe_ingredients", "id,food_item_id,raw_text,amount,unit,manual_macros,no_macros,position,step_position,grams", (q) => q.eq("recipe_id", id).order("position", { ascending: true })),
     fetchAll("recipe_steps", "id,position,text,timer_seconds,tag,depends_on,station,hold_tolerance,is_prep", (q) => q.eq("recipe_id", id).order("position", { ascending: true })),
     // this recipe's cook entries — lastCookedFor's compute-on-read source for the "last cooked" line (V2 P3).
