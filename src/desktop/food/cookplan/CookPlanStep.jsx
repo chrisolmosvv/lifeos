@@ -6,7 +6,7 @@
 
 import { STATION, TAG_LABEL, fmtDur, fmtRemaining, scaledAmount } from "../../../spine/logic/cookPlanView";
 
-export default function CookPlanStep({ n, step, linked, scale, timer, liveState, usedSet, onStart, onStop, onResume, onTick }) {
+export default function CookPlanStep({ n, step, linked, scale, timer, liveState, usedSet, critical, floatMin, deadline, urgency, blocked, onStart, onStop, onResume, onTick }) {
   const st = STATION[step?.station] || null;
   const tag = step?.tag ? TAG_LABEL[step.tag] || step.tag : null;
   const dur = fmtDur(step?.timer_seconds);
@@ -29,7 +29,16 @@ export default function CookPlanStep({ n, step, linked, scale, timer, liveState,
         {dur && <span className="cp-step-dur tnum">{dur}</span>}
       </div>
 
+      <div className="cp-step-sched">
+        {critical ? <span className="cp-clock-mark">sets the clock</span> : floatMin > 0 && <span className="cp-slack">{floatMin}m slack</span>}
+        {deadline && <span className={`cp-deadline${urgency ? ` cp-deadline--${urgency}` : ""}`}>start by {deadline}</span>}
+      </div>
+
       <p className="cp-step-text">{step?.text}</p>
+
+      {blocked && (
+        <p className="cp-blocked">waiting on {blocked.nums.join(", ")} · frees up {blocked.freesUp}</p>
+      )}
 
       {hasDur && (
         <div className="cp-step-timer">

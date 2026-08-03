@@ -10,13 +10,22 @@ import { supabase } from "./supabaseClient.js";
 export async function fetchActiveSession(recipeId) {
   const { data, error } = await supabase
     .from("cook_session")
-    .select("id,recipe_id,status,started_at,ended_at,created_at,updated_at")
+    .select("id,recipe_id,status,started_at,ended_at,created_at,updated_at,target_serve_at")
     .eq("recipe_id", recipeId)
     .eq("status", "active")
     .order("updated_at", { ascending: false })
     .limit(1);
   if (error) throw new Error(error.message);
   return data?.[0] || null;
+}
+
+// Set the per-cook serve-time anchor (3c-i). target_serve_at is an ISO string (or null to clear).
+export async function setServeTime(sessionId, iso) {
+  const { error } = await supabase
+    .from("cook_session")
+    .update({ target_serve_at: iso, updated_at: new Date().toISOString() })
+    .eq("id", sessionId);
+  if (error) throw new Error(error.message);
 }
 
 // Any active session across all recipes (for the resume banner + header marker).

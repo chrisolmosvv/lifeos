@@ -21,6 +21,7 @@ import {
   startTimer as startTimerAction,
   stopTimer as stopTimerAction,
   resumeTimer as resumeTimerAction,
+  setServeTime as setServeTimeAction,
 } from "./cookEventStore.js";
 
 export function useCookEvents(recipeId) {
@@ -30,6 +31,8 @@ export function useCookEvents(recipeId) {
   const [now, setNow] = useState(Date.now());
   const tickRef = useRef(null);
   const localIdRef = useRef(0);
+  const [localServe, setLocalServe] = useState(null); // serve time set before a session exists
+  const pendingServeRef = useRef(null);               // flushed to the session on create
 
   // 1-second tick for timer countdowns — wall-clock math, not a decrementing counter
   useEffect(() => {
@@ -85,8 +88,19 @@ export function useCookEvents(recipeId) {
     if (session) return session.id;
     const s = await startSession(recipeId);
     setSession(s);
+    // Flush a serve time set before the cook began (3c-i).
+    if (pendingServeRef.current) { setServeTimeAction(s.id, pendingServeRef.current).catch(() => {}); pendingServeRef.current = null; }
     return s.id;
   }, [session, recipeId]);
+
+  // 3c-i: the serve anchor. Persists to the session when one exists; otherwise held locally and
+  // flushed on session create — setting a serve time must NOT begin the cook.
+  const serveAt = session?.target_serve_at ?? localServe;
+  const setServeTime = useCallback((iso) => {
+    setLocalServe(iso);
+    if (session) setServeTimeAction(session.id, iso).catch(() => {});
+    else pendingServeRef.current = iso;
+  }, [session]);
 
   const nowIso = () => new Date().toISOString();
 
@@ -143,6 +157,8 @@ export function useCookEvents(recipeId) {
     ready,
     state,               // { stepStates, tickedIngredients, usedIngredients, timers, finished, liveStates, liveTimers }
     hasSession: !!session,
+    serveAt,             // ISO string | null (3c-i)
+    setServeTime,
     markStep,            // BRIDGE (mobile)
     tickIngredient,
     useIngredient,

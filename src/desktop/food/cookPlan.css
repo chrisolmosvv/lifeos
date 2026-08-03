@@ -100,6 +100,22 @@
 .cp-timer-live.is-paused { color: var(--ink-muted); }
 .cp-timer-live.is-over { color: #A85C44; } /* brick — overrun, per the house law (not the accent) */
 
+/* ── 3c-i: serve anchor · deadlines · float (terracotta rare — serve readout + urgency only) ──── */
+.cp-serve { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem; }
+.cp-serve-label { font-size: 0.72rem; color: var(--ink-muted); }
+.cp-serve-input { font-family: var(--font-sans); font-size: 0.8rem; border: 1px solid var(--rule); background: none; color: var(--ink); padding: 0.1rem 0.35rem; }
+.cp-serve-read { font-size: 0.8rem; color: var(--accent); }         /* terracotta — the serve readout */
+.cp-serve-read--early { color: var(--ink-muted); }
+.cp-total--work { color: var(--ink-muted); }
+
+.cp-step-sched { display: flex; gap: 0.85rem; align-items: baseline; margin-top: 0.25rem; font-size: 0.72rem; }
+.cp-clock-mark { color: #874E58; letter-spacing: 0.04em; }          /* wine — sets the clock (critical path) */
+.cp-slack { color: var(--ink-muted); }
+.cp-deadline { color: var(--ink-muted); }
+.cp-deadline--urgent { color: var(--accent); }                      /* terracotta — within 10 min */
+.cp-deadline--overdue { color: #A85C44; }                           /* brick — past the deadline */
+.cp-blocked { margin: 0.3rem 0 0; font-size: 0.76rem; color: var(--ink-muted); font-style: italic; }
+
 /* ── Ingredients panel (collapsible) ──────────────────────────────────────── */
 .cp-ings { margin-top: 1.2rem; }
 .cp-ings-toggle {

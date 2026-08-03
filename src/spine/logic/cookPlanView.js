@@ -27,6 +27,12 @@ export function fmtDur(secs) {
   return mm ? `${h} h ${String(mm).padStart(2, "0")}` : `${h} h`;
 }
 
+// A clock time from an epoch ms, in the owner's local time — "18:42". Used for deadlines + serve.
+export function fmtClockTime(ms) {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 // A live countdown for the cook (3b). >=0 → "12:34"; NEGATIVE (overrun) → "+2:14 over" — it keeps
 // counting up past zero, never freezes.
 export function fmtRemaining(sec) {
