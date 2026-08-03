@@ -110,6 +110,30 @@
 .cpq-size-pct { font-size: 0.72rem; color: var(--ink-muted); min-width: 2.5rem; }
 .cpq-finish { background: none; border: 1px solid var(--accent); color: var(--accent); font-size: 0.8rem; padding: 0.25rem 0.8rem; cursor: pointer; }
 
+/* ── 3e: end-of-cook review modal ──────────────────────────────────────────── */
+.cpq-review-scrim { position: fixed; inset: 0; background: rgba(28, 25, 22, 0.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.cpq-review { background: var(--paper); border: 1px solid var(--rule); width: min(30rem, 92vw); max-height: 82vh; overflow-y: auto; padding: 1.25rem 1.4rem; }
+.cpq-review-h { font-family: var(--font-serif); font-weight: 500; font-size: 1.4rem; margin: 0 0 0.75rem; }
+.cpq-review-empty { color: var(--ink-muted); margin: 0.5rem 0 1rem; }
+.cpq-review-grp { margin-bottom: 0.9rem; }
+.cpq-review-grp-h { font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); }
+.cpq-review-item { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.4rem 0; border-bottom: 1px solid var(--rule-faint); cursor: pointer; }
+.cpq-review-item.is-dropped { opacity: 0.45; text-decoration: line-through; }
+.cpq-review-what { flex: 1; font-size: 0.9rem; }
+.cpq-review-delta { font-family: var(--font-serif); font-size: 0.95rem; }
+.cpq-review-src { font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); }
+.cpq-review-log { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; color: var(--ink-muted); margin: 0.6rem 0 1rem; }
+.cpq-review-foot { display: flex; justify-content: flex-end; gap: 0.75rem; }
+.cpq-review-cancel { background: none; border: 1px solid var(--rule); color: var(--ink-muted); font-size: 0.85rem; padding: 0.35rem 0.9rem; cursor: pointer; }
+.cpq-review-save { background: none; border: 1px solid var(--accent); color: var(--accent); font-size: 0.85rem; padding: 0.35rem 1rem; cursor: pointer; }
+
+/* 3e in-cook ingredient editing */
+.cp-ings-item.is-omit { opacity: 0.5; text-decoration: line-through; }
+.cp-ings-edit { display: inline-flex; gap: 0.3rem; margin-left: auto; }
+.cp-nudge { background: none; border: 1px solid var(--rule); color: var(--ink); font-size: 0.72rem; width: 1.3rem; cursor: pointer; }
+.cp-omit { background: none; border: 1px solid var(--rule); color: var(--ink-muted); font-size: 0.68rem; padding: 0.05rem 0.4rem; cursor: pointer; }
+.cp-omit.is-on { border-color: #A85C44; color: #A85C44; }
+
 /* ── Ingredients panel (preserved from 3a — still used) ────────────────────── */
 .cp-ings { margin: 0; }
 .cp-ings-toggle { display: flex; align-items: center; gap: 0.45rem; width: 100%; background: none; border: none; padding: 0.2rem 0; font-family: var(--font-sans); font-size: 0.9rem; color: var(--ink); cursor: pointer; text-align: left; }

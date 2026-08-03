@@ -22,6 +22,11 @@ import {
   stopTimer as stopTimerAction,
   resumeTimer as resumeTimerAction,
   setServeTime as setServeTimeAction,
+  adjustEstimate as adjustEstimateAction,
+  adjustTimer as adjustTimerAction,
+  changeAmount as changeAmountAction,
+  omitIngredient as omitIngredientAction,
+  abandonSession,
 } from "./cookEventStore.js";
 
 export function useCookEvents(recipeId) {
@@ -146,11 +151,40 @@ export function useCookEvents(recipeId) {
     try { commit(lid, await resumeTimerAction(session.id, stepIndex)); } catch { /* */ }
   }, [session, appendOptimistic, commit]);
 
+  // 3e mid-cook edits — proposals, captured as events (require a session; edits happen during a cook).
+  const adjustEstimate = useCallback(async (i, seconds) => {
+    if (!session) return;
+    const lid = appendOptimistic({ event_type: "estimate_adjusted", target_ref: String(i), payload: { seconds }, created_at: nowIso() });
+    try { commit(lid, await adjustEstimateAction(session.id, i, seconds)); } catch { /* */ }
+  }, [session, appendOptimistic, commit]);
+  const adjustTimer = useCallback(async (i, delta) => {
+    if (!session) return;
+    const lid = appendOptimistic({ event_type: "timer_adjusted", target_ref: String(i), payload: { delta }, created_at: nowIso() });
+    try { commit(lid, await adjustTimerAction(session.id, i, delta)); } catch { /* */ }
+  }, [session, appendOptimistic, commit]);
+  const changeAmount = useCallback(async (i, amount, unit, grams) => {
+    if (!session) return;
+    const lid = appendOptimistic({ event_type: "amount_changed", target_ref: String(i), payload: { amount, unit, grams }, created_at: nowIso() });
+    try { commit(lid, await changeAmountAction(session.id, i, amount, unit, grams)); } catch { /* */ }
+  }, [session, appendOptimistic, commit]);
+  const omitIngredient = useCallback(async (i) => {
+    if (!session) return;
+    const lid = appendOptimistic({ event_type: "ingredient_omitted", target_ref: String(i), payload: null, created_at: nowIso() });
+    try { commit(lid, await omitIngredientAction(session.id, i)); } catch { /* */ }
+  }, [session, appendOptimistic, commit]);
+
   const finish = useCallback(async () => {
     if (!session) return;
     appendOptimistic({ event_type: "finished", target_ref: null, payload: null, created_at: nowIso() });
     try { await finishSession(session.id); } catch { /* */ }
   }, [session, appendOptimistic]);
+
+  // 3e: ABANDON — silent discard. Marks the session abandoned; nothing is saved to the recipe.
+  const abandon = useCallback(async () => {
+    if (!session) return;
+    try { await abandonSession(session.id); } catch { /* */ }
+    setSession(null); setEvents([]);
+  }, [session]);
 
   return {
     session,
@@ -165,6 +199,11 @@ export function useCookEvents(recipeId) {
     startTimer,
     stopTimer,
     resumeTimer,
+    adjustEstimate,
+    adjustTimer,
+    changeAmount,
+    omitIngredient,
     finish,
+    abandon,
   };
 }

@@ -1,17 +1,21 @@
-// LifeOS — Food → the COOK PLAN page (mock Q, 3d). Composes the five zones — masthead · band ·
-// on-now · board · foot — over the live cook (3b), the resource-aware schedule (3c) and the serve
-// anchor. Fit-to-hole scales the board to fill the page; only the board scrolls. The serve readout
-// is LIVE: it re-times the schedule around what has actually happened. Renders what the scheduler
-// and replay produce — it changes neither.
+// LifeOS — Food → the COOK PLAN page (mock Q; 3a–3e). Composes masthead · band · on-now · board ·
+// foot over the live cook, the resource-aware schedule and the serve anchor. Mid-cook edits are
+// captured as EVENTS (survive reload). FINISH opens the itemised review (Keep/Drop → updateRecipe
+// with WHOLE objects). BACK abandons silently. Renders what the scheduler + replay produce.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchRecipe } from "../../../spine/data/recipeLoad";
+import { updateRecipe } from "../../../spine/data/recipeWrite";
 import { cookSchedule } from "../../../spine/logic/cookSchedule";
 import { anchorPlan } from "../../../spine/logic/cookDeadlines";
 import { recipeMacros } from "../../../spine/logic/recipeCalc";
+import { computeChanges, applyKept } from "../../../spine/logic/cookChanges";
 import { fmtDur, fmtClockTime, startByLabel } from "../../../spine/logic/cookPlanView";
+import { NUTRIENTS, slotForHour } from "../../../spine/logic/foodCalc";
+import { amsTodayYMD, amsClockMinutes } from "../../../spine/logic/gymDates";
 import { useCookEvents } from "../../../spine/data/useCookEvents";
 import { useWakeLock } from "../../../spine/data/useWakeLock";
+import { useCookLog } from "../../../spine/data/useCookLog";
 import { initAudioContext, startAlarm, stopAlarm } from "../../../spine/logic/cookAlarm";
 import { useFitToHole } from "./useFitToHole";
 import CookMasthead from "./CookMasthead";
@@ -20,6 +24,8 @@ import CookOnNow from "./CookOnNow";
 import CookBoard from "./CookBoard";
 import CookFoot from "./CookFoot";
 import CookIngredients from "./CookIngredients";
+import CookReview from "./CookReview";
+import Toast from "../../kit/Toast";
 import "../cookPlan.css";
 
 const elapsedStr = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 3600) ? Math.floor(s / 3600) + "h " : ""}${Math.floor((s % 3600) / 60)}m`; };
@@ -27,19 +33,17 @@ const elapsedStr = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); retur
 export default function CookPlan({ recipeId, onBack }) {
   const [data, setData] = useState(null);
   const [cookServings, setCookServings] = useState(null);
-  const [est, setEst] = useState({});          // index → overridden duration (seconds), session-local
   const [showIngs, setShowIngs] = useState(false);
+  const [reviewing, setReviewing] = useState(null); // null | changes object
+  const [saving, setSaving] = useState(false);
   const cook = useCookEvents(recipeId);
+  const cl = useCookLog();
   useWakeLock(cook.hasSession);
 
   const alarmedRef = useRef(new Set());
   const prevRemRef = useRef({});
   const boardScrollRef = useRef(null);
   const boardContentRef = useRef(null);
-
-  // The ancestor chain (.food-page/.food-pane) isn't full-height, so give .cpq a MEASURED height
-  // (viewport bottom − its own top). This bounds the board so it scrolls internally and fit-to-hole
-  // has a real hole to fill — without touching the shared food containers.
   const cpqRef = useRef(null);
   const [pageH, setPageH] = useState(null);
   const measure = useCallback(() => { const el = cpqRef.current; if (el) setPageH(window.innerHeight - el.getBoundingClientRect().top); }, []);
@@ -47,7 +51,7 @@ export default function CookPlan({ recipeId, onBack }) {
   useEffect(() => { window.addEventListener("resize", measure); return () => window.removeEventListener("resize", measure); }, [measure]);
 
   useEffect(() => {
-    let alive = true; setData(null); setCookServings(null); setEst({});
+    let alive = true; setData(null); setCookServings(null); setReviewing(null);
     fetchRecipe(recipeId).then((r) => { if (!alive) return; setData(r); setCookServings(r.recipe.default_servings ?? r.recipe.servings ?? 1); }).catch(() => {});
     return () => { alive = false; };
   }, [recipeId]);
@@ -62,13 +66,12 @@ export default function CookPlan({ recipeId, onBack }) {
   });
 
   const steps = data?.steps || [];
-  const durOf = (i) => est[i] ?? (steps[i]?.timer_seconds || 0);
-  const base = useMemo(() => cookSchedule(steps.map((s, i) => ({ durationSeconds: durOf(i), deps: s.depends_on, hold: s.hold_tolerance, tag: s.tag }))), [data, est]); // eslint-disable-line react-hooks/exhaustive-deps
+  const durOf = (i) => cook.state.estimates?.[String(i)] ?? (steps[i]?.timer_seconds || 0);
+  const base = data ? cookSchedule(steps.map((s, i) => ({ durationSeconds: durOf(i), deps: s.depends_on, hold: s.hold_tolerance, tag: s.tag }))) : null;
 
-  const fitSig = `${recipeId}:${cookServings}:${steps.length}:${Object.keys(est).length}`;
+  const fitSig = `${recipeId}:${cookServings}:${steps.length}:${Object.keys(cook.state?.estimates || {}).length}`;
   const fit = useFitToHole(boardScrollRef, boardContentRef, fitSig);
-
-  useEffect(() => { // keyboard − / + sizing (ignore while typing in an input)
+  useEffect(() => {
     const h = (e) => { if (e.target.tagName === "INPUT") return; if (e.key === "-") fit.dec(); else if (e.key === "+" || e.key === "=") fit.inc(); };
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
   }, [fit]);
@@ -89,7 +92,6 @@ export default function CookPlan({ recipeId, onBack }) {
   const cookStartMs = cook.session ? new Date(cook.session.started_at || cook.session.created_at).getTime() : null;
   const anchor = anchorPlan({ schedule, finish, serveAtMs, cookStartMs, nowMs });
 
-  // LIVE serve projection: re-time the schedule using each step's REMAINING duration given reality.
   const remDur = (i) => { const t = timerByRef[String(i)]; if (!t) return durOf(i); return t.running ? Math.max(0, t.remaining) : 0; };
   const liveFinish = cookStartMs ? cookSchedule(steps.map((s, i) => ({ durationSeconds: remDur(i), deps: s.depends_on, hold: s.hold_tolerance, tag: s.tag }))).finish : finish;
   const projFinishMs = cookStartMs ? nowMs + liveFinish * 1000 : nowMs + finish * 1000;
@@ -118,11 +120,28 @@ export default function CookPlan({ recipeId, onBack }) {
       blocked: blockedFor(i), critical: schedule[i].critical, floatMin: Math.round(schedule[i].float / 60),
       usedSet: cook.state.usedIngredients, onTick: (idx) => cook.useIngredient(idx),
       onStart: () => { initAudioContext(); cook.startTimer(i, durOf(i)); }, onStop: () => cook.stopTimer(i), onResume: () => cook.resumeTimer(i),
-      onAdjustEst: (delta) => setEst((o) => ({ ...o, [i]: Math.max(60, durOf(i) + delta) })),
+      onAdjustEst: (delta) => cook.adjustEstimate(i, Math.max(60, durOf(i) + delta)),
     };
   });
 
-  const onAdjustRunning = (i, delta) => { const t = timerByRef[String(i)]; if (t) cook.startTimer(i, Math.max(1, t.remaining + delta)); };
+  const logThisCook = () => {
+    const snap = {}; for (const k of NUTRIENTS) snap[k] = (macros.perServing[k] || 0) * cookServings;
+    cl.logSnapshot({ entry_date: amsTodayYMD(Date.now()), meal_slot: slotForHour(Math.floor(amsClockMinutes(Date.now()) / 60)), food_item_id: null, recipe_id: recipeId, amount: cookServings, unit: "serving", ...snap, entry_source: "recipe_cook", is_alcohol: false }, {});
+  };
+  const handleBack = async () => { if (cook.hasSession) await cook.abandon(); onBack(); }; // BACK = silent abandon
+  const openReview = () => setReviewing(computeChanges(data.steps, data.ingredients, cook.state));
+  const onReviewSave = async (keptKeys, alsoLog) => {
+    setSaving(true);
+    try {
+      if (reviewing && (reviewing.timing.length || reviewing.amounts.length)) {
+        const { steps: kSteps, ingredients: kIngs } = applyKept(data.steps, data.ingredients, reviewing, keptKeys);
+        await updateRecipe(recipeId, recipe, kIngs, kSteps);
+      }
+      await cook.finish();
+      if (alsoLog) logThisCook();
+    } catch { /* toast below on log; save failure surfaces on reload */ }
+    setSaving(false); setReviewing(null); onBack();
+  };
 
   return (
     <div className="cpq" ref={setCpq} style={{ height: pageH ? `${pageH}px` : "100%" }}>
@@ -131,13 +150,15 @@ export default function CookPlan({ recipeId, onBack }) {
         metricLabel={cookStartMs ? "elapsed" : "total planned"} metricValue={cookStartMs ? elapsedStr(nowMs - cookStartMs) : fmtDur(finish)}
         serveVal={serveAtMs ? fmtClockTime(serveAtMs) : ""} onServe={onServe} serveDrift={serveDrift} serveState={serveState}
         servings={cookServings} baseServ={recipe.servings || 1} onDec={() => setCookServings((s) => Math.max(1, s - 1))} onInc={() => setCookServings((s) => s + 1)}
-        onBack={onBack} onIngredients={() => setShowIngs((v) => !v)}
+        onBack={handleBack} onIngredients={() => setShowIngs((v) => !v)}
       />
-      {showIngs && <div className="cpq-ings-panel"><CookIngredients ingredients={ingredients} scale={cookServings / (recipe.servings || 1)} /></div>}
+      {showIngs && <div className="cpq-ings-panel"><CookIngredients ingredients={ingredients} scale={cookServings / (recipe.servings || 1)} editable={cook.hasSession} omitted={cook.state.omitted} amounts={cook.state.amounts} onOmit={cook.omitIngredient} onAmount={cook.changeAmount} /></div>}
       <CookBand steps={steps} schedule={schedule} finish={finish} timerByRef={timerByRef} cookStartMs={cookStartMs} nowMs={nowMs} />
-      <CookOnNow running={running} ready={ready} onAdjust={onAdjustRunning} onStart={(i) => { initAudioContext(); cook.startTimer(i, durOf(i)); }} usedSet={cook.state.usedIngredients} onTick={(idx) => cook.useIngredient(idx)} />
+      <CookOnNow running={running} ready={ready} onAdjust={(i, d) => cook.adjustTimer(i, d)} onStart={(i) => { initAudioContext(); cook.startTimer(i, durOf(i)); }} usedSet={cook.state.usedIngredients} onTick={(idx) => cook.useIngredient(idx)} />
       <CookBoard scrollRef={boardScrollRef} contentRef={boardContentRef} onScroll={fit.onScroll} scale={fit.scale} rows={boardRows} />
-      <CookFoot perServing={macros.perServing} unestimated={macros.unestimatedCount} fitPct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onFinish={() => cook.finish()} hasSession={cook.hasSession} />
+      <CookFoot perServing={macros.perServing} unestimated={macros.unestimatedCount} fitPct={fit.pct} isManual={fit.isManual} onDec={fit.dec} onInc={fit.inc} onFit={fit.fit} onFinish={openReview} hasSession={cook.hasSession} />
+      {reviewing && <CookReview changes={reviewing} kcalPerServing={macros.perServing.kcal} servings={cookServings} onSave={onReviewSave} onCancel={() => setReviewing(null)} saving={saving} />}
+      {cl.toast && <Toast text={cl.toast.text} onUndo={cl.toast.undo} onDismiss={cl.dismiss} />}
     </div>
   );
 }

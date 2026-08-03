@@ -161,3 +161,17 @@ export function stopTimer(sessionId, stepIndex) {
 export function resumeTimer(sessionId, stepIndex) {
   return insertEvent(sessionId, "timer_resumed", String(stepIndex), null);
 }
+
+// ── Mid-cook edit events (3e) — proposals captured so they survive a reload + feed the review ──
+export function adjustEstimate(sessionId, stepIndex, seconds) {
+  return insertEvent(sessionId, "estimate_adjusted", String(stepIndex), { seconds });
+}
+export function adjustTimer(sessionId, stepIndex, delta) {
+  return insertEvent(sessionId, "timer_adjusted", String(stepIndex), { delta });
+}
+export function changeAmount(sessionId, ingredientIndex, amount, unit, grams) {
+  return insertEvent(sessionId, "amount_changed", String(ingredientIndex), { amount, unit, grams });
+}
+export function omitIngredient(sessionId, ingredientIndex) {
+  return insertEvent(sessionId, "ingredient_omitted", String(ingredientIndex), null);
+}

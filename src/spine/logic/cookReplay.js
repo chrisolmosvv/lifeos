@@ -21,6 +21,11 @@ export function replayCookEvents(events, now) {
   // ── NEW (desktop 3b): per-step timer SEGMENTS for signed remaining + timer-derived state ──
   const seg = {};               // targetRef → { duration, accumulated (sec), runningSince (ts|null) }
 
+  // ── 3e mid-cook edits (desktop): captured as events so they survive a reload + feed the review ──
+  const estimates = {};         // step ref → adjusted planned duration (sec), last wins
+  const amounts = {};           // ingredient ref → { amount, unit, grams }, last wins
+  const omittedMap = {};        // ingredient ref → bool (toggle)
+
   for (const e of events || []) {
     const ref = e.target_ref;
     const payload = e.payload || {};
@@ -57,6 +62,19 @@ export function replayCookEvents(events, now) {
           seg[ref].runningSince = null;
         }
         break;
+      case "timer_adjusted": // 3e: −1m/+1m on a running timer nudges its duration
+        if (seg[ref]) seg[ref].duration = Math.max(0, seg[ref].duration + (payload.delta || 0));
+        break;
+      case "estimate_adjusted": // 3e: a waiting step's planned duration edited
+        estimates[ref] = payload.seconds;
+        break;
+      case "amount_changed": // 3e: an ingredient's amount/unit edited
+        amounts[ref] = { amount: payload.amount ?? null, unit: payload.unit ?? null, grams: payload.grams ?? null };
+        break;
+      case "ingredient_omitted": // 3e: an ingredient left out entirely (toggle)
+        omittedMap[ref] = !omittedMap[ref];
+        break;
+
       case "finished":
         finished = true;
         break;
@@ -90,5 +108,8 @@ export function replayCookEvents(events, now) {
   const usedIngredients = new Set();
   for (const [ref, used] of Object.entries(ingredientUsed)) if (used) usedIngredients.add(ref);
 
-  return { stepStates, tickedIngredients, usedIngredients, timers, finished, liveStates, liveTimers };
+  const omitted = new Set();
+  for (const [ref, v] of Object.entries(omittedMap)) if (v) omitted.add(ref);
+
+  return { stepStates, tickedIngredients, usedIngredients, timers, finished, liveStates, liveTimers, estimates, amounts, omitted };
 }
