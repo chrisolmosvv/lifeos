@@ -18,11 +18,14 @@ const CLIENT_TIMEOUT_MS = 25000;
 const BATCH_SIZE = 6; // ingredients per batch — keeps well under 15 req/min
 const BATCH_GAP_MS = 1200; // pause between batches
 
-export async function importRecipe({ text, url }) {
+export async function importRecipe({ text, url, image, imageMime }) {
+  // One request body, whichever input the screen gave us. A photo (2b) is OCR'd server-side into
+  // the same text pipeline; the image is never stored.
+  const body = text ? { text } : url ? { url } : { image, imageMime: imageMime || "image/jpeg" };
   let data;
   try {
     const res = await Promise.race([
-      supabase.functions.invoke("recipe-import", { body: text ? { text } : { url } }),
+      supabase.functions.invoke("recipe-import", { body }),
       new Promise((_, reject) => setTimeout(() => reject(new Error("client_timeout")), CLIENT_TIMEOUT_MS)),
     ]);
     if (res.error) return { ok: false, error: "unreachable" };
@@ -31,7 +34,9 @@ export async function importRecipe({ text, url }) {
     return { ok: false, error: "unreachable" };
   }
   if (!data || data.ok !== true) {
-    return { ok: false, error: data?.error === "fetch_fail" ? "fetch_fail" : "parse_fail" };
+    // Pass through the distinct failures the screen has messages for; everything else → parse_fail.
+    const e = data?.error;
+    return { ok: false, error: e === "fetch_fail" || e === "ocr_fail" || e === "multi_recipe" ? e : "parse_fail" };
   }
 
   const r = data.recipe;
