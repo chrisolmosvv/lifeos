@@ -33,6 +33,77 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-03 — PIECE 6 — EDIT VIA THE REVIEW SCREEN (the old editor STAYS — Planner ruling). Src-only, 3 commits.
+
+WHAT CHANGED: the Edit button now re-opens the SAME three-pass review screen for that recipe, in an
+EDIT MODE — no more cramped old two-column editor for editing. The old editor SURVIVES, but only
+behind "+ NEW" (writing a recipe from a blank page by hand).
+- Commit `00f693b` — ImportReview gains an edit mode. Given a saved recipe (fed as a draft by the new
+  EditReview loader), it saves via updateRecipe (never a second recipe), passing WHOLE objects so the
+  delete-all-reinsert can't null station/hold_tolerance/is_prep/grams/step_position. The import-only
+  scaffolding steps back when a recipe is already reviewed: no source-line diff/arrow, no impact
+  flags, no prep-step approval — the fields just stay editable. The SAVE GATE still applies (every
+  ingredient resolved · every step timed · plan valid). reviewed_at: an already-reviewed recipe stays
+  reviewed; an unreviewed DRAFT keeps the full review and is marked reviewed on save, like an import.
+- Commit `1bfcad0` — added the recipe-page **Edit button** (the cook page had none since the rebuild —
+  CookPlan got a dangling onEdit prop but never rendered it). Calm hairline button in the masthead,
+  shown only on the dormant plan (not mid-cook). Recorded in RecipeEditor.jsx WHY it survived.
+- ★ ROUTING CONFIRMED (verified by reading Cookbook.jsx): Edit → `{kind:"edit"}` → EditReview → the
+  review in edit mode. "+ NEW" → `{kind:"editor"}` → RecipeEditor. **Edit NEVER reaches the old
+  editor.** A draft opened from the library goes straight to the review (full flags + approval); a
+  reviewed recipe opens the cook page, whose Edit button opens the review in scaffolding-off mode.
+
+FILES: src/spine/data/recipeLoad.js (fetchRecipe also selects default_servings + reviewed_at —
+additive, not frozen; also fixes a latent CookPlan default_servings gap); src/desktop/food/importreview/
+{ImportReview,IngredientsPass,MethodPass,StepRow,ImportMasthead}.jsx + NEW EditReview.jsx; src/desktop/
+food/cookplan/{CookPlan,CookMasthead}.jsx; src/desktop/food/Cookbook.jsx; src/desktop/food/RecipeEditor.jsx
+(survival comment only). No schema, no deploy, no mobile. Build passes after every commit.
+
+HOW TO VERIFY (owner, 13" Mac — I verified by build + code-trace; the row-check is YOURS):
+1. Open a saved recipe → click **Edit** (top of the cook page) → the THREE-PASS REVIEW opens, not the
+   old screen. Eyebrow reads "editing a recipe".
+2. It shows the stored values — no red import flags, no "approve prep step" chrome, no source→arrow.
+3. Change an ingredient amount (tap a row → Finder), a step's text, and a step's duration.
+4. In pass ③ (the plan) drag a step to change what it waits for.
+5. Save → back on the recipe, changes present, and **NO SECOND RECIPE** created.
+6. ★ Query it (Supabase SQL editor, Frankfurt; runs as postgres so select by title):
+     select count(*) from recipes where title ilike '%<title>%';   -- must be 1, not 2
+     select position, timer_seconds, tag, station, hold_tolerance, is_prep from recipe_steps
+       where recipe_id=(select id from recipes where title ilike '%<title>%' order by created_at desc limit 1) order by position;
+     select position, raw_text, amount, unit, grams, step_position from recipe_ingredients
+       where recipe_id=(select id from recipes where title ilike '%<title>%' order by created_at desc limit 1) order by position;
+   → the edits saved AND station / hold_tolerance / is_prep / grams / step_position ALL still populated.
+7. Break the gate: clear a step's duration → Save blocks and the checklist says why.
+8. Import a NEW recipe → the import path works exactly as before (flags + approval + save).
+9. Cook a recipe → unaffected. Food → Log → unaffected.
+
+KNOWN GAPS / FLAGS:
+- ★ **The old editor (RecipeEditor.jsx + EditorSteps.jsx + recipeEditor.css) is NOT deleted — by
+  Planner ruling.** Prove-dead found it is still the ONLY path for "+ NEW" (hand-writing a recipe from
+  a blank page); the review has no "add an ingredient from nothing" flow. Removing "+ NEW" just to
+  delete the file was rejected (don't trade a working capability for a tidier tree). My flag was
+  confirmed correct; the rebuild's plan had the gap, not the build.
+- Verified by build + code-trace, NOT a live click — I did not drive saves against your real recipes
+  (that mutates real data; the row-check above is the gate). If the cookbook is empty, import one
+  first (step 8), then edit it (steps 1–6).
+- Reviewed-recipe DELETE is also currently unreachable on the cook page (the old recipe-page menu was
+  dropped in demolition; CookPlan's onDelete is dangling too). Out of scope for Piece 6 — noted for a
+  future call.
+
+★ ROADMAP NOTE (for the next docs pass — NOT edited this session): the "editing is unfinished" debt in
+02-roadmap.md is now CLOSED (Edit uses the review). It is REPLACED by a new debt item: give the review
+screen an "add an ingredient from nothing" flow so it can create a recipe from scratch — after which
+"+ NEW" reroutes there and the old editor can finally retire.
+
+NEXT: owner runs the verify steps above. The "add-ingredient in review, then retire the editor" piece
+is NOT started (Planner said stop).
+
+FOR THE CHECKER: confirm (a) Edit never reaches RecipeEditor (only "+ NEW" does); (b) an edited
+reviewed recipe saves via updateRecipe with station/hold/is_prep/grams intact and creates no duplicate;
+(c) the import path is unchanged.
+
+---
+
 ### 2026-08-03 — DEMOLITION — retired the old Cookbook surfaces (3 commits, src-only)
 
 WHAT CHANGED: removed the old cook screens that had been left on disk (unrouted) as a fallback
