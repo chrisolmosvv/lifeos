@@ -21,7 +21,7 @@
 //   OFF_CONTACT_EMAIL — the contact in OFF's User-Agent (built in off.ts).
 //   SUPABASE_URL / SUPABASE_ANON_KEY — auto-injected; the owner-scoped food_items read.
 
-import { type FoodCandidate, isBasic, mergeDedupeOrder, dropZeroJunk, isClearNameMatch, type SourceResult } from "./normalize.ts";
+import { type FoodCandidate, isBasic, mergeDedupeOrder, dropZeroJunk, isClearNameMatch, exactNameIndex, type SourceResult } from "./normalize.ts";
 import { searchSaved } from "./saved.ts";
 import { searchOff } from "./off.ts";
 import { searchUsda, usdaConfigured } from "./usda.ts";
@@ -117,7 +117,12 @@ Deno.serve(async (req) => {
   // core-word test as the zero-drop filter). Saves a Gemini call on obvious picks like
   // "chicken stock" → "Chicken Stock". dbSuppressed stays unchanged (Finder UI unaffected).
   const clearMatch = results.length > 0 && isClearNameMatch(query, results[0]);
-  const top3 = (dbSuppressed || clearMatch) ? null : await rerankTop(query, results);
+  // Piece 11 — EXACT-NAME-FIRST, above the word-scoring: when the query exactly names a candidate
+  // (a seeded plain "Salt"/"Black pepper" basic over a compound), pin it as the sole top pick and
+  // skip the rerank (its quota saved too). Only when there is NO exact name does today's logic —
+  // dbSuppressed / clearMatch / the AI rerank — run, entirely unchanged.
+  const exact = exactNameIndex(query, results);
+  const top3 = exact != null ? [exact] : (dbSuppressed || clearMatch) ? null : await rerankTop(query, results);
 
   // Per-source outcome: a count when reachable, "unavailable" when the API failed/timed
   // out, "not_configured" when the USDA key isn't set (OFF/saved still worked).

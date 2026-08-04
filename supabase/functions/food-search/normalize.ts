@@ -154,6 +154,34 @@ export function isClearNameMatch(query: string, candidate: FoodCandidate): boole
   return core.every((w) => new RegExp(`\\b${w}\\b`).test(name));
 }
 
+// ── Exact-name-first (Piece 11) ──────────────────────────────────────────────
+// A DETERMINISTIC rule that sits ABOVE the word-scoring: if the query NAMES a candidate exactly —
+// same words, order-independent, ignoring a few pure-prep words that don't change per-100g nutrition
+// ("cooking" salt, "ground" cumin) — that candidate wins outright, a seeded plain "Salt"/"Black
+// pepper" basic beating a compound that merely contains the term ("Cooked Salted Duck Eggs"). Prefers
+// a BASICS row on a tie. Returns the winning index, or null → the existing pipeline (word-scoring + AI
+// rerank) runs UNCHANGED. Deliberately narrow: it fires only on true name-equality, and never treats
+// fresh↔dried (or other nutrition-changing states) as equal, so it can't mismatch their per-100g.
+const PREP_WORDS = new Set([
+  "cooking", "table", "fine", "coarse", "sea", "kosher", "flaky", "ground", "powdered", "crushed", "whole",
+]);
+function nameKey(s: string): string {
+  return (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+    .split(" ").filter((w) => w && !PREP_WORDS.has(w)).sort().join(" ");
+}
+export function exactNameIndex(query: string, candidates: FoodCandidate[]): number | null {
+  const q = nameKey(query);
+  if (!q) return null;
+  let basicHit: number | null = null;
+  let anyHit: number | null = null;
+  candidates.forEach((c, i) => {
+    if (nameKey(c.name) !== q) return;
+    if (anyHit === null) anyHit = i;
+    if (basicHit === null && isBasic(c)) basicHit = i;
+  });
+  return basicHit ?? anyHit;
+}
+
 // ── Merge + dedupe ──────────────────────────────────────────────────────────
 // Merge the three sources into one ordered list with no duplicate of the SAME food.
 //   • Order: curated BASICS staples FIRST (P1 — the trusted generics lead), then the rest of
