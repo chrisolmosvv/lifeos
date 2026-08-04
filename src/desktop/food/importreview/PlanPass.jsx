@@ -52,7 +52,11 @@ export default function PlanPass({ steps, schedule, finish, gate, ingCount, onRe
             {gate.hasTitle === false && <Check ok={false} title="Needs a title" detail="name the recipe up top" />}
             {gate.hasIngredients === false && <Check ok={false} title="Needs an ingredient" detail="add at least one" />}
             {gate.hasSteps === false && <Check ok={false} title="Needs a method" detail="add at least one step" />}
-            <Check ok={gate.ingredientsResolved} title="Every ingredient resolved" detail={gate.ingredientsResolved ? `all ${ingCount} have macros` : `${gate.ingUnresolved} still to resolve`} />
+            {/* Piece 9 (revised): unweighted ingredients WARN, they do not lock Save. But they must be
+                loud — an ingredient contributing nothing must never pass silently as "resolved". */}
+            {gate.ingUnresolved > 0
+              ? <div className="iv-ck iv-warn"><i /><div className="t"><b>{gate.ingUnresolved} ingredient{gate.ingUnresolved === 1 ? " has" : "s have"} no weight</b> — {gate.ingUnresolved === 1 ? "it contributes" : "they contribute"} nothing to the totals. Give a weight, or mark “no macros” — or save as-is.</div></div>
+              : <Check ok={true} title="Every ingredient resolved" detail={`all ${ingCount} have macros`} />}
             <Check ok={gate.stepsTimed} title="Every step timed" detail={gate.stepsTimed ? `all ${steps.length}` : `${gate.stepsUntimed} without a duration`} />
             <Check ok={gate.planValid} title="Plan is valid" detail={gate.planValid ? "no impossible order" : "a circular dependency — remove one link"} />
             {gate.warnFlags > 0 && <div className="iv-ck iv-warn"><i /><div className="t"><b>{gate.warnFlags} guess{gate.warnFlags === 1 ? "" : "es"} unconfirmed</b> — you can still save</div></div>}

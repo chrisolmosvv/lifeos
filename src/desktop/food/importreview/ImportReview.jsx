@@ -105,7 +105,9 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, onDele
   const reparent = (i, after) => upd(i, { depends_on: after != null ? [after] : null });
 
   const approveAll = () => { if (pass === 1) setResolved(new Set(ings.map((_, i) => i))); else if (pass === 2) setSteps((xs) => xs.map((s) => ({ ...s, approved: true }))); };
-  const subs = { 1: unresolvedFlags ? `${unresolvedFlags} to check` : `all ${model.count} resolved`, 2: unapproved ? `${unapproved} to approve` : `${steps.length} steps`, 3: gate.canSave ? "ready to save" : "not ready" };
+  // Save is enabled once the plan is sound (steps timed, no cycle) + the essentials exist; unweighted
+  // ingredients WARN in the sub rather than reading a bland "ready to save" (Piece 9 revised).
+  const subs = { 1: unresolvedFlags ? `${unresolvedFlags} to check` : `all ${model.count} resolved`, 2: unapproved ? `${unapproved} to approve` : `${steps.length} steps`, 3: !gate.canSave ? "not ready" : gate.ingUnresolved ? `${gate.ingUnresolved} with no weight` : "ready to save" };
 
   const save = async () => {
     if (!gate.canSave || saving) return;

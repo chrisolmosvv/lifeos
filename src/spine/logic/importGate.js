@@ -1,14 +1,16 @@
-// LifeOS — Food → import review SAVE GATE (4c, PURE). Three checks that all must pass before Save is
-// enabled; low-confidence flags WARN but never block (the owner may ship a guess, it just says so).
-//   • every ingredient RESOLVED — a food match WITH a resolved weight, manual_macros, or no_macros
-//   • every step has a DURATION (timer_seconds > 0)
-//   • the plan is VALID — no circular dependency
+// LifeOS — Food → import review SAVE GATE (4c, PURE). Save is HARD-BLOCKED only by structural faults
+// the owner can't sensibly waive — an untimed step, a circular plan. Everything about ingredients
+// WARNS but never blocks: the owner may knowingly ship a recipe with guesses or unweighted items.
+//   • every step has a DURATION (timer_seconds > 0)      [blocks]
+//   • the plan is VALID — no circular dependency          [blocks]
+//   • every ingredient RESOLVED — a food match WITH a weight, manual_macros, or no_macros [WARNS]
 //
 // Piece 9 Fix 4: "resolved" used to mean "has a food_item_id" ALONE — so a WRONG match with no
 // weight (red pepper flakes → a snap-peas product, 0 g, 0 macros) counted as done and the recipe
-// read "ready to save" while every row under it was flagged. A match without a weight produces NO
-// macros, which is the whole point of resolving. So a food match now ALSO needs grams > 0. The three
-// genuinely-distinct exits: matched food + weight · manual macros · the owner said it has none.
+// read "ready to save" while every row was flagged. A match without a weight produces NO macros, so
+// it is not resolved; it now stays visibly UNRESOLVED (a loud warning) until the owner gives it a
+// weight OR explicitly says it has none. The three genuinely-distinct exits: matched food + weight ·
+// manual macros · the owner said it has none. "No macros" is an OWNER CHOICE, never a silent default.
 
 import { resolvePortion } from "./portions.js";
 
@@ -52,6 +54,11 @@ export function importGate(ingredients, steps, unconfirmedFlags = 0) {
     stepsTimed: stepsUntimed === 0, stepsUntimed,
     planValid,
     warnFlags: unconfirmedFlags,
-    canSave: ingUnresolved === 0 && stepsUntimed === 0 && planValid,
+    // Piece 9 (revised): unweighted ingredients WARN, they do NOT lock Save — the owner may ship a
+    // recipe knowing some items contribute nothing. What they must NOT do is contribute nothing
+    // SILENTLY: ingUnresolved keeps them visibly unresolved (a loud warning), not counted as done.
+    // A structurally-broken plan (untimed step, cycle) still hard-blocks — those aren't a judgement
+    // call the owner can waive. canSave therefore drops the ingredient gate.
+    canSave: stepsUntimed === 0 && planValid,
   };
 }
