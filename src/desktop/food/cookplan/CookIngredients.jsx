@@ -26,7 +26,7 @@ export default function CookIngredients({ ingredients, itemsById, srcServings, s
                 <span className="cp-ings-amt tnum">{row.amount != null ? `${row.amount}${unit}` : "—"}</span>
                 <span className="cp-ings-text">{row.orig}{omit ? " · left out" : ""}</span>
                 <span className="cp-ings-g tnum">{row.grams != null ? `${row.grams}g` : ""}</span>
-                <span className="cp-ings-kc tnum">{row.kcal}</span>
+                <span className="cp-ings-kc tnum">{row.manual ? "~" : ""}{row.kcal}</span>
                 <span className="cp-ings-mm iv-mp tnum">{row.protein}</span>
                 <span className="cp-ings-mm iv-mc tnum">{row.carbs}</span>
                 <span className="cp-ings-mm iv-mf tnum">{row.fat}</span>

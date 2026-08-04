@@ -7,16 +7,20 @@ import { useEffect, useMemo, useState } from "react";
 import { searchFoods } from "../../../spine/data/foodLoad";
 import { recipeMacros } from "../../../spine/logic/recipeCalc";
 import { resolvePortion, unitOptionsFor } from "../../../spine/logic/portions";
+import ManualMacros from "./ManualMacros";
 
 const r = (v) => Math.round(v || 0);
 
 // variant "import" (4a): full — name, amount+unit, macros, food-search, Confirm/No macros/Remove.
 // variant "cook" (3f): a mid-cook subset — amount+unit (live), macros, and Used / Left out / Close.
 // You don't re-match a food mid-cook; you adjust its amount or drop it, recorded as events.
-export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResolve, onNoMacros, onRemove, onClose, variant = "import", onUsed, onOmit, isUsed }) {
+export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResolve, onNoMacros, onRemove, onClose, onManualMacros, onClearManual, variant = "import", onUsed, onOmit, isUsed }) {
   const cook = variant === "cook";
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
+  // Reopening an ingredient that already has hand-entered numbers lands in the manual view, populated
+  // and editable (Piece 10) — not a blank search.
+  const [manual, setManual] = useState(!!ing.manual_macros);
 
   useEffect(() => {
     if (!query.trim()) { setResults([]); return; }
@@ -45,7 +49,9 @@ export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResol
     // not-yet-cached candidate is cached on the way out rather than trusted as already-stored.
     const key = c.food_item_id || c.id || `sel:${c.source || "x"}:${c.source_ref || c.name}`;
     itemsById[key] = { ...c };
-    onPatch({ food_item_id: key, no_macros: false, parsedName: ing.parsedName || c.name });
+    // Matching a real food UNDOES any hand-entered macros cleanly — the two are mutually exclusive
+    // (recipeCalc prefers manual_macros, so a leftover would silently win) (Piece 10).
+    onPatch({ food_item_id: key, no_macros: false, manual_macros: null, parsedName: ing.parsedName || c.name });
   };
 
   const style = { left: Math.min((anchor?.left || 0) + 40, window.innerWidth - 374), top: Math.min((anchor?.top || 0) + 8, window.innerHeight - 420) };
@@ -66,24 +72,32 @@ export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResol
           <span>= <b>{r(ing.grams)} g</b></span><span><b>{r(macros.kcal)}</b> kcal</span>
           <span className="iv-mp"><b>{r(macros.protein)}g</b> P</span><span className="iv-mc"><b>{r(macros.carbs)}g</b> C</span><span className="iv-mf"><b>{r(macros.fat)}g</b> F</span>
         </div>
-        {!cook && <>
-          <label>matched food</label>
-          <input className="iv-search" placeholder="search foods…" value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
-          <div className="iv-res">
-            {results.map((c, k) => (
-              <button key={c.id || k} type="button" className="iv-rr" onClick={() => pick(c)}>
-                <span className="rn">{c.name}</span><span className="rk">{kcal100(c)} kcal/100g</span>
-              </button>
-            ))}
-          </div>
-        </>}
+        {!cook && (manual ? (
+          <ManualMacros name={ing.parsedName || ing.name} amount={ing.amount} unit={ing.unit} initial={ing.manual_macros || null}
+            onSave={onManualMacros} onClear={onClearManual} onSearch={() => setManual(false)} />
+        ) : (
+          <>
+            <label>matched food</label>
+            <input className="iv-search" placeholder="search foods…" value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
+            <div className="iv-res">
+              {results.map((c, k) => (
+                <button key={c.id || k} type="button" className="iv-rr" onClick={() => pick(c)}>
+                  <span className="rn">{c.name}</span><span className="rk">{kcal100(c)} kcal/100g</span>
+                </button>
+              ))}
+            </div>
+          </>
+        ))}
         <div className="iv-pacts">
           {cook ? <>
             <button type="button" className="pri" onClick={onUsed}>{isUsed ? "Un-tick" : "Mark used"}</button>
             <button type="button" onClick={onOmit}>Left out</button>
             <button type="button" onClick={onClose}>Close</button>
-          </> : <>
+          </> : manual ? (
+            <button type="button" onClick={onClose}>Close</button>
+          ) : <>
             <button type="button" className="pri" onClick={onResolve}>Confirm</button>
+            <button type="button" onClick={() => setManual(true)}>Enter macros</button>
             <button type="button" onClick={onNoMacros}>No macros</button>
             <button type="button" onClick={onRemove}>Remove</button>
             <button type="button" onClick={onClose}>Close</button>

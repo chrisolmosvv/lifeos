@@ -42,7 +42,7 @@ export default function IngredientsPass({ model, resolved, scrollRef, contentRef
                 <span>{savedLabel(row)}</span>
                 <span className="match">{row.match}</span>
                 <span className="n">{row.grams != null ? row.grams : "—"}</span>
-                <span className="kc">{row.kcal}</span>
+                <span className="kc">{row.manual ? "~" : ""}{row.kcal}</span>
                 <span className="n iv-mp">{row.protein}</span>
                 <span className="n iv-mc">{row.carbs}</span>
                 <span className="n iv-mf">{row.fat}</span>

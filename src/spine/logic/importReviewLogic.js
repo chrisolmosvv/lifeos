@@ -65,17 +65,22 @@ export function buildReview(ingredients, itemsById, srcServings, serv) {
 
   let flaggedCount = 0;
   const rows = base.map((b, i) => {
-    const flagged = (b.guessed && impactful(b)) || b.grams == null;
+    // An EXPLICITLY-resolved ingredient — the owner typed its macros (manual_macros) or said it has
+    // none (no_macros) — is never flagged for a missing weight or a guessed amount. It's a settled
+    // owner choice, not an uncertainty (Piece 10).
+    const explicit = !!(b.ing.no_macros || b.ing.manual_macros);
+    const flagged = !explicit && ((b.guessed && impactful(b)) || b.grams == null);
     if (flagged) flaggedCount++;
     const it = b.ing.food_item_id != null ? itemsById?.[b.ing.food_item_id] : null;
+    const manual = !!b.ing.manual_macros;
     return {
       i, orig: b.ing.raw_text || "", name: (b.ing.parsedName || it?.name || "").toLowerCase(),
       amount: b.ing.amount != null ? round(Number(b.ing.amount) * scale) : null, unit: b.ing.unit || null,
-      match: b.ing.no_macros ? "no macros" : (it?.name || "no match"),
+      match: b.ing.no_macros ? "no macros" : manual ? "your numbers" : (it?.name || "no match"),
       grams: b.grams != null ? Math.round(b.grams * scale) : null,
       kcal: Math.round((b.m?.kcal || 0) * scale), protein: Math.round((b.m?.protein || 0) * scale),
       carbs: Math.round((b.m?.carbs || 0) * scale), fat: Math.round((b.m?.fat || 0) * scale),
-      guessed: b.guessed, flagged,
+      guessed: b.guessed, flagged, manual,
       why: flagged ? whyText(b) : null,
     };
   });

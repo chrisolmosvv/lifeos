@@ -77,12 +77,16 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, onDele
   // discards it — an add you backed out of shouldn't leave an orphan unresolved row behind.
   const closeFinder = () => {
     setFinder((f) => {
-      if (f?.added) { const row = ings[f.i]; if (row && !row.food_item_id && !row.no_macros) setIngs((xs) => xs.filter((_, j) => j !== f.i)); }
+      if (f?.added) { const row = ings[f.i]; if (row && !row.food_item_id && !row.no_macros && !row.manual_macros) setIngs((xs) => xs.filter((_, j) => j !== f.i)); }
       return null;
     });
   };
   const resolveOne = () => { setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
-  const noMacros = () => { patch({ no_macros: true }); setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
+  const noMacros = () => { patch({ no_macros: true, manual_macros: null }); setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
+  // Manual macros (Piece 10): the owner typed the numbers — a real resolution. Clears any wrong match
+  // (manual and a food match are mutually exclusive). Clearing them un-resolves the row again.
+  const manualMacros = (m) => { patch({ manual_macros: m, no_macros: false, food_item_id: null }); setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
+  const clearManual = () => { patch({ manual_macros: null }); setResolved((s) => { const n = new Set(s); n.delete(finder.i); return n; }); setFinder(null); };
   const removeOne = () => { const i = finder.i; setIngs((xs) => xs.filter((_, j) => j !== i)); setFinder(null); };
   // Add an ingredient from nothing (all modes): append a blank row and open the Finder on it. No
   // raw_text — nothing wrote it, so the diff's left side stays honestly empty.
@@ -177,7 +181,8 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, onDele
       </div>
 
       {finder && <FinderPopover ing={ings[finder.i]} itemsById={itemsRef.current} anchor={finder.anchor}
-        onPatch={patch} onResolve={resolveOne} onNoMacros={noMacros} onRemove={removeOne} onClose={closeFinder} />}
+        onPatch={patch} onResolve={resolveOne} onNoMacros={noMacros} onRemove={removeOne} onClose={closeFinder}
+        onManualMacros={manualMacros} onClearManual={clearManual} />}
 
       {(delState === "confirm" || delState === "blocked" || delState === "deleting") && (
         <DeleteConfirm title={title} blocked={delState === "blocked"} deleting={delState === "deleting"}
