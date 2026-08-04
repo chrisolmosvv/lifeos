@@ -11,12 +11,19 @@
 
 ## Piece 9 — ingredient resolution fixes (2026-08-04)
 
-**[A "resolved" ingredient means a food match WITH a weight, not a match alone]** — the save gate now
-requires `food_item_id` AND grams > 0 (or an explicit `no_macros`/`manual_macros`). **Why:** a match
-with no weight produces no macros — a failure wearing a success; it let the Penne draft say "ready to
-save" with four blank ingredients. **Trade-off:** the gate can now trap an ingredient that has real
-calories but no DB match and no way to hand-enter them (manual macros was retired in Piece 8) — see
-the open debt below.
+**[A "resolved" ingredient means a food match WITH a weight, not a match alone — but unresolved WARNS,
+it does not BLOCK]** — the gate treats an ingredient as resolved only with `food_item_id` AND grams > 0
+(or explicit `no_macros`/`manual_macros`); anything else stays visibly UNRESOLVED. But Save hard-blocks
+only on structural faults (untimed step, circular plan) — unweighted ingredients raise a loud warning
+("N contribute nothing to the totals") and the owner may ship anyway. **Why:** a match with no weight
+produces no macros — a failure wearing a success that let the Penne draft read "ready to save" over
+four blanks; making it *silent-resolved* was the bug, not the owner's freedom to ship. The Planner
+first ruled "block", then revised to "warn, don't block" — the owner decides what ships, the tool only
+refuses to lie about it. **[No macros is an EXPLICIT owner choice, never a silent fallback]** —
+confirmed the only setter is the Finder button; the gate never auto-marks a failed item as zero.
+**Trade-off:** the gate can now surface an ingredient with real calories that has no DB match and no
+way to hand-enter them — which is why **manual macros is the next piece** (storage already exists;
+`ManualMacrosPanel` is recoverable from `78c2b59`).
 
 **[The density table is data, sourced, in its own file (`portionsData.js`)]** — every gram value
 carries its source; `densityClass` walks ordered rules (first match wins). **Why:** "accuracy over

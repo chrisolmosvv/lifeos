@@ -64,6 +64,21 @@ fork — stop and flag it, don't decide alone."*
   colour/threshold/meaning decisions are the owner's, and "I assumed you'd want…" is exactly the
   phrase to catch yourself on.
 
+### The mirror of that rule: READ THE RUNNING CODE, not a screenshot (added 2026-08-04, Cookbook Piece 9)
+Flag-don't-decide cuts BOTH ways. In the Piece 9 build the Planner twice asserted a bug from a
+screenshot — "cups/teaspoons can never be flagged", "the gate blocks Save" — and both were wrong:
+the Builder read the *running* code (the source, the shipped `dist` bundle, AND executed the modules
+on the exact recipe) and found the row-flag already keyed on "did a weight resolve", so the four
+broken rows *were* flagged; the real leak was elsewhere (the save gate). The Builder refused to dress
+a no-op as a win, surfaced the fork BEFORE building, and the Planner corrected the spec.
+- **A screenshot shows a symptom, not the mechanism.** Before "fixing" a described bug, confirm it in
+  the code that actually runs — grep it, read it, and where cheap, EXECUTE it on the real input.
+- **A fix that changes nothing is not a fix.** If the code already does what a prompt asks, say so
+  plainly and stop; do not implement a no-op and report success. That is the same sin as claiming
+  "done" loosely, just earlier in the pipeline.
+- **The Builder disagreeing with the Planner, in writing, before building, is the system working** —
+  not insubordination. The brain is the source of truth; the running code is the brain's ground floor.
+
 ## Architecture guardrails
 - Free-by-default (amended 2026-07-15; was "free tiers only"). Three paid
   exceptions stand, each an explicit owner decision: the Hetzner box + the

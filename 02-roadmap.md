@@ -10,19 +10,22 @@ fully before starting the next. Each phase ends on a visible win.
 ---
 
 ## Session note — 2026-08-04 — Cookbook Piece 9: ingredient resolution (Fixes 1, 3, 4) ✅ — Fix 2 next
-The Penne-alla-Vodka import's three faults were diagnosed and three of four fixed (src-only, 3
-commits `0d1b558` / `06079a9` / `209948d`): **Fix 1** don't flag resolved plural-unit measures;
-**Fix 4** the save gate needs a match AND a weight (was: any match = "resolved", which is why it read
-"ready to save" over four blank rows); **Fix 3** a real, sourced density table in new `portionsData.js`
-(salt, spirits, pepper/flakes, dried herbs now convert). Detail + verify steps in the handoff
-(2026-08-04); rulings + a flag-don't-decide process note in decisions (2026-08-04).
-- 🔨 **NEXT — Fix 2: exact-name-first ranker + seed missing Basics.** TWO tracks, NOT src-only:
-  seed plain salt/pepper/etc. into `db/32` Basics (checker-gated DB commit — they are absent today),
-  then the exact-name-first rule above the word-scoring in the `food-search` edge function (deploy +
-  log). Until then, wrong matches persist and Fix 3 made them quieter (they no longer flag).
-- ⬜ **Manual macros in the review screen** (retired with the old editor in Piece 8). Fix 4's tighter
-  gate can now trap an ingredient with real calories that has no DB match — strong candidate for the
-  piece after Fix 2.
+The Penne-alla-Vodka import's three faults were diagnosed and three of four fixed (src-only, 4
+commits `0d1b558` / `06079a9`+`0720ed4` / `209948d`): **Fix 1** don't flag resolved plural-unit
+measures; **Fix 4** the save gate needs a match AND a weight (was: any match = "resolved", which is
+why it read "ready to save" over four blanks) — then revised to WARN, not block: unweighted items
+raise a loud warning but the owner may ship; **Fix 3** a real, sourced density table in new
+`portionsData.js` (salt, spirits, pepper/flakes, dried herbs now convert). A flag-don't-decide
+process note was added to CLAUDE.md. Detail + verify in the handoff (2026-08-04); rulings in
+decisions (2026-08-04).
+- 🔨 **NEXT — Manual macros in the review screen** (Planner ruled it next). PURE SRC: `manual_macros`
+  storage already exists (read/write/calc); the old `ManualMacrosPanel` is recoverable from `78c2b59`
+  (better restyled to the Finder popover). Hook a fourth Finder exit → `patch({manual_macros})` +
+  mark resolved. Restores the exit the tightened gate exposed.
+- ⬜ **Fix 2: exact-name-first ranker + seed missing Basics.** TWO tracks, NOT src-only: seed plain
+  salt/pepper/etc. into `db/32` Basics (checker-gated DB commit — absent today), then exact-name-first
+  above the word-scoring in the `food-search` edge function (deploy + log). Until then wrong matches
+  persist, and Fix 3 made them quieter (they no longer flag).
 
 ## Session note — 2026-08-03 — Cookbook rebuild COMPLETE + demolition + docs close ✅
 The whole Food → Cookbook was rebuilt and the old surfaces retired. What shipped: **one cook page**

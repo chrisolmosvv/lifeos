@@ -43,11 +43,17 @@ WRONG MATCHES are NOT (that is Fix 2, deferred below — and it now matters MORE
   weight resolve". The one real bug there: `isCountUnit` listed only singular unit words, so a
   resolved measure stored as "cups"/"teaspoons"/"grams" was marked a guess (a whole cup of cream
   could flag). Now matches singular, plural and long forms.
-- Commit `06079a9` — **Fix 4 (the real leak).** The save gate counted an ingredient "resolved" the
-  moment it had ANY `food_item_id` — so the four WRONG matches (0 g, 0 macros) passed and the footer
-  said "ready to save" while every row was flagged. A match with no weight makes no macros, so it is
-  not a resolution. The gate now needs a match AND grams > 0 (mirrors the review's weight logic); the
-  explicit exits — `no_macros`, `manual_macros` — still pass untouched.
+- Commit `06079a9` + `0720ed4` — **Fix 4 (the real leak), then revised to WARN-not-block.** The gate
+  counted an ingredient "resolved" the moment it had ANY `food_item_id` — so the four WRONG matches
+  (0 g, 0 macros) passed and the footer said "ready to save" while every row was flagged. A match with
+  no weight makes no macros, so it is not resolved: the gate now needs a match AND grams > 0 (mirrors
+  the review's weight logic). **Planner revision (`0720ed4`):** unweighted ingredients WARN, they do
+  NOT lock Save — the owner may knowingly ship a recipe with items that contribute nothing; what they
+  must not do is contribute nothing SILENTLY. So Save hard-blocks only on structural faults (untimed
+  step, circular plan); the plan checklist shows a loud "N ingredients have no weight — they
+  contribute nothing; give a weight, mark no macros, or save as-is", and the save-step rail reads that
+  warning instead of "ready to save". `no_macros` stays an explicit owner choice (it is never set
+  automatically — confirmed: the only setter is the Finder's "No macros" button).
 - Commit `209948d` — **Fix 3 (a real, sourced density table).** `densityClass` could not classify
   salt, spirits, or pepper/flakes → cups/tsp of them returned null. Density table moved to
   `portionsData.js` (each gram value carries its source), `densityClass` is now data-driven (ordered
@@ -55,15 +61,19 @@ WRONG MATCHES are NOT (that is Fix 2, deferred below — and it now matters MORE
   g/mL at 40% ABV), a lighter dried-herb class, plus expanded spice recognition (pepper, flakes,
   ginger, cloves…). Buttermilk now reads as liquid, not fat. No regressions on existing classes.
 
-FILES TOUCHED: `src/spine/logic/importReviewLogic.js` (Fix 1) · `src/spine/logic/importGate.js`
-(Fix 4) · `src/spine/logic/portions.js` + new `src/spine/logic/portionsData.js` (Fix 3).
+FILES TOUCHED: `src/spine/logic/importReviewLogic.js` (Fix 1) · `src/spine/logic/importGate.js`,
+`src/desktop/food/importreview/PlanPass.jsx`, `.../ImportReview.jsx` (Fix 4 + revision) ·
+`src/spine/logic/portions.js` + new `src/spine/logic/portionsData.js` (Fix 3) · `CLAUDE.md` (process
+note).
 
 HOW TO VERIFY: re-import the recipe (paste `recipetineats.com/penne-alla-vodka`). Expect, per row:
 heavy cream ≈300 g · vodka ≈68 g (0.3 cup) · red pepper flakes ≈1 g · cooking salt ≈5 g · black
 pepper "Pinch" = NO weight → a flagged row saying "no weight found — set one to get macros". At the
-plan step the footer must read **"not ready"**, NOT "ready to save" — because black pepper has no
-weight. (Verified by executing the real modules on this exact draft; a live browser re-import was
-judged unnecessary and quota-costly — the screenshot the owner already had settled the flag question.)
+plan step: Save is ENABLED (the plan is sound), but the checklist and the save-step rail show a LOUD
+warning — "1 ingredient has no weight — it contributes nothing to the totals" — NOT a bland "ready to
+save". The owner can save anyway, or open black pepper's Finder and set a weight / mark "no macros".
+(Verified by executing the real modules on this exact draft; a live browser re-import was judged
+unnecessary and quota-costly — the screenshot the owner already had settled the flag question.)
 
 KNOWN GAPS / RISKS:
 - **THE WRONG MATCHES STILL STAND (Fix 2 deferred) — and Fix 3 made them QUIETER.** Before Fix 3,
@@ -75,12 +85,26 @@ KNOWN GAPS / RISKS:
 - **Manual macros is a missing exit — the tightened gate can now trap the owner.** See the dedicated
   note below.
 
-NEXT: **Fix 2 — exact-name-first ranker + seed the missing Basics.** This is TWO tracks and CANNOT
-ride in a src-only commit: (a) the ranker change lives in the `food-search` edge function and needs a
-LOGGED deploy; (b) plain "salt"/"black pepper"/"red pepper flakes"/"vodka" do NOT exist in the Basics
-seed (`db/32` — confirmed: 20 items, none of them) so no ranker can find them — seeding is a
-checker-gated DB commit. Recommended order: seed Basics (DB, checker) → exact-name-first rule above
-the existing word-scoring (edge, deploy + log) → then manual-macros as its own piece.
+NEXT (Planner ruled MANUAL MACROS is the next piece; Fix 2 stands after):
+
+**Manual macros in the review screen (PURE SRC — no schema, no deploy).** The tightened gate can now
+leave the owner stuck: an ingredient with real calories, no correct DB match, and no way to hand-enter
+macros has only "no macros" (undercount) or a forced wrong match. The fix restores hand-entry. What it
+takes: (a) the storage path ALREADY EXISTS — `recipe_ingredients.manual_macros` (jsonb) is read
+(`recipeLoad`), written (`recipeWrite`), computed (`recipeCalc`, used-as-is with a "~"), and the gate
+already treats `manual_macros` as resolved. (b) The old panel is RECOVERABLE:
+`src/desktop/food/ManualMacrosPanel.jsx` (43 lines: kcal/P/C/F inputs, props `{name, initial, onSave,
+onClose}`), deleted in `78c2b59` — `git show 78c2b59^:src/desktop/food/ManualMacrosPanel.jsx`. It
+leaned on `foodGoals.css` chrome, so it is better RESTYLED to the Finder's `iv-` popover than pulled
+back wholesale. (c) Hook: add a fourth exit to `FinderPopover` ("enter macros") beside Confirm / No
+macros / Remove; on save, `patch({ manual_macros: m })` and mark the row resolved — copy the existing
+`noMacros()` handler in `ImportReview`. No DB or edge work.
+
+**Then Fix 2 — exact-name-first ranker + seed the missing Basics** (TWO tracks, NOT src-only): plain
+"salt"/"black pepper"/"red pepper flakes"/"vodka" do NOT exist in the Basics seed (`db/32` — confirmed:
+20 items, none of them), so no ranker can find them — seeding is a checker-gated DB commit; the
+exact-name-first rule (above the existing word-scoring, which stays) lives in the `food-search` edge
+function and needs a LOGGED deploy.
 
 FOR THE CHECKER: (1) confirm Fix 4's gate mirrors the review's weight resolution (no row shows a gram
 value while the gate calls it unresolved, and vice-versa). (2) Sanity-check the NEW density values in
