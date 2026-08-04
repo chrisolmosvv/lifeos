@@ -3,6 +3,11 @@
 // Pure util (no DB), like the F3 calc. NOT exhaustive — an off-list amount falls back to a grams
 // prompt, and an unresolvable ingredient is marked no-macros ("unestimated"). The resolved grams
 // are stored as the ingredient's amount; raw_text keeps the human label.
+//
+// Piece 9 Fix 3: the density table (VOLUME) + its name→class rules (DENSITY_RULES) moved to
+// portionsData.js, where each gram value carries its source. This file keeps the resolving LOGIC.
+
+import { VOLUME, DENSITY_RULES } from "./portionsData.js";
 
 // Whole items: one piece → grams. Keyed by a word that appears in the food's name.
 // Compound keys (e.g. "green onion") checked first via ITEM_COMPOUNDS to avoid a substring
@@ -16,21 +21,6 @@ const ITEM_GRAMS = {
   tomato: 120, banana: 120, apple: 180, lemon: 60, pepper: 120,
   chilli: 30, celery: 40, zucchini: 200, avocado: 150, lime: 45,
   shallot: 30, beetroot: 80,
-};
-
-// Volume → grams per (cup, tbsp, tsp), by density CLASS. The food name picks the class.
-const VOLUME = {
-  flour: { cup: 120, tbsp: 8, tsp: 3 },
-  sugar: { cup: 200, tbsp: 12, tsp: 4 },
-  fat: { cup: 218, tbsp: 14, tsp: 5 }, //   oil / butter
-  rice: { cup: 185, tbsp: 12, tsp: 4 }, //  uncooked
-  liquid: { cup: 240, tbsp: 15, tsp: 5 }, // water / milk / stock / sauce / vinegar / etc.
-  vegetable: { cup: 150, tbsp: 10, tsp: 3 }, // peas, corn, diced veg
-  spice: { cup: 110, tbsp: 7, tsp: 2 }, // dry powder / ground spice
-  breadcrumb: { cup: 60, tbsp: 4, tsp: 1 }, // panko, breadcrumbs
-  oat: { cup: 85, tbsp: 5, tsp: 2 }, //  rolled / porridge oats
-  nut: { cup: 120, tbsp: 8, tsp: 3 }, //  chopped tree nuts
-  cheese: { cup: 100, tbsp: 6, tsp: 2 }, // grated hard cheese
 };
 
 const num = (v) => {
@@ -52,21 +42,13 @@ function itemWord(name) {
   return Object.keys(ITEM_GRAMS).find((w) => n.includes(w)) || null;
 }
 
-// A food name → its density class for volume conversions.
+// A food name → its density class for volume conversions. Walks DENSITY_RULES in order, FIRST
+// MATCH WINS (specific/heavier rules sit above generic ones). Unknown → null (honest omission,
+// not a water-density guess) so the amount flags for a weight rather than lying about the total.
 function densityClass(name) {
   const n = (name || "").toLowerCase();
-  if (n.includes("flour")) return "flour";
-  if (n.includes("sugar")) return "sugar";
-  if (n.includes("oil") || n.includes("butter")) return "fat";
-  if (n.includes("rice")) return "rice";
-  if (/(milk|water|stock|broth|juice|cream|wine|yogurt|yoghurt|vinegar|sauce|honey|syrup|beer|cider|paste|puree|purée)/.test(n)) return "liquid";
-  if (/(peas|corn|bean|chickpea|lentil)/.test(n)) return "vegetable";
-  if (/(cumin|paprika|cinnamon|turmeric|chilli powder|chili powder|fenugreek|garam|nutmeg|oregano|thyme|basil|coriander ground|curry powder|spice)/.test(n)) return "spice";
-  if (/\b(breadcrumbs?|panko)\b/.test(n)) return "breadcrumb";
-  if (/\b(oats?|oatmeal|porridge)\b/.test(n)) return "oat";
-  if (/\b(almonds?|walnuts?|pecans?|cashews?|pistachios?|peanuts?|hazelnuts?|macadamias?|nuts?|pine nuts?)\b/.test(n)) return "nut";
-  if (/\b(parmesan|pecorino|cheddar|mozzarella|gruyere|gruyère|gouda|emmental|manchego)\b/.test(n)) return "cheese";
-  return null; // unknown → flagged (honest omission, not a water-density guess)
+  const hit = DENSITY_RULES.find(([, re]) => re.test(n));
+  return hit ? hit[0] : null;
 }
 
 // The portion units the amount step offers for a food: grams + the volumes, plus "item" when the
