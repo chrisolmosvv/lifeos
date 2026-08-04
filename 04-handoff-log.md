@@ -33,6 +33,77 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-04 — PIECE 11 — THE RANKER + THE BASICS SEED. TWO TRACKS. Track B committed; Track A awaits checker + a hand-deploy is PENDING.
+
+WHAT CHANGED — the last Penne fault (compound products beating plain ingredients) is fixed by two
+independent pieces that must BOTH land to work:
+
+- **Track B — the ranker (edge, committed `69cc5f3`).** Added `exactNameIndex` to `normalize.ts` and
+  wired it into `index.ts` ABOVE the word-scoring: if the query names a candidate exactly (words in
+  any order, ignoring pure-prep words like "cooking"/"ground"/"sea" that don't change per-100g), that
+  candidate wins outright and the AI rerank is skipped. Prefers a basics row on a tie; returns null →
+  today's pipeline (dbSuppressed / clearMatch / rerank) runs UNCHANGED. The hard-won word-scoring was
+  NOT touched. Logic verified 10/10 in isolation, incl. safety cases (chicken-thigh does NOT match
+  chicken-breast; fresh basil does NOT match dried; bell "red pepper" does NOT match "red pepper
+  flakes"). Files: `supabase/functions/food-search/normalize.ts`, `.../index.ts`.
+
+- **Track A — the Basics seed (db, NOT committed — CHECKER-GATED).** `db/48_food_basics_seasonings_seed.sql`
+  seeds the 15 plain staples missing from db/32: Salt · Black pepper · Red pepper flakes · Paprika ·
+  Cumin · Cinnamon · Garlic powder · Onion powder · Oregano · Thyme · Vodka · Gin · Rum · Whisky ·
+  Brandy. Same convention as db/32 (source='manual', source_ref='basics:%'), same idempotent
+  on-conflict guard. USDA-FDC-derived per-100g. **Do NOT commit until the owner returns the exact
+  words "checker approved"**, then it commits on the db track (never with src).
+
+★★ TWO OFF-REPO ACTIONS ARE PENDING (a `git push` does neither):
+  1. **DEPLOY the edge function** — Track B is committed but NOT LIVE. Owner runs, from their terminal:
+     `env -u SUPABASE_ACCESS_TOKEN supabase functions deploy food-search --project-ref cntlptuacsujbdtwvbis`
+     (verify_jwt stays true from config.toml — deploy food-search ALONE). ★ RECORD THIS DEPLOY IN THIS
+     HANDOFF AT THE TIME IT HAPPENS — the commit is not the deploy.
+  2. **Run the seed** — after "checker approved", run `db/48` in the Supabase SQL editor (Frankfurt).
+
+HOW VERIFIED: the exact-name LOGIC is proven in isolation (10/10, above). The seed SQL matches db/32's
+proven structure and is idempotent. The REAL-IMPORT verification CANNOT run yet — it needs both the
+deploy and the seed applied; steps are below for when they are.
+
+★ VERIFY ON THE REAL IMPORT (after BOTH land): re-import recipetineats.com/penne-alla-vodka and check
+each row against the original failure list —
+  · red pepper flakes → should match the **Red pepper flakes** basic (was: pickled snap peas)
+  · cooking salt → **Salt** basic (was: cooked salted duck eggs)
+  · black pepper → **Black pepper** basic (was: sea salt and black pepper)
+  · vodka → **Vodka** basic
+  Report matched-food · grams · macros · flagged · save-gate for each, and confirm no previously-good
+  ingredient regressed (try a recipe with several similarly-named items, e.g. red pepper + red pepper
+  flakes + black pepper).
+
+KNOWN GAPS / RISKS:
+- The seed's per-100g figures are USDA-derived; the CHECKER must verify each before approval (a wrong
+  basic silently poisons every recipe that matches it).
+- Track B alone (no seed) is inert for salt/pepper (no exact candidate exists yet); the seed alone
+  already helps (basics hoist to results[0]) but "cooking salt" only becomes DETERMINISTIC with Track B.
+- Precedent note: db/32 declared basics seeds "NOT checker-gated" (data, no schema). We are gating db/48
+  anyway per the Piece 11 instruction — the conservative choice; flagged so it's not a surprise.
+
+★ Once both land and the real import verifies, the ingredient-resolution work from the Penne alla Vodka
+diagnosis (Pieces 9–11) is COMPLETE.
+
+═══════════════ CHECKER BRIEF — carry this to a FRESH checker chat (Track A / db/48) ═══════════════
+WHAT: one migration, `db/48_food_basics_seasonings_seed.sql`, that INSERTs 15 rows of plain staple
+foods (salt, black pepper, red pepper flakes, six common spices/herbs, five spirits) into the existing
+`food_items` table, marked canonical by source_ref='basics:<slug>' — the same convention as db/32.
+WHY: none of these plain ingredients existed as a "basic", so the food matcher had only branded/compound
+products to choose from and picked e.g. "Cooked Salted Duck Eggs" for "cooking salt". Seeding the plain
+generics gives the ranker the right thing to prefer.
+SAFE TO SAY PLAINLY: it is INSERT-only · NO schema change (no ALTER/CREATE/DROP) · NO new table · NO new
+column · NO new foreign key · NO policy/RLS change · it CANNOT invalidate or alter any existing row · it
+is IDEMPOTENT (on-conflict updates in place, so re-running never duplicates). Owner-only RLS already
+governs food_items; user_id scopes the rows to the owner.
+CHECKER SHOULD VERIFY: each per-100g figure against USDA FoodData Central (a wrong basic poisons recipes);
+that the on-conflict target (user_id, source, source_ref) matches db/32; and that names read as the plain
+generic a recipe would use. Ships only on the exact words "checker approved".
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+
+---
+
 ### 2026-08-04 — PIECE 10 — MANUAL MACROS: the third resolution exit, restored. Src-only, 1 commit `3aeab4a`.
 
 WHAT CHANGED: an ingredient with real calories but no correct DB match and no weight now has an honest

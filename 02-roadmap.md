@@ -9,6 +9,18 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-08-04 — Cookbook Piece 11: the ranker + Basics seed 🔨 — awaits checker + deploy
+The last Penne fault (compounds beating plain ingredients). TWO tracks:
+- ✅ **Track B — ranker (edge, committed `69cc5f3`).** `exactNameIndex` above the word-scoring: an
+  exact query→name match (order-independent, prep-words ignored) wins outright; a plain "Salt"/"Black
+  pepper" basic beats a compound. Word-scoring untouched; null → today's pipeline unchanged. Logic
+  10/10 incl. safety cases. **NOT LIVE until the owner hand-deploys food-search** (see handoff).
+- ⏳ **Track A — Basics seed (`db/48`, written, NOT committed).** 15 plain staples missing from db/32
+  (salt, pepper, flakes, common spices/herbs, spirits). CHECKER-GATED — ships on "checker approved",
+  then runs in the SQL editor. Checker brief is in the handoff.
+- Both must land, then re-import Penne to verify. After that, Pieces 9–11 (Penne ingredient
+  resolution) are COMPLETE.
+
 ## Session note — 2026-08-04 — Cookbook Piece 10: manual macros ✅ — Fix 2 next
 The third resolution exit is restored (commit `3aeab4a`, src-only, verified through the real UI). A
 fourth Finder exit "Enter macros" opens a 4-field panel inside the popover; the numbers are FOR THE

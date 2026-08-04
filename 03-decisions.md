@@ -9,6 +9,24 @@
 
 ---
 
+## Piece 11 — the ranker + Basics seed (2026-08-04)
+
+**[Exact-name-first is a DETERMINISTIC rule ABOVE the word-scoring, not a change to it]** — if the
+query names a candidate exactly (order-independent, ignoring pure-prep words that don't change
+per-100g), it wins; else the existing pipeline runs untouched. **Why:** "cooking salt → Cooked Salted
+Duck Eggs" was a MISSING rule, not a scoring bug; the word-scoring is hard-won and handles the messy
+cases a blunt rule can't. **Trade-off:** it only bites when the plain generic actually exists — hence
+the seed — and it's kept narrow (never fresh↔dried) so it can't force a wrong match.
+
+**[The missing plain staples are seeded as basics, same convention as db/32]** — salt, pepper, flakes,
+common spices/herbs, spirits, via source_ref='basics:%'. **Why:** no plain generic existed for the
+ranker to prefer, so it could only pick compounds. **Trade-off:** accuracy-over-coverage — a wrong
+basic poisons every recipe that matches it, so the seed is checker-gated and every per-100g figure is
+USDA-cited for verification. (db/32 called basics seeds non-checker-gated; we gate db/48 anyway as the
+conservative choice.)
+
+---
+
 ## Piece 10 — manual macros (2026-08-04)
 
 **[Hand-entered macros are STORED FOR THE STATED AMOUNT, as-is — NOT per-100g]** — five fields
