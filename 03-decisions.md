@@ -9,6 +9,38 @@
 
 ---
 
+## Piece 9 — ingredient resolution fixes (2026-08-04)
+
+**[A "resolved" ingredient means a food match WITH a weight, not a match alone]** — the save gate now
+requires `food_item_id` AND grams > 0 (or an explicit `no_macros`/`manual_macros`). **Why:** a match
+with no weight produces no macros — a failure wearing a success; it let the Penne draft say "ready to
+save" with four blank ingredients. **Trade-off:** the gate can now trap an ingredient that has real
+calories but no DB match and no way to hand-enter them (manual macros was retired in Piece 8) — see
+the open debt below.
+
+**[The density table is data, sourced, in its own file (`portionsData.js`)]** — every gram value
+carries its source; `densityClass` walks ordered rules (first match wins). **Why:** "accuracy over
+coverage" — a wrong density silently poisons a total, a missing one now flags honestly. New sourced
+classes: salt (USDA 1 tsp = 6 g), spirit (~0.94 g/mL, 40% ABV), dried herb (1 g/tsp, lighter than
+ground spice). **Trade-off:** two deliberate accuracy changes to existing behaviour — buttermilk now
+reads as liquid (was fat), dried oregano/thyme/basil now use the lighter herb class (were spice).
+
+**[Fix 3 makes wrong matches quieter, so Fix 2 is now MORE urgent]** — resolving salt/pepper to tiny
+grams means their wrong-food macros are tiny → below the flag threshold → no longer flagged. **Why:**
+noted so nobody reads "the flags went away" as "the matches got fixed." **Trade-off:** none; it's a
+sequencing flag, not a choice.
+
+**[PROCESS NOTE — flag-don't-decide worked; a screenshot-based bug claim was wrong]** — the Planner
+asserted (from a screenshot) that cups/teaspoons "can never be flagged" and made that Fix 1. The
+Builder read the *running* code (source + shipped build + executed it) and found the row-flag already
+keyed on "did a weight resolve" — the four broken rows *were* flagged; the real leak was the gate
+(Fix 4). The Builder refused to dress a no-op as a win and surfaced the fork BEFORE building; the
+Planner confirmed the correction and re-scoped Fix 1 to the one real bug (plural units). **Why banked:**
+this is the CLAUDE.md "when the spec turns out wrong, FLAG — don't quietly decide" rule paying off.
+Read the code, not the screenshot.
+
+---
+
 ## Cookbook rebuild — decisions banked (2026-08-03)
 
 > The whole Food → Cookbook was rebuilt: one cook page (a dormant plan + a live cook), a three-pass

@@ -33,6 +33,63 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-04 — PIECE 9 — FIX INGREDIENT RESOLUTION (Fixes 1, 3, 4). Src-only, 3 commits. Fix 2 deferred.
+
+WHAT CHANGED: the "Penne alla Vodka" import that came back with blank grams, wrong matches, and a
+false "ready to save" is three-quarters fixed. The blank-grams and false-ready-to-save are gone; the
+WRONG MATCHES are NOT (that is Fix 2, deferred below — and it now matters MORE, see risks).
+- Commit `0d1b558` — **Fix 1 (plural units).** The row-flag was NEVER keyed on `unit === 'g'` (the
+  Planner's original premise was mis-stated — see the PROCESS NOTE); it already flagged on "did a
+  weight resolve". The one real bug there: `isCountUnit` listed only singular unit words, so a
+  resolved measure stored as "cups"/"teaspoons"/"grams" was marked a guess (a whole cup of cream
+  could flag). Now matches singular, plural and long forms.
+- Commit `06079a9` — **Fix 4 (the real leak).** The save gate counted an ingredient "resolved" the
+  moment it had ANY `food_item_id` — so the four WRONG matches (0 g, 0 macros) passed and the footer
+  said "ready to save" while every row was flagged. A match with no weight makes no macros, so it is
+  not a resolution. The gate now needs a match AND grams > 0 (mirrors the review's weight logic); the
+  explicit exits — `no_macros`, `manual_macros` — still pass untouched.
+- Commit `209948d` — **Fix 3 (a real, sourced density table).** `densityClass` could not classify
+  salt, spirits, or pepper/flakes → cups/tsp of them returned null. Density table moved to
+  `portionsData.js` (each gram value carries its source), `densityClass` is now data-driven (ordered
+  rules, first match wins), and sourced classes were added: salt (USDA 1 tsp = 6 g), spirit (~0.94
+  g/mL at 40% ABV), a lighter dried-herb class, plus expanded spice recognition (pepper, flakes,
+  ginger, cloves…). Buttermilk now reads as liquid, not fat. No regressions on existing classes.
+
+FILES TOUCHED: `src/spine/logic/importReviewLogic.js` (Fix 1) · `src/spine/logic/importGate.js`
+(Fix 4) · `src/spine/logic/portions.js` + new `src/spine/logic/portionsData.js` (Fix 3).
+
+HOW TO VERIFY: re-import the recipe (paste `recipetineats.com/penne-alla-vodka`). Expect, per row:
+heavy cream ≈300 g · vodka ≈68 g (0.3 cup) · red pepper flakes ≈1 g · cooking salt ≈5 g · black
+pepper "Pinch" = NO weight → a flagged row saying "no weight found — set one to get macros". At the
+plan step the footer must read **"not ready"**, NOT "ready to save" — because black pepper has no
+weight. (Verified by executing the real modules on this exact draft; a live browser re-import was
+judged unnecessary and quota-costly — the screenshot the owner already had settled the flag question.)
+
+KNOWN GAPS / RISKS:
+- **THE WRONG MATCHES STILL STAND (Fix 2 deferred) — and Fix 3 made them QUIETER.** Before Fix 3,
+  red-pepper-flakes/salt had null grams → they FLAGGED ("no weight"). Now they resolve to tiny grams
+  (1 g, 5 g), so their wrong-food macros are tiny (≈0, ≈8 kcal) → below the impact threshold → NOT
+  flagged. So a wrong match on a small quantity now passes quietly. Net: Fix 3 correctly fixes the
+  weight, but Fix 2 (right matches + seeding plain salt/pepper into Basics) is now MORE important,
+  not less. Do it next.
+- **Manual macros is a missing exit — the tightened gate can now trap the owner.** See the dedicated
+  note below.
+
+NEXT: **Fix 2 — exact-name-first ranker + seed the missing Basics.** This is TWO tracks and CANNOT
+ride in a src-only commit: (a) the ranker change lives in the `food-search` edge function and needs a
+LOGGED deploy; (b) plain "salt"/"black pepper"/"red pepper flakes"/"vodka" do NOT exist in the Basics
+seed (`db/32` — confirmed: 20 items, none of them) so no ranker can find them — seeding is a
+checker-gated DB commit. Recommended order: seed Basics (DB, checker) → exact-name-first rule above
+the existing word-scoring (edge, deploy + log) → then manual-macros as its own piece.
+
+FOR THE CHECKER: (1) confirm Fix 4's gate mirrors the review's weight resolution (no row shows a gram
+value while the gate calls it unresolved, and vice-versa). (2) Sanity-check the NEW density values in
+`portionsData.js` against your own sources — salt 6 g/tsp, spirit 0.94 g/mL, dried herb 1 g/tsp.
+(3) Confirm no existing recipe's totals shifted except the intended buttermilk→liquid and
+dried-herb→lighter changes.
+
+---
+
 ### 2026-08-03 — PIECE 8 — ADD AN INGREDIENT + BLANK RECIPE, and RETIRE THE OLD EDITOR. Src-only, 2 commits.
 
 WHAT CHANGED: the review screen can now build a recipe from nothing, so "+ NEW" opens IT — and the
