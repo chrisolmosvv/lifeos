@@ -64,13 +64,15 @@ fork — stop and flag it, don't decide alone."*
   colour/threshold/meaning decisions are the owner's, and "I assumed you'd want…" is exactly the
   phrase to catch yourself on.
 
-### The mirror of that rule: READ THE RUNNING CODE, not a screenshot (added 2026-08-04, Cookbook Piece 9)
-Flag-don't-decide cuts BOTH ways. In the Piece 9 build the Planner twice asserted a bug from a
-screenshot — "cups/teaspoons can never be flagged", "the gate blocks Save" — and both were wrong:
-the Builder read the *running* code (the source, the shipped `dist` bundle, AND executed the modules
-on the exact recipe) and found the row-flag already keyed on "did a weight resolve", so the four
-broken rows *were* flagged; the real leak was elsewhere (the save gate). The Builder refused to dress
-a no-op as a win, surfaced the fork BEFORE building, and the Planner corrected the spec.
+### The mirror of that rule: READ THE RUNNING CODE, not a screenshot (added 2026-08-04, Cookbook Pieces 9–10)
+Flag-don't-decide cuts BOTH ways. THREE times across Pieces 9–10 the Planner asserted something from a
+screenshot or memory that the running code contradicted: "cups/teaspoons can never be flagged" and
+"the gate blocks Save" (Piece 9 — the row-flag already keyed on "did a weight resolve", so the broken
+rows *were* flagged; the real leak was the save gate), and "store manual macros per-100g, matching
+downstream" (Piece 10 — `recipeCalc` consumes `manual_macros` AS-IS, so per-100g would have written a
+pinch of pepper at up to 200× its true calories into the cooked-food LOG). Each time the Builder read
+the source, the shipped bundle, and/or executed the module on the real input, refused to dress a
+wrong build as a win, surfaced the fork BEFORE building, and the Planner corrected the spec.
 - **A screenshot shows a symptom, not the mechanism.** Before "fixing" a described bug, confirm it in
   the code that actually runs — grep it, read it, and where cheap, EXECUTE it on the real input.
 - **A fix that changes nothing is not a fix.** If the code already does what a prompt asks, say so

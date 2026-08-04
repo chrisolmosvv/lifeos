@@ -11,13 +11,19 @@
 
 ## Piece 10 — manual macros (2026-08-04)
 
-**[Hand-entered macros are FOR THE AMOUNT AS THE RECIPE STATES IT, not per-100g]** — the panel labels
-the four fields with the concrete amount ("for ½ tsp black pepper"). **Why:** `recipeCalc` uses
-`manual_macros` as-is (unscaled by grams), and the owner reaches manual entry precisely because there
-is no weight to scale a per-100g figure by — so per-amount is both what the maths expects and the only
-basis that works. A number entered against the wrong basis is a silent error in the food history, so
-the label removes the ambiguity. **Trade-off:** if the owner later rescales the recipe, the manual
-figure scales proportionally with servings (like every other ingredient) but does not re-derive.
+**[Hand-entered macros are STORED FOR THE STATED AMOUNT, as-is — NOT per-100g]** — five fields
+(kcal/P/C/F/fibre, fibre optional→0) + a REQUIRED grams weight; the panel labels the basis with the
+concrete amount ("for ⅓ cup vodka"). **Why:** `recipeCalc` consumes `manual_macros` AS-IS with no
+division, and that number reaches `logSnapshot` when the recipe is cooked — so storing per-100g would
+write a pinch of pepper at up to 200× its true calories into the owner's food history. This is the
+OPPOSITE of the per-100g convention everywhere else; the old ManualMacrosPanel worked the same way, so
+the convention is pre-existing. The required weight is NOT a divisor (nothing is divided) — it fills
+the ingredient's `grams` so the row stops being unweighted, making hand-entry a real resolution.
+**Trade-off:** the storage basis is deliberately inconsistent with matched foods (per-100g); anyone
+who assumes uniformity reintroduces the corruption. On rescale the figure scales with servings.
+**Process:** the Planner first ruled per-100g conversion; reading `recipeCalc` caught that it would
+corrupt the log (the THIRD time this session code-reading overturned a prompt assertion — see the
+CLAUDE.md lesson). Ruling revised to store as-is.
 
 **[Manual macros and a food match are MUTUALLY EXCLUSIVE]** — entering numbers clears any
 `food_item_id`; matching a food (or "clear") clears `manual_macros`. **Why:** `recipeCalc` prefers

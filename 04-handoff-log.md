@@ -38,17 +38,25 @@ FOR THE CHECKER: (what specifically to review, if anything)
 WHAT CHANGED: an ingredient with real calories but no correct DB match and no weight now has an honest
 way through — the owner hand-enters its macros. This closes the gap Piece 8's demolition opened (the
 old ManualMacrosPanel died with the editor) and the tightened Piece 9 gate exposed.
-- A FOURTH Finder exit **"Enter macros"** sits beside Confirm · No macros · Remove. It opens a 4-field
-  panel (calories/protein/carbs/fat) INSIDE the popover (not a second overlay), restyled to the
-  Finder's broadsheet chrome (`iv-mm-*`), not the old goals-screen CSS.
-- **BASIS = FOR THE AMOUNT AS THE RECIPE STATES IT**, not per-100g. `recipeCalc` uses `manual_macros`
-  AS-IS (unscaled by grams); and the owner is here precisely because there's no weight to scale a
-  per-100g figure by. The panel LABELS it with the concrete amount ("your numbers — for ½ tsp black
-  pepper") so a number can't be entered against the wrong basis.
-- Saving sets `manual_macros` + marks the row **resolved** (a real resolution — the owner supplied the
-  numbers) and clears any wrong `food_item_id`. `manual` and a food match are mutually exclusive:
-  matching a food (or "clear") undoes the manual entry cleanly; reopening the Finder lands in the
-  manual view, populated and editable.
+- A FOURTH Finder exit **"Enter macros"** sits beside Confirm · No macros · Remove. It opens a panel
+  INSIDE the popover (not a second overlay), restyled to the Finder's broadsheet chrome (`iv-mm-*`),
+  not the old goals-screen CSS. **FIVE** fields — calories · protein · carbs · fat · **fibre** (fibre
+  optional, blank → 0) — plus a **REQUIRED grams weight** ("it weighs ___ g").
+- ★★ **manual_macros IS STORED PER THE STATED AMOUNT, NOT per 100 g.** This is the OPPOSITE of the
+  per-100g convention used everywhere else in food — assume otherwise and you WILL corrupt the food
+  history. `recipeCalc` consumes `manual_macros` AS-IS with no division, and those numbers reach
+  `logSnapshot` when the recipe is cooked, so a per-100g value would write e.g. a pinch of pepper at
+  up to 200× its true calories into the owner's log. (The old ManualMacrosPanel worked the same way —
+  the convention is pre-existing, not invented here.) The panel LABELS the basis with the concrete
+  amount ("your numbers — for ⅓ cup vodka") so nothing is entered against the wrong basis.
+- The **required weight** is NOT a divisor (nothing is divided) — it fills the ingredient's `grams` so
+  the row stops being unweighted, turning hand-entry from a paper-over into a real resolution.
+- Saving sets `manual_macros` (as-is) + `grams` + marks the row **resolved**, and clears any wrong
+  `food_item_id`. `manual` and a food match are mutually exclusive: matching a food (or "clear") undoes
+  the manual entry cleanly; reopening the Finder lands in the manual view, populated and editable.
+- **Round trip verified** (node): owner types 157 kcal + 68 g for ⅓ cup vodka → stored
+  `manual_macros={kcal:157,…}`, `grams=68` (unchanged) → the review row AND the cooked-recipe
+  `logSnapshot` both read **157** kcal. Scales proportionally (136 g / 314 kcal at 2× servings).
 - A **"~"** marks the estimate wherever those macros surface via `buildReview` — the review row and the
   cook-page ingredients panel. `buildReview` also no longer flags an explicitly-resolved row
   (`manual_macros`/`no_macros`) for a missing weight.
