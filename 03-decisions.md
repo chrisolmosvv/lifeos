@@ -9,6 +9,34 @@
 
 ---
 
+## Piece 12 — fix the scorer, not the data (2026-08-04)
+
+**[PREMISE CORRECTION: there is no deterministic "word-scoring" ranker — Piece 11's decision note was
+wrong about the mechanism]** — reading the running code showed food-search ranks by exactly two things:
+a fixed SOURCE-PRIORITY order (`mergeDedupeOrder`) and the Gemini LLM reranker (`rerankTop`). The
+"word-scoring" earlier entries speak of does not exist; the helpers that look like it (`coreWords`,
+`isClearNameMatch`) are FILTERS, not a ranker. **Why it matters:** the fix had to be BUILT, not tweaked.
+**Trade-off:** none — this corrects the record.
+
+**[The "Cooked Salted Duck Eggs" bug is a SCORING fault, so db/48 is PARKED — not seeded]** — the app
+already queries USDA, which serves clean salt/pepper/turmeric/etc. with proper per-100g. Hardcoding 15
+rows would have left the mechanism broken underneath and started a treadmill (turmeric, fish sauce,
+sesame oil next). **Why:** fix the general thing once. **Trade-off:** db/48 (checker-approved, reverted
+`275560a`) may return LATER purely as an offline-speed cache for true staples — never as "the fix".
+
+**[Fix = a deterministic FALLBACK RANKER under the LLM, + GENERIC-BEFORE-BRANDED in the merge]** — Gemini
+stays primary; when it returns null (the batch-import rate-limit state that caused the bug) the fallback
+ranks coverage → generic-over-branded → shorter-name. AND the merge now lists unbranded (USDA generics
+first) ahead of branded. **Why the merge change too:** verification proved the fallback alone is bypassed —
+the `clearMatch` short-circuit fires first and returns `results[0]`, so the clean generic must BE
+`results[0]`. **Trade-off:** generic-first is a blunt majority signal — one regression ("heinz ketchup" →
+generic "Ketchup" when the brand is only in the brand field); brand-named queries otherwise still win via
+exact-name/coverage. Correct-food-but-branded remains for ~5 staples whose USDA name doesn't string-match
+the query (black pepper, etc.) — food identity right, source branded; fixing it means touching the fenced
+exact-name pin, so deferred.
+
+---
+
 ## Piece 11 — the ranker + Basics seed (2026-08-04)
 
 **[Exact-name-first is a DETERMINISTIC rule ABOVE the word-scoring, not a change to it]** — if the

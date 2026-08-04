@@ -182,10 +182,63 @@ export function exactNameIndex(query: string, candidates: FoodCandidate[]): numb
   return basicHit ?? anyHit;
 }
 
+// ── Deterministic fallback ranker (Piece 12) ─────────────────────────────────
+// The DETERMINISTIC FLOOR under the Gemini reranker. Gemini stays PRIMARY; this runs ONLY when the
+// reranker returns null — FOOD_RERANK_OFF, or (the case that bit us) rate-limited mid batch-import,
+// which is exactly when imports run — AND only when no exact-name pin (Piece 11) and no
+// dbSuppressed/clearMatch shortcut already decided the pick. It never runs when the AI answered.
+//
+// Before this existed, a null reranker left the import client taking results[0] = the raw
+// source-priority order = the first OFF BRANDED compound ("Cooked Salted Duck Eggs" for "cooking
+// salt"). This replaces that blind pick with a real ranking, in strict priority:
+//   1. TOKEN COVERAGE — how many of the query's CORE words (coreWords: same punctuation tokeniser,
+//      4+ chars, prep-modifiers stripped) appear as WHOLE words in the name; MORE first. "cooking
+//      salt" → core ["cooking","salt"]: "Salt, table" covers 1, "Cooked Salted Duck Eggs" covers 0
+//      ("cooked"≠"cooking", "salted"≠"salt") → salt wins on coverage before anything else runs.
+//   2. GENERIC over BRANDED — brand == null beats a branded product on a coverage tie. A strong
+//      MAJORITY signal, NOT a guarantee (OFF carries unbranded rows; a few USDA items are composite),
+//      which is precisely why it sits BELOW coverage and never above it.
+//   3. SHORTER NAME — a pure TIEBREAK, never a primary signal ("Salt, table" over "Salt, table,
+//      iodized"). Original source order (stable sort) breaks any remaining tie.
+// Returns up-to-`max` indices best-first (same contract as rerankTop), or null when empty. The
+// exact-name pin sits ABOVE this; Gemini sits above that. It re-orders NOTHING in `results` — it only
+// annotates top3, so the Finder list and dbSuppressed logic are untouched.
+export function fallbackRank(query: string, candidates: FoodCandidate[], max = 3): number[] | null {
+  if (!candidates.length) return null;
+  const patterns = coreWords(query).map((w) => new RegExp(`\\b${w}\\b`));
+  const coverage = (name: string) => {
+    const n = name.toLowerCase();
+    return patterns.reduce((acc, p) => acc + (p.test(n) ? 1 : 0), 0);
+  };
+  const scored = candidates.map((c, i) => ({
+    i,
+    cover: coverage(c.name),
+    generic: c.brand == null ? 1 : 0,
+    len: c.name.length,
+  }));
+  scored.sort((a, b) =>
+    b.cover - a.cover ||      // 1. more query words covered
+    b.generic - a.generic ||  // 2. generic before branded
+    a.len - b.len ||          // 3. shorter name — tiebreak only
+    a.i - b.i                 // stable: original source order
+  );
+  return scored.slice(0, max).map((s) => s.i);
+}
+
 // ── Merge + dedupe ──────────────────────────────────────────────────────────
 // Merge the three sources into one ordered list with no duplicate of the SAME food.
 //   • Order: curated BASICS staples FIRST (P1 — the trusted generics lead), then the rest of
-//     the owner's saved/cached items (favourites-first from saved.ts), then OFF, then USDA.
+//     the owner's saved/cached items (favourites-first from saved.ts), then the API results —
+//     and among the API results, GENERIC (brand == null) BEFORE BRANDED (Piece 12, fault #3),
+//     with USDA (clean lab generics) ahead of OFF. This order is load-bearing: EVERY downstream
+//     short-circuit (exact-name's first-hit, dbSuppressed/clearMatch's results[0], the fallback
+//     ranker's stable tiebreak) reads results[0] / first-match FROM this order, so putting the
+//     clean generic first is what stops a branded/compound OFF row ("Cooked Salted Duck Eggs",
+//     "Pickled snap peas … red pepper flakes") from being the pick when Gemini is null. The
+//     fallback ranker alone could NOT fix this — clearMatch fires before it and returns results[0].
+//   • generic-over-branded is a MAJORITY signal, not a guarantee (OFF carries unbranded rows;
+//     a few USDA items are composite) — a query that NAMES a brand still wins it via exact-name /
+//     coverage, which sit above this ordering.
 //   • Dedupe: an API item with the same (source, source_ref) as one the owner already
 //     has saved is dropped — the saved row wins (it carries food_item_id + any edits).
 //     Manual items have a null source_ref, so they never collide with anything.
@@ -198,12 +251,16 @@ export function mergeDedupeOrder(
   for (const c of saved) {
     if (c.source_ref) seen.add(`${c.source}:${c.source_ref}`);
   }
-  const apiKept = [...off, ...usda].filter((c) => {
+  // USDA (clean generics) ahead of OFF, then drop any API row the owner already has saved.
+  const apiRaw = [...usda, ...off].filter((c) => {
     if (!c.source_ref) return true;
     const key = `${c.source}:${c.source_ref}`;
     return !seen.has(key);
   });
-  // Hoist basics to the front of the saved group (their relative order preserved).
+  // fault #3 — GENERIC before BRANDED, stable within each group (USDA-then-OFF order preserved).
+  const apiKept = [...apiRaw.filter((c) => c.brand == null), ...apiRaw.filter((c) => c.brand != null)];
+  // Hoist basics to the front of the saved group (their relative order preserved). The owner's own
+  // saved rows keep their favourites-first order — a deliberate save is not reordered by brand.
   const basics = saved.filter(isBasic);
   const savedRest = saved.filter((c) => !isBasic(c));
   return [...basics, ...savedRest, ...apiKept];

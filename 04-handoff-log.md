@@ -33,6 +33,64 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-04 — PIECE 12 — FIX THE SCORER (not the data). Committed `b2fb093`; ⚠️ DEPLOY PENDING (owner hand-deploy). db/48 PARKED.
+
+WHY THIS EXISTS: investigating why "cooking salt" matched "Cooked Salted Duck Eggs" showed the app
+ALREADY queries USDA (which serves clean salt/pepper/etc.). The bug was never missing data — it was
+SCORING. So the 15-row Basics seed (db/48) was PARKED and the ranker fixed instead. Planner ruling.
+
+WHAT CHANGED — two edits to the food-search edge function, both deterministic (they only matter when
+the Gemini reranker returns null — which is EXACTLY the batch-import rate-limit state that caused the bug):
+- **A deterministic FALLBACK RANKER** (`normalize.ts` `fallbackRank`, wired in `index.ts`). Gemini stays
+  PRIMARY; when it returns null we no longer let the import blind-pick `results[0]`. Order: token-coverage
+  (all query words present > fewer) → generic-over-branded → shorter-name (tiebreak only). Reuses the
+  existing punctuation tokeniser. Exact-name pin (Piece 11) still sits above it.
+- **GENERIC-BEFORE-BRANDED in the merge order** (`normalize.ts` `mergeDedupeOrder`): API results now list
+  unbranded (brand==null; USDA lab generics first) ahead of branded. THIS was required — verification proved
+  the fallback ALONE is bypassed: the `clearMatch` short-circuit fires first and returns `results[0]`, so the
+  clean generic has to be `results[0]` for the compound to lose. (⚠️ this is the one change beyond "just the
+  fallback" — it implements fault #3; flagged for Planner ratification. Isolated + reversible.)
+
+FILES TOUCHED: `supabase/functions/food-search/normalize.ts`, `supabase/functions/food-search/index.ts`.
+db/48 reverted (`275560a`) → parked, off main. ⚠️ EDGE FUNCTION NOT YET DEPLOYED — a git push does NOT
+deploy it.
+
+HOW TO VERIFY:
+  1. ⚠️ DEPLOY FIRST (owner, from repo root — verify_jwt=true is pinned in config.toml, so a bare deploy is
+     correct here, the OPPOSITE of health-ingest):
+       `env -u SUPABASE_ACCESS_TOKEN supabase functions deploy food-search --project-ref cntlptuacsujbdtwvbis`
+     Confirm the project ref is Frankfurt. **RECORD the deploy in this log the moment it lands.**
+  2. In the app, import the Penne alla Vodka recipe again → "cooking salt" and "red pepper flakes" should
+     no longer match duck eggs / pickled snap peas.
+  3. Local logic proof (already run, reranker forced null, real functions via node type-strip):
+     cooking salt→Salt,table · red pepper flakes→Red pepper flakes · turmeric→turmeric(ground) · caster
+     sugar→Caster Sugar · smoked paprika→smoked paprika (all generic/clean). Adversarial (OFF returns ONLY
+     the wrong-food compound): cooking salt→Salt,table · red pepper flakes→USDA cayenne · turmeric→USDA
+     turmeric — the compounds are rejected. Harness: scratchpad/verify.mjs.
+
+KNOWN GAPS / RISKS:
+- **Correct-food-but-BRANDED for ~5 staples** (black pepper, fish sauce, sesame oil, dried oregano, plain
+  flour): the exact-name pin picks the OFF branded product because its NAME equals the query while USDA's
+  comma-name ("Spices, pepper, black") does not. Food identity is RIGHT; source is branded OFF (crowd macros,
+  not lab). This is NOT the wrong-food bug. Fully fixing it means teaching exact-name to prefer generic — but
+  that's the FENCED Piece 11 code, so left alone; flag for a later call.
+- **One regression found:** "heinz ketchup" → generic "Ketchup" (brand named only in the brand field, not the
+  product name, so coverage can't see it). Low real-world impact — recipes say "ketchup", not "heinz ketchup".
+- Merge reorder also changes the Finder UI list order (generics/USDA now appear before branded OFF). Looks
+  like an improvement; watch it on the real surface.
+- Verified at the LOGIC level (real functions, fixtures grounded in live OFF pulls) — NOT yet through the
+  deployed app. The browser import is the real gate (per "verify the real user path").
+
+NEXT: owner deploys → re-import Penne → confirm salt/pepper resolve. Then decide on the two flagged items
+(branded-staples exact-name preference; whether to keep the merge reorder).
+
+FOR THE CHECKER: (1) `fallbackRank` order is coverage→generic→length and never runs when Gemini answered.
+(2) `mergeDedupeOrder` generic-before-branded — confirm it can't strand the owner's own saved rows (savedRest
+order is untouched) and doesn't break dedupe. (3) Is correct-food-but-branded for the ~5 staples acceptable,
+or worth the exact-name change?
+
+---
+
 ### 2026-08-04 — PIECE 11 — THE RANKER + THE BASICS SEED. TWO TRACKS. Track B committed; Track A awaits checker + a hand-deploy is PENDING.
 
 WHAT CHANGED — the last Penne fault (compound products beating plain ingredients) is fixed by two

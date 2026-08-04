@@ -80,6 +80,16 @@ wrong build as a win, surfaced the fork BEFORE building, and the Planner correct
   "done" loosely, just earlier in the pipeline.
 - **The Builder disagreeing with the Planner, in writing, before building, is the system working** —
   not insubordination. The brain is the source of truth; the running code is the brain's ground floor.
+- **FOURTH time (Piece 12, 2026-08-04) — and the first to dismantle the PREMISE, not a detail.** The
+  ruling said "fix the three faults in the existing hard-won word-scoring, don't weaken it." Reading the
+  code showed there IS no word-scorer — ranking was a fixed source-priority order plus a flaky Gemini LLM
+  reranker, nothing else. Two of the three "faults" described a scorer that didn't exist. The Builder
+  stopped and flagged the whole premise as an OPEN question BEFORE building; the Planner re-ruled (build a
+  real deterministic fallback ranker). Then verification of the agreed fix found IT was insufficient too —
+  the fallback was bypassed by an earlier short-circuit — which only surfaced by running the real functions
+  with the reranker forced off. Lesson compounded: **verify the fix you just built the same way you
+  verified the bug — by executing the running code on the real path — because "I built what was ruled" is
+  not "it works," and the ruling itself can rest on a mechanism that isn't there.**
 
 ## Architecture guardrails
 - Free-by-default (amended 2026-07-15; was "free tiers only"). Three paid

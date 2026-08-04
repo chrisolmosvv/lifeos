@@ -21,7 +21,7 @@
 //   OFF_CONTACT_EMAIL — the contact in OFF's User-Agent (built in off.ts).
 //   SUPABASE_URL / SUPABASE_ANON_KEY — auto-injected; the owner-scoped food_items read.
 
-import { type FoodCandidate, isBasic, mergeDedupeOrder, dropZeroJunk, isClearNameMatch, exactNameIndex, type SourceResult } from "./normalize.ts";
+import { type FoodCandidate, isBasic, mergeDedupeOrder, dropZeroJunk, isClearNameMatch, exactNameIndex, fallbackRank, type SourceResult } from "./normalize.ts";
 import { searchSaved } from "./saved.ts";
 import { searchOff } from "./off.ts";
 import { searchUsda, usdaConfigured } from "./usda.ts";
@@ -122,7 +122,20 @@ Deno.serve(async (req) => {
   // skip the rerank (its quota saved too). Only when there is NO exact name does today's logic —
   // dbSuppressed / clearMatch / the AI rerank — run, entirely unchanged.
   const exact = exactNameIndex(query, results);
-  const top3 = exact != null ? [exact] : (dbSuppressed || clearMatch) ? null : await rerankTop(query, results);
+  // Piece 12 — DETERMINISTIC FALLBACK RANKER. Gemini stays PRIMARY. But when rerankTop returns null —
+  // FOOD_RERANK_OFF, or rate-limited mid batch-import, which is exactly WHEN imports run — we no longer
+  // leave top3 null (which made the import client blind-pick results[0], the first OFF branded compound).
+  // Instead fallbackRank orders by token-coverage → generic-over-branded → shorter-name, so the floor is
+  // a real match. dbSuppressed/clearMatch stay null on purpose: there results[0] is already the hoisted
+  // basic / clear name match, so the client's results[0] is correct and the Finder UI is unchanged.
+  let top3: number[] | null;
+  if (exact != null) {
+    top3 = [exact];
+  } else if (dbSuppressed || clearMatch) {
+    top3 = null;
+  } else {
+    top3 = (await rerankTop(query, results)) ?? fallbackRank(query, results);
+  }
 
   // Per-source outcome: a count when reachable, "unavailable" when the API failed/timed
   // out, "not_configured" when the USDA key isn't set (OFF/saved still worked).

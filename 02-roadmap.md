@@ -9,6 +9,21 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-08-04 — Cookbook Piece 12: fix the SCORER, not the data 🔨 — awaits owner hand-deploy
+Tracing "cooking salt → Cooked Salted Duck Eggs" showed the app ALREADY queries USDA (serves clean salt/
+pepper/etc.) — so the bug was SCORING, not missing data. Planner ruling: PARK the db/48 seed, fix the ranker.
+- 🔨 **Fallback ranker** (`normalize.ts` `fallbackRank`, wired in `index.ts`) — the deterministic floor under
+  the Gemini reranker: coverage → generic-over-branded → shorter-name. Runs only when the LLM returns null
+  (the batch-import rate-limit state that produced the bug). Exact-name pin (Piece 11) still sits above it.
+- 🔨 **Generic-before-branded merge** (`mergeDedupeOrder`) — unbranded (USDA generics first) ahead of branded.
+  REQUIRED: the `clearMatch` short-circuit bypasses the fallback, so the clean generic must be `results[0]`.
+- ⏸️ **db/48 PARKED** (reverted `275560a`). Premise of Piece 11's "hard-won word-scoring" was WRONG — no such
+  scorer exists (source-order + LLM only); corrected in 03-decisions.md.
+- Verified at LOGIC level (real functions, reranker forced null, fixtures grounded in live OFF pulls): wrong-
+  food compounds rejected; 5/9 staples clean-generic, ~5 correct-food-but-branded (flagged). ⚠️ NOT LIVE —
+  **edge fn needs owner hand-deploy** (`supabase functions deploy food-search`), then re-import Penne. Details
+  + the one known regression (heinz ketchup) in 04-handoff-log.md.
+
 ## Session note — 2026-08-04 — Cookbook Piece 11: the ranker + Basics seed 🔨 — awaits checker + deploy
 The last Penne fault (compounds beating plain ingredients). TWO tracks:
 - ✅ **Track B — ranker (edge, committed `69cc5f3`).** `exactNameIndex` above the word-scoring: an
