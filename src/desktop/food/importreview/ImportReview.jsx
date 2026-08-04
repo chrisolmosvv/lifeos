@@ -83,9 +83,10 @@ export default function ImportReview({ draft, itemsById, onBack, onSaved, onDele
   };
   const resolveOne = () => { setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
   const noMacros = () => { patch({ no_macros: true, manual_macros: null }); setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
-  // Manual macros (Piece 10): the owner typed the numbers — a real resolution. Clears any wrong match
-  // (manual and a food match are mutually exclusive). Clearing them un-resolves the row again.
-  const manualMacros = (m) => { patch({ manual_macros: m, no_macros: false, food_item_id: null }); setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
+  // Manual macros (Piece 10): the owner typed the numbers FOR THE STATED AMOUNT (stored as-is) plus a
+  // weight — a real resolution. The weight fills grams so the row stops being unweighted; clears any
+  // wrong match (manual and a food match are mutually exclusive). Clearing un-resolves the row again.
+  const manualMacros = (m, grams) => { patch({ manual_macros: m, grams, no_macros: false, food_item_id: null }); setResolved((s) => new Set(s).add(finder.i)); setFinder(null); };
   const clearManual = () => { patch({ manual_macros: null }); setResolved((s) => { const n = new Set(s); n.delete(finder.i); return n; }); setFinder(null); };
   const removeOne = () => { const i = finder.i; setIngs((xs) => xs.filter((_, j) => j !== i)); setFinder(null); };
   // Add an ingredient from nothing (all modes): append a blank row and open the Finder on it. No

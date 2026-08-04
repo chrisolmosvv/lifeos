@@ -73,7 +73,7 @@ export default function FinderPopover({ ing, itemsById, anchor, onPatch, onResol
           <span className="iv-mp"><b>{r(macros.protein)}g</b> P</span><span className="iv-mc"><b>{r(macros.carbs)}g</b> C</span><span className="iv-mf"><b>{r(macros.fat)}g</b> F</span>
         </div>
         {!cook && (manual ? (
-          <ManualMacros name={ing.parsedName || ing.name} amount={ing.amount} unit={ing.unit} initial={ing.manual_macros || null}
+          <ManualMacros name={ing.parsedName || ing.name} amount={ing.amount} unit={ing.unit} initial={ing.manual_macros || null} initialGrams={ing.grams}
             onSave={onManualMacros} onClear={onClearManual} onSearch={() => setManual(false)} />
         ) : (
           <>
