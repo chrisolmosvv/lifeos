@@ -33,7 +33,12 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
-### 2026-08-04 — PIECE 12 — FIX THE SCORER (not the data). Committed `53a547b`; ⚠️ DEPLOY PENDING (owner hand-deploy). db/48 PARKED.
+### 2026-08-04 — PIECE 12 — FIX THE SCORER (not the data). Committed `53a547b`; ✅ DEPLOYED (Frankfurt, by hand 2026-08-04); db/48 PARKED.
+
+DEPLOY RECORD: `food-search` was deployed by hand to Frankfurt (`cntlptuacsujbdtwvbis`) on 2026-08-04 —
+the fallback ranker + generic-before-branded ordering are LIVE. `recipe-import` was already current (its
+source did not change this range). No other edge function is pending a deploy; no DB change outstanding
+(db/48 reverted/parked). Remaining gate: the owner driving the LIVE site (below), not localhost.
 
 WHY THIS EXISTS: investigating why "cooking salt" matched "Cooked Salted Duck Eggs" showed the app
 ALREADY queries USDA (which serves clean salt/pepper/etc.). The bug was never missing data — it was
