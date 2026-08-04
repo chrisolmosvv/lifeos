@@ -33,6 +33,65 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
+### 2026-08-04 — PIECE 10 — MANUAL MACROS: the third resolution exit, restored. Src-only, 1 commit `3aeab4a`.
+
+WHAT CHANGED: an ingredient with real calories but no correct DB match and no weight now has an honest
+way through — the owner hand-enters its macros. This closes the gap Piece 8's demolition opened (the
+old ManualMacrosPanel died with the editor) and the tightened Piece 9 gate exposed.
+- A FOURTH Finder exit **"Enter macros"** sits beside Confirm · No macros · Remove. It opens a 4-field
+  panel (calories/protein/carbs/fat) INSIDE the popover (not a second overlay), restyled to the
+  Finder's broadsheet chrome (`iv-mm-*`), not the old goals-screen CSS.
+- **BASIS = FOR THE AMOUNT AS THE RECIPE STATES IT**, not per-100g. `recipeCalc` uses `manual_macros`
+  AS-IS (unscaled by grams); and the owner is here precisely because there's no weight to scale a
+  per-100g figure by. The panel LABELS it with the concrete amount ("your numbers — for ½ tsp black
+  pepper") so a number can't be entered against the wrong basis.
+- Saving sets `manual_macros` + marks the row **resolved** (a real resolution — the owner supplied the
+  numbers) and clears any wrong `food_item_id`. `manual` and a food match are mutually exclusive:
+  matching a food (or "clear") undoes the manual entry cleanly; reopening the Finder lands in the
+  manual view, populated and editable.
+- A **"~"** marks the estimate wherever those macros surface via `buildReview` — the review row and the
+  cook-page ingredients panel. `buildReview` also no longer flags an explicitly-resolved row
+  (`manual_macros`/`no_macros`) for a missing weight.
+
+FILES TOUCHED: new `src/desktop/food/importreview/ManualMacros.jsx` · `FinderPopover.jsx`,
+`ImportReview.jsx`, `IngredientsPass.jsx` (import review) · `cookplan/CookIngredients.jsx` ·
+`importReview.css` · `src/spine/logic/importReviewLogic.js`. No schema, no deploy — the
+`recipe_ingredients.manual_macros` column already existed and already flows through recipeCalc.
+
+HOW TO VERIFY (verified through the real UI on the dev server, blank recipe):
+1. Cookbook → "+ NEW" (or import/edit) → "+ add an ingredient" → the Finder shows **Enter macros**
+   beside the other exits. ✓
+2. Click it → four fields under a label naming the exact amount. ✓
+3. Enter calories → "Save numbers" → the row reads **"your numbers"**, kcal shows **"~6"**, the
+   ingredient counts as **resolved**, totals move. ✓
+4. Reopen the row → the numbers are there, editable, with a "clear" action. ✓
+5. "‹ match a food instead" → returns to search; picking a food clears the manual entry. ✓
+6. On the Penne draft: give the "Pinch black pepper" manual macros → the gate's "1 with no weight"
+   warning clears (verified in logic; ingUnresolved 1→0). ✓
+7. ★ SQL after a save (Frankfurt `cntlptuacsujbdtwvbis` ONLY) — confirms manual_macros persisted AND
+   the step fields survived the delete-all-reinsert:
+   `select position, food_item_id, manual_macros, grams, no_macros from recipe_ingredients where recipe_id = '<id>' order by position;`
+   `select position, station, hold_tolerance, is_prep, timer_seconds from recipe_steps where recipe_id = '<id>' order by position;`
+   (Not run here — would leave test data; the write path is code-confirmed: recipeWrite inserts whole
+   objects incl. manual_macros/grams/station/hold/is_prep, recipeLoad reads them back.)
+
+KNOWN GAPS / RISKS:
+- The "~" marks manual macros on the review + cook ingredients panel; a RECIPE-level "~" (CookbookRegister)
+  still keys on `unestimatedCount`, so a fully-hand-entered recipe reads as estimated-complete at the
+  list level (arguably correct — it IS estimated). Not changed.
+- ★ The manual-macros gap opened by Piece 8's demolition is now **CLOSED** — the third resolution exit
+  (matched food+weight · manual macros · no-macros) is whole again.
+
+NEXT: **Fix 2 — exact-name-first ranker + seed the missing Basics** (TWO tracks, NOT src-only: a
+checker-gated DB seed of plain salt/pepper/etc. into `db/32`, and the exact-name-first rule above the
+word-scoring in the `food-search` edge function with a LOGGED deploy).
+
+FOR THE CHECKER: confirm the manual-macros basis (per stated amount, not per-100g) matches how
+recipeCalc consumes it, and that a saved recipe round-trips manual_macros without nulling grams/station/
+hold/is_prep on the other rows (the SQL above).
+
+---
+
 ### 2026-08-04 — PIECE 9 — FIX INGREDIENT RESOLUTION (Fixes 1, 3, 4). Src-only, 3 commits. Fix 2 deferred.
 
 WHAT CHANGED: the "Penne alla Vodka" import that came back with blank grams, wrong matches, and a

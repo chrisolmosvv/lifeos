@@ -9,6 +9,16 @@ fully before starting the next. Each phase ends on a visible win.
 
 ---
 
+## Session note — 2026-08-04 — Cookbook Piece 10: manual macros ✅ — Fix 2 next
+The third resolution exit is restored (commit `3aeab4a`, src-only, verified through the real UI). A
+fourth Finder exit "Enter macros" opens a 4-field panel inside the popover; the numbers are FOR THE
+STATED AMOUNT (recipeCalc uses manual_macros as-is), labelled with the concrete amount; saving marks
+the row resolved and shows a "~", matching a food undoes it. No schema, no deploy — the column existed.
+The gap Piece 8's demolition opened is CLOSED.
+- ⬜ **Fix 2: exact-name-first ranker + seed missing Basics** — the last Penne fault. TWO tracks, NOT
+  src-only: seed plain salt/pepper/etc. into `db/32` (checker-gated DB commit — absent today), then
+  exact-name-first above the word-scoring in the `food-search` edge function (deploy + log).
+
 ## Session note — 2026-08-04 — Cookbook Piece 9: ingredient resolution (Fixes 1, 3, 4) ✅ — Fix 2 next
 The Penne-alla-Vodka import's three faults were diagnosed and three of four fixed (src-only, 4
 commits `0d1b558` / `06079a9`+`0720ed4` / `209948d`): **Fix 1** don't flag resolved plural-unit

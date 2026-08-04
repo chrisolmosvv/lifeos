@@ -9,6 +9,22 @@
 
 ---
 
+## Piece 10 — manual macros (2026-08-04)
+
+**[Hand-entered macros are FOR THE AMOUNT AS THE RECIPE STATES IT, not per-100g]** — the panel labels
+the four fields with the concrete amount ("for ½ tsp black pepper"). **Why:** `recipeCalc` uses
+`manual_macros` as-is (unscaled by grams), and the owner reaches manual entry precisely because there
+is no weight to scale a per-100g figure by — so per-amount is both what the maths expects and the only
+basis that works. A number entered against the wrong basis is a silent error in the food history, so
+the label removes the ambiguity. **Trade-off:** if the owner later rescales the recipe, the manual
+figure scales proportionally with servings (like every other ingredient) but does not re-derive.
+
+**[Manual macros and a food match are MUTUALLY EXCLUSIVE]** — entering numbers clears any
+`food_item_id`; matching a food (or "clear") clears `manual_macros`. **Why:** `recipeCalc` prefers
+`manual_macros`, so a leftover would silently override a real match. **Trade-off:** none.
+
+---
+
 ## Piece 9 — ingredient resolution fixes (2026-08-04)
 
 **[A "resolved" ingredient means a food match WITH a weight, not a match alone — but unresolved WARNS,
