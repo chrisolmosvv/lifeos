@@ -33,7 +33,7 @@ FOR THE CHECKER: (what specifically to review, if anything)
 
 ---
 
-### 2026-08-04 — PIECE 12 — FIX THE SCORER (not the data). Committed `b2fb093`; ⚠️ DEPLOY PENDING (owner hand-deploy). db/48 PARKED.
+### 2026-08-04 — PIECE 12 — FIX THE SCORER (not the data). Committed `53a547b`; ⚠️ DEPLOY PENDING (owner hand-deploy). db/48 PARKED.
 
 WHY THIS EXISTS: investigating why "cooking salt" matched "Cooked Salted Duck Eggs" showed the app
 ALREADY queries USDA (which serves clean salt/pepper/etc.). The bug was never missing data — it was
