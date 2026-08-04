@@ -14,10 +14,18 @@ const round = (v) => (v >= 100 ? Math.round(v) : Math.abs(v - Math.round(v)) < 0
 
 // Is the unit a whole-item COUNT (variable weight) rather than a confident measure? portions maps
 // clove/piece/large/etc. → "item"; g/ml/tbsp/tsp/cup are confident.
+// The confident set lists the SINGULAR, PLURAL and long forms — the extractor stores "cups",
+// "teaspoons", "grams" etc., and matching only the singular used to mark those resolved measures
+// as guesses (Piece 9 Fix 1: a whole cup of cream flagged while the measure was exact).
+const CONFIDENT_UNITS = new Set([
+  "g", "gram", "grams", "ml", "milliliter", "milliliters", "millilitre", "millilitres",
+  "tbsp", "tablespoon", "tablespoons", "tsp", "teaspoon", "teaspoons",
+  "cup", "cups", "l", "litre", "litres", "liter", "liters", "kg", "kilogram", "kilograms",
+]);
 function isCountUnit(unit) {
   const u = String(unit || "").toLowerCase().trim();
   if (!u) return true; // no unit + a count = an item guess
-  return !["g", "ml", "tbsp", "tsp", "cup", "l", "kg"].includes(u);
+  return !CONFIDENT_UNITS.has(u);
 }
 
 // { grams, guessed } — the edible weight and whether it's an uncertain guess.
